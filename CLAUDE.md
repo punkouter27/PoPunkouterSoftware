@@ -206,6 +206,13 @@ buttons render only when `/api/config` reports `managementActionsEnabled`, so in
 local JSON report file (`ReportFileCache`); a corrupt cache degrades to "no report", never a 500.
 `wwwroot/data/apps.json` is authoritative for the home page — live Azure inventory only *decorates*
 entries, so a probe failure never removes an app from the portfolio.
+**Degrading has to be FAST too, or it is an outage.** Every storage bootstrap (both table
+stores and the screenshot blob container) caps its CreateIfNotExists probe at
+`TableClientProvider.BootstrapTimeout` (10s) and then sits out a 30s cooldown. Until
+2026-10-20 the blob container had no cooldown and no probe had a cap: with local Azurite not
+running, the SDK retried a refused port (~2s each on Windows) and `/api/portfolio` took 70-90s
+to fall back, so the client's 30s budget always lost and the home page said "could not be
+loaded". Now ~20s once, then instant.
 
 **The report cache is server-side and must stay off the web root.** `ReportFileCache` keeps two
 paths apart on purpose: `GetCatalogDir` is `wwwroot/data` and holds **only** `apps.json`, which is
@@ -913,7 +920,9 @@ served until the facts happen to change. It produces the
   Material Symbols variable font (~3,600 glyphs, 1,068,920 bytes) and self-hosts it as family
   `"Material Symbols"`. This app draws about thirty of those glyphs, so
   [SCRIPTS/Build-IconFontSubset.py](SCRIPTS/Build-IconFontSubset.py) builds
-  `wwwroot/fonts/material-symbols-subset.woff2` (19,612 bytes) and `modern-ui.css` declares the
+  `wwwroot/fonts/material-symbols-subset.woff2` (17,344 bytes, from the Radzen version pinned in
+  `Directory.Packages.props` — the script used to take the "newest" cache folder by string
+  sort, which picked 8.7.3) and `modern-ui.css` declares the
   family against that. **Material Symbols renders through LIGATURES** — the element's text is the
   icon's name — so a name missing from the subset does not degrade to a blank box: it renders the
   literal word "refresh" inside the button. Add the name to `APP_ICONS` and re-run the script; it

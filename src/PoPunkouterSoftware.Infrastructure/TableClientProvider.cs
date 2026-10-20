@@ -36,6 +36,14 @@ public sealed class TableClientProvider
     private DateTimeOffset _lastClientFailureAt = DateTimeOffset.MinValue;
     private static readonly TimeSpan ClientRetryCooldown = TimeSpan.FromSeconds(30);
 
+    /// <summary>
+    /// Ceiling on the one-time CreateIfNotExists probe, shared by every storage bootstrap here.
+    /// Unbounded, the SDK's own retries against a refused port (local Azurite not running)
+    /// took ~14s per table and ~37s per blob container, and /api/portfolio took 70-90s to fall
+    /// back — past the client's 30s budget, so "degradation" rendered as a load failure.
+    /// </summary>
+    public static readonly TimeSpan BootstrapTimeout = TimeSpan.FromSeconds(10);
+
     /// <param name="owner">Names the caller in log messages ("uptime samples").</param>
     public TableClientProvider(IConfiguration config, ILogger logger, string owner)
     {
@@ -126,7 +134,9 @@ public sealed class TableClientProvider
         }
 
         var tableClient = serviceClient.GetTableClient(tableName);
-        await tableClient.CreateIfNotExistsAsync(ct);
+        using var probe = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        probe.CancelAfter(BootstrapTimeout);
+        await tableClient.CreateIfNotExistsAsync(probe.Token);
         return tableClient;
     }
 

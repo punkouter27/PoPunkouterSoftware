@@ -34,6 +34,11 @@ public class AppScreenshotService
     private BlobContainerClient? _cachedContainer;
     private readonly SemaphoreSlim _containerLock = new(1, 1);
 
+    // Same failure cooldown the table stores carry. Without it, /api/portfolio's two blob
+    // reads (versions + scores) queued on the lock and each paid the full retry walk in turn.
+    private DateTimeOffset _lastContainerFailureAt = DateTimeOffset.MinValue;
+    private static readonly TimeSpan ContainerRetryCooldown = TimeSpan.FromSeconds(30);
+
     // Only one capture run at a time; page loads that find a run in progress just skip.
     private readonly SemaphoreSlim _captureLock = new(1, 1);
 
@@ -464,12 +469,16 @@ public class AppScreenshotService
     {
         if (_cachedContainer is not null)
             return _cachedContainer;
+        if (DateTimeOffset.UtcNow - _lastContainerFailureAt < ContainerRetryCooldown)
+            return null;
 
         await _containerLock.WaitAsync(ct);
         try
         {
             if (_cachedContainer is not null)
                 return _cachedContainer;
+            if (DateTimeOffset.UtcNow - _lastContainerFailureAt < ContainerRetryCooldown)
+                return null;
 
             // Same account as the report table store; a dedicated blob endpoint may be
             // configured for managed-identity setups where only endpoints are known.
@@ -488,12 +497,15 @@ public class AppScreenshotService
             }
 
             var container = service.GetBlobContainerClient(ContainerName);
-            await container.CreateIfNotExistsAsync(cancellationToken: ct);
+            using var probe = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            probe.CancelAfter(TableClientProvider.BootstrapTimeout);
+            await container.CreateIfNotExistsAsync(cancellationToken: probe.Token);
             _cachedContainer = container;
             return _cachedContainer;
         }
         catch (Exception ex)
         {
+            _lastContainerFailureAt = DateTimeOffset.UtcNow;
             _logger.LogWarning("Blob storage unavailable — screenshots disabled. Reason: {Reason}", ex.Message);
             return null;
         }

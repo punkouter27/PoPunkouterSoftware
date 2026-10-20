@@ -431,7 +431,9 @@ public class AzureReportStore
         }
 
         var tableClient = serviceClient.GetTableClient(tableName);
-        await tableClient.CreateIfNotExistsAsync(ct);
+        using var probe = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        probe.CancelAfter(TableClientProvider.BootstrapTimeout);
+        await tableClient.CreateIfNotExistsAsync(probe.Token);
         return tableClient;
     }
 

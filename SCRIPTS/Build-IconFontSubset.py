@@ -36,7 +36,7 @@ The script verifies every requested ligature actually survived into the subset a
 loudly if one did not, so a typo cannot ship as a word rendered in a button.
 """
 
-import glob
+import re
 import os
 import sys
 
@@ -78,6 +78,9 @@ RADZEN_ICONS = [
     "error_outline", "visibility", "visibility_off", "star", "star_border", "event",
     "schedule", "today", "check_box", "check_box_outline_blank", "indeterminate_check_box",
     "radio_button_checked", "radio_button_unchecked", "notifications", "help",
+    # RadzenAlert's Warning icon (every ErrorRetryBanner). Missing, it rendered the "warning"
+    # glyph followed by the literal text "_amber".
+    "warning_amber",
 ]
 
 ICON_NAMES = sorted(set(APP_ICONS) | set(RADZEN_ICONS))
@@ -88,14 +91,20 @@ OUT = os.path.join(REPO, "src", "PoPunkouterSoftware.Client", "wwwroot", "fonts"
 
 
 def find_source_font() -> str:
-    """The newest MaterialSymbolsOutlined.woff2 in the local NuGet cache."""
-    pattern = os.path.join(
-        os.path.expanduser("~"), ".nuget", "packages", "radzen.blazor", "*",
+    """MaterialSymbolsOutlined.woff2 from the Radzen.Blazor version this repo pins.
+
+    Not "the newest in the cache": the cache holds other repos' versions too, and a string
+    sort ranked 8.7.3 above 10.4.5, so the subset silently came from a stale font."""
+    props = open(os.path.join(REPO, "Directory.Packages.props"), encoding="utf-8").read()
+    pinned = re.search(r'Include="Radzen\.Blazor"\s+Version="([^"]+)"', props)
+    if not pinned:
+        sys.exit("Radzen.Blazor is not pinned in Directory.Packages.props")
+    path = os.path.join(
+        os.path.expanduser("~"), ".nuget", "packages", "radzen.blazor", pinned.group(1),
         "staticwebassets", "fonts", "MaterialSymbolsOutlined.woff2")
-    matches = sorted(glob.glob(pattern))
-    if not matches:
-        sys.exit(f"Source font not found. Restore the solution first.\nLooked in: {pattern}")
-    return matches[-1]
+    if not os.path.exists(path):
+        sys.exit(f"Source font not found. Restore the solution first.\nLooked in: {path}")
+    return path
 
 
 def ligature_names(font: TTFont) -> set:
