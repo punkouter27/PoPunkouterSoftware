@@ -16,8 +16,8 @@ namespace PoPunkouterSoftware.Infrastructure;
 /// number the scan produced rather than from the attention-item list alone.
 ///
 /// <para><b>Backend: Azure AI Foundry.</b> Calls the chat-completions API on the shared
-/// <c>po-aiservices-shared</c> AI Services account in the <c>poshared</c> resource group —
-/// the same estate-wide shared-resource pattern as <c>kv-poshared</c>. The default deployment
+/// <c>po-aiservices-shared2</c> AI Services account in the <c>poshared</c> resource group —
+/// the same estate-wide shared-resource pattern as <c>kv-poshared2</c>. The default deployment
 /// is <c>gpt-5.4-nano</c>, the cheapest deployment on that account that can write a coherent
 /// paragraph. This replaces the previous Hugging Face <c>flan-t5-base</c> integration
 /// wholesale; there is deliberately still exactly ONE AI client in the app.</para>
@@ -47,7 +47,7 @@ namespace PoPunkouterSoftware.Infrastructure;
 public sealed class AiTriageService
 {
     public const string HttpClientName = "ai-azure";
-    public const string DefaultEndpoint = "https://po-aiservices-shared.cognitiveservices.azure.com/";
+    public const string DefaultEndpoint = "https://po-aiservices-shared2.cognitiveservices.azure.com/";
 
     /// <summary>Cheapest deployment on the shared account that writes a coherent paragraph. Verified live.</summary>
     public const string DefaultDeployment = "gpt-5.4-nano";

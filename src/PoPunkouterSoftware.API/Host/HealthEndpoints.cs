@@ -73,7 +73,7 @@ public sealed class KeyVaultHealthCheck : IHealthCheck
         // report on the vault the app actually bound, not a different one. A blank value is
         // "no vault" (Program.cs skips binding it), which is healthy-not-configured rather
         // than a failure: the hermetic Testing config blanks these keys on purpose.
-        var uri = _config["KeyVault:Uri"] ?? _config["AzureKeyVaultUri"] ?? "https://kv-poshared.vault.azure.net/";
+        var uri = _config["KeyVault:Uri"] ?? _config["AzureKeyVaultUri"] ?? "https://kv-poshared2.vault.azure.net/";
         if (string.IsNullOrWhiteSpace(uri) || !Uri.TryCreate(uri, UriKind.Absolute, out var vaultUri))
         {
             return HealthCheckResult.Healthy("not-configured", new Dictionary<string, object>

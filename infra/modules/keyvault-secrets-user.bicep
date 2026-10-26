@@ -1,14 +1,14 @@
 // Grants a principal least-privilege read access (get/list secrets) on an
-// existing Key Vault. kv-poshared has RBAC authorization DISABLED and uses the
+// existing Key Vault. kv-poshared2 has RBAC authorization DISABLED and uses the
 // classic access-policy model, so access must be granted via an access policy —
 // an RBAC role assignment would be silently ineffective on this vault.
 //
-// Deployed at the scope of the vault's resource group (kv-poshared lives in the
+// Deployed at the scope of the vault's resource group (kv-poshared2 lives in the
 // shared 'PoShared' RG, not the app's RG), so this is invoked as a module with
 // `scope: resourceGroup('PoShared')`.
 targetScope = 'resourceGroup'
 
-@description('Name of the existing shared Key Vault, e.g. kv-poshared.')
+@description('Name of the existing shared Key Vault, e.g. kv-poshared2.')
 param keyVaultName string
 
 @description('Object (principal) ID of the identity to grant access to.')

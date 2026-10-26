@@ -39,8 +39,8 @@ permissions:
   contents: read
 
 env:
-  SITE_URL: 'https://app-popunkoutersoftware.azurewebsites.net'
-  STORAGE_ACCOUNT: 'stpopunkoutersoftware'
+  SITE_URL: 'https://app-popunkoutersoftware2.azurewebsites.net'
+  STORAGE_ACCOUNT: 'stpopunkoutersoftware2'
   STORAGE_RG: 'PoPunkouterSoftware'
   CONTAINER: 'app-screenshots'
   # Must match AppScreenshotService's ViewportWidth/ViewportHeight: the cards display the
@@ -238,7 +238,7 @@ jobs:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: |
           [ -f previous.json ] && [ -f lighthouse.json ] || exit 0
-          TOPIC="${NTFY_TOPIC:-$(az keyvault secret show --vault-name kv-poshared \
+          TOPIC="${NTFY_TOPIC:-$(az keyvault secret show --vault-name kv-poshared2 \
             --name PoPunkouterSoftware--Alerts--NtfyTopic --query value -o tsv 2>/dev/null || true)}"
           [ -n "$TOPIC" ] || { echo "No ntfy topic available — skipping."; exit 0; }
           echo "::add-mask::$TOPIC"

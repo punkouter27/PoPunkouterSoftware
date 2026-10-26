@@ -17,14 +17,14 @@ public static class NameMatching
     ///
     /// <para>Defined once because the uptime grid joins two independently written sources on
     /// this string. <c>HistorySummaryMapper</c> wrote the friendly name ("PoMemeVideo") while
-    /// <c>ServicePingerService</c> wrote the resource name ("app-pomemevideo"), so every
+    /// <c>ServicePingerService</c> wrote the resource name ("app-pomemevideo2"), so every
     /// service appeared as two half-populated rows — 16 rows for 8 apps, each showing a
     /// fraction of the evidence. Any new writer into that partition must use this.</para>
     /// </summary>
     public static string ServiceIdentity(string? friendlyName, string? resourceName) =>
         string.IsNullOrWhiteSpace(friendlyName) ? resourceName ?? "" : friendlyName;
 
-    /// <summary>Letters and digits only, lower-cased — "app-pomemevideo" and "PoMemeVideo"
+    /// <summary>Letters and digits only, lower-cased — "app-pomemevideo2" and "PoMemeVideo"
     /// differ only by the "app" prefix once normalized.</summary>
     public static string Normalize(string? value) =>
         string.Concat((value ?? "").Where(char.IsLetterOrDigit)).ToLowerInvariant();

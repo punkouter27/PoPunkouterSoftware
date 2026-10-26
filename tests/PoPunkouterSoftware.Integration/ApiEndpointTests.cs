@@ -197,7 +197,7 @@ public class PortfolioEndpointTests
             .ToList();
 
         names.Should().NotContain(n => n.Replace("-", "").Equals("PoPunkouterSoftware", StringComparison.OrdinalIgnoreCase));
-        names.Should().NotContain(n => n.Contains("app-popunkoutersoftware", StringComparison.OrdinalIgnoreCase));
+        names.Should().NotContain(n => n.Contains("app-popunkoutersoftware2", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]

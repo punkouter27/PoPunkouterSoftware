@@ -70,7 +70,7 @@ public class DashboardDerivationsTests
             [
                 new StorageItem
                 {
-                    Name = "potrafficstorage",
+                    Name = "potrafficstorage2",
                     ResourceGroup = "potraffic",
                     HttpsOnly = true,
                     PublicBlobAccess = false,
@@ -100,7 +100,7 @@ public class DashboardDerivationsTests
         queue.Select(i => DashboardDerivations.ActionabilityRank(i.Actionability))
             .Should().BeInAscendingOrder("the badge is the claim and the order must agree with it");
         queue[0].Actionability.Should().Be("Fix Now");
-        queue.Should().Contain(i => i.Item == "potrafficstorage" && i.Actionability == "Fix Soon");
+        queue.Should().Contain(i => i.Item == "potrafficstorage2" && i.Actionability == "Fix Soon");
 
         // Same source, same item — one row survives, and it is the worse of the two.
         queue.Where(i => i.Item == "shared-cert").Should().ContainSingle()

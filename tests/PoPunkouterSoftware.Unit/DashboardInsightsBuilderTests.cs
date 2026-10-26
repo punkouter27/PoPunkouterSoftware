@@ -394,9 +394,9 @@ public class ServiceIdentityTests
     [Fact]
     public void PrefersFriendlyName_FallingBackToResourceName()
     {
-        NameMatching.ServiceIdentity("PoMemeVideo", "app-pomemevideo").Should().Be("PoMemeVideo");
+        NameMatching.ServiceIdentity("PoMemeVideo", "app-pomemevideo2").Should().Be("PoMemeVideo");
         // null and "" take the same absent-friendly-name branch; one case covers both.
-        NameMatching.ServiceIdentity(null, "app-pomemevideo").Should().Be("app-pomemevideo");
+        NameMatching.ServiceIdentity(null, "app-pomemevideo2").Should().Be("app-pomemevideo2");
     }
 }
 

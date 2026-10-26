@@ -17,7 +17,7 @@ public class AzureReportServiceTests
                 "shortDescription":{"problem":"Right-size underused plans","solution":"Scale down"},
                 "extendedProperties":{"savingsAmount":"12.499"}}},
               {"properties":{"category":"Security","impact":"Low","shortDescription":{}}},
-              {"properties":{"category":"HighAvailability","impact":"High","impactedValue":"bbb8dfbe-9169-432f-9b7a-fbf861b51037",
+              {"properties":{"category":"HighAvailability","impact":"High","impactedValue":"14d963a2-badc-4a1f-9900-553bf01f8de2",
                 "shortDescription":{"problem":"Create a Service Health alert"}}}
             ],"nextLink":null}
             """).RootElement;

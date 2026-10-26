@@ -2,17 +2,17 @@
 // (Cognitive Services) account, so the app can call chat completions with its
 // managed identity instead of a shared API key.
 //
-// Unlike kv-poshared — which has RBAC authorization DISABLED and therefore needs
+// Unlike kv-poshared2 — which has RBAC authorization DISABLED and therefore needs
 // a classic access policy (see keyvault-secrets-user.bicep) — Cognitive Services
 // data-plane access is ALWAYS RBAC. A role assignment is the only mechanism here,
 // and an access policy would be meaningless.
 //
-// Deployed at the scope of the AI account's resource group (po-aiservices-shared
+// Deployed at the scope of the AI account's resource group (po-aiservices-shared2
 // lives in the shared 'PoShared' RG, not the app's RG), so this is invoked as a
 // module with `scope: resourceGroup('PoShared')`.
 targetScope = 'resourceGroup'
 
-@description('Name of the existing shared AI Services account, e.g. po-aiservices-shared.')
+@description('Name of the existing shared AI Services account, e.g. po-aiservices-shared2.')
 param aiServicesAccountName string
 
 @description('Object (principal) ID of the identity to grant inference access to.')

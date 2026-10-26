@@ -56,7 +56,7 @@ Standing instructions from the owner. They outrank default habits and apply to e
   that compiles is not a running app — and this project's stale-process footgun means a "successful"
   build can leave the old binary serving on :8000.
 - **No `dotnet user-secrets`.** Local config goes in `appsettings*.json`; real secrets go in the
-  `kv-poshared` Key Vault. Rationale: user secrets live outside the repo in a per-machine folder, so
+  `kv-poshared2` Key Vault. Rationale: user secrets live outside the repo in a per-machine folder, so
   a value only one machine has looks like a bug on every other machine and in production.
   Resolved 2026-09-05: `<UserSecretsId>` removed from `PoPunkouterSoftware.API.csproj`; ASP.NET no
   longer auto-loads `%APPDATA%\Microsoft\UserSecrets\popunkouter-software-api\secrets.json` in
@@ -586,7 +586,7 @@ proves a context and program were created, not that anything reached the screen.
   Two senders live in GitHub Actions because only they hold the facts: `deploy.yml` on a
   rollback and `screenshots.yml` on a Lighthouse category dropping 15+ points overnight. Both
   read the optional `NTFY_TOPIC` GitHub secret and fall back to the Key Vault secret (which
-  works only if the OIDC identity can read `kv-poshared`); with neither they stay silent.
+  works only if the OIDC identity can read `kv-poshared2`); with neither they stay silent.
 - **Two anonymous endpoints are rate-limited, globally.** `Host/RateLimits.cs`: `/api/signins`
   (live Log Analytics) 30/min, `POST /api/diag/ai` (paid completion) 20/hour. Global windows,
   not per-IP, on purpose — a hard cost ceiling IP rotation cannot beat, and no trust in
@@ -794,7 +794,7 @@ proves a context and program were created, not that anything reached the screen.
   `Microsoft.OpenApi` is one; removing it because "nothing references it" reintroduces a vulnerable
   version. `MinVer` is referenced from `Directory.Build.props`, not from any csproj.
 - **Status narrative (AI).** `AiTriageService` calls **Azure AI Foundry** chat completions on the
-  shared `po-aiservices-shared` account in the `poshared` resource group — deployment
+  shared `po-aiservices-shared2` account in the `poshared` resource group — deployment
   `gpt-5.4-nano`, the cheapest one there that writes a coherent paragraph. **The prompt asks for
 at most two sentences that do NOT repeat the numbers the hero tiles print** — "use the actual
 numbers" produced ~90 words restating health %, cost, projection, budget and three cost drivers
@@ -813,7 +813,7 @@ served until the facts happen to change. It produces the
   **Auth order:** `StatusNarrator:ApiKey` → Entra ID via the shared `TokenCredential` → the app's
   existing `AzureOpenAI:ApiKey` vault secret. The keyless path needs the `Cognitive Services OpenAI
   User` role, declared in `infra/modules/cognitive-services-openai-user.bicep`; note that unlike
-  `kv-poshared` (RBAC **disabled**, so Key Vault access is a classic access policy), Cognitive
+  `kv-poshared2` (RBAC **disabled**, so Key Vault access is a classic access policy), Cognitive
   Services data-plane access is always RBAC. Until that role is applied, production runs on the key
   fallback and works either way.
 - **Never name a config section after a generic Azure service.** `AppKeyVaultSecretManager` loads
@@ -842,7 +842,7 @@ served until the facts happen to change. It produces the
   observed if either saw it, and cells stay worst-wins across sources.
   - **Both writers must key on `NameMatching.ServiceIdentity`.** The grid joins scan rows and ping
     rows on that string. They disagreed once — `HistorySummaryMapper` wrote `PoMemeVideo` while the
-    pinger wrote `app-pomemevideo` — and every service rendered as two half-populated rows.
+    pinger wrote `app-pomemevideo2` — and every service rendered as two half-populated rows.
   - **A ping `timeout` is recorded as neither up nor down.** These are F1 apps that sleep; a 14s
     probe missing a cold start is not evidence of downtime. `unreachable` and 5xx still count.
   - **Both writers must also agree on what "up" means.** They did not: the pinger counted anything
@@ -862,12 +862,12 @@ served until the facts happen to change. It produces the
   - The pinger stops when the app does (F1 has no Always-On), which is why
     `.github/workflows/uptime-scan.yml` exists — see CI/CD below.
 - **A local scan uses YOUR `az login`, pinned to the personal tenant.** `launchSettings.json`
-  sets `AZURE_TENANT_ID=1639b208-…` (the "Punkouter26" subscription's tenant), which every
+  sets `AZURE_TENANT_ID=28e2074a-…` (the punkouter27 account's tenant), which every
   `DefaultAzureCredential()` here honours. Without it, a CLI defaulted to a work account fails
   every scan with `InvalidAuthenticationTokenTenant`. With it, the CLI still needs a live
-  login to that tenant (`az login --tenant 1639b208-d5bf-4d71-9096-06163884a5e4`); a stale one
+  login to that tenant (`az login --tenant 28e2074a-9756-49cb-9bde-314aba4d2bbe`); a stale one
   fails with AADSTS90072. Production uses the managed identity and ignores this.
-- **Secrets.** Key Vault `kv-poshared`, prefix `PoPunkouterSoftware--`, loaded at startup via
+- **Secrets.** Key Vault `kv-poshared2`, prefix `PoPunkouterSoftware--`, loaded at startup via
   System-Assigned Managed Identity, and **skipped entirely under the `Testing` environment**. The
   grant is a classic access policy, not RBAC — the vault is shared across Po* apps, so switching
   models is an estate-wide change.
@@ -1052,7 +1052,7 @@ three tiers still run locally before a push.
   before any scan) must answer within ~3 minutes of retries, or the backup is redeployed, the
   job goes red and ntfy is told. No backup (first deploy, SCM down) means no rollback, with a
   warning. Target is App
-  Service `app-popunkoutersoftware` via OIDC, no required secrets in the workflow. Unit is the only tier
+  Service `app-popunkoutersoftware2` via OIDC, no required secrets in the workflow. Unit is the only tier
   that belongs in a deploy pipeline: no Docker, no network, no live host, ~0.5s for 100 tests
   against an assembly the job already built. Integration needs Testcontainers Azurite; both E2E
   tiers need a running app and a `BASE_URL`. Adding any of them would trade a fast gate for a

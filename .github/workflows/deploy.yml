@@ -35,7 +35,7 @@ env:
   # The live production targets. Used as the fallback when the matching
   # "production" environment variables are unset or misconfigured, so the
   # pipeline deploys to the right resource even without the GitHub vars.
-  DEFAULT_APP_NAME: 'app-popunkoutersoftware'
+  DEFAULT_APP_NAME: 'app-popunkoutersoftware2'
   DEFAULT_RESOURCE_GROUP: 'PoPunkouterSoftware'
 
 jobs:
@@ -189,7 +189,7 @@ jobs:
           echo "::error title=Rolled back::${{ github.sha }} failed its smoke test; the previous build is live again."
           # Same ntfy topic as AlertNotifier: optional NTFY_TOPIC secret, else the app's own
           # Key Vault secret, else no push (the red workflow still emails).
-          TOPIC="${NTFY_TOPIC:-$(az keyvault secret show --vault-name kv-poshared \
+          TOPIC="${NTFY_TOPIC:-$(az keyvault secret show --vault-name kv-poshared2 \
             --name PoPunkouterSoftware--Alerts--NtfyTopic --query value -o tsv 2>/dev/null || true)}"
           if [ -n "$TOPIC" ]; then
             echo "::add-mask::$TOPIC"

@@ -16,7 +16,7 @@ namespace PoPunkouterSoftware.API;
 /// path no matter what the catalog says.</para>
 ///
 /// <para>There used to be a second, retired-app set here, holding PoRepoLineTracker after
-/// its host stopped resolving. The app was redeployed (<c>app-porepolinetracker</c>, RG
+/// its host stopped resolving. The app was redeployed (<c>app-porepolinetracker2</c>, RG
 /// <c>PoRepoLineTracker</c>, answering 200), so the set was emptied and removed rather
 /// than left as a rule matching nothing. Retiring an app again means deleting its Azure
 /// resource — a name-based denylist here silently hides a live app from its own dashboard,
@@ -30,7 +30,7 @@ internal static class PortfolioIdentity
     /// </summary>
     /// <remarks>
     /// Entries are already in <see cref="NormalizeName"/> form (letters and digits only,
-    /// lower-cased), so both the Azure resource name "app-popunkoutersoftware" and the
+    /// lower-cased), so both the Azure resource name "app-popunkoutersoftware2" and the
     /// friendly name "PoPunkouterSoftware" collapse onto one entry here.
     /// </remarks>
     private static readonly HashSet<string> SelfIdentities =

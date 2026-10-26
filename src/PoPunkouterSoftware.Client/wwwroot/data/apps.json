@@ -10,8 +10,8 @@
         "Azure App Service",
         "JavaScript"
       ],
-      "url": "https://app-polocalcompare-win.azurewebsites.net",
-      "healthUrl": "https://app-polocalcompare-win.azurewebsites.net/health/live",
+      "url": "https://app-polocalcompare-win2.azurewebsites.net",
+      "healthUrl": "https://app-polocalcompare-win2.azurewebsites.net/health/live",
       "githubRepo": "punkouter26/PoLocalCompare"
     },
     {
@@ -24,8 +24,8 @@
         "Azure App Service",
         "C#"
       ],
-      "url": "https://app-pomemevideo.azurewebsites.net",
-      "healthUrl": "https://app-pomemevideo.azurewebsites.net/health/live",
+      "url": "https://app-pomemevideo2.azurewebsites.net",
+      "healthUrl": "https://app-pomemevideo2.azurewebsites.net/health/live",
       "githubRepo": "punkouter26/PoMemeVideo"
     },
     {
@@ -38,12 +38,12 @@
         "Azure App Service",
         "C#"
       ],
-      "url": "https://app-5ln5hfdrvof5u-f1win.azurewebsites.net",
-      "healthUrl": "https://app-5ln5hfdrvof5u-f1win.azurewebsites.net/health/live",
+      "url": "https://app-5ln5hfdrvof5u-f1win2.azurewebsites.net",
+      "healthUrl": "https://app-5ln5hfdrvof5u-f1win2.azurewebsites.net/health/live",
       "githubRepo": "punkouter26/PoMiniGames"
     },
     {
-      "id": "app-pomode",
+      "id": "app-pomode2",
       "name": "PoMode",
       "description": "Drop in a song and hear what it is made of — stems, pitch, chords and the mode it sits in, plus a Mode Lab that plays each mode over harmony rooted to match.",
       "category": "creative",
@@ -53,12 +53,12 @@
         "C#",
         "Blazor"
       ],
-      "url": "https://app-pomode.azurewebsites.net",
-      "healthUrl": "https://app-pomode.azurewebsites.net/health/live",
+      "url": "https://app-pomode2.azurewebsites.net",
+      "healthUrl": "https://app-pomode2.azurewebsites.net/health/live",
       "githubRepo": "punkouter26/PoMode"
     },
     {
-      "id": "app-porepolinetracker",
+      "id": "app-porepolinetracker2",
       "name": "PoRepoLineTracker",
       "description": "Track lines of code across all your GitHub repositories over time — point it at an account and watch each repo grow or shrink.",
       "category": "productivity",
@@ -68,8 +68,8 @@
         "C#",
         "Blazor"
       ],
-      "url": "https://app-porepolinetracker.azurewebsites.net",
-      "healthUrl": "https://app-porepolinetracker.azurewebsites.net/health/live",
+      "url": "https://app-porepolinetracker2.azurewebsites.net",
+      "healthUrl": "https://app-porepolinetracker2.azurewebsites.net/health/live",
       "githubRepo": "punkouter26/PoRepoLineTracker"
     },
     {
@@ -82,8 +82,8 @@
         "Azure App Service",
         "C#"
       ],
-      "url": "https://potraffic-api-win.azurewebsites.net",
-      "healthUrl": "https://potraffic-api-win.azurewebsites.net/health/live",
+      "url": "https://potraffic-api-win2.azurewebsites.net",
+      "healthUrl": "https://potraffic-api-win2.azurewebsites.net/health/live",
       "githubRepo": "punkouter26/PoTraffic"
     },
     {
@@ -97,8 +97,8 @@
         "C#",
         "Blazor"
       ],
-      "url": "https://app-powatch-win.azurewebsites.net",
-      "healthUrl": "https://app-powatch-win.azurewebsites.net/health/live",
+      "url": "https://app-powatch-win2.azurewebsites.net",
+      "healthUrl": "https://app-powatch-win2.azurewebsites.net/health/live",
       "githubRepo": "punkouter26/PoWatch"
     },
     {
@@ -111,8 +111,8 @@
         "Azure App Service",
         "Blazor"
       ],
-      "url": "https://app-poseereview.azurewebsites.net",
-      "healthUrl": "https://app-poseereview.azurewebsites.net/health/live",
+      "url": "https://app-poseereview2.azurewebsites.net",
+      "healthUrl": "https://app-poseereview2.azurewebsites.net/health/live",
       "githubRepo": null
     }
   ]

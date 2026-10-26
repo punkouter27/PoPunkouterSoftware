@@ -22,7 +22,7 @@ internal static partial class PortfolioEndpoints
             .WithName("GetPortfolioScreenshot");
 
         // Consumer: the README of each app's GitHub repo, as
-        // ![status](https://app-popunkoutersoftware.azurewebsites.net/api/portfolio/badge/<id>.svg)
+        // ![status](https://app-popunkoutersoftware2.azurewebsites.net/api/portfolio/badge/<id>.svg)
         portfolio.MapGet("/badge/{id}.svg", GetBadge)
             .WithName("GetPortfolioBadge");
 

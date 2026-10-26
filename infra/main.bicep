@@ -1,7 +1,7 @@
 // Infrastructure for PoPunkouterSoftware.
 //
 // Faithful, idempotent description of the resources that already exist in the
-// 'PoPunkouterSoftware' resource group (subscription bbb8dfbe-...-fbf861b51037,
+// 'PoPunkouterSoftware' resource group (subscription 14d963a2-...-553bf01f8de2,
 // region West US 2). Deployed in Incremental mode from deploy.yml, so a run
 // against the live resource group is a no-op when nothing has drifted.
 //
@@ -9,7 +9,7 @@
 // 'PoPunkouterSoftware' uses the per-solution form — the rule explicitly
 // permits both. The Agent Service Plan stays app-local (not in PoShared) on
 // purpose: F1 isolation keeps this app's cold starts and quota pressure
-// away from any shared plan. The shared Key Vault kv-poshared does live in
+// away from any shared plan. The shared Key Vault kv-poshared2 does live in
 // PoShared and is referenced by name below.
 //
 // IMPORTANT: appSettings are intentionally NOT declared on the site resource.
@@ -20,13 +20,13 @@
 targetScope = 'resourceGroup'
 
 @description('App Service name. Must match the live site — defaults to the production app.')
-param appName string = 'app-popunkoutersoftware'
+param appName string = 'app-popunkoutersoftware2'
 
 @description('App Service Plan (Windows) hosting the site.')
 param appServicePlanName string = 'asp-PoPunkouterSoftware-f1'
 
 @description('Storage account used by the app (Azure Table Storage).')
-param storageAccountName string = 'stpopunkoutersoftware'
+param storageAccountName string = 'stpopunkoutersoftware2'
 
 @description('Azure region. Defaults to the resource group location.')
 param location string = resourceGroup().location
@@ -35,16 +35,16 @@ param location string = resourceGroup().location
 param appServicePlanSku string = 'F1'
 
 @description('Shared Key Vault the app reads secrets from (system-assigned MI).')
-param sharedKeyVaultName string = 'kv-poshared'
+param sharedKeyVaultName string = 'kv-poshared2'
 
 @description('Resource group that holds the shared Key Vault.')
 param sharedKeyVaultResourceGroup string = 'PoShared'
 
 @description('Shared Azure AI Services account backing the /azure status narrative.')
-param sharedAiServicesAccountName string = 'po-aiservices-shared'
+param sharedAiServicesAccountName string = 'po-aiservices-shared2'
 
 @description('App Insights component the site is linked to, surfaced as the portal hidden-link tag.')
-param appInsightsResourceId string = '/subscriptions/bbb8dfbe-9169-432f-9b7a-fbf861b51037/resourceGroups/PoShared/providers/microsoft.insights/components/poappideinsights8f9c9a4e'
+param appInsightsResourceId string = '/subscriptions/14d963a2-badc-4a1f-9900-553bf01f8de2/resourceGroups/PoShared/providers/microsoft.insights/components/poappideinsights8f9c9a4e'
 
 // Windows App Service Plan, Free (F1) tier.
 resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
@@ -61,7 +61,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
 }
 
 // The site. Windows, .NET 10, HTTPS-only, TLS 1.2, system-assigned identity
-// (used to read Key Vault 'kv-poshared'). Always-On stays off — F1 cannot run it.
+// (used to read Key Vault 'kv-poshared2'). Always-On stays off — F1 cannot run it.
 resource site 'Microsoft.Web/sites@2024-04-01' = {
   name: appName
   location: location
@@ -147,7 +147,7 @@ resource storageLifecycle 'Microsoft.Storage/storageAccounts/managementPolicies@
 
 // Least-privilege binding: grant the site's system-assigned identity read-only
 // access to secrets in the shared Key Vault — nothing more. Scoped to the shared
-// RG because that is where kv-poshared lives.
+// RG because that is where kv-poshared2 lives.
 module keyVaultAccess 'modules/keyvault-secrets-user.bicep' = {
   name: 'kv-secrets-user-${appName}'
   scope: resourceGroup(sharedKeyVaultResourceGroup)

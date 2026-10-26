@@ -38,7 +38,7 @@ try
     var kvUriStr = builder.Configuration["KeyVault:Uri"] ?? builder.Configuration["AzureKeyVaultUri"];
     if (kvUriStr is null)
     {
-        kvUriStr = "https://kv-poshared.vault.azure.net/";
+        kvUriStr = "https://kv-poshared2.vault.azure.net/";
     }
     if (!builder.Environment.IsEnvironment("Testing") && !string.IsNullOrWhiteSpace(kvUriStr))
     {
@@ -339,9 +339,9 @@ try
         });
 
     // ─── HTTP client for Azure AI Foundry (chat completions) ────────────────
-    // Targets the shared po-aiservices-shared account in the poshared resource group via
+    // Targets the shared po-aiservices-shared2 account in the poshared resource group via
     // Entra ID (System-Assigned Managed Identity in Azure, az login locally) — the same
-    // shared-estate pattern as kv-poshared. AiTriageService builds the absolute request URL
+    // shared-estate pattern as kv-poshared2. AiTriageService builds the absolute request URL
     // from StatusNarrator:Endpoint, so no BaseAddress is set here.
     //
     // Deliberately NO resilience: an AI outage must degrade to the rule-based narrative,

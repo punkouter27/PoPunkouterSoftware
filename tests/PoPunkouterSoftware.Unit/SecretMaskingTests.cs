@@ -51,7 +51,7 @@ public class SecretMaskingTests
     public void MaskSubscriptionIds_RemovesEveryGuid_AndKeepsTheRestOfTheId()
     {
         const string json = """
-            {"a":"/subscriptions/bbb8dfbe-9169-432f-9b7a-fbf861b51037/resourceGroups/PoMode/providers/Microsoft.Web/sites/app-pomode",
+            {"a":"/subscriptions/14d963a2-badc-4a1f-9900-553bf01f8de2/resourceGroups/PoMode/providers/Microsoft.Web/sites/app-pomode2",
              "b":"/SUBSCRIPTIONS/BBB8DFBE-9169-432F-9B7A-FBF861B51037/resourceGroups/PoWatch/providers/Microsoft.Storage/storageAccounts/stpo"}
             """;
 
@@ -59,7 +59,7 @@ public class SecretMaskingTests
 
         masked.Should().NotContain("bbb8dfbe", "the id must go regardless of casing");
         masked.Should().NotContain("BBB8DFBE");
-        masked.Should().Contain("/subscriptions/****/resourceGroups/PoMode/providers/Microsoft.Web/sites/app-pomode");
+        masked.Should().Contain("/subscriptions/****/resourceGroups/PoMode/providers/Microsoft.Web/sites/app-pomode2");
         masked.Should().Contain("/resourceGroups/PoWatch/providers/Microsoft.Storage/storageAccounts/stpo");
 
         // ...and everything that is not an ARM id passes through untouched, so the mask can

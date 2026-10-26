@@ -6,7 +6,7 @@
     <AssemblyName>PoPunkouterSoftware.API</AssemblyName>
     <!--
       <UserSecretsId> intentionally absent. CLAUDE.md standing rule: "No `dotnet user-secrets`.
-      Local config goes in appsettings*.json; real secrets go in the kv-poshared Key Vault."
+      Local config goes in appsettings*.json; real secrets go in the kv-poshared2 Key Vault."
       Declaring the id would make ASP.NET auto-load %APPDATA%\Microsoft\UserSecrets\<id>\secrets.json
       in Development, reintroducing the per-machine config drift the rule exists to prevent.
       Re-add only with the owner's explicit go-ahead.

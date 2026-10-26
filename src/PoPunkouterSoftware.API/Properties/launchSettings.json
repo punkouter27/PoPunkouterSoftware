@@ -8,7 +8,7 @@
       "applicationUrl": "http://localhost:8000",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "AZURE_TENANT_ID": "1639b208-d5bf-4d71-9096-06163884a5e4"
+        "AZURE_TENANT_ID": "28e2074a-9756-49cb-9bde-314aba4d2bbe"
       }
     },
     "http": {
@@ -19,7 +19,7 @@
       "applicationUrl": "http://localhost:8000",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "AZURE_TENANT_ID": "1639b208-d5bf-4d71-9096-06163884a5e4"
+        "AZURE_TENANT_ID": "28e2074a-9756-49cb-9bde-314aba4d2bbe"
       }
     }
   }
