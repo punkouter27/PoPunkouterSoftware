@@ -403,6 +403,21 @@ public class AppScreenshotService
             }
             catch (System.TimeoutException) { }
 
+            // Unity WebGL games (the RL training cards): network-idle is the download finishing,
+            // not the game drawing. Wait for the loader to hide, then past the "Made with Unity"
+            // splash — the same wait as the nightly workflow's capture.mjs.
+            if (await page.QuerySelectorAsync("#unity-canvas") is not null)
+            {
+                try
+                {
+                    await page.WaitForFunctionAsync(
+                        "() => document.getElementById('loading')?.style.display === 'none'",
+                        null, new() { Timeout = 90_000 });
+                }
+                catch (System.TimeoutException) { }
+                await page.WaitForTimeoutAsync(6_000);
+            }
+
             png = await page.ScreenshotAsync(new() { Type = ScreenshotType.Png });
         }
         finally

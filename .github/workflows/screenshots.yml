@@ -115,6 +115,14 @@ jobs:
               // exactly as the in-process path does.
               try { await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 }); }
               catch { /* timeout — screenshot what we have */ }
+              // Unity WebGL games (the RL training cards): network-idle is the download
+              // finishing, not the game drawing. Wait for the loader to hide, then past the
+              // "Made with Unity" splash — the same wait as the in-process path.
+              if (await page.$('#unity-canvas')) {
+                await page.waitForFunction(() => document.getElementById('loading')?.style.display === 'none',
+                  null, { timeout: 90000 }).catch(() => {});
+                await page.waitForTimeout(6000);
+              }
               writeFileSync(`shots/${host}.png`, await page.screenshot({ type: 'png' }));
               captured++;
             } catch (err) {
