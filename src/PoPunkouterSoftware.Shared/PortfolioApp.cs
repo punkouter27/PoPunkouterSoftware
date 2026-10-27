@@ -5,7 +5,7 @@ namespace PoPunkouterSoftware.Shared;
 /// live Azure inventory decorates it with current reachability.
 ///
 /// <para>Deliberately narrow: this is exactly what <c>PortfolioAppCard</c> binds, plus
-/// <see cref="Status"/>, which the API contract tests pin. <c>Category</c>,
+/// <see cref="Status"/>, which the API contract tests pin, and <see cref="Category"/>.
 /// <c>InventoryGeneratedAt</c>, <c>Technologies</c> and <c>GithubRepo</c> were serialised
 /// onto every card in the response and read by nothing after the design pass stripped the
 /// card down to screenshot + name + description + link. They stay in apps.json as catalog
@@ -13,8 +13,13 @@ namespace PoPunkouterSoftware.Shared;
 /// </summary>
 public record PortfolioApp
 {
+    /// <summary>"rl-training" puts the card in the home page's RL training section (the
+    /// Unity games on Static Web Apps, 2026-10-27); anything else is a web app.</summary>
+    public const string RlTraining = "rl-training";
+
     public string Id { get; init; } = "";
     public string Name { get; init; } = "";
+    public string Category { get; init; } = "";
     public string Description { get; init; } = "";
     public string Url { get; init; } = "";
     public string Status { get; init; } = "unknown";

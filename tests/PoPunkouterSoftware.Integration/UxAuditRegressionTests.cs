@@ -142,7 +142,8 @@ public class PortfolioExclusionRegressionTests
 
     /// <summary>
     /// The card renders screenshot + name + description + PageSpeed chips + link. Everything
-    /// else was payload serialised onto every app and read by nothing.
+    /// else was payload serialised onto every app and read by nothing. Category is read by the
+    /// page, not the card: it picks the section (web apps or RL training).
     /// </summary>
     [Fact]
     public async Task Portfolio_Cards_CarryOnlyWhatTheCardBinds()
@@ -153,7 +154,7 @@ public class PortfolioExclusionRegressionTests
         foreach (var app in doc.RootElement.GetProperty("apps").EnumerateArray())
         {
             app.EnumerateObject().Select(p => p.Name).Should().BeSubsetOf(
-                new[] { "id", "name", "description", "url", "status", "screenshotUrl", "scores", "cleanDays" });
+                new[] { "id", "name", "category", "description", "url", "status", "screenshotUrl", "scores", "cleanDays" });
         }
     }
 }

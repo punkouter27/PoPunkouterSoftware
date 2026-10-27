@@ -114,6 +114,132 @@
       "url": "https://app-poseereview2.azurewebsites.net",
       "healthUrl": "https://app-poseereview2.azurewebsites.net/health/live",
       "githubRepo": null
+    },
+    {
+      "id": "pobox",
+      "name": "PoBox",
+      "description": "A boxing broadcast: physics-driven boxers with trained brains, cut by cameras that follow the action, scored by three judges.",
+      "category": "rl-training",
+      "status": "active",
+      "technologies": [
+        "Azure Static Web Apps",
+        "Unity WebGL",
+        "Reinforcement learning"
+      ],
+      "url": "https://gentle-mushroom-0d162090f.6.azurestaticapps.net",
+      "githubRepo": "punkouter27/PoBox"
+    },
+    {
+      "id": "pofootball",
+      "name": "PoFootball",
+      "description": "An AI football sim: trained players run full downs, or take the snap yourself in QB challenge mode.",
+      "category": "rl-training",
+      "status": "active",
+      "technologies": [
+        "Azure Static Web Apps",
+        "Unity WebGL",
+        "Reinforcement learning"
+      ],
+      "url": "https://polite-coast-0ba40400f.4.azurestaticapps.net",
+      "githubRepo": "punkouter27/PoFootball"
+    },
+    {
+      "id": "pohillking",
+      "name": "PoHillKing",
+      "description": "King of the hill between physics-simulated human bodies, each driven by its own trained policy.",
+      "category": "rl-training",
+      "status": "active",
+      "technologies": [
+        "Azure Static Web Apps",
+        "Unity WebGL",
+        "Reinforcement learning"
+      ],
+      "url": "https://white-bush-08dbace0f.4.azurestaticapps.net",
+      "githubRepo": "punkouter27/PoHillKing"
+    },
+    {
+      "id": "poolympic",
+      "name": "PoOlympic",
+      "description": "Olympic events contested by MuJoCo-simulated athletes trained with reinforcement learning.",
+      "category": "rl-training",
+      "status": "active",
+      "technologies": [
+        "Azure Static Web Apps",
+        "Unity WebGL",
+        "Reinforcement learning"
+      ],
+      "url": "https://icy-field-055e0430f.6.azurestaticapps.net",
+      "githubRepo": "punkouter27/PoOlympic"
+    },
+    {
+      "id": "porace",
+      "name": "PoRace",
+      "description": "Robots race on MuJoCo physics, every stride from a trained locomotion policy.",
+      "category": "rl-training",
+      "status": "active",
+      "technologies": [
+        "Azure Static Web Apps",
+        "Unity WebGL",
+        "Reinforcement learning"
+      ],
+      "url": "https://proud-sea-0d583fb0f.2.azurestaticapps.net",
+      "githubRepo": "punkouter27/PoRace"
+    },
+    {
+      "id": "porumble",
+      "name": "PoRumble",
+      "description": "A top-down boxing battle royale: sixteen fighters with ML-Agents-trained opponents, last one standing.",
+      "category": "rl-training",
+      "status": "active",
+      "technologies": [
+        "Azure Static Web Apps",
+        "Unity WebGL",
+        "Reinforcement learning"
+      ],
+      "url": "https://purple-sand-0067c2e0f.2.azurestaticapps.net",
+      "githubRepo": "punkouter27/PoRumble"
+    },
+    {
+      "id": "posoccer",
+      "name": "PoSoccer",
+      "description": "Pocket soccer between ML-Agents-trained players.",
+      "category": "rl-training",
+      "status": "active",
+      "technologies": [
+        "Azure Static Web Apps",
+        "Unity WebGL",
+        "Reinforcement learning"
+      ],
+      "url": "https://ambitious-plant-09c70a10f.4.azurestaticapps.net",
+      "githubRepo": "punkouter27/PoSoccer"
+    },
+    {
+      "id": "posumo",
+      "name": "PoSumo",
+      "description": "Sumo bouts under real sumo rules between trained agents.",
+      "category": "rl-training",
+      "status": "active",
+      "technologies": [
+        "Azure Static Web Apps",
+        "Unity WebGL",
+        "Reinforcement learning"
+      ],
+      "url": "https://thankful-beach-0a07eb70f.2.azurestaticapps.net",
+      "githubRepo": "punkouter27/PoSumo"
+    },
+    {
+      "id": "poslapunreal",
+      "name": "PoSlapUnreal",
+      "description": "A slap-fight arena whose fighters are trained with reinforcement learning, running in the browser.",
+      "category": "rl-training",
+      "status": "active",
+      "technologies": [
+        "Azure Static Web Apps",
+        "Unreal Engine",
+        "Reinforcement learning"
+      ],
+      "url": "https://ashy-plant-0f75ec30f.3.azurestaticapps.net",
+      "githubRepo": "punkouter27/PoSlapUnreal"
     }
   ]
 }

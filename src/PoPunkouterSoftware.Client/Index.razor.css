@@ -31,6 +31,20 @@
     max-width: 60ch;
 }
 
+/* ── RL training section header ──────────────────────────────────────────────
+   Same type scale as the page header, one step down. */
+.portfolio-section-header h2 {
+    margin: var(--app-space-sm) 0 0;
+    font-size: var(--app-step-3);
+    line-height: 1.1;
+}
+
+.portfolio-section-header p {
+    margin: var(--app-space-2xs) 0 0;
+    color: var(--app-text-muted);
+    max-width: 60ch;
+}
+
 /* ── Freshness summary row ───────────────────────────────────────────────────
    `display: flex` + `gap` is the rule that keeps the count, the "updated N ago"
    text and the auto-update note apart. */

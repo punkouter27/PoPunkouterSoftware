@@ -88,13 +88,30 @@
     }
     else if (data is not null)
     {
+        var webApps = data.Apps.Where(a => a.Category != PortfolioApp.RlTraining).ToList();
+        var rlApps = data.Apps.Where(a => a.Category == PortfolioApp.RlTraining).ToList();
         <section class="app-grid cards" aria-label="Web applications">
-            @for (var i = 0; i < data.Apps.Count; i++)
+            @for (var i = 0; i < webApps.Count; i++)
             {
-                var app = data.Apps[i];
+                var app = webApps[i];
                 <PortfolioAppCard @key="app.Id" App="app" IsFirst="@(i == 0)" />
             }
         </section>
+        @if (rlApps.Count > 0)
+        {
+            @* The Unity games: agents trained with reinforcement learning, playable in the
+               browser as WebGL builds on Azure Static Web Apps. *@
+            <header class="portfolio-section-header">
+                <h2 id="rl-training">RL training</h2>
+                <p>Games whose players are trained with reinforcement learning, running in the browser.</p>
+            </header>
+            <section class="app-grid cards" aria-labelledby="rl-training">
+                @foreach (var app in rlApps)
+                {
+                    <PortfolioAppCard @key="app.Id" App="app" IsFirst="false" />
+                }
+            </section>
+        }
     }
 </main>
 

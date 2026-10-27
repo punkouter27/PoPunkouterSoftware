@@ -303,6 +303,7 @@ internal static partial class PortfolioEndpoints
         {
             Id = meta?.Id ?? service?.Name ?? PortfolioIdentity.NormalizeName(name),
             Name = name,
+            Category = meta?.Category ?? "",
             Description = !string.IsNullOrWhiteSpace(meta?.Description) ? meta.Description :
                 !string.IsNullOrWhiteSpace(service?.Description) ? service.Description : $"Open {name}.",
             Url = url,
