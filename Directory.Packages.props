@@ -20,7 +20,7 @@
          The advisory also lists an 11.0.0-rc.2 fix, but that package ships only lib/net11.0
          and this solution targets net10.0 — do not bump past the 10.0.x line without a TFM upgrade. -->
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Common" Version="10.0.13" />
-    <PackageVersion Include="Radzen.Blazor" Version="10.4.5" />
+    <PackageVersion Include="Radzen.Blazor" Version="12.1.8" />
     <!-- Structured Logging (Serilog) — AppInsights sink removed; OTel Azure Monitor is the sole telemetry pipeline -->
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Serilog.Enrichers.CorrelationId" Version="3.0.1" />
