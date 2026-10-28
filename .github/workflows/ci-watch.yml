@@ -1,0 +1,56 @@
+name: CI watcher
+
+# One place that watches every Po repo's CI/CD, so no repo needs its own alerting.
+# Every 30 minutes: the latest run of each workflow on each Po repo's default branch. A run that
+# finished red since the last check gets an ntfy push. No state is kept: "since the last check"
+# is the 35-minute window, so a missed tick at worst alerts twice.
+on:
+  schedule:
+    - cron: '7,37 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}   # every Po repo is public, so the default token can read their runs
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+    steps:
+      - name: Find runs that went red
+        run: |
+          since=$(date -u -d '35 minutes ago' +%Y-%m-%dT%H:%M:%SZ)
+          : > red.txt
+          for repo in $(gh repo list punkouter27 --limit 200 --no-archived --json name,defaultBranchRef \
+                          -q '.[] | select(.name | startswith("Po")) | "\(.name):\(.defaultBranchRef.name)"'); do
+            name=${repo%%:*}; branch=${repo#*:}
+            # Latest run per workflow on the default branch, ignoring GitHub's own Pages and Dependabot runs.
+            gh api "repos/punkouter27/$name/actions/runs?branch=$branch&per_page=50" \
+              -q '[.workflow_runs[] | select(.event != "dynamic")] | group_by(.workflow_id) | map(max_by(.run_number))[]
+                  | select(.status == "completed" and (.conclusion == "failure" or .conclusion == "timed_out"))
+                  | "\(.updated_at)\t'"$name"'\t\(.name)\t\(.html_url)"' \
+              | awk -F'\t' -v since="$since" '$1 >= since' >> red.txt || echo "::warning::could not read $name"
+          done
+          cat red.txt
+          echo "count=$(wc -l < red.txt)" >> "$GITHUB_OUTPUT"
+        id: find
+
+      - name: Alert
+        if: steps.find.outputs.count != '0'
+        run: |
+          if [ -z "$NTFY_TOPIC" ]; then
+            echo "::error::Red runs found but the NTFY_TOPIC secret is not set, so nobody was told."; exit 1
+          fi
+          echo "::add-mask::$NTFY_TOPIC"
+          while IFS=$'\t' read -r when repo workflow url; do
+            jq -n --arg topic "$NTFY_TOPIC" --arg t "$repo: $workflow failed" --arg m "Finished red at $when." --arg click "$url" \
+              '{topic: $topic, title: $t, message: $m, priority: 4, tags: ["x"], click: $click}' \
+              | curl -fsS -X POST -H 'Content-Type: application/json' --data-binary @- https://ntfy.sh/ > /dev/null
+            echo "alerted: $repo / $workflow"
+          done < red.txt

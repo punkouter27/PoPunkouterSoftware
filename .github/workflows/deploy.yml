@@ -17,12 +17,11 @@ permissions:
   id-token: write
   contents: read
 
-# Most values come from the GitHub Environment "production".
-# Required environment secrets/vars (configure in Settings → Environments → production):
-#   AZURE_CLIENT_ID            (secret) — User-assigned MI for OIDC
-#   AZURE_TENANT_ID            (secret)
-#   AZURE_SUBSCRIPTION_ID      (secret)
-#   AZURE_APP_NAME             (variable, optional) — App Service name.
+# Repository variables, set by SCRIPTS/ensure-azure-access.ps1 (none of them is a secret):
+#   AZURE_CLIENT_ID            — the gh-popunkoutersoftware-deploy OIDC app
+#   AZURE_TENANT_ID
+#   AZURE_SUBSCRIPTION_ID
+#   AZURE_WEBAPP_NAME          (optional) — App Service name.
 #                              Falls back to the known production app if unset.
 #   AZURE_RESOURCE_GROUP       (variable, optional) — falls back to PoPunkouterSoftware.
 #   AZURE_WEBAPP_SLOT          (variable, optional) — default 'production'
@@ -52,10 +51,10 @@ jobs:
       - name: Resolve deploy targets
         id: targets
         run: |
-          APP_NAME="${{ vars.AZURE_APP_NAME || env.DEFAULT_APP_NAME }}"
+          APP_NAME="${{ vars.AZURE_WEBAPP_NAME || env.DEFAULT_APP_NAME }}"
           RG="${{ vars.AZURE_RESOURCE_GROUP || env.DEFAULT_RESOURCE_GROUP }}"
-          if [ -z "${{ vars.AZURE_APP_NAME }}" ]; then
-            echo "::warning title=AZURE_APP_NAME unset::Using fallback app name '$APP_NAME'. Set AZURE_APP_NAME in Settings → Environments → production → Variables to make this explicit."
+          if [ -z "${{ vars.AZURE_WEBAPP_NAME }}" ]; then
+            echo "::warning title=AZURE_WEBAPP_NAME unset::Using fallback app name '$APP_NAME'. Set AZURE_WEBAPP_NAME in Settings → Environments → production → Variables to make this explicit."
           fi
           echo "app_name=$APP_NAME" >> "$GITHUB_OUTPUT"
           echo "resource_group=$RG" >> "$GITHUB_OUTPUT"
@@ -110,9 +109,9 @@ jobs:
       - name: Azure Login (OIDC)
         uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
       # Infrastructure is provisioned out-of-band (infra/main.bicep, applied
       # locally or by a separately-privileged infra workflow) — deliberately NOT
@@ -171,7 +170,7 @@ jobs:
             done
             echo "::error title=Smoke test failed::$1 never answered $2"; return 1
           }
-          check /healthz 200
+          check /health/live 200
           check /health 200
           # 404 is a legitimate answer before the first scan has ever run.
           check /api/diag/summary "200 404"

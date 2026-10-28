@@ -39,7 +39,7 @@ permissions:
   contents: read
 
 env:
-  SITE_URL: 'https://app-popunkoutersoftware2.azurewebsites.net'
+  SITE_URL: 'https://${{ vars.AZURE_WEBAPP_NAME }}.azurewebsites.net'
   STORAGE_ACCOUNT: 'stpopunkoutersoftware2'
   STORAGE_RG: 'PoPunkouterSoftware'
   CONTAINER: 'app-screenshots'
@@ -192,9 +192,9 @@ jobs:
       - name: Azure Login (OIDC)
         uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
       - name: Upload to blob storage
         run: |

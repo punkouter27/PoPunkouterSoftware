@@ -28,7 +28,7 @@ permissions:
   contents: read
 
 env:
-  APP_URL: https://app-popunkoutersoftware2.azurewebsites.net
+  APP_URL: https://${{ vars.AZURE_WEBAPP_NAME }}.azurewebsites.net
 
 jobs:
   scan:
