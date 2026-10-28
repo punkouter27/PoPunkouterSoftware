@@ -10,8 +10,11 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <!-- Runs the IDE analyzers the .editorconfig raises to error (dead private members). -->
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <!-- Allow build to treat NuGet audit advisory warnings as warnings rather than errors -->
-    <WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+    <!-- Fail the build on a NuGet advisory, direct or transitive, rather than emitting a warning
+         nobody reads. Fix one by pinning a patched version in Directory.Packages.props. -->
+    <NuGetAudit>true</NuGetAudit>
+    <NuGetAuditMode>all</NuGetAuditMode>
+    <NuGetAuditLevel>low</NuGetAuditLevel>
     <RootNamespace>$(MSBuildProjectName.Replace('-', '_'))</RootNamespace>
     <!-- Git-driven semantic versioning from tags (for example: v1.2.3) -->
     <MinVerTagPrefix>v</MinVerTagPrefix>

@@ -369,6 +369,15 @@ try
     // WASM payload and API JSON alike, not just the routes that reach an endpoint.
     app.UseSecurityHeaders();
 
+    // The commit this build came from (SDK-stamped as "<version>+<sha>"), so a deploy can prove
+    // which build is answering: CI checks /health/live for X-Commit equal to the pushed sha.
+    var commit = PoPlatform.Version.Split('+') is [_, var sha, ..] ? sha : "unknown";
+    app.Use((ctx, next) =>
+    {
+        ctx.Response.Headers["X-Commit"] = commit;
+        return next();
+    });
+
     // A browser that mistypes a URL, or follows a link to an app that was renamed, must get
     // the app: the shell, the header, the skip link and a way back. It used to get
     // `{"status":404,"path":"…","message":"Route not found."}` on a blank white page, because
