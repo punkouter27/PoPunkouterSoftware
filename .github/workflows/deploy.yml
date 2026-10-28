@@ -113,6 +113,16 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
+      # Same step in every Po web repo. F1 gives the app about 60 CPU-minutes a day; once spent, Azure stops the
+      # site (usageState Exceeded) until 00:00 UTC and refuses the package with a bare 403. Say what it is.
+      - name: Check the F1 daily CPU quota
+        run: |
+          usage=$(az webapp show -g "${{ github.event.repository.name }}" -n "${{ vars.AZURE_WEBAPP_NAME }}" --query usageState -o tsv)
+          if [ "$usage" = "Exceeded" ]; then
+            echo "::error::${{ vars.AZURE_WEBAPP_NAME }} has used up its F1 daily CPU quota, so Azure refuses the package until 00:00 UTC. Rerun after that."
+            exit 1
+          fi
+
       # Infrastructure is provisioned out-of-band (infra/main.bicep, applied
       # locally or by a separately-privileged infra workflow) — deliberately NOT
       # here. That keeps this deploy identity scoped to website-publish only,
@@ -175,8 +185,28 @@ jobs:
           # 404 is a legitimate answer before the first scan has ever run.
           check /api/diag/summary "200 404"
 
+      # Same gate in every Po web repo: the new build is the one answering (X-Commit on /health/live is this
+      # commit, not the old instance still serving), then its dependencies answer (/health).
+      - name: Health gate (this commit on /health/live, then /health)
+        id: gate
+        shell: bash
+        run: |
+          base="https://${{ vars.AZURE_WEBAPP_NAME }}.azurewebsites.net"
+          for attempt in $(seq 1 60); do
+            commit=$(curl -s -D - -o /dev/null --max-time 30 "$base/health/live" | tr -d '\r' | awk -F': ' 'tolower($1)=="x-commit" {print $2}')
+            [ "$commit" = "$GITHUB_SHA" ] && { echo "/health/live serves $GITHUB_SHA (attempt $attempt)"; break; }
+            [ "$attempt" = "60" ] && { echo "::error::/health/live still serves ${commit:-no X-Commit header}, not $GITHUB_SHA"; exit 1; }
+            sleep 15
+          done
+          for attempt in $(seq 1 20); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$base/health" || echo 000)
+            [ "$code" = "200" ] && { echo "/health -> 200 (attempt $attempt)"; exit 0; }
+            sleep 15
+          done
+          echo "::error::/health never returned 200 (last: $code)"; exit 1
+
       - name: Roll back
-        if: failure() && steps.smoke.conclusion == 'failure' && steps.backup.outputs.ok == 'true'
+        if: failure() && (steps.smoke.conclusion == 'failure' || steps.gate.conclusion == 'failure') && steps.backup.outputs.ok == 'true'
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: |
