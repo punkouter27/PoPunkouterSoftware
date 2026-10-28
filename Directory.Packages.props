@@ -6,13 +6,13 @@
   <ItemGroup>
     <!-- Blazor / UI -->
     <PackageVersion Include="Azure.Monitor.Query" Version="1.7.1" />
-    <PackageVersion Include="Azure.Data.Tables" Version="12.11.0" />
-    <PackageVersion Include="Azure.Storage.Blobs" Version="12.24.0" />
+    <PackageVersion Include="Azure.Data.Tables" Version="12.13.0" />
+    <PackageVersion Include="Azure.Storage.Blobs" Version="12.30.1" />
     <PackageVersion Include="Azure.ResourceManager" Version="1.14.0" />
-    <PackageVersion Include="Azure.ResourceManager.AppService" Version="1.4.1" />
-    <PackageVersion Include="Azure.ResourceManager.Resources" Version="1.11.2" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.13" />
-    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.13" />
+    <PackageVersion Include="Azure.ResourceManager.AppService" Version="1.5.0" />
+    <PackageVersion Include="Azure.ResourceManager.Resources" Version="1.12.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.14" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.8" />
     <!-- SECURITY PIN, transitive via Microsoft.AspNetCore.SignalR.Client. 10.0.8 carries a
          high-severity advisory; patched in the 10.0.13 servicing release, forced across the
@@ -20,13 +20,13 @@
          The advisory also lists an 11.0.0-rc.2 fix, but that package ships only lib/net11.0
          and this solution targets net10.0 — do not bump past the 10.0.x line without a TFM upgrade. -->
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Common" Version="10.0.13" />
-    <PackageVersion Include="Radzen.Blazor" Version="10.4.5" />
+    <PackageVersion Include="Radzen.Blazor" Version="10.4.9" />
     <!-- Structured Logging (Serilog) — AppInsights sink removed; OTel Azure Monitor is the sole telemetry pipeline -->
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Serilog.Enrichers.CorrelationId" Version="3.0.1" />
     <PackageVersion Include="Serilog.Enrichers.Environment" Version="3.0.1" />
     <!-- OpenTelemetry — OpenTelemetry.Api arrives transitively via Azure Monitor -->
-    <PackageVersion Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.5.0" />
+    <PackageVersion Include="Azure.Monitor.OpenTelemetry.AspNetCore" Version="1.6.0" />
     <!-- OpenAPI (Scalar) -->
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
     <!-- SECURITY PIN, not a direct dependency. Microsoft.OpenApi arrives transitively via
@@ -35,29 +35,29 @@
          lets this entry force the patched 2.7.5 across the graph. Do not remove it because
          "nothing references it": removing it reintroduces the vulnerable transitive version. -->
     <PackageVersion Include="Microsoft.OpenApi" Version="2.7.5" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.14.14" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.18.3" />
     <!-- Resilience — native .NET typed-HttpClient resilience pipeline (retry + circuit breaker + timeout) -->
-    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.7.0" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.11.0" />
     <!-- Azure Key Vault & Identity -->
-    <PackageVersion Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.5.1" />
+    <PackageVersion Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.5.2" />
     <PackageVersion Include="Azure.Identity" Version="1.21.0" />
     <!-- Referenced from Directory.Build.props (all non-test projects), not from any .csproj -->
     <PackageVersion Include="MinVer" Version="7.0.0" />
     <!-- Testing -->
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.6.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.11.0" />
     <!-- SECURITY-RELEVANT FLOOR. Testcontainers drags SSH.NET in transitively, and 4.12.0
          resolved it to 2025.1.0 — a version with a known high-severity advisory
          (GHSA-q939-rpr3-3284) that surfaced as NU1903 on every Integration build. 4.14.0
          resolves SSH.NET 2026.0.0 and clears it, so the fix is this version floor rather than
          a transitive pin (contrast Microsoft.OpenApi above, which has no such upstream fix).
          Keep Testcontainers and Testcontainers.Azurite on the same version. -->
-    <PackageVersion Include="Testcontainers" Version="4.14.0" />
+    <PackageVersion Include="Testcontainers" Version="4.16.0" />
     <PackageVersion Include="xunit" Version="2.9.3" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
-    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.8" />
-    <PackageVersion Include="Testcontainers.Azurite" Version="4.14.0" />
-    <PackageVersion Include="FluentAssertions" Version="8.10.0" />
-    <PackageVersion Include="Microsoft.Playwright" Version="1.49.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.14" />
+    <PackageVersion Include="Testcontainers.Azurite" Version="4.16.0" />
+    <PackageVersion Include="FluentAssertions" Version="8.11.0" />
+    <PackageVersion Include="Microsoft.Playwright" Version="1.64.1" />
     <!-- axe-core accessibility rules inside the E2EUI Playwright tier (Deque, MPL-2.0). -->
     <PackageVersion Include="Deque.AxeCore.Playwright" Version="4.14.0" />
   </ItemGroup>
