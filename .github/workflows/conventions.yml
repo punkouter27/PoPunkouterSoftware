@@ -16,6 +16,6 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}   # every Po repo is public, so the default token can read them
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Check every Po repo
         run: bash SCRIPTS/check-conventions.sh
