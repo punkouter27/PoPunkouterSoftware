@@ -34,19 +34,53 @@ public class AzureReportServiceTests
     }
 
     [Fact]
-    public void AppErrors_SumPerApp_AndNameTheMostFrequentType()
+    public void AppErrors_SumPerApp_NameTheMostFrequentType_AndListTypesWithFirstAndLastSeen()
     {
+        var t0 = new DateTime(2026, 10, 30, 1, 0, 0, DateTimeKind.Utc);
         var summary = AzureReportService.SummarizeAppErrors(
         [
-            ("PoMode", "System.TimeoutException", 3),
-            ("pomode", "System.NullReferenceException", 9),
-            ("PoWatch", "System.IO.IOException", 1),
-            ("", "Orphan", 50),
-            ("PoQuiet", "Ignored", 0),
+            ("PoMode", "System.TimeoutException", 3, t0, t0.AddHours(5)),
+            ("pomode", "System.NullReferenceException", 9, t0.AddHours(1), t0.AddHours(2)),
+            ("PoWatch", "System.IO.IOException", 1, t0, t0),
+            ("", "Orphan", 50, t0, t0),
+            ("PoQuiet", "Ignored", 0, t0, t0),
         ]);
 
         summary.Select(s => (s.Count24h, s.TopType)).Should().Equal(
             (12, "System.NullReferenceException"),
             (1, "System.IO.IOException"));
+        summary[0].Types.Select(t => (t.Type, t.Count, t.LastSeen)).Should().Equal(
+            ("System.NullReferenceException", 9, t0.AddHours(2)),
+            ("System.TimeoutException", 3, t0.AddHours(5)));
+    }
+
+    [Fact]
+    public void PackagePriceAndDomainReaders_KeepOnlyWhatTheyCanJudge()
+    {
+        AzureReportService.ParseCentralPackages("""
+            <Project><ItemGroup>
+              <PackageVersion Include="Radzen.Blazor" Version="8.6.0" />
+              <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="$(AspNetVersion)" />
+            </ItemGroup></Project>
+            """).Should().Equal(("Radzen.Blazor", "8.6.0"));
+        AzureReportService.ParseCentralPackages("not xml").Should().BeEmpty();
+
+        AzureReportService.IsNewer("12.1.8", "8.6.0").Should().BeTrue();
+        AzureReportService.IsNewer("10.0.14", "10.0.14").Should().BeFalse();
+        AzureReportService.IsNewer("2.0.0", "2.0.0-preview.1").Should().BeFalse("a prerelease pin is deliberate");
+
+        AzureReportService.ParseTierPrices("""
+            {"Items":[
+              {"skuName":"B1","productName":"Azure App Service Basic Plan - Linux","unitOfMeasure":"1 Hour","retailPrice":0.018},
+              {"skuName":"B1","productName":"Azure App Service Basic Plan","unitOfMeasure":"1 Hour","retailPrice":0.075},
+              {"skuName":"P0v3","productName":"Azure App Service Premium v3 Plan","unitOfMeasure":"1 Hour","retailPrice":0.1575},
+              {"skuName":"S1","productName":"Azure App Service Standard Plan","unitOfMeasure":"1/Month","retailPrice":9}
+            ]}
+            """, "westus2").Select(t => (t.Sku, t.Linux, t.MonthlyUsd)).Should().Equal(
+            ("B1", true, 13.14), ("B1", false, 54.75), ("P0v3", false, 114.98));
+
+        AzureReportService.RegistrableDomain("www.shop.example.com").Should().Be("example.com");
+        AzureReportService.RegistrableDomain("app.example.co.uk").Should().Be("example.co.uk");
+        AzureReportService.RegistrableDomain("localhost").Should().BeNull();
     }
 }

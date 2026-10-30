@@ -90,6 +90,24 @@ public record UptimeRow
     /// call an app that answers 200 right now "Down". Null when the latest scan did not see it.
     /// </summary>
     public string? Current { get; init; }
+
+    /// <summary>Up to ten exception types behind <see cref="Errors24h"/>, for the app drawer.</summary>
+    public List<AppErrorType> ErrorTypes { get; init; } = new();
+
+    /// <summary>The repo's latest push-triggered workflow run — a failed one is a red build. Null when unknown.</summary>
+    public DeployInfo? LastRun { get; init; }
+
+    /// <summary>The catalog's content expectation, checked at the latest scan.</summary>
+    public ContentCheckInfo? ContentCheck { get; init; }
+
+    /// <summary>The repo's package freshness at the latest scan.</summary>
+    public PackageHealthInfo? Packages { get; init; }
+
+    /// <summary>The app's App Service plan SKU ("F1"); null for anything that is not an App Service site.</summary>
+    public string? PlanSku { get; init; }
+
+    /// <summary>What the paid tiers would cost per month in this app's region and OS, cheapest first.</summary>
+    public List<TierPrice> TierOptions { get; init; } = new();
 }
 
 /// <summary>

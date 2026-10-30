@@ -28,14 +28,15 @@ public partial class AzureReportService
                 new ResourceIdentifier(resourceId),
                 """
                 exceptions
-                | summarize N = count() by App = cloud_RoleName, Type = type
+                | summarize N = count(), First = min(timestamp), Last = max(timestamp) by App = cloud_RoleName, Type = type
                 | take 500
                 """,
                 new QueryTimeRange(TimeSpan.FromHours(24)),
                 cancellationToken: budget.Token);
 
             return SummarizeAppErrors(response.Value.Table.Rows.Select(r =>
-                (r.GetString("App") ?? "", r.GetString("Type") ?? "", (int)(r.GetInt64("N") ?? 0))));
+                (r.GetString("App") ?? "", r.GetString("Type") ?? "", (int)(r.GetInt64("N") ?? 0),
+                    r.GetDateTimeOffset("First")?.UtcDateTime ?? default, r.GetDateTimeOffset("Last")?.UtcDateTime ?? default)));
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
         {
@@ -45,8 +46,9 @@ public partial class AzureReportService
         }
     }
 
-    /// <summary>Pure: (app, type, count) rows to one summary per app, top type by count.</summary>
-    public static List<AppErrorSummary> SummarizeAppErrors(IEnumerable<(string App, string Type, int Count)> rows) =>
+    /// <summary>Pure: (app, type, count, first, last) rows to one summary per app, types by count, top ten kept.</summary>
+    public static List<AppErrorSummary> SummarizeAppErrors(
+        IEnumerable<(string App, string Type, int Count, DateTime First, DateTime Last)> rows) =>
         rows.Where(r => !string.IsNullOrWhiteSpace(r.App) && r.Count > 0)
             .GroupBy(r => r.App, StringComparer.OrdinalIgnoreCase)
             .Select(g => new AppErrorSummary
@@ -54,6 +56,11 @@ public partial class AzureReportService
                 App = g.Key,
                 Count24h = g.Sum(r => r.Count),
                 TopType = g.OrderByDescending(r => r.Count).First().Type is { Length: > 0 } t ? t : null,
+                Types = g.Where(r => r.Type.Length > 0)
+                    .OrderByDescending(r => r.Count)
+                    .Take(10)
+                    .Select(r => new AppErrorType { Type = r.Type, Count = r.Count, FirstSeen = r.First, LastSeen = r.Last })
+                    .ToList(),
             })
             .OrderByDescending(s => s.Count24h)
             .ToList();

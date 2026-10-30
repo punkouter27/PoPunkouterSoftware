@@ -6,10 +6,10 @@ namespace PoPunkouterSoftware.Shared;
 ///
 /// <para>Deliberately narrow: this is exactly what <c>PortfolioAppCard</c> binds, plus
 /// <see cref="Status"/>, which the API contract tests pin, and <see cref="Category"/>.
-/// <c>InventoryGeneratedAt</c>, <c>Technologies</c> and <c>GithubRepo</c> were serialised
-/// onto every card in the response and read by nothing after the design pass stripped the
-/// card down to screenshot + name + description + link. They stay in apps.json as catalog
-/// metadata; they no longer ride the wire.</para>
+/// <c>InventoryGeneratedAt</c> and <c>Technologies</c> were serialised onto every card in
+/// the response and read by nothing after the design pass stripped the card down to
+/// screenshot + name + description + link. They stay in apps.json as catalog metadata.
+/// <see cref="GithubRepo"/> came back on 2026-10-30 with a reader: the Ctrl+K palette.</para>
 /// </summary>
 public record PortfolioApp
 {
@@ -32,4 +32,6 @@ public record PortfolioApp
     /// means every day of the window was seen and clean. Null when the app was never observed — no streak to claim.
     /// </summary>
     public int? CleanDays { get; init; }
+    /// <summary>"owner/repo" from the catalog — the Ctrl+K palette's repo and Actions links. Null when the catalog names none.</summary>
+    public string? GithubRepo { get; init; }
 }

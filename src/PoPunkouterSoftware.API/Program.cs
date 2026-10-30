@@ -323,6 +323,18 @@ try
         })
         .AddStandardResilienceHandler();
 
+    // ─── HTTP client for keyless public APIs and pages ───────────────────────
+    // nuget.org, OSV.dev, Azure Retail Prices, RDAP and the catalog content checks. Separate
+    // from "github" so the PAT never leaves for a third party, and deliberately without a
+    // resilience handler: the content check must report what the page did, not retry through
+    // it, and every other caller already degrades to "no data" on a failure.
+    builder.Services.AddHttpClient(AzureReportService.PublicApiClientName)
+        .ConfigureHttpClient(c =>
+        {
+            c.DefaultRequestHeaders.UserAgent.ParseAdd("PoPunkouterSoftware/1.0");
+            c.Timeout = TimeSpan.FromSeconds(30);
+        });
+
     // ─── HTTP client for raw Azure management-plane REST calls ───────────────
     // The ArmClient SDK path has built-in retries, but the direct
     // https://management.azure.com REST calls previously used the unnamed default

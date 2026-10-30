@@ -517,6 +517,19 @@ public static class DashboardInsightsBuilder
             Errors24h = errors?.Count24h,
             TopError = errors?.TopType,
             SecurityAlerts = service?.OpenSecurityAlerts,
+            ErrorTypes = errors?.Types ?? [],
+            LastRun = service?.LastDeploy,
+            ContentCheck = service?.ContentCheck,
+            Packages = service?.Packages,
+            PlanSku = service?.AppServicePlanSku,
+            // Priced only for an App Service site: a Static Web App or container has no plan tier.
+            TierOptions = service is { ResourceType: "Microsoft.Web/sites", Region: { } region }
+                ? latest.TierPrices
+                    .Where(t => t.Region == region
+                        && t.Linux == (service.Kind?.Contains("linux", StringComparison.OrdinalIgnoreCase) == true))
+                    .OrderBy(t => t.MonthlyUsd)
+                    .ToList()
+                : [],
             Current = service is null ? null
                 : ServiceHealth.IsHealthy(service.HttpStatus) ? UptimeState.Healthy
                 : ServiceHealth.IsBroken(service.HttpStatus) ? UptimeState.Broken

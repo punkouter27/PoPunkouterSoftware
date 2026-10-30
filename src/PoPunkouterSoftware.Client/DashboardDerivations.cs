@@ -408,8 +408,40 @@ public static class DashboardDerivations
                         Command: null);
                 });
 
+        // Up but wrong — the four facts AttentionItemsBuilder states as sentences on first
+        // paint, so they survive this queue replacing that list.
+        IEnumerable<PriorityQueueItem> FromQuality()
+        {
+            foreach (var s in r?.WebServices?.Services ?? [])
+            {
+                var name = string.IsNullOrWhiteSpace(s.FriendlyName) ? s.Name : s.FriendlyName;
+                PriorityQueueItem Row(string tier, string source, int impact, string reason) => new(
+                    Actionability: tier, Item: name, Source: source, ImpactScore: impact, Confidence: "high",
+                    Reason: reason, Owner: InferOwner(s.ResourceGroup, s.Name),
+                    Environment: InferEnvironment(s.ResourceGroup, s.Name), Command: null);
+
+                if (s.ContentCheck is { Found: false, Error: null } check)
+                    yield return Row("Fix Now", "Content", 85, $"Page answers but no longer contains \"{check.Expect}\"");
+                if (s.LastDeploy?.Conclusion == "failure")
+                    yield return Row("Fix Soon", "Build", 70, $"Latest build failed {s.LastDeploy.CompletedAt:MMM d}");
+                if (s.Packages is { Vulnerable.Count: > 0 } packages)
+                    yield return Row("Fix Soon", "Packages", 75, string.Join("; ", packages.Vulnerable.Take(3)));
+            }
+            foreach (var d in r?.DomainExpiries ?? [])
+            {
+                var days = (int)(d.ExpiresAt - DateTime.UtcNow).TotalDays;
+                if (days < 60)
+                    yield return new PriorityQueueItem(
+                        Actionability: days < 30 ? "Fix Now" : "Fix Soon", Item: d.Domain, Source: "Domain",
+                        ImpactScore: days < 30 ? 92 : 65, Confidence: "high",
+                        Reason: $"Registration expires {d.ExpiresAt:MMM d, yyyy}", Owner: "unassigned",
+                        Environment: "production", Command: null);
+            }
+        }
+
         return Enumerable.Empty<PriorityQueueItem>()
             .Concat(FromReliability())
+            .Concat(FromQuality())
             .Concat(FromAdvisor())
             .Concat(FromSafeToRemove())
             .Concat(FromSsl())
@@ -612,6 +644,12 @@ public static class DashboardDerivations
             text += $" {Plural(row.Errors24h.Value, "exception")} in the last 24 hours{(row.TopError is { } t ? $", mostly {t}" : "")}.";
         if (row.SecurityAlerts is > 0)
             text += $" {Plural(row.SecurityAlerts.Value, "open Dependabot alert")}.";
+        if (row.Packages is { Vulnerable.Count: > 0 } vulnerable)
+            text += $" {Plural(vulnerable.Vulnerable.Count, "package")} with a known vulnerability.";
+        if (row.LastRun?.Conclusion == "failure")
+            text += $" Latest build failed on {row.LastRun.CompletedAt:MMM d}.";
+        if (row.ContentCheck is { Found: false, Error: null } check)
+            text += $" The page answers but no longer contains \"{check.Expect}\".";
 
         if (row.DeployDays.Count > 0)
             text += $" Deployed {string.Join(", ", row.DeployDays.Where(i => i < days.Count).Select(i => $"{days[i]:MMM d}"))}.";
@@ -624,6 +662,12 @@ public static class DashboardDerivations
             ? $"{text} Bad days: {named}."
             : $"{text} Bad days: {named}, and {bad.Count - 4} more.";
     }
+
+    /// <summary>
+    /// The shield chip's number: open Dependabot alerts when the repo has Dependabot on, else
+    /// the OSV.dev count from the package scan. Null — no chip — when neither is known.
+    /// </summary>
+    public static int? VulnerabilityCount(UptimeRow row) => row.SecurityAlerts ?? row.Packages?.Vulnerable.Count;
 
     /// <summary>"1 check", "3 checks" — instead of the "(s)" the UI used to print.</summary>
     public static string Plural(int count, string noun) => count == 1 ? $"1 {noun}" : $"{count:N0} {noun}s";

@@ -94,6 +94,17 @@
                 <span class="app-sr-only">@(days >= 30 ? "No outage in 30 days" : $"{days} days without an outage")</span>
             </span>
         }
+        @* Nightly PageSpeed performance, last 30 nights, on this line rather than the chips'
+           (five items wrapped to a second line at 300px). Draws nothing under two points. *@
+        @if (App.Scores is { PerformanceHistory.Count: > 1 } trend)
+        {
+            var history = trend.PerformanceHistory;
+            <span class="app-card-trend">
+                <Sparkline Points="@history.Select((p, i) => new OpsMetricPoint(i.ToString(), p)).ToList()"
+                           Tone="@(history[^1] >= history[0] ? "good" : "warn")"
+                           AriaLabel="@($"Performance over {history.Count} nights, from {history[0]} to {history[^1]}")" />
+            </span>
+        }
         @if (Host is { } host)
         {
             <span class="app-card-host" aria-hidden="true"><RadzenIcon Icon="open_in_new" /><span class="app-card-host__name">@host</span></span>

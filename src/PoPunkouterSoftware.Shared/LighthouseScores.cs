@@ -10,4 +10,6 @@ public record LighthouseScores
     public int Accessibility { get; init; }
     public int BestPractices { get; init; }
     public int Seo { get; init; }
+    /// <summary>Nightly performance scores, oldest first, up to 30 — the card's trend line.</summary>
+    public List<int> PerformanceHistory { get; init; } = new();
 }

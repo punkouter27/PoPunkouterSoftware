@@ -44,6 +44,16 @@
                 }
                 cmds.push({ id: 'focus-' + app.id, title: 'Show ' + app.name + ' uptime', icon: 'my_location', category: 'Apps', app: true,
                     action: function () { navigate('/azure?focus=' + encodeURIComponent(app.name)); } });
+                // Repo and Actions straight from the catalog's githubRepo. No Azure portal row:
+                // a portal deep link carries the subscription id, which every anonymous
+                // endpoint here masks (see /api/diag/report).
+                if (app.githubRepo) {
+                    var repo = 'https://github.com/' + app.githubRepo;
+                    cmds.push({ id: 'repo-' + app.id, title: 'Open ' + app.name + ' repo', icon: 'data_object', category: 'Apps', app: true,
+                        action: function () { window.open(repo, '_blank', 'noopener'); } });
+                    cmds.push({ id: 'actions-' + app.id, title: 'Open ' + app.name + ' GitHub Actions', icon: 'history', category: 'Apps', app: true,
+                        action: function () { window.open(repo + '/actions', '_blank', 'noopener'); } });
+                }
             });
             // Same gate as the Rescan and Sync buttons: shown only where the server will accept it.
             if (res[1].managementActionsEnabled) {

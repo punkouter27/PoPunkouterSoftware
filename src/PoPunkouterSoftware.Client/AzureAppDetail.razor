@@ -39,6 +39,42 @@
             <dt>Sign-ins, 30 days</dt>
             <dd>@SignInLabel</dd>
         </div>
+        @if (Row.PlanSku is { Length: > 0 } sku)
+        {
+            @* The Retail Prices API's monthly figure for each paid tier in this app's region
+               and OS — "should this one move up?" with the number beside it. *@
+            <div>
+                <dt>Plan</dt>
+                <dd>
+                    @sku@(Row.TierOptions.Count > 0
+                        ? " · " + string.Join(" · ", Row.TierOptions.Select(t => $"{t.Sku} ${t.MonthlyUsd:F0}/mo"))
+                        : "")
+                </dd>
+            </div>
+        }
+        @if (Row.LastRun is { } run)
+        {
+            <div>
+                <dt>Latest build</dt>
+                <dd>
+                    @if (run.Url is { Length: > 0 } url)
+                    {
+                        <a href="@url" target="_blank" rel="noopener noreferrer">@(run.Conclusion ?? "finished") · @run.CompletedAt.ToString("MMM d")</a>
+                    }
+                    else
+                    {
+                        @($"{run.Conclusion ?? "finished"} · {run.CompletedAt:MMM d}")
+                    }
+                </dd>
+            </div>
+        }
+        @if (Row.Packages is { } packages)
+        {
+            <div>
+                <dt>Packages</dt>
+                <dd>@packages.Checked checked · @packages.Outdated.Count outdated · @packages.Vulnerable.Count vulnerable</dd>
+            </div>
+        }
         @* Only when the group billed something — the same rule as the /users cost column. *@
         @if (Reach is { Cost30Days: double cost and > 0 } reach)
         {
@@ -55,6 +91,42 @@
             <h3 class="azure-app-detail__heading">Needs attention</h3>
             <ul class="azure-app-detail__list">
                 @foreach (var item in Attention) { <li>@item</li> }
+            </ul>
+        </section>
+    }
+
+    @if (Row.ErrorTypes.Count > 0)
+    {
+        @* Types only, never messages: messages can carry user data and this is anonymous. *@
+        <section>
+            <h3 class="azure-app-detail__heading">Exceptions, 24 hours</h3>
+            <div class="app-table-scroll">
+                <table class="app-table">
+                    <thead><tr><th scope="col">Type</th><th scope="col">Count</th><th scope="col">First</th><th scope="col">Last</th></tr></thead>
+                    <tbody>
+                        @foreach (var e in Row.ErrorTypes)
+                        {
+                            <tr>
+                                <td>@ShortType(e.Type)</td>
+                                <td>@e.Count.ToString("N0")</td>
+                                <td>@RelativeTime.Format(e.FirstSeen)</td>
+                                <td>@RelativeTime.Format(e.LastSeen)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+
+    @if (Row.Packages is { } pkgs && (pkgs.Vulnerable.Count > 0 || pkgs.Outdated.Count > 0))
+    {
+        <section>
+            <h3 class="azure-app-detail__heading">Package updates</h3>
+            <ul class="azure-app-detail__list">
+                @foreach (var v in pkgs.Vulnerable) { <li><strong>Vulnerable:</strong> @v</li> }
+                @foreach (var o in pkgs.Outdated.Take(8)) { <li>@o</li> }
+                @if (pkgs.Outdated.Count > 8) { <li>and @(pkgs.Outdated.Count - 8) more</li> }
             </ul>
         </section>
     }
@@ -84,6 +156,9 @@
 
     /// <summary>Null until the page's one /api/signins fetch completes.</summary>
     [Parameter] public SignInReport? SignIns { get; set; }
+
+    /// <summary>"System.Net.Http.HttpRequestException" → "HttpRequestException": the namespace is noise in a 390px drawer.</summary>
+    private static string ShortType(string type) => type[(type.LastIndexOf('.') + 1)..];
 
     // The latest probe, not today's worst-wins cell — the strip below already shows the day.
     private string Latest => Row.Current ?? UptimeState.NoData;

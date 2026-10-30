@@ -35,6 +35,35 @@ public record AzureReport
     public List<AdvisorRecommendation> AdvisorRecommendations { get; init; } = new();
     /// <summary>Exceptions per app over the 24 hours before the scan, from the shared Application Insights.</summary>
     public List<AppErrorSummary> AppErrors { get; init; } = new();
+    /// <summary>App Service plan prices from the Azure Retail Prices API, per region and OS.</summary>
+    public List<TierPrice> TierPrices { get; init; } = new();
+    /// <summary>Registration expiry of every custom domain the scanned apps answer on (RDAP).</summary>
+    public List<DomainExpiry> DomainExpiries { get; init; } = new();
+}
+
+/// <summary>One App Service plan SKU's pay-as-you-go price, per month (730 hours).</summary>
+public record TierPrice
+{
+    public string Region { get; init; } = "";
+    public bool Linux { get; init; }
+    public string Sku { get; init; } = "";
+    public double MonthlyUsd { get; init; }
+}
+
+/// <summary>A registered domain's expiry date, read from its registry over RDAP.</summary>
+public record DomainExpiry
+{
+    public string Domain { get; init; } = "";
+    public DateTime ExpiresAt { get; init; }
+}
+
+/// <summary>One exception type an app threw in the 24 hours before the scan.</summary>
+public record AppErrorType
+{
+    public string Type { get; init; } = "";
+    public int Count { get; init; }
+    public DateTime FirstSeen { get; init; }
+    public DateTime LastSeen { get; init; }
 }
 
 /// <summary>One app's exception count over the last 24 hours, and its most frequent exception TYPE.</summary>
@@ -48,6 +77,8 @@ public record AppErrorSummary
     /// reaches the anonymous first-paint contract.
     /// </summary>
     public string? TopType { get; init; }
+    /// <summary>Up to ten exception types, most frequent first, with when each was first and last seen.</summary>
+    public List<AppErrorType> Types { get; init; } = new();
 }
 
 public record SubscriptionInfo { public string Name { get; init; } = ""; }

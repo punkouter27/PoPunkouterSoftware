@@ -120,6 +120,7 @@ public partial class AzureReportService(
 
         Report("Testing connectivity…", 28, $"{rawServices.Count} services found");
         var connectedSvcs = await RunTimedStepAsync("Testing connectivity", () => TestConnectivityAsync(rawServices, ct));
+        connectedSvcs = await RunTimedStepAsync("Checking page content", () => CheckContentAsync(connectedSvcs, ct));
 
         Report("Loading all resources…", 36);
         var allResources = await RunTimedStepAsync("Loading all resources", () => GetAllResourcesAsync(subscription, ct));
@@ -211,6 +212,17 @@ public partial class AzureReportService(
             : await RunTimedStepAsync("Counting Dependabot alerts",
                 () => FetchSecurityAlertCountsAsync(repos.Where(r => r is not null).Select(r => r!.FullName), ct));
 
+        var packageHealth = infraReviews.Count == 0
+            ? new Dictionary<string, PackageHealthInfo>()
+            : await RunTimedStepAsync("Checking package versions",
+                () => GetPackageHealthAsync(repos.Where(r => r is not null).Select(r => r!.FullName), ct));
+
+        Report("Pricing tiers and domains…", 89);
+        var tierPrices = await RunTimedStepAsync("Fetching tier prices",
+            () => GetTierPricesAsync(connectedSvcs.Where(s => s.ResourceTypeRaw == "Microsoft.Web/sites").Select(s => s.Region), ct));
+        var domainExpiries = await RunTimedStepAsync("Checking domain expiry",
+            () => GetDomainExpiriesAsync(connectedSvcs.SelectMany(s => s.CustomHosts), ct));
+
         var servicesList = connectedSvcs.Select((s, i) =>
         {
             metricsMap.TryGetValue(s.ResourceId ?? "", out var m);
@@ -221,6 +233,7 @@ public partial class AzureReportService(
                 FreeTierCheck = CheckFreeTierForService(s.ResourceTypeRaw, s.Sku),
                 LastDeploy = ToDeployInfo(repo),
                 OpenSecurityAlerts = repo is not null && securityAlerts.TryGetValue(repo.FullName, out var alerts) ? alerts : null,
+                Packages = repo is not null && packageHealth.TryGetValue(repo.FullName, out var packages) ? packages : null,
             };
         }).ToList();
 
@@ -286,6 +299,8 @@ public partial class AzureReportService(
             DowntimeDiagnoses = downtimeDiags,
             AdvisorRecommendations = advisor,
             AppErrors = appErrors,
+            TierPrices = tierPrices,
+            DomainExpiries = domainExpiries,
         };
 
         var delta = ComputeDelta(report, previousReport);

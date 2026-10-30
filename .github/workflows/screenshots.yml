@@ -224,11 +224,18 @@ jobs:
           # Scores MERGE into last night's file rather than replacing it: an app PageSpeed
           # could not reach tonight keeps yesterday's numbers instead of losing its chips.
           # Same container, so AppScreenshotService reads it with the credential it already has.
+          # Each scored host also appends tonight's performance to its performanceHistory
+          # (last 30 nights): the trend line on the card. A host scored before the history
+          # existed seeds it with its stored score, so the line starts with two points.
           if [ -f lighthouse.json ]; then
             az storage blob download --account-name "$STORAGE_ACCOUNT" --account-key "$ACCOUNT_KEY" \
               --container-name "$CONTAINER" --name lighthouse.json --file previous.json --output none 2>/dev/null \
               || echo '{}' > previous.json
-            jq -s '{generatedAt: .[1].generatedAt, scores: ((.[0].scores // {}) + .[1].scores)}' \
+            jq -s '(.[0].scores // {}) as $old
+              | {generatedAt: .[1].generatedAt,
+                 scores: ($old + (.[1].scores | with_entries(.key as $h
+                   | .value += {performanceHistory: ((($old[$h].performanceHistory)
+                       // ([$old[$h].performance] | map(select(. != null)))) + [.value.performance])[-30:]})))}' \
               previous.json lighthouse.json > merged.json
             az storage blob upload --account-name "$STORAGE_ACCOUNT" --account-key "$ACCOUNT_KEY" \
               --container-name "$CONTAINER" --name lighthouse.json --file merged.json \
@@ -255,7 +262,8 @@ jobs:
           jq -r --argjson min 15 -s '
             (.[0].scores // {}) as $old | (.[1].scores // {}) as $new
             | $new | to_entries[] | .key as $host | select($old[$host])
-            | [ .value | to_entries[] | select(($old[$host][.key] // .value) - .value >= $min)
+            | [ .value | to_entries[] | select(.key != "performanceHistory")
+                | select(($old[$host][.key] // .value) - .value >= $min)
                 | "\(.key) \($old[$host][.key])→\(.value)" ]
             | select(length > 0) | "\($host): \(join(", "))"' previous.json lighthouse.json > drops.txt
           [ -s drops.txt ] || { echo "No score dropped by 15+ points."; exit 0; }

@@ -42,6 +42,41 @@ public record WebService
     /// matched repo or the PAT cannot read its alerts — unknown, not clean.
     /// </summary>
     public int? OpenSecurityAlerts { get; init; }
+    /// <summary>Azure region name as ARM reports it ("westus2"). Prices the tier options.</summary>
+    public string? Region { get; init; }
+    /// <summary>
+    /// The catalog's <c>expect</c> text checked against the live page. Null when the catalog
+    /// sets no expectation for this app.
+    /// </summary>
+    public ContentCheckInfo? ContentCheck { get; init; }
+    /// <summary>
+    /// The matched repo's central NuGet versions checked against nuget.org and OSV.dev. Null
+    /// when there is no matched repo or it has no <c>Directory.Packages.props</c>.
+    /// </summary>
+    public PackageHealthInfo? Packages { get; init; }
+}
+
+/// <summary>Whether the live page still contains the text the catalog says it must.</summary>
+public record ContentCheckInfo
+{
+    public string Expect { get; init; } = "";
+    public bool Found { get; init; }
+    /// <summary>Why the page could not be read at all — a status code or a timeout.</summary>
+    public string? Error { get; init; }
+}
+
+/// <summary>
+/// Package freshness for one repo. Lists are "Name version" strings, capped, so the scan
+/// stays small enough to ride the first-paint contract.
+/// </summary>
+public record PackageHealthInfo
+{
+    /// <summary>Packages read from the manifest.</summary>
+    public int Checked { get; init; }
+    /// <summary>Packages with a newer stable release on nuget.org ("Name 1.2.0 → 1.3.0").</summary>
+    public List<string> Outdated { get; init; } = new();
+    /// <summary>Packages whose pinned version has a known advisory on OSV.dev ("Name 1.2.0 (GHSA-…)").</summary>
+    public List<string> Vulnerable { get; init; } = new();
 }
 
 public record DeployInfo

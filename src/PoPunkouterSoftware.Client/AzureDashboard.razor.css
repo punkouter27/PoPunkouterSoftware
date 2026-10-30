@@ -907,11 +907,20 @@ html[data-app-theme="dark"] .azure-ops-page {
     text-align: left;
     color: var(--app-text-muted);
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+/* The NAME truncates, never the chips: with the ellipsis on the whole button, a row carrying
+   two chips showed "PoOlympic…" and no chip at all. */
+.azure-ops-page ::deep .azure-uptime__name {
     max-width: 16ch;
     overflow: hidden;
     text-overflow: ellipsis;
-    cursor: pointer;
 }
+
+.azure-ops-page ::deep .azure-uptime__label .azure-uptime__chip { flex: 0 0 auto; }
 
 /* The row name opens the app's drawer; at 17px tall it was under the 24px touch minimum. */
 @media (hover: none) {

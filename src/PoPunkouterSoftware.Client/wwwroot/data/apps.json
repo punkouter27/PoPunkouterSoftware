@@ -12,7 +12,8 @@
       ],
       "url": "https://app-polocalcompare-win2.azurewebsites.net",
       "healthUrl": "https://app-polocalcompare-win2.azurewebsites.net/health/live",
-      "githubRepo": "punkouter26/PoLocalCompare"
+      "githubRepo": "punkouter26/PoLocalCompare",
+      "expect": "<title>PoLocalCompare</title>"
     },
     {
       "id": "pomemevideo",
@@ -26,7 +27,8 @@
       ],
       "url": "https://app-pomemevideo2.azurewebsites.net",
       "healthUrl": "https://app-pomemevideo2.azurewebsites.net/health/live",
-      "githubRepo": "punkouter26/PoMemeVideo"
+      "githubRepo": "punkouter26/PoMemeVideo",
+      "expect": "<title>PoMemeVideo</title>"
     },
     {
       "id": "5ln5hfdrvof5u",
@@ -40,7 +42,8 @@
       ],
       "url": "https://app-5ln5hfdrvof5u-f1win2.azurewebsites.net",
       "healthUrl": "https://app-5ln5hfdrvof5u-f1win2.azurewebsites.net/health/live",
-      "githubRepo": "punkouter26/PoMiniGames"
+      "githubRepo": "punkouter26/PoMiniGames",
+      "expect": "<title>PoMiniGames</title>"
     },
     {
       "id": "app-pomode2",
@@ -55,7 +58,8 @@
       ],
       "url": "https://app-pomode2.azurewebsites.net",
       "healthUrl": "https://app-pomode2.azurewebsites.net/health/live",
-      "githubRepo": "punkouter26/PoMode"
+      "githubRepo": "punkouter26/PoMode",
+      "expect": "<title>PoMode</title>"
     },
     {
       "id": "app-porepolinetracker2",
@@ -70,7 +74,8 @@
       ],
       "url": "https://app-porepolinetracker2.azurewebsites.net",
       "healthUrl": "https://app-porepolinetracker2.azurewebsites.net/health/live",
-      "githubRepo": "punkouter26/PoRepoLineTracker"
+      "githubRepo": "punkouter26/PoRepoLineTracker",
+      "expect": "<title>PoRepoLineTracker</title>"
     },
     {
       "id": "potraffic-api",
@@ -84,7 +89,8 @@
       ],
       "url": "https://potraffic-api-win2.azurewebsites.net",
       "healthUrl": "https://potraffic-api-win2.azurewebsites.net/health/live",
-      "githubRepo": "punkouter26/PoTraffic"
+      "githubRepo": "punkouter26/PoTraffic",
+      "expect": "<title>PoTraffic</title>"
     },
     {
       "id": "app-powatch",
@@ -99,7 +105,8 @@
       ],
       "url": "https://app-powatch-win2.azurewebsites.net",
       "healthUrl": "https://app-powatch-win2.azurewebsites.net/health/live",
-      "githubRepo": "punkouter26/PoWatch"
+      "githubRepo": "punkouter26/PoWatch",
+      "expect": "<title>PoWatch</title>"
     },
     {
       "id": "poseereview",
@@ -127,7 +134,8 @@
         "Reinforcement learning"
       ],
       "url": "https://gentle-mushroom-0d162090f.6.azurestaticapps.net",
-      "githubRepo": "punkouter27/PoBox"
+      "githubRepo": "punkouter27/PoBox",
+      "expect": "<title>PoBox</title>"
     },
     {
       "id": "pofootball",
@@ -141,7 +149,8 @@
         "Reinforcement learning"
       ],
       "url": "https://polite-coast-0ba40400f.4.azurestaticapps.net",
-      "githubRepo": "punkouter27/PoFootball"
+      "githubRepo": "punkouter27/PoFootball",
+      "expect": "<title>PoFootball</title>"
     },
     {
       "id": "pohillking",
@@ -155,7 +164,8 @@
         "Reinforcement learning"
       ],
       "url": "https://white-bush-08dbace0f.4.azurestaticapps.net",
-      "githubRepo": "punkouter27/PoHillKing"
+      "githubRepo": "punkouter27/PoHillKing",
+      "expect": "<title>PoHillKing</title>"
     },
     {
       "id": "poolympic",
@@ -169,7 +179,8 @@
         "Reinforcement learning"
       ],
       "url": "https://icy-field-055e0430f.6.azurestaticapps.net",
-      "githubRepo": "punkouter27/PoOlympic"
+      "githubRepo": "punkouter27/PoOlympic",
+      "expect": "<title>PoOlympics</title>"
     },
     {
       "id": "porace",
@@ -183,7 +194,8 @@
         "Reinforcement learning"
       ],
       "url": "https://proud-sea-0d583fb0f.2.azurestaticapps.net",
-      "githubRepo": "punkouter27/PoRace"
+      "githubRepo": "punkouter27/PoRace",
+      "expect": "<title>PoRace</title>"
     },
     {
       "id": "porumble",
@@ -197,7 +209,8 @@
         "Reinforcement learning"
       ],
       "url": "https://purple-sand-0067c2e0f.2.azurestaticapps.net",
-      "githubRepo": "punkouter27/PoRumble"
+      "githubRepo": "punkouter27/PoRumble",
+      "expect": "<title>PoRumble</title>"
     },
     {
       "id": "posoccer",
@@ -211,7 +224,8 @@
         "Reinforcement learning"
       ],
       "url": "https://ambitious-plant-09c70a10f.4.azurestaticapps.net",
-      "githubRepo": "punkouter27/PoSoccer"
+      "githubRepo": "punkouter27/PoSoccer",
+      "expect": "<title>PoSoccer</title>"
     },
     {
       "id": "posumo",
@@ -225,7 +239,8 @@
         "Reinforcement learning"
       ],
       "url": "https://thankful-beach-0a07eb70f.2.azurestaticapps.net",
-      "githubRepo": "punkouter27/PoSumo"
+      "githubRepo": "punkouter27/PoSumo",
+      "expect": "<title>PoSumo</title>"
     },
     {
       "id": "poslapunreal",
@@ -239,7 +254,8 @@
         "Reinforcement learning"
       ],
       "url": "https://ashy-plant-0f75ec30f.3.azurestaticapps.net",
-      "githubRepo": "punkouter27/PoSlapUnreal"
+      "githubRepo": "punkouter27/PoSlapUnreal",
+      "expect": "<title>PoSlap Arena</title>"
     }
   ]
 }

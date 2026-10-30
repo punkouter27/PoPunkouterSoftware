@@ -370,7 +370,7 @@ comment in each before changing it; they document the reasoning, this is the map
 | `theme-kit.js` | The visitor's light/dark choice and the compact-density flag, plus `window.appSettings` — the one facade `/settings` reads (`read()` → `theme|density|sound|fx`) and writes all four preferences through. Applies `data-app-theme` to `<html>` and rewrites the two Radzen theme sheets' `media` attributes. Must load before Blazor. |
 | `app-boot.js` | Host-page boot: dismisses the loading splash, drives the nav progress bar, filters hot-reload console noise. Not an animation layer — no rAF. Was inline in `App.razor` until the CSP banned inline script. |
 | `blazor-hooks.js` | Registers the enhanced-navigation callbacks. Must load **after** `blazor.web.js`, which defines `Blazor`. Also ex-inline. |
-| `command-palette.js` | Ctrl+K / Cmd+K overlay: navigation (Settings included — it holds no setting toggles of its own), and a launcher — open / copy link / show uptime for every app (from `/api/portfolio`, fetched on first open) plus "Rescan Azure" when management actions are on. Fuzzy matching is hand-written: the CSP's `script-src 'self'` rules out a CDN library. |
+| `command-palette.js` | Ctrl+K / Cmd+K overlay: navigation (Settings included — it holds no setting toggles of its own), and a launcher — open / copy link / show uptime / repo / GitHub Actions for every app (from `/api/portfolio`, fetched on first open; repo rows come from the catalog's `githubRepo`. There is deliberately no Azure portal row: a portal deep link carries the subscription id every anonymous endpoint here masks) plus "Rescan Azure" when management actions are on. Fuzzy matching is hand-written: the CSP's `script-src 'self'` rules out a CDN library. |
 
 **There is no service worker and no offline mode** (owner's call, 2026-10-19). One served every
 page and script cache-first under a hand-bumped cache name, so a returning visitor saw the
@@ -585,7 +585,8 @@ proves a context and program were created, not that anything reached the screen.
   alert cannot disagree with the grid it links to); `ReportRefreshRunner` on a failed scan, on
   a NEW spend spike (anomalies the previous report already carried are not re-sent), and — via
   `AlertTriggers`, compared against the previous report — on an SSL certificate crossing 14
-  days and on the month-end forecast crossing `Budget:MonthlyUsd`. Outage alerts link to
+  days, on the month-end forecast crossing `Budget:MonthlyUsd`, on a page newly failing its
+  catalog content check, and on a custom domain crossing 30 days to expiry. Outage alerts link to
   `/azure?focus=<service>`, which highlights and scrolls to that uptime row.
   Tracker state is in-memory: an app still down when this site restarts is re-alerted.
   Two senders live in GitHub Actions because only they hold the facts: `deploy.yml` on a
@@ -628,7 +629,29 @@ proves a context and program were created, not that anything reached the screen.
   Insights component at `SignIns:ResourceId` — stored with the scan, so this is not a second
   live query — and carry the exception TYPE only, never the message, because messages can
   hold user data and this reaches the anonymous summary. Shown as the bug chip on the uptime
-  row; null (no chip), never a manufactured 0, for an app that logged nothing.
+  row; null (no chip), never a manufactured 0, for an app that logged nothing. The top ten types
+  per app, with first/last seen, are the app drawer's "Exceptions, 24 hours" table.
+- **"Up" is checked past the status code, from four keyless public APIs (2026-10-30).** All go
+  through the `public-api` HttpClient, never `github`, so the PAT stays with GitHub. Each is a
+  scan step in its own partial and degrades to "no data", never a failed scan:
+  - **Content checks** (`.ContentChecks`): an `apps.json` entry may set `expect` (today each
+    app's `<title>`); the scan GETs the page and checks the body. Only a 2xx WITHOUT the text
+    fails — a timeout or error status sets `Error` and claims nothing, the pinger's own rule.
+  - **Packages** (`.Packages`): the matched repo's `Directory.Packages.props` (every Po .NET
+    repo pins centrally; a `$(Property)` version is skipped), newest stable from nuget.org's
+    flat container, advisories from ONE OSV.dev batch query. This is what the shield chip
+    counts now that Dependabot is off everywhere (`DashboardDerivations.VulnerabilityCount`).
+  - **Tier prices** (`.Pricing`): Azure Retail Prices for B1/S1/P0v3 per region and OS
+    (`- Linux` suffix), ×730h — the app drawer's Plan row. Discovery normalises ARM's
+    "West US 2" to "westus2" for it.
+  - **Domains** (`.Domains`): RDAP (`rdap.org`) expiry of every custom host name on a site or
+    Static Web App. **No Po app has a custom domain today**, so this step makes no calls; it
+    exists so the first one is watched from day one.
+  All four, plus a red build (the latest push run's `failure` conclusion, already fetched for
+  deploy markers), are first-paint attention sentences (`AttentionItemsBuilder`) AND rows in
+  the ranked queue (`DashboardDerivations.BuildPriorityQueue`, `FromQuality`) — the queue
+  replaces the list in place, so a fact in one only would vanish when it loads. On the uptime
+  row: `CI` and `page` chips; the name truncates, never the chips.
 - **Spend spikes are per resource group, from one extra Cost Management query.**
   `GetResourceGroupCostsAsync` (30 days × daily × group, no nextLink paging — see its ponytail
   note) fills `CostInfo.ResourceGroups`; `DashboardInsightsBuilder.BuildCostAnomalies` flags a
@@ -725,7 +748,7 @@ proves a context and program were created, not that anything reached the screen.
   `web.config`, not middleware: on Windows App Service IIS appends it downstream of the managed
   pipeline, so a middleware `Remove()` is a no-op that reads like a fix.
 - **Resilience.** Typed clients `github` and `azure-arm` use `AddStandardResilienceHandler`.
-  `health`, `azure-probe` and `ai-hf` deliberately have **none** — they must report real reachability
+  `health`, `azure-probe`, `public-api` and `ai-hf` deliberately have **none** — they must report real reachability
   (or degrade), not retry through the outages they exist to detect.
 - **Named `HttpClient`s are pooled and shared.** Never reassign `DefaultRequestHeaders` on an
   instance from `CreateClient(name)` — handler chains are pooled, so a per-call mutation leaks that
@@ -998,7 +1021,7 @@ served until the facts happen to change. It produces the
   without which `GetContainerAsync` returns null and stored images never appear —
   indistinguishable from never having captured any.
 
-## Tests — four projects, one per tier (budget 100/50/25/25, currently 99/45/21/24)
+## Tests — four projects, one per tier (budget 100/50/25/25, currently 100/45/21/24)
 
 **The budget is a ceiling, not a target.** All four tiers are at or under it. Adding a test means
 finding one to remove, so prefer widening an existing test's assertions to adding a new method — the
@@ -1048,7 +1071,7 @@ commit every outstanding change, run `dotnet test` on the Unit and Integration p
 the filtered subset that covered the edit — this is the gate that stands in for a review), then
 push. Everywhere else, run only the tests covering what changed.
 
-**CI/CD:** three workflows. Only `deploy.yml` runs tests, and only the Unit tier — the other
+**CI/CD:** the workflows below, plus the estate-wide `ci-watch.yml` and `conventions.yml`. Only `deploy.yml` runs tests, and only the Unit tier — the other
 three tiers still run locally before a push.
 
 - [deploy.yml](.github/workflows/deploy.yml) — build, **unit tests**, back up, deploy, **smoke
@@ -1062,6 +1085,10 @@ three tiers still run locally before a push.
   against an assembly the job already built. Integration needs Testcontainers Azurite; both E2E
   tiers need a running app and a `BASE_URL`. Adding any of them would trade a fast gate for a
   slow flaky one and start blocking deploys on infrastructure rather than on code.
+- [weekly-digest.yml](.github/workflows/weekly-digest.yml) — Monday 07:05 UTC ntfy push built
+  from `/api/diag/summary` and `/api/signins?days=7`: health, 30-day spend against a week ago
+  (the last `costHistory` point labelled that date), month projection, lowest uptime,
+  sign-ins, top five attention items. A workflow, not a timer, because F1 sleeps.
 - [uptime-scan.yml](.github/workflows/uptime-scan.yml) — nightly (06:17 UTC) `POST /api/diag/refresh`
   so the uptime grid gets one data point per day even when nobody visits and the F1 site is asleep.
   It wakes the site first (cold start), treats 409 "already refreshing" as success, and then
@@ -1092,7 +1119,11 @@ three tiers still run locally before a push.
   `app-screenshots` blob container under the host name
   the card looks up. A second pass calls PageSpeed Insights (mobile; `PAGESPEED_API_KEY`
   optional) and MERGES the scores into `lighthouse.json` in the same container, which
-  `AppScreenshotService.LoadScoresAsync` reads into `PortfolioApp.Scores` — the card's chips. Exists because in-process capture cannot run on the Windows F1 sandbox.
+  `AppScreenshotService.LoadScoresAsync` reads into `PortfolioApp.Scores` — the card's chips.
+  The merge also appends each scored host's performance to `performanceHistory` (30 nights),
+  the sparkline on the card's foot line. **Anonymous PageSpeed calls answer 429**: the run on
+  2026-10-30 scored 0/19 and production `lighthouse.json` holds no scores, so neither the
+  chips nor the trend render until a `PAGESPEED_API_KEY` secret exists. Exists because in-process capture cannot run on the Windows F1 sandbox.
   Uploads with the storage **account key**, resolved at run time through ARM by the same OIDC
   identity `deploy.yml` uses — Contributor on the resource group covers `listKeys`, so this needs
   no new role assignment and no new secret. It was written with `--auth-mode login` and no

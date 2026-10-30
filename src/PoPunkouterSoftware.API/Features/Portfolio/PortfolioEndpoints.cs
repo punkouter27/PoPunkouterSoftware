@@ -312,6 +312,7 @@ internal static partial class PortfolioEndpoints
             ScreenshotUrl = hasScreenshot || (host is not null && captureOnDemand)
                 ? $"/api/portfolio/screenshots/{host}?v={version}" : null,
             Scores = host is not null && scores.TryGetValue(host, out var score) ? score : null,
+            GithubRepo = string.IsNullOrWhiteSpace(meta?.GithubRepo) ? null : meta.GithubRepo,
         };
     }
 

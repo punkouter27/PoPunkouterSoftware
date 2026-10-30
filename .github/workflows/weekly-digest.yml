@@ -1,0 +1,81 @@
+name: Weekly digest
+
+# One ntfy push every Monday morning: the week in one notification, so the dashboard does not
+# have to be opened to know whether it needs opening. Every number comes from endpoints the
+# site already serves — /api/diag/summary (the /azure first-paint contract) and
+# /api/signins?days=7 — so the digest can never disagree with the page it links to.
+#
+# Lives here rather than in the app for the same reason uptime-scan.yml does: the site is on
+# F1 with no Always-On, so a timer inside it does not fire when nobody is visiting.
+#
+# NTFY_TOPIC is an optional secret; without it the step reads the app's own Key Vault secret
+# (same fallback as screenshots.yml and deploy.yml), and without either it is a no-op.
+
+on:
+  schedule:
+    # Monday 07:05 UTC — after the 06:17 nightly scan has landed a fresh report.
+    - cron: '5 7 * * 1'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  APP_URL: https://${{ vars.AZURE_WEBAPP_NAME }}.azurewebsites.net
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Wake the site
+        run: curl -fsS --max-time 180 --retry 3 --retry-all-errors "$APP_URL/healthz" > /dev/null
+
+      - name: Read the week
+        run: |
+          curl -fsS --max-time 120 "$APP_URL/api/diag/summary" > summary.json
+          # Sign-ins are best-effort: the endpoint is rate-limited and Log Analytics can be slow.
+          curl -fsS --max-time 120 "$APP_URL/api/signins?days=7" > signins.json || echo '{}' > signins.json
+
+          # costHistory is one point per scan, labelled "Oct 23" — several on a busy day, none
+          # on a quiet one — so "a week ago" is the last point labelled with that date, and
+          # absent when no scan ran that day.
+          jq -r --slurpfile s signins.json '
+            def money: "$" + ((. * 100 | round) / 100 | tostring);
+            (now - 604800 | strftime("%b %e") | gsub("  "; " ")) as $day
+            | ([.costHistory[] | select(.label == $day) | .value] | last) as $weekAgo
+            | (.uptime.rows | sort_by(.uptimePercent) | first) as $worst
+            | [
+                "Health \(.healthPercent)% · \(.activeServices)/\(.totalServices) up",
+                "30-day spend \(.costFormatted)"
+                  + (if $weekAgo then " (\($weekAgo | money) a week ago)" else "" end)
+                  + " · month projected \(.forecast.projectedMonthTotal | money)",
+                (if $worst then "Lowest uptime: \($worst.name) \($worst.uptimePercent)%" else empty end),
+                (if ($s[0].available // false)
+                   then "Sign-ins this week: \($s[0].totalPeople) people, \($s[0].totalSignIns) sign-ins"
+                   else empty end),
+                (if (.attentionItems | length) > 0
+                   then "Needs attention:\n" + ([.attentionItems[:5][] | "• " + .] | join("\n"))
+                   else "Nothing needs attention." end)
+              ] | join("\n")' summary.json > digest.txt
+          cat digest.txt
+
+      - name: Azure Login (OIDC)
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Send to ntfy
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: |
+          TOPIC="${NTFY_TOPIC:-$(az keyvault secret show --vault-name kv-poshared2 \
+            --name PoPunkouterSoftware--Alerts--NtfyTopic --query value -o tsv 2>/dev/null || true)}"
+          [ -n "$TOPIC" ] || { echo "No ntfy topic available — skipping."; exit 0; }
+          echo "::add-mask::$TOPIC"
+          jq -n --arg topic "$TOPIC" --rawfile body digest.txt --arg click "$APP_URL/azure" \
+            '{topic: $topic, title: "Weekly Azure digest", message: $body, priority: 2, tags: ["calendar"], click: $click}' \
+            | curl -fsS -X POST -H 'Content-Type: application/json' --data-binary @- https://ntfy.sh/ > /dev/null

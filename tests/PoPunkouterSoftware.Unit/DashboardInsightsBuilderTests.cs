@@ -249,8 +249,23 @@ public class UptimeHeatmapTests
         // name, so "App-A" must still find "app-a".
         var latest = new AzureReport
         {
-            WebServices = new WebServicesInfo { Services = [new WebService { Name = "app-a", OpenSecurityAlerts = 3 }] },
-            AppErrors = [new AppErrorSummary { App = "App-A", Count24h = 12, TopType = "System.TimeoutException" }],
+            WebServices = new WebServicesInfo { Services = [new WebService
+            {
+                Name = "app-a", OpenSecurityAlerts = 3, ResourceType = "Microsoft.Web/sites", Kind = "app,linux",
+                Region = "westus2", AppServicePlanSku = "F1",
+                LastDeploy = new DeployInfo { Conclusion = "failure" },
+                ContentCheck = new ContentCheckInfo { Expect = "<title>A</title>", Found = true },
+            }] },
+            AppErrors = [new AppErrorSummary { App = "App-A", Count24h = 12, TopType = "System.TimeoutException",
+                Types = [new AppErrorType { Type = "System.TimeoutException", Count = 12 }] }],
+            // Only the app's own region and OS are its options.
+            TierPrices =
+            [
+                new TierPrice { Region = "westus2", Linux = true, Sku = "P0v3", MonthlyUsd = 56.58 },
+                new TierPrice { Region = "westus2", Linux = true, Sku = "B1", MonthlyUsd = 13.14 },
+                new TierPrice { Region = "westus2", Linux = false, Sku = "B1", MonthlyUsd = 54.75 },
+                new TierPrice { Region = "westus3", Linux = true, Sku = "B1", MonthlyUsd = 9 },
+            ],
         };
 
         var map = DashboardInsightsBuilder.BuildUptime([scan, old], Today, NothingExcluded, windowDays: 7, latest: latest);
@@ -261,7 +276,10 @@ public class UptimeHeatmapTests
         map.Rows[0].DeployDays.Should().Equal(4);
         map.Rows[0].CleanDays.Should().Be(1, "only the one observed day counts — six blank days are not a clean streak");
         map.Rows[0].Should().Match<UptimeRow>(r =>
-            r.Errors24h == 12 && r.TopError == "System.TimeoutException" && r.SecurityAlerts == 3);
+            r.Errors24h == 12 && r.TopError == "System.TimeoutException" && r.SecurityAlerts == 3
+            && r.ErrorTypes.Count == 1 && r.LastRun!.Conclusion == "failure" && r.ContentCheck!.Found
+            && r.PlanSku == "F1");
+        map.Rows[0].TierOptions.Select(t => t.Sku).Should().Equal("B1", "P0v3");
     }
 
     [Fact]

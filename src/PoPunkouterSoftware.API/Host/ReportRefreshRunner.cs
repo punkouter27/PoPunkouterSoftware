@@ -223,7 +223,8 @@ internal sealed class ReportRefreshRunner(
     }
 
     /// <summary>
-    /// Certificate expiry and budget overrun, each sent once when it is crossed — see
+    /// Certificate expiry, budget overrun, a page losing its expected content and a domain
+    /// nearing expiry, each sent once when it is crossed — see
     /// <see cref="AlertTriggers"/> for why a crossing and not a state.
     /// </summary>
     private async Task NotifyCrossingsAsync(AzureReport report, AzureReport? previous)
@@ -234,6 +235,23 @@ internal sealed class ReportRefreshRunner(
                 $"Certificate for {ssl.Name} expires in {ssl.DaysLeft} day{(ssl.DaysLeft == 1 ? "" : "s")}",
                 $"{ssl.Url ?? ssl.Name} — expiry {ssl.Expiry ?? "unknown"}",
                 priority: ssl.DaysLeft <= 3 ? 5 : 4, clickPath: "/azure", tags: ["lock"], ct: CancellationToken.None);
+        }
+
+        foreach (var svc in AlertTriggers.NewContentFailures(report, previous))
+        {
+            var name = string.IsNullOrWhiteSpace(svc.FriendlyName) ? svc.Name : svc.FriendlyName;
+            await alerts.SendAsync(
+                $"{name} is up but its page looks wrong",
+                $"{svc.Url} answered without \"{svc.ContentCheck!.Expect}\"",
+                priority: 4, clickPath: $"/azure?focus={Uri.EscapeDataString(name)}", tags: ["mag"], ct: CancellationToken.None);
+        }
+
+        foreach (var domain in AlertTriggers.NewDomainExpiries(report, previous, DateTime.UtcNow))
+        {
+            await alerts.SendAsync(
+                $"Domain {domain.Domain} expires {domain.ExpiresAt:MMM d}",
+                "Renew the registration before the certificate and every link on it stop working.",
+                priority: 4, clickPath: "/azure", tags: ["globe_with_meridians"], ct: CancellationToken.None);
         }
 
         if (AlertTriggers.BudgetCrossed(report, previous, config.GetValue<double?>("Budget:MonthlyUsd")) is { } forecast)

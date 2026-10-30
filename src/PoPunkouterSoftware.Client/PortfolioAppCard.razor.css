@@ -149,6 +149,16 @@
 .app-card-scores li.is-warn::before { background: var(--app-accent-warm); }
 .app-card-scores li.is-bad::before { background: var(--app-danger-soft); }
 
+/* Performance trend on the foot line. The sparkline's own styles are scoped to
+   .azure-ops-page, so the card states the few it needs. */
+.app-card-trend { flex: 0 0 2.75rem; display: inline-flex; }
+.app-card-trend ::deep .app-sparkline { width: 100%; height: 1rem; overflow: visible; }
+.app-card-trend ::deep .app-sparkline__line { fill: none; stroke: var(--trend); stroke-width: 1.5px; }
+.app-card-trend ::deep .app-sparkline__area { fill: none; }
+.app-card-trend ::deep .app-sparkline__dot { fill: var(--trend); }
+.app-card-trend ::deep .app-sparkline.tone-good { --trend: #217a52; }
+.app-card-trend ::deep .app-sparkline.tone-warn { --trend: var(--app-accent-warm); }
+
 /* The title link is the card's only anchor, stretched over the whole card: `::after` on a
    `position: relative` card makes the screenshot, copy and chips one click target without
    three anchors to the same URL. The focus ring moves to the card for the same reason — a

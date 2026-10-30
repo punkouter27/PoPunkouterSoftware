@@ -26,6 +26,11 @@ internal record RawService
     public string? AppServicePlanSku { get; init; }
     public DeployInfo? LastDeploy { get; init; }
     public int? OpenSecurityAlerts { get; init; }
+    public string? Region { get; init; }
+    /// <summary>Custom domains the site answers on — the RDAP expiry lookup's input. Not carried onto the report.</summary>
+    public List<string> CustomHosts { get; init; } = new();
+    public ContentCheckInfo? ContentCheck { get; init; }
+    public PackageHealthInfo? Packages { get; init; }
 
     public WebService ToWebService() => new()
     {
@@ -45,5 +50,8 @@ internal record RawService
         ResourceId = ResourceId,
         LastDeploy = LastDeploy,
         OpenSecurityAlerts = OpenSecurityAlerts,
+        Region = Region,
+        ContentCheck = ContentCheck,
+        Packages = Packages,
     };
 }

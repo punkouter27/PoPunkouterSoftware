@@ -43,4 +43,25 @@ public static class AlertTriggers
             ? null
             : now;
     }
+
+    /// <summary>
+    /// Services whose page answered without the catalog's expected text now, and did not at
+    /// the previous scan (it was found, or the check could not read the page).
+    /// </summary>
+    public static List<WebService> NewContentFailures(AzureReport current, AzureReport? previous)
+    {
+        static bool Failed(WebService s) => s.ContentCheck is { Found: false, Error: null };
+        var before = (previous?.WebServices?.Services ?? []).Where(Failed)
+            .Select(s => s.Name).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return (current.WebServices?.Services ?? []).Where(s => Failed(s) && !before.Contains(s.Name)).ToList();
+    }
+
+    /// <summary>Domains inside <see cref="AttentionItemsBuilder.DomainAlertDays"/> now that were not at the previous scan.</summary>
+    public static List<DomainExpiry> NewDomainExpiries(AzureReport current, AzureReport? previous, DateTime now)
+    {
+        var line = now.AddDays(AttentionItemsBuilder.DomainAlertDays);
+        var before = (previous?.DomainExpiries ?? []).Where(d => d.ExpiresAt < line)
+            .Select(d => d.Domain).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return current.DomainExpiries.Where(d => d.ExpiresAt < line && !before.Contains(d.Domain)).ToList();
+    }
 }

@@ -58,16 +58,26 @@
                        used to — mouse-only text no phone or keyboard visitor could reach. *@
                     <button type="button" class="azure-uptime__label @(focused ? "is-focused" : "")" data-fx-attract="@attract" data-fx-flock="@flock"
                             @onclick="() => OnSelect.InvokeAsync(row)">
-                        @row.Name
+                        <span class="azure-uptime__name">@row.Name</span>
                         @if (row.Errors24h is > 0)
                         {
                             @* Up is not the same as working: an app answering its home page while
                                throwing on every real request shows green cells and this chip. *@
                             <span class="azure-uptime__chip is-error"><RadzenIcon Icon="bug_report" />@row.Errors24h</span>
                         }
-                        @if (row.SecurityAlerts is > 0)
+                        @if (DashboardDerivations.VulnerabilityCount(row) is > 0 and var vulns)
                         {
-                            <span class="azure-uptime__chip is-alert"><RadzenIcon Icon="shield" />@row.SecurityAlerts</span>
+                            <span class="azure-uptime__chip is-alert"><RadzenIcon Icon="shield" />@vulns</span>
+                        }
+                        @if (row.LastRun?.Conclusion == "failure")
+                        {
+                            @* A red build on a green row: the next deploy is the next outage. *@
+                            <span class="azure-uptime__chip is-error"><RadzenIcon Icon="error" />CI</span>
+                        }
+                        @if (row.ContentCheck is { Found: false, Error: null })
+                        {
+                            @* Answers 200 without the page it should serve. *@
+                            <span class="azure-uptime__chip is-error"><RadzenIcon Icon="visibility_off" />page</span>
                         }
                     </button>
                     @for (var i = 0; i < row.Cells.Count; i++)
@@ -107,9 +117,17 @@
             {
                 <span><span class="azure-uptime__chip is-error">n</span> exceptions, 24h</span>
             }
-            @if (Map.Rows.Any(r => r.SecurityAlerts > 0))
+            @if (Map.Rows.Any(r => DashboardDerivations.VulnerabilityCount(r) > 0))
             {
-                <span><span class="azure-uptime__chip is-alert">n</span> Dependabot alerts</span>
+                <span><span class="azure-uptime__chip is-alert">n</span> vulnerable packages</span>
+            }
+            @if (Map.Rows.Any(r => r.LastRun?.Conclusion == "failure"))
+            {
+                <span><span class="azure-uptime__chip is-error">CI</span> latest build failed</span>
+            }
+            @if (Map.Rows.Any(r => r.ContentCheck is { Found: false, Error: null }))
+            {
+                <span><span class="azure-uptime__chip is-error">page</span> expected content missing</span>
             }
         </div>
     }

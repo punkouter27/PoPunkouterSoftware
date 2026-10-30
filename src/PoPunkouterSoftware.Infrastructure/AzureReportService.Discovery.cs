@@ -49,6 +49,8 @@ public partial class AzureReportService
                 Sku = null, // SKU is on the App Service Plan, not the site
                 PlatformState = site.Data.State,
                 ResourceId = site.Data.Id?.ToString(),
+                Region = ArmRegion(site.Data.Location.Name),
+                CustomHosts = (site.Data.HostNames ?? []).Where(IsCustomHost).ToList(),
             });
         }
 
@@ -67,6 +69,8 @@ public partial class AzureReportService
                 Sku = swa.Data.Sku?.Name ?? "Free",
                 PlatformState = "Running",
                 ResourceId = swa.Data.Id?.ToString(),
+                Region = ArmRegion(swa.Data.Location.Name),
+                CustomHosts = (swa.Data.CustomDomains ?? []).Where(IsCustomHost).ToList(),
             });
         }
 
@@ -91,6 +95,16 @@ public partial class AzureReportService
 
         return list;
     }
+
+    /// <summary>ARM hands back "West US 2" for a site; the Retail Prices API wants "westus2".</summary>
+    private static string ArmRegion(string? location) =>
+        (location ?? "").Replace(" ", "", StringComparison.Ordinal).ToLowerInvariant();
+
+    /// <summary>A host name the owner registered, not one Azure hands out.</summary>
+    private static bool IsCustomHost(string host) =>
+        !string.IsNullOrWhiteSpace(host)
+        && !host.EndsWith(".azurewebsites.net", StringComparison.OrdinalIgnoreCase)
+        && !host.EndsWith(".azurestaticapps.net", StringComparison.OrdinalIgnoreCase);
 
     private async Task<List<RawService>> ResolveAppServicePlansAsync(
         List<RawService> services, string? armToken, CancellationToken ct)

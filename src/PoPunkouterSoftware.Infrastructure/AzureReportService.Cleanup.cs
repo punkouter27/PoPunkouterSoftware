@@ -391,7 +391,8 @@ public partial class AzureReportService
         string? Status,
         string? Url,
         System.Collections.Generic.List<string>? Technologies,
-        string? GithubRepo);
+        string? GithubRepo,
+        string? Expect = null);
 
     private static string NormalizeKey(string? friendlyName, string? resourceName) =>
         string.IsNullOrWhiteSpace(friendlyName)

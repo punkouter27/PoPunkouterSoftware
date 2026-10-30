@@ -17,6 +17,9 @@ namespace PoPunkouterSoftware.Infrastructure;
 /// </summary>
 public static class AttentionItemsBuilder
 {
+    /// <summary>Days before a domain's registration lapses at which it becomes an attention item and a push.</summary>
+    public const int DomainAlertDays = 30;
+
     /// <summary>
     /// The exclusion-filtered service list plus every count and flag <c>BuildOpsSummary</c>
     /// needs, so callers never have to recompute the filter themselves.
@@ -78,6 +81,22 @@ public static class AttentionItemsBuilder
                     false => " — app-side, Azure reports the platform healthy",
                     null => "",
                 }));
+        // Up but wrong: each of these is a service the probe calls healthy. AzurePriorityQueue
+        // ranks the same four facts (DashboardDerivations.BuildPriorityQueue, FromQuality) so
+        // nothing vanishes when the queue replaces this list.
+        static string NameOf(WebService s) => string.IsNullOrWhiteSpace(s.FriendlyName) ? s.Name : s.FriendlyName;
+        attention.AddRange(services
+            .Where(s => s.ContentCheck is { Found: false, Error: null })
+            .Select(s => $"{NameOf(s)} answers, but its page no longer contains \"{s.ContentCheck!.Expect}\""));
+        attention.AddRange(services
+            .Where(s => s.LastDeploy?.Conclusion == "failure")
+            .Select(s => $"{NameOf(s)}'s latest build failed"));
+        attention.AddRange(services
+            .Where(s => s.Packages is { Vulnerable.Count: > 0 })
+            .Select(s => $"{NameOf(s)} pins {s.Packages!.Vulnerable.Count} package{(s.Packages.Vulnerable.Count == 1 ? "" : "s")} with a known vulnerability"));
+        attention.AddRange(report.DomainExpiries
+            .Where(d => d.ExpiresAt < DateTime.UtcNow.AddDays(DomainAlertDays))
+            .Select(d => $"Domain {d.Domain} expires in {Math.Max(0, (int)(d.ExpiresAt - DateTime.UtcNow).TotalDays)} days"));
         if (security > 0)
             attention.Add($"{security} security configuration finding{(security == 1 ? "" : "s")}");
         if (cleanup > 0)
