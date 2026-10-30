@@ -79,7 +79,10 @@ Standing instructions from the owner. They outrank default habits and apply to e
   architectural change).
 - **A UI change ships a before/after page.** Capture the old and new states, annotate what moved,
   save it as `SCREENSHOTS/YYMMDD-feature-name.html` (self-contained, images inlined) and give the
-  owner its full absolute path.
+  owner its full absolute path. Also save the same before/after, with its notes, as one PNG
+  beside it (`SCREENSHOTS/YYMMDD-feature-name.png`).
+- **A change over 100 lines ends with three follow-up questions** about future direction or
+  logic, unless questions are already pending with the owner.
 - **Keep [README.md](README.md) in step with this file** whenever a dependency, configuration key
   or major endpoint changes — in the same change, like the rule above for this file.
 - **Treat compile warnings as errors and make sure they are fixed.** The build command above
