@@ -67,10 +67,8 @@ public class PortfolioUiTests : IAsyncLifetime
         response!.Ok.Should().BeTrue();
         (await page.TitleAsync()).Should().Contain("PoPunkouterSoftware");
         await Assertions.Expect(page.GetByText("PoPunkouterSoftware").First).ToBeVisibleAsync();
-        // The top-nav links are in the markup but HIDDEN at every width (owner's call, 2026-10-20).
-        var azureLink = page.Locator("a.app-topbar-link[href='/azure']");
-        await Assertions.Expect(azureLink).ToHaveCountAsync(1);
-        await Assertions.Expect(azureLink).ToBeHiddenAsync();
+        // The header is the brand and nothing else (links hidden 2026-10-20, removed 2026-10-30).
+        await Assertions.Expect(page.Locator(".app-topbar a")).ToHaveCountAsync(1);
         await Assertions.Expect(page.Locator(".app-portfolio-card").First).ToBeVisibleAsync();
         await CaptureAsync(page, $"01-home-{label}.png");
     }

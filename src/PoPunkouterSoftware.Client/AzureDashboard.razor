@@ -115,6 +115,10 @@ else if (_summary is not null)
                 {
                     <RadzenButton Text="Cancel" Icon="close" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="CancelRefreshAsync" />
                 }
+                @* A hint each for Rescan and Listen, not one for both: Listen is a Details
+                   control and can be hidden, and a shared hint would then describe a button
+                   that is not there. Each used to carry a `title` — mouse-only (see AppHint). *@
+                <AppHint Focusable="true" Text="Rescan runs a full Azure subscription scan (about 30 seconds); progress streams live and you can leave the page." />
             }
             else
             {
@@ -132,14 +136,14 @@ else if (_summary is not null)
                and mutates nothing, so it belongs with /api/diag/ai on the unprivileged
                side. Clicking it while sound is off turns sound on — the
                click is itself the user gesture the autoplay policy requires, so this is the
-               one place where opting in and hearing the result can happen in one action. *@
-            <RadzenButton Text="Listen" Icon="graphic_eq" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-                          Click="SonifyAsync" Disabled="@_sonifying" />
-            @* ONE hint for both buttons. Each used to carry a `title` — mouse-only text no phone
-               or keyboard visitor could reach (see AppHint). *@
-            <AppHint Focusable="true"
-                     Text="@((_managementActionsEnabled ? "Rescan runs a full Azure subscription scan (about 30 seconds); progress streams live and you can leave the page. " : "")
-                            + "Listen plays the fleet status as a four-second sound: health tunes the chord, outages add dissonance, spend sets the pulse rate, uptime opens the filter. It turns sound on if it is off.")" />
+               one place where opting in and hearing the result can happen in one action.
+               A Details control: hidden unless /settings → Details → Full. *@
+            <span class="azure-listen" data-detail>
+                <RadzenButton Text="Listen" Icon="graphic_eq" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
+                              Click="SonifyAsync" Disabled="@_sonifying" />
+                <AppHint Focusable="true"
+                         Text="Listen plays the fleet status as a four-second sound: health tunes the chord, outages add dissonance, spend sets the pulse rate, uptime opens the filter. It turns sound on if it is off." />
+            </span>
         </div>
     </header>
 

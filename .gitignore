@@ -23,8 +23,7 @@ coverage/
 *.coverage
 *.coveragexml
 *.trx
-tests/PoPunkouterSoftware.Tests.E2E/.playwright/
-tests/PoPunkouterSoftware.Tests.E2E/test-results/
+tests/PoPunkouterSoftware.E2EUI/.playwright/
 .playwright-mcp/
 
 # Logs
@@ -82,6 +81,9 @@ gh_output.txt
 .vscode/extensions.json
 .vscode/*.code-snippets
 .vscode/launch.json.bak
+# Per-machine editor/agent state: MCP server config and the Aura extension's index.
+.vscode/mcp.json
+.aura/
 *.code-workspace
 
 # Rider / JetBrains

@@ -23,14 +23,6 @@
     outline-offset: 2px;
 }
 
-/* ── Header: brand only ──────────────────────────────────────────────────────────
-   The links stay in the markup but are hidden at every width (owner's call, 2026-10-20;
-   below 768px since 2026-10-19). The routes still work — reach them by URL, Ctrl+K or the
-   404 page's list. */
-.app-topbar-nav {
-    display: none;
-}
-
 @media (prefers-reduced-motion: reduce) {
     .app-skip-link {
         transition: none;

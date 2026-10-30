@@ -63,21 +63,21 @@
                         {
                             @* Up is not the same as working: an app answering its home page while
                                throwing on every real request shows green cells and this chip. *@
-                            <span class="azure-uptime__chip is-error"><RadzenIcon Icon="bug_report" />@row.Errors24h</span>
+                            <span class="azure-uptime__chip is-error" data-detail><RadzenIcon Icon="bug_report" />@row.Errors24h</span>
                         }
                         @if (DashboardDerivations.VulnerabilityCount(row) is > 0 and var vulns)
                         {
-                            <span class="azure-uptime__chip is-alert"><RadzenIcon Icon="shield" />@vulns</span>
+                            <span class="azure-uptime__chip is-alert" data-detail><RadzenIcon Icon="shield" />@vulns</span>
                         }
                         @if (row.LastRun?.Conclusion == "failure")
                         {
                             @* A red build on a green row: the next deploy is the next outage. *@
-                            <span class="azure-uptime__chip is-error"><RadzenIcon Icon="error" />CI</span>
+                            <span class="azure-uptime__chip is-error" data-detail><RadzenIcon Icon="error" />CI</span>
                         }
                         @if (row.ContentCheck is { Found: false, Error: null })
                         {
                             @* Answers 200 without the page it should serve. *@
-                            <span class="azure-uptime__chip is-error"><RadzenIcon Icon="visibility_off" />page</span>
+                            <span class="azure-uptime__chip is-error" data-detail><RadzenIcon Icon="visibility_off" />page</span>
                         }
                     </button>
                     @for (var i = 0; i < row.Cells.Count; i++)
@@ -112,22 +112,25 @@
             <span><i class="azure-uptime__cell is-no-data"></i> no scan</span>
             <span><i class="azure-uptime__cell is-healthy has-deploy"></i> deploy landed</span>
             @* Keyed only when a row actually carries the chip: a legend for marks that are not
-               on screen is one more line to read for nothing. *@
+               on screen is one more line to read for nothing. The chips and their keys are
+               `data-detail` — shown only under /settings → Details → Full. Simple loses no facts:
+               every chip's fact is in the row's drawer and its screen-reader sentence, and the
+               CI, page and package ones are "Needs attention" lines too. *@
             @if (Map.Rows.Any(r => r.Errors24h > 0))
             {
-                <span><span class="azure-uptime__chip is-error">n</span> exceptions, 24h</span>
+                <span data-detail><span class="azure-uptime__chip is-error">n</span> exceptions, 24h</span>
             }
             @if (Map.Rows.Any(r => DashboardDerivations.VulnerabilityCount(r) > 0))
             {
-                <span><span class="azure-uptime__chip is-alert">n</span> vulnerable packages</span>
+                <span data-detail><span class="azure-uptime__chip is-alert">n</span> vulnerable packages</span>
             }
             @if (Map.Rows.Any(r => r.LastRun?.Conclusion == "failure"))
             {
-                <span><span class="azure-uptime__chip is-error">CI</span> latest build failed</span>
+                <span data-detail><span class="azure-uptime__chip is-error">CI</span> latest build failed</span>
             }
             @if (Map.Rows.Any(r => r.ContentCheck is { Found: false, Error: null }))
             {
-                <span><span class="azure-uptime__chip is-error">page</span> expected content missing</span>
+                <span data-detail><span class="azure-uptime__chip is-error">page</span> expected content missing</span>
             }
         </div>
     }

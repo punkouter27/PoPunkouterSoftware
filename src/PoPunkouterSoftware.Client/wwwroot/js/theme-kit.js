@@ -1,8 +1,12 @@
 /*
- * Visitor preferences — the explicit light/dark choice and the compact-density flag, plus
- * `window.appSettings`, the one facade the /settings page reads and writes all four
- * preferences through (theme and density here, sound in audio-kit.js, effects in
- * gpu-backdrop.js — each stays owned by the kit that applies it).
+ * Visitor preferences — the explicit light/dark choice, the compact-density flag and the
+ * Details level, plus `window.appSettings`, the one facade the /settings page reads and
+ * writes all five preferences through (theme, density and details here, sound in
+ * audio-kit.js, effects in gpu-backdrop.js — each stays owned by the kit that applies it).
+ *
+ * Details: "simple" (the default) hides every `[data-detail]` element via one rule in
+ * modern-ui.css, and command-palette.js leaves out its per-app repo/Actions rows. "full"
+ * sets data-app-details="full" on <html> and shows them.
  *
  * WHY THIS IS A FILE AND NOT A RADZEN COMPONENT
  * `RadzenTheme` + `RadzenAppearanceToggle` exist, but the app does not use them, and
@@ -34,6 +38,7 @@
 
     var KEY = 'pops:theme';
     var DENSITY_KEY = 'pops:density';
+    var DETAILS_KEY = 'pops:details';
     var root = document.documentElement;
     var darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -59,6 +64,27 @@
         } else {
             root.removeAttribute('data-compact');
         }
+    }
+
+    function readDetails() {
+        try {
+            return localStorage.getItem(DETAILS_KEY) === 'full';
+        } catch (e) {
+            return false;
+        }
+    }
+
+    function setDetails(isFull) {
+        try {
+            if (isFull) localStorage.setItem(DETAILS_KEY, 'full');
+            else localStorage.removeItem(DETAILS_KEY);
+        } catch (e) { }
+        applyDetails();
+    }
+
+    function applyDetails() {
+        if (readDetails()) root.setAttribute('data-app-details', 'full');
+        else root.removeAttribute('data-app-details');
     }
 
     function read() {
@@ -143,6 +169,7 @@
     // Apply before anything else can paint content.
     apply();
     applyDensity();
+    applyDetails();
 
     window.themeKit = {
         get preference() { return read(); },
@@ -151,14 +178,15 @@
     };
 
     // Only primitives cross the Blazor interop boundary, so read() is one delimited string
-    // in a fixed order: theme|density|sound|fx. Every default is the simplest choice.
+    // in a fixed order: theme|density|sound|fx|details. Every default is the simplest choice.
     window.appSettings = {
         read: function () {
             return [
                 read() || 'system',
                 readDensity() ? 'compact' : 'comfortable',
                 window.audioKit && window.audioKit.enabled ? 'on' : 'off',
-                window.appFx && window.appFx.full ? 'full' : 'simple'
+                window.appFx && window.appFx.full ? 'full' : 'simple',
+                readDetails() ? 'full' : 'simple'
             ].join('|');
         },
         set: function (key, value, x, y) {
@@ -166,6 +194,7 @@
             else if (key === 'density') setDensity(value === 'compact');
             else if (key === 'sound' && window.audioKit) window.audioKit.setEnabled(value === 'on');
             else if (key === 'fx' && window.appFx) window.appFx.setFull(value === 'full');
+            else if (key === 'details') setDetails(value === 'full');
         }
     };
 })();

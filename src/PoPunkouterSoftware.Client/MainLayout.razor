@@ -1,5 +1,4 @@
 @inherits LayoutComponentBase
-@inject NavigationManager NavigationManager
 
 @* RadzenComponents hosts the notification, dialog, tooltip and context-menu outlets that
    NotificationService and friends push into. It MUST carry its own render mode.
@@ -19,7 +18,7 @@
 <RadzenComponents @rendermode="WasmRenderModes.Interactive" />
 
 @* Skip-to-content link — first focusable element on every page, invisible until it
-   receives keyboard focus. Tab order lands on it before the topbar nav, then jumps the
+   receives keyboard focus. Tab order lands on it before the brand, then jumps the
    visitor past the chrome directly to <main id="main-content">. *@
 <a href="#main-content" class="app-skip-link">Skip to content</a>
 
@@ -28,9 +27,8 @@
    the header footprint via --app-header-reserve instead. *@
 <RadzenLayout>
     <RadzenHeader>
-        @* Spatial contract — Left: branding · Center: links · Right: an empty spacer.
-           Brand and the spacer are both `flex: 1 1 0` so the centre nav is optically
-           centred.
+        @* Brand only, at every width. The four page links were hidden from 2026-10-20 and removed
+           on 2026-10-30; pages are reached from Ctrl+K, the 404 page's list, or a typed URL.
 
            This layout is STATICALLY server-rendered (<Routes /> carries no render mode;
            only the page components are InteractiveWebAssembly). Nothing here may depend
@@ -41,25 +39,6 @@
            rather than left as chrome that only looks functional. *@
         <nav class="app-topbar" aria-label="Primary navigation">
             <a href="/" class="app-topbar-brand">PoPunkouterSoftware</a>
-
-            @* Centre region. HIDDEN at every width (MainLayout.razor.css) — the owner's
-               call (2026-10-20): the header is just the brand. Kept in the markup on purpose. *@
-            <div class="app-topbar-nav">
-                <a href="/" class="app-topbar-link @NavClass("/")">
-                    <span class="material-symbols-outlined" aria-hidden="true">home</span>Apps
-                </a>
-                <a href="/azure" class="app-topbar-link @NavClass("/azure")">
-                    <span class="material-symbols-outlined" aria-hidden="true">monitor_heart</span>Azure
-                </a>
-                <a href="/users" class="app-topbar-link @NavClass("/users")">
-                    <span class="material-symbols-outlined" aria-hidden="true">group</span>Users
-                </a>
-                <a href="/settings" class="app-topbar-link @NavClass("/settings")">
-                    <span class="material-symbols-outlined" aria-hidden="true">settings</span>Settings
-                </a>
-            </div>
-
-            <div class="app-topbar-session" aria-hidden="true"></div>
         </nav>
     </RadzenHeader>
     <RadzenBody>
@@ -71,12 +50,3 @@
     </RadzenBody>
 </RadzenLayout>
 
-@code {
-    private string NavClass(string href)
-    {
-        var current = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-        if (href == "/")
-            return current == "" || current == "/" ? "active" : "";
-        return current.StartsWith(href.TrimStart('/'), StringComparison.OrdinalIgnoreCase) ? "active" : "";
-    }
-}

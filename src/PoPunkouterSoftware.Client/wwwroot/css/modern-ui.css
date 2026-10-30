@@ -89,6 +89,15 @@
     --app-density: 0.82;
 }
 
+/* /settings → Details. `data-detail` marks an optional control or mark (uptime chips and
+   their legend keys, the card performance trend, Listen); it shows only when theme-kit.js
+   has set data-app-details="full". !important because this one switch must beat whatever
+   display a component's scoped CSS gives the element — a specificity contest per call site
+   is exactly what a single attribute is here to avoid. */
+html:not([data-app-details="full"]) [data-detail] {
+    display: none !important;
+}
+
 :root {
     --app-space-3xs: calc(0.25rem * var(--app-density));
     --app-space-2xs: calc(0.35rem * var(--app-density));
@@ -426,12 +435,8 @@ a {
     padding: var(--app-space-lg) var(--app-space-md) var(--app-space-xl);
 }
 
-/* ── Top navigation bar ──────────────────────────────────────────────────────
-   Spatial contract: Left (branding) — Center (actions) — Right (session).
-   Brand and session are both `flex: 1 1 0` so the centre nav is optically dead
-   centre regardless of their differing intrinsic widths. Removing either side
-   silently breaks the contract, which is exactly what happened before.
-*/
+/* ── Top bar: the brand, nothing else ────────────────────────────────────────
+   The page links were hidden from 2026-10-20 and removed on 2026-10-30. */
 .app-topbar {
     display: flex;
     align-items: center;
@@ -455,8 +460,7 @@ a {
     /* WCAG 2.2 2.5.8: 24x24 CSS px minimum for a pointer target. The wordmark is one line
        of text, so it measured 169x23 on a phone and 501x23 on a desktop — a 23px-tall band,
        one pixel under the floor, and the only target in the app that failed it. The padding
-       is vertical only: `flex: 1 1 0` already spreads the hit area horizontally, and
-       horizontal padding would move the wordmark off the shell's left edge. */
+       is vertical only: horizontal padding would move the wordmark off the shell's left edge. */
     padding-block: 2px;
     align-self: center;
 }
@@ -464,59 +468,6 @@ a {
 .app-topbar-brand:hover {
     color: var(--app-text);
     text-decoration: none;
-}
-
-.app-topbar-nav {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--app-space-3xs);
-}
-
-.app-topbar-session {
-    flex: 1 1 0;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: var(--app-space-xs);
-    min-width: 0;
-}
-
-.app-topbar-link {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--app-space-2xs);
-    padding: var(--app-space-2xs) var(--app-space-sm);
-    border-radius: var(--app-radius-md);
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--app-text-muted);
-    text-decoration: none;
-    transition: background-color var(--app-dur-fast) var(--app-ease-smooth),
-                color var(--app-dur-fast) var(--app-ease-smooth);
-}
-
-.app-topbar-link:hover {
-    background: var(--app-hover-wash);
-    color: var(--app-text);
-    text-decoration: none;
-}
-
-/* The label is --app-text, not --app-accent: light-theme accent on the accent wash measured
-   4.37:1 (axe, CoreRoutes_HaveNoSeriousAxeViolations), under AA for 13.6px text. The glyph
-   keeps the accent — an icon is non-text and needs 3:1 — so the active cue is unchanged. */
-.app-topbar-link.active {
-    background: var(--app-accent-wash);
-    color: var(--app-text);
-}
-
-.app-topbar-link.active .material-symbols-outlined {
-    color: var(--app-accent);
-}
-
-.app-topbar-link .material-symbols-outlined {
-    font-size: 1.1rem;
 }
 
 /* ── Surfaces ────────────────────────────────────────────────────────────────

@@ -9,6 +9,11 @@
     <!-- Trim hygiene — this assembly ships in the WASM bundle. -->
     <IsTrimmable>true</IsTrimmable>
     <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <!-- Implies the trim, AOT and single-file analyzers, so reflection creeping into the DTOs
+         fails the build here rather than in the WASM publish. The API host itself cannot be
+         Native AOT (Razor component rendering, the SignalR hub and Radzen all need runtime
+         reflection), so this is the one project where the guarantee is both cheap and real. -->
+    <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
 
   <!-- No PackageReferences by design: this assembly is DTOs and the domain vocabulary only,

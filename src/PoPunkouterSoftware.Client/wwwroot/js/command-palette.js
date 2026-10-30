@@ -44,14 +44,15 @@
                 }
                 cmds.push({ id: 'focus-' + app.id, title: 'Show ' + app.name + ' uptime', icon: 'my_location', category: 'Apps', app: true,
                     action: function () { navigate('/azure?focus=' + encodeURIComponent(app.name)); } });
-                // Repo and Actions straight from the catalog's githubRepo. No Azure portal row:
+                // Repo and Actions straight from the catalog's githubRepo — Details rows, listed
+                // only under /settings → Details → Full (see getFilteredCommands). No Azure portal row:
                 // a portal deep link carries the subscription id, which every anonymous
                 // endpoint here masks (see /api/diag/report).
                 if (app.githubRepo) {
                     var repo = 'https://github.com/' + app.githubRepo;
-                    cmds.push({ id: 'repo-' + app.id, title: 'Open ' + app.name + ' repo', icon: 'data_object', category: 'Apps', app: true,
+                    cmds.push({ id: 'repo-' + app.id, title: 'Open ' + app.name + ' repo', icon: 'data_object', category: 'Apps', app: true, detail: true,
                         action: function () { window.open(repo, '_blank', 'noopener'); } });
-                    cmds.push({ id: 'actions-' + app.id, title: 'Open ' + app.name + ' GitHub Actions', icon: 'history', category: 'Apps', app: true,
+                    cmds.push({ id: 'actions-' + app.id, title: 'Open ' + app.name + ' GitHub Actions', icon: 'history', category: 'Apps', app: true, detail: true,
                         action: function () { window.open(repo + '/actions', '_blank', 'noopener'); } });
                 }
             });
@@ -78,9 +79,9 @@
 
     /**
      * Enhanced navigation when Blazor is up, like any other in-app link — wrapped in a View
-     * Transition so the matching header link morphs into the new page's h1. The old snapshot
-     * names the link, the new one names the heading; the browser animates between the two
-     * boxes. Skipped under reduced motion or without the API: a plain navigation, same URL.
+     * Transition so the header brand morphs into the new page's h1. The old snapshot names
+     * the brand (the only header link there is), the new one names the heading; the browser
+     * animates between the two boxes. Skipped under reduced motion or without the API: a plain navigation, same URL.
      */
     function navigate(url) {
         fx('jump');
@@ -96,8 +97,7 @@
         var go = function () { window.Blazor.navigateTo(url); };
         if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { go(); return; }
 
-        var path = url.split('?')[0];
-        var link = document.querySelector('.app-topbar-link[href="' + path + '"]');
+        var link = document.querySelector('.app-topbar-brand');
         if (link) link.style.viewTransitionName = 'app-jump';
         var heading = null;
         var vt = document.startViewTransition(function () {
@@ -221,7 +221,9 @@
         var query = (input ? input.value : '').toLowerCase().trim();
         // With no query the list stays short — the per-app rows only appear once you type.
         if (!query) return COMMANDS.concat(appCommands.filter(function (c) { return !c.app; }));
-        var ranked = COMMANDS.concat(appCommands)
+        // Details rows (repo / Actions) only when the visitor chose /settings → Details → Full.
+        var full = document.documentElement.getAttribute('data-app-details') === 'full';
+        var ranked = COMMANDS.concat(appCommands.filter(function (c) { return full || !c.detail; }))
             .map(function (cmd) { return { cmd: cmd, score: Math.max(fuzzyScore(query, cmd.title), fuzzyScore(query, cmd.category) - 5) }; })
             .filter(function (x) { return x.score >= 0; })
             .sort(function (a, b) { return b.score - a.score; });
