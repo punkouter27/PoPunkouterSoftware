@@ -220,8 +220,11 @@ to fall back, so the client's 30s budget always lost and the home page said "cou
 loaded". Now ~20s once, then instant.
 
 **`/` is a stack matrix, not a card grid (owner's ask, 2026-11-03).** `PortfolioStackTable`
-draws one row per app and one column per technical piece — Frontend, Backend, Real-time,
-Data, AI, Sign-in, Ships via, and rightmost "Unique tech" (`AppStack.Extras`: the
+draws one row per app. **Both tables open with the same pinned columns, in this order:
+App, Sign-in, Tech stack, Data, AI** (owner's call, 2026-11-03) — pinned means always a column,
+never moved to the "Shared by all" line even when every row agrees. Tech stack is ONE cell
+holding labelled lines: Frontend / Backend / Real-time for a web app, Engine / Physics /
+RL training for a game. Then Ships via and rightmost "Unique tech" (`AppStack.Extras`: the
 libraries and APIs only that app uses, read from its packages and code) — written for a visitor, not the owner (a Phone/PWA column went 2026-11-03 to save width): plain names, no SKUs or
 resource ids. Cells are SHORT labels ("Table + Blob", "Azure OpenAI", "PWA") so a column
 scans; the full wording is `AppStack.Details[<camelCase key>]`, shown as an `AppHint` on the

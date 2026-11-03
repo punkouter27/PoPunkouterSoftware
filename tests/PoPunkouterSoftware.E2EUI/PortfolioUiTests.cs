@@ -70,13 +70,13 @@ public class PortfolioUiTests : IAsyncLifetime
         // The header is the brand and nothing else (links hidden 2026-10-20, removed 2026-10-30).
         await Assertions.Expect(page.Locator(".app-topbar a")).ToHaveCountAsync(1);
         await Assertions.Expect(page.Locator(".portfolio-stack__row").First).ToBeVisibleAsync();
-        // The matrix's point: every row says what it is built with — its Frontend, in its own
-        // cell, or once in its table's "Shared by all" strip when every app agrees.
+        // The matrix's point: every row says what it is built with, in its Tech stack cell —
+        // a pinned column, so it is in every row of both tables.
         var unnamed = await page.EvaluateAsync<int>(@"() => [...document.querySelectorAll('.portfolio-stack')]
-            .filter(t => ![...t.querySelectorAll('.portfolio-stack__shared dt')].some(d => d.textContent.trim() === 'Frontend'))
+            .filter(t => ![...t.querySelectorAll('.portfolio-stack__shared dt')].some(d => d.textContent.trim() === 'Tech stack'))
             .flatMap(t => [...t.querySelectorAll('.portfolio-stack__row')])
-            .filter(r => !r.querySelector(""td[data-label='Frontend']:not(.is-empty)"")).length");
-        unnamed.Should().Be(0, $"every app row names its frontend, in its cell or the shared strip, at {label}");
+            .filter(r => !r.querySelector(""td[data-label='Tech stack']:not(.is-empty)"")).length");
+        unnamed.Should().Be(0, $"every app row names its tech stack, at {label}");
         // The name link is stretched over its OWN cell only. With the cell left `static` on a
         // phone, its overlay covered the whole table and every tap opened the last app — and
         // the source / training links below it could not be clicked at all.

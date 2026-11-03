@@ -161,7 +161,7 @@
                     @foreach (var column in _columns)
                     {
                         var value = column.Value(app.Stack);
-                        <td role="cell" data-label="@column.Label" class="@(value is null ? "is-empty" : null) @(column.Key == "ai" ? "is-ai" : null)">
+                        <td role="cell" data-label="@column.Label" class="@(value is null ? "is-empty" : null) @(column.Key is "ai" or "techstack" ? "is-wide" : null)">
                             @if (column.Key == "ai" && app.Stack.AiServices.Count > 0)
                             {
                                 @* The AI column lists every model, grouped by where it runs:
@@ -185,20 +185,45 @@
                                     }
                                 </ul>
                             }
+                            else if (column.Key == "techstack")
+                            {
+                                @* Everything technical in one cell, as labelled lines: Frontend /
+                                   Backend / Real-time for a web app, Engine / Physics / RL training
+                                   for a game. Each line keeps its hint; RL training keeps its link
+                                   to the training code. *@
+                                <dl class="portfolio-stack__tech">
+                                    @foreach (var part in TechParts(app.Stack))
+                                    {
+                                        var partHint = app.Stack.Details.GetValueOrDefault(part.Key);
+                                        <div>
+                                            <dt>@part.Label</dt>
+                                            <dd>
+                                                @if (part.Key == "training" && app.SourceUrl is { } repo && app.Stack.TrainingPath is { } folder)
+                                                {
+                                                    <a class="portfolio-stack__cell-link" href="@($"{repo}/tree/HEAD/{folder}")" target="_blank" rel="noopener noreferrer">@part.Value<span class="app-sr-only">: training code on GitHub</span></a>
+                                                    @if (partHint is not null)
+                                                    {
+                                                        <AppHint Text="@partHint" />
+                                                    }
+                                                }
+                                                else if (partHint is not null && partHint != part.Value)
+                                                {
+                                                    <AppHint Text="@partHint" Class="portfolio-stack__hint">@part.Value</AppHint><span class="app-sr-only">: @partHint</span>
+                                                }
+                                                else
+                                                {
+                                                    @part.Value
+                                                }
+                                            </dd>
+                                        </div>
+                                    }
+                                </dl>
+                            }
                             else if (value is null)
                             {
                                 <span aria-hidden="true">–</span><span class="app-sr-only">None listed</span>
                             }
-                            else if (column.Key == "training" && app.SourceUrl is { } repo && app.Stack.TrainingPath is { } folder)
-                            {
-                                @* The training code itself, for anyone who wants to see how. *@
-                                <a class="portfolio-stack__cell-link" href="@($"{repo}/tree/HEAD/{folder}")" target="_blank" rel="noopener noreferrer">@value<span class="app-sr-only">: training code on GitHub</span></a>
-                                @if (app.Stack.Details.GetValueOrDefault(column.Key) is { } why)
-                                {
-                                    <AppHint Text="@why" />
-                                }
-                            }
-                            else if (column.Key is "data" or "realtime" or "extras" && value.Contains(" + "))
+                            else if (column.Key is "data" or "extras" && value.Contains(" + "))
                             {
                                 @* One service per line: "Azure Table Storage + Azure Blob Storage"
                                    is two things, and on one line it was the widest cell. *@
@@ -244,22 +269,36 @@
     /// <summary>True for the table holding the page's LCP image — its first row loads eagerly.</summary>
     [Parameter] public bool FirstIsLcp { get; set; }
 
-    /// <summary>Key is the property's camelCase JSON name, which is also its <see cref="AppStack.Details"/> key.</summary>
-    private sealed record Column(string Key, string Label, Func<AppStack, string?> Value);
+    /// <summary>Key is the property's camelCase JSON name, which is also its <see cref="AppStack.Details"/> key.
+    /// <paramref name="Pinned"/>: always a column, in both tables, even when every row agrees —
+    /// so the two tables open with the same four columns (owner's call, 2026-11-03).</summary>
+    private sealed record Column(string Key, string Label, Func<AppStack, string?> Value, bool Pinned = false);
 
-    /// <summary>The matrix, in the order a request travels: what the visitor loads, what
-    /// answers it, how it pushes back live, what else it calls, where data lands, then the rest.</summary>
+    private sealed record TechPart(string Key, string Label, string Value);
+
+    /// <summary>The Tech stack cell's lines. A game (no backend, an RL training method) calls
+    /// its frontend the engine.</summary>
+    private static IEnumerable<TechPart> TechParts(AppStack s)
+    {
+        var game = s.Backend is null && s.Training is not null;
+        (string Key, string Label, string? Value)[] parts =
+        [
+            ("frontend", game ? "Engine" : "Frontend", s.Frontend),
+            ("backend", "Backend", s.Backend),
+            ("realtime", "Real-time", s.Realtime),
+            ("physics", "Physics", s.Physics),
+            ("training", "RL training", s.Training),
+        ];
+        return parts.Where(p => p.Value is not null).Select(p => new TechPart(p.Key, p.Label, p.Value!));
+    }
+
+    /// <summary>The same first four in both tables — Sign-in, Tech stack, Data, AI — then the rest.</summary>
     private static readonly Column[] AllColumns =
     [
-        new("frontend", "Frontend", s => s.Frontend),
-        // The RL games' columns; empty for every web app, so that table never draws them.
-        new("physics", "Physics", s => s.Physics),
-        new("training", "RL training", s => s.Training),
-        new("backend", "Backend", s => s.Backend),
-        new("realtime", "Real-time", s => s.Realtime),
-        new("data", "Data", s => s.Data),
-        new("ai", "AI", s => s.Ai),
-        new("signIn", "Sign-in", s => s.SignIn),
+        new("signIn", "Sign-in", s => s.SignIn, Pinned: true),
+        new("techstack", "Tech stack", s => TechParts(s).Any() ? string.Join(" | ", TechParts(s).Select(p => p.Value)) : null, Pinned: true),
+        new("data", "Data", s => s.Data, Pinned: true),
+        new("ai", "AI", s => s.Ai, Pinned: true),
         new("delivery", "Ships via", s => s.Delivery),
         // Last: what makes THIS app different, after the columns most apps share.
         new("extras", "Unique tech", s => s.Extras),
@@ -288,7 +327,7 @@
         var present = AllColumns.Where(c => Apps.Any(a => c.Value(a.Stack) is not null)).ToArray();
         // Shared = every app has a value and it is the same one. One app is not a comparison.
         Column[] shared = Apps.Count > 1
-            ? present.Where(c => Apps.All(a => Signature(c, a.Stack) is not null)
+            ? present.Where(c => !c.Pinned && Apps.All(a => Signature(c, a.Stack) is not null)
                                  && Apps.Select(a => Signature(c, a.Stack)).Distinct().Count() == 1).ToArray()
             : [];
         _columns = present.Except(shared).ToArray();

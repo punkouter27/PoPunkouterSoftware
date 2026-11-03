@@ -313,11 +313,23 @@
 
 .portfolio-stack__table td ::deep .app-hint--icon { margin-left: var(--app-space-2xs); vertical-align: top; }
 
+/* Tech stack: label: value lines inside one cell. */
+.portfolio-stack__tech { display: grid; gap: var(--app-space-3xs); margin: 0; }
+.portfolio-stack__tech > div { display: grid; grid-template-columns: 5.6rem minmax(0, 1fr); gap: var(--app-space-2xs); align-items: baseline; }
+.portfolio-stack__tech dt {
+    color: var(--app-text-soft);
+    font-size: var(--app-step--2);
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+.portfolio-stack__tech dd { margin: 0; }
+
 /* ── AI column: a list per app, grouped by cloud ──────────────────────────────
    The one column that wraps: it names every model, so it gets a real width instead of
    one line. The cloud tag is text ("Azure", "Google", "In-app"), not a colour key, so it
    reads the same in both themes and to a screen reader. */
-.portfolio-stack__table td.is-ai {
+.portfolio-stack__table td.is-wide {
     white-space: normal;
     min-width: 15rem;
     max-width: 19rem;
@@ -417,7 +429,7 @@
     }
 
     .portfolio-stack__table td { white-space: normal; }
-    .portfolio-stack__table td.is-ai { min-width: 0; max-width: none; }
+    .portfolio-stack__table td.is-wide { min-width: 0; max-width: none; }
 
     .portfolio-stack__app {
         display: block;
