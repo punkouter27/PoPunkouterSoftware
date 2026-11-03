@@ -232,7 +232,7 @@ was gathered 2026-11-03 from each repo's appsettings, option classes and client 
 secret names and each App Service's app settings (PoSeeReview overrides its image model to
 FLUX.1 Kontext pro there; PoRedoMedia's Google key is in the vault, so its Google models are live). A column IDENTICAL on every row of a table (for AI: the same service list) moves into a
 "Shared by all N" strip above that table, outside its scroller, worked out per table on every
-response; per-app add-ons a shared Backend would hide sit in  (its own column).
+response; per-app add-ons a shared Backend would hide sit in `AppStack.Extras` (its own column).
 A column empty on every row of a table is not drawn (the RL table has
 no backend). **It stays a table down to 641px**: when the columns outgrow the card, the card
 scrolls sideways (tabindex + role=group) with the app column `position: sticky` and opaque.
