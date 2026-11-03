@@ -8,6 +8,11 @@
 
    A column that is empty on every row of this table is not drawn — the RL games have no
    backend, sign-in or delivery to list, and a column of dashes is noise, not information.
+   A column IDENTICAL on every row is not drawn either: it moves into the "Shared by all N"
+   strip above the table, so the grid shows only what differs (owner's ask, 2026-11-03).
+   It is worked out per table on every new response, so the day one app changes backend,
+   the Backend column comes back on its own. What a shared column hid per app — SignalR,
+   the Google Maps API — lives in its own Extras column.
 
    Cells are SHORT labels ("Table + Blob", "Azure OpenAI") so a column scans at a glance;
    the full wording is a hint on the cell (AppHint: hover, focus or tap) and sr-only text
@@ -22,7 +27,33 @@
    table otherwise loses in some browsers.
 
    ONE link per row: the app name, stretched over the row's app cell by `::after`. *@
-<div class="app-card portfolio-stack" data-glass tabindex="0" role="group" aria-label="@($"{Label}. Scrolls sideways when the columns do not fit.")">
+<div class="app-card portfolio-stack" data-glass>
+    @if (_shared.Length > 0)
+    {
+        @* Outside the scroller, so it stays put when the columns scroll sideways. *@
+        <div class="portfolio-stack__shared">
+            <span class="portfolio-stack__shared-title">Shared by all @Apps.Count</span>
+            <dl>
+                @foreach (var shared in _shared)
+                {
+                    <div>
+                        <dt>@shared.Label</dt>
+                        <dd>
+                            @if (shared.Detail is { } detail && detail != shared.Value)
+                            {
+                                <AppHint Text="@detail" Class="portfolio-stack__hint">@shared.Value</AppHint><span class="app-sr-only">: @detail</span>
+                            }
+                            else
+                            {
+                                @shared.Value
+                            }
+                        </dd>
+                    </div>
+                }
+            </dl>
+        </div>
+    }
+    <div class="portfolio-stack__scroll" tabindex="0" role="group" aria-label="@($"{Label}. Scrolls sideways when the columns do not fit.")">
     <table class="portfolio-stack__table" role="table" aria-label="@Label">
         <thead role="rowgroup">
             <tr role="row">
@@ -150,6 +181,7 @@
             }
         </tbody>
     </table>
+    </div>
 </div>
 
 @code {
@@ -171,6 +203,7 @@
         new("hosting", "Hosting", s => s.Hosting),
         new("frontend", "Frontend", s => s.Frontend),
         new("backend", "Backend", s => s.Backend),
+        new("extras", "Extras", s => s.Extras),
         new("data", "Data", s => s.Data),
         new("ai", "AI", s => s.Ai),
         new("signIn", "Sign-in", s => s.SignIn),
@@ -179,6 +212,10 @@
     ];
 
     private Column[] _columns = AllColumns;
+
+    /// <summary>A column identical on every row, shown once above the table.</summary>
+    private sealed record SharedValue(string Label, string Value, string? Detail);
+    private SharedValue[] _shared = [];
     private IReadOnlyList<PortfolioApp>? _rendered;
 
     /// <summary>
@@ -192,8 +229,34 @@
         return true;
     }
 
-    protected override void OnParametersSet() =>
-        _columns = AllColumns.Where(c => Apps.Any(a => c.Value(a.Stack) is not null)).ToArray();
+    protected override void OnParametersSet()
+    {
+        var present = AllColumns.Where(c => Apps.Any(a => c.Value(a.Stack) is not null)).ToArray();
+        // Shared = every app has a value and it is the same one. One app is not a comparison.
+        Column[] shared = Apps.Count > 1
+            ? present.Where(c => Apps.All(a => Signature(c, a.Stack) is not null)
+                                 && Apps.Select(a => Signature(c, a.Stack)).Distinct().Count() == 1).ToArray()
+            : [];
+        _columns = present.Except(shared).ToArray();
+        _shared = shared.Select(c => Summarise(c, Apps[0].Stack)).ToArray();
+    }
+
+    /// <summary>What "the same" means for a column: the short value, or for AI the whole list
+    /// of services — two apps that both say "Azure OpenAI" but call different models differ.</summary>
+    private static string? Signature(Column column, AppStack stack) =>
+        column.Key == "ai" && stack.AiServices.Count > 0
+            ? string.Join("|", stack.AiServices.Select(s => $"{s.Cloud}:{s.Name}"))
+            : column.Value(stack);
+
+    /// <summary>The strip's entry: the value, with a hint only when every app agrees on that too.</summary>
+    private SharedValue Summarise(Column column, AppStack first)
+    {
+        if (column.Key == "ai" && first.AiServices.Count > 0)
+            return new(column.Label, string.Join(", ", first.AiServices.Select(s => s.Name)),
+                string.Join(" ", first.AiServices.Select(s => s.Use.TrimEnd('.') + ".")));
+        var details = Apps.Select(a => a.Stack.Details.GetValueOrDefault(column.Key)).Distinct().ToArray();
+        return new(column.Label, column.Value(first)!, details is [{ } only] ? only : null);
+    }
 
     /// <summary>Lighthouse's own bands: 90+ good, 50–89 needs work, below 50 poor.</summary>
     private static string ScoreClass(int score) => score >= 90 ? "is-good" : score >= 50 ? "is-warn" : "is-bad";

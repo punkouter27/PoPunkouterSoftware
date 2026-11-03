@@ -37,6 +37,7 @@ internal static class AppStackBuilder
                 ?? Shorten(technologies?.FirstOrDefault(t => t.StartsWith("Azure ", StringComparison.OrdinalIgnoreCase))),
             Frontend = Blank(catalog.Frontend),
             Backend = Blank(catalog.Backend),
+            Extras = Blank(catalog.Extras),
             Data = data,
             Ai = Blank(catalog.Ai),
             SignIn = Blank(catalog.SignIn),

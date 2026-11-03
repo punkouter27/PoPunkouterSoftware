@@ -17,6 +17,10 @@ public record AppStack
     public string? Hosting { get; init; }
     public string? Frontend { get; init; }
     public string? Backend { get; init; }
+    /// <summary>What this app adds on top of the common stack, e.g. "SignalR", "Google Maps API".
+    /// Its own column, so a Backend shared by every app can move into the summary without
+    /// hiding the parts that differ.</summary>
+    public string? Extras { get; init; }
     /// <summary>Catalog value; falls back to "Azure Storage" when the scan finds a storage account in the app's resource group.</summary>
     public string? Data { get; init; }
     /// <summary>Short summary; the matrix draws <see cref="AiServices"/> instead when there are any.</summary>

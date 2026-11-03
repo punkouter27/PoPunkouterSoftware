@@ -5,16 +5,20 @@
 
    RadzenBadge, RadzenIcon and Sparkline are child components, so their elements carry no
    scope attribute — every rule reaching them goes through ::deep. */
-/* The card is the sideways scroller. Values are short labels kept to one line, so the table
+/* The inner .portfolio-stack__scroll is the sideways scroller. Values are short labels kept to one line, so the table
    is ~1150px wide: it fits a desktop and scrolls in anything narrower, never wraps a cell
    into a four-line paragraph. */
 .portfolio-stack {
     padding: 0;
+    overflow: hidden;
+}
+
+.portfolio-stack__scroll {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
 }
 
-.portfolio-stack:focus-visible {
+.portfolio-stack__scroll:focus-visible {
     outline: 2px solid var(--app-accent);
     outline-offset: 2px;
 }
@@ -227,6 +231,58 @@
 .portfolio-stack__trend ::deep .app-sparkline.tone-good { --trend: #217a52; }
 .portfolio-stack__trend ::deep .app-sparkline.tone-warn { --trend: var(--app-accent-warm); }
 
+/* ── "Shared by all N": the columns every app agrees on, once ──────────────────
+   Above the table and outside its scroller. A definition list of label: value pairs that
+   wraps; the label wears the column-header treatment so it reads as "the column that went". */
+.portfolio-stack__shared {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--app-space-2xs) var(--app-space-md);
+    padding: var(--app-space-sm) var(--app-space-md);
+    border-bottom: 1px solid var(--app-border);
+    background: var(--app-accent-wash);
+}
+
+.portfolio-stack__shared-title {
+    color: var(--app-text);
+    font-size: var(--app-step--1);
+    font-weight: 700;
+}
+
+.portfolio-stack__shared dl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--app-space-2xs) var(--app-space-md);
+    margin: 0;
+}
+
+.portfolio-stack__shared dl > div {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--app-space-2xs);
+}
+
+.portfolio-stack__shared dt {
+    color: var(--app-text-soft);
+    font-size: var(--app-step--2);
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.portfolio-stack__shared dd {
+    margin: 0;
+    color: var(--app-text);
+    font-size: var(--app-step--1);
+}
+
+.portfolio-stack__shared dd ::deep .portfolio-stack__hint {
+    text-decoration: underline dotted var(--app-text-soft);
+    text-underline-offset: 3px;
+    cursor: help;
+}
+
 /* ── AI column: a list per app, grouped by cloud ──────────────────────────────
    The one column that wraps: it names every model, so it gets a real width instead of
    one line. The cloud tag is text ("Azure", "Google", "In-app"), not a colour key, so it
@@ -317,7 +373,7 @@
         border-bottom: 0;
     }
 
-    .portfolio-stack { overflow-x: visible; }
+    .portfolio-stack__scroll { overflow-x: visible; }
 
     .portfolio-stack__table th.portfolio-stack__app {
         position: static;

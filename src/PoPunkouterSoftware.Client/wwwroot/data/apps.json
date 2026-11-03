@@ -195,12 +195,14 @@
         "data": "Table",
         "signIn": "GitHub",
         "delivery": "GitHub Actions",
+        "extras": "GitHub API",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
-          "backend": "ASP.NET Core on .NET 10, reading the GitHub API",
+          "backend": "ASP.NET Core on .NET 10",
           "data": "Azure Table Storage",
           "signIn": "Sign in with GitHub",
-          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
+          "extras": "Reads repositories and commit history through the GitHub API"
         }
       }
     },
@@ -224,12 +226,14 @@
         "data": "Table",
         "signIn": "Microsoft",
         "delivery": "GitHub Actions",
+        "extras": "Google Maps API",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
-          "backend": "ASP.NET Core on .NET 10, calling the Google Maps API",
+          "backend": "ASP.NET Core on .NET 10",
           "data": "Azure Table Storage",
           "signIn": "Sign in with a Microsoft account",
-          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
+          "extras": "Google Maps supplies the live traffic times for each route"
         }
       }
     },
@@ -256,13 +260,15 @@
         "signIn": "Microsoft",
         "phone": "PWA",
         "delivery": "GitHub Actions",
+        "extras": "Azure email",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
-          "backend": "ASP.NET Core on .NET 10, sending email through Azure",
+          "backend": "ASP.NET Core on .NET 10",
           "data": "Azure Table Storage for records, Blob Storage for files",
           "signIn": "Sign in with a Microsoft account",
           "phone": "Installable web app (PWA): add it to a phone home screen",
-          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
+          "extras": "Sends the recaps through Azure Communication Services email"
         },
         "aiServices": [
           {
@@ -301,13 +307,15 @@
         "signIn": "Microsoft",
         "phone": "PWA",
         "delivery": "GitHub Actions",
+        "extras": "Google Places API",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
-          "backend": "ASP.NET Core on .NET 10, reading Google Maps reviews",
+          "backend": "ASP.NET Core on .NET 10",
           "data": "Azure Table Storage for records, Blob Storage for files",
           "signIn": "Sign in with a Microsoft account",
           "phone": "Installable web app (PWA): add it to a phone home screen",
-          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
+          "extras": "Google Places supplies the restaurant reviews the comics are drawn from"
         },
         "aiServices": [
           {
@@ -626,13 +634,15 @@
         "signIn": "Microsoft",
         "phone": "PWA",
         "delivery": "GitHub Actions",
+        "extras": "SignalR",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
-          "backend": "ASP.NET Core on .NET 10, with SignalR for live rounds",
+          "backend": "ASP.NET Core on .NET 10",
           "data": "Azure Table Storage for records, Blob Storage for files",
           "signIn": "Sign in with a Microsoft account",
           "phone": "Installable web app (PWA): add it to a phone home screen",
-          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
+          "extras": "SignalR pushes each live round to the browser as it happens"
         },
         "aiServices": [
           {

@@ -230,7 +230,10 @@ wired but off by default), grouped by cloud, and it is the one column that wraps
 was gathered 2026-11-03 from each repo's appsettings, option classes and client code
 (tests and vendored JS excluded); `optional` was then checked against production: `kv-poshared2`
 secret names and each App Service's app settings (PoSeeReview overrides its image model to
-FLUX.1 Kontext pro there; PoRedoMedia's Google key is in the vault, so its Google models are live). A column empty on every row of a table is not drawn (the RL table has
+FLUX.1 Kontext pro there; PoRedoMedia's Google key is in the vault, so its Google models are live). A column IDENTICAL on every row of a table (for AI: the same service list) moves into a
+"Shared by all N" strip above that table, outside its scroller, worked out per table on every
+response; per-app add-ons a shared Backend would hide sit in  (its own column).
+A column empty on every row of a table is not drawn (the RL table has
 no backend). **It stays a table down to 641px**: when the columns outgrow the card, the card
 scrolls sideways (tabindex + role=group) with the app column `position: sticky` and opaque.
 A 1200px stacking breakpoint was tried first and took the comparison away in any window

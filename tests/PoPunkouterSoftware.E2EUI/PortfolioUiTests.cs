@@ -71,10 +71,13 @@ public class PortfolioUiTests : IAsyncLifetime
         await Assertions.Expect(page.Locator(".app-topbar a")).ToHaveCountAsync(1);
         await Assertions.Expect(page.Locator(".portfolio-stack__row").First).ToBeVisibleAsync();
         // The matrix's point: every row says where it runs (Hosting is read from the scan, or
-        // the catalog when the scan has not seen the app — never blank for a listed app).
-        var rows = await page.Locator(".portfolio-stack__row").CountAsync();
-        (await page.Locator(".portfolio-stack__row td[data-label='Hosting']:not(.is-empty)").CountAsync())
-            .Should().Be(rows, $"every app row names its hosting at {label}");
+        // the catalog when the scan has not seen the app — never blank for a listed app) —
+        // in its own cell, or once in its table's "Shared by all" strip when every app agrees.
+        var unnamed = await page.EvaluateAsync<int>(@"() => [...document.querySelectorAll('.portfolio-stack')]
+            .filter(t => ![...t.querySelectorAll('.portfolio-stack__shared dt')].some(d => d.textContent.trim() === 'Hosting'))
+            .flatMap(t => [...t.querySelectorAll('.portfolio-stack__row')])
+            .filter(r => !r.querySelector(""td[data-label='Hosting']:not(.is-empty)"")).length");
+        unnamed.Should().Be(0, $"every app row names its hosting, in its cell or the shared strip, at {label}");
         await CaptureAsync(page, $"01-home-{label}.png");
     }
 
