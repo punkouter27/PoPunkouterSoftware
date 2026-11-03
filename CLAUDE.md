@@ -268,7 +268,8 @@ scrolls sideways (tabindex + role=group) with the app column `position: sticky` 
 hint is what the term IS, from `TechGlossary` in the Client (~100 plain-English entries,
 versioned labels fall back to their longest prefix), then how THIS app uses it, from its
 `stack.details` note. A term added to apps.json with no glossary entry still renders, just
-without the first half — add it to `TechGlossary`. Headings and line labels get an ⓘ that is
+without the first half — add it to `TechGlossary`. Headings and line labels get an ⓘ — except App, Sign-in, Tech stack,
+Frontend and Backend, whose names say enough (`NoSectionIcon`, owner's call) — that is
 silent to screen readers (`AppHint SpeakText=false`); the table's sr-only caption says what each
 column means once instead of with every cell.
 A 1200px stacking breakpoint was tried first and took the comparison away in any window

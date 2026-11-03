@@ -337,7 +337,7 @@
     /// reader, which repeats headings with every cell; the table's caption says it once.</summary>
     private static RenderFragment SectionHint(string key, bool speak = false) => __builder =>
     {
-        if (TechGlossary.Sections.GetValueOrDefault(key) is { } text)
+        if (!NoSectionIcon.Contains(key) && TechGlossary.Sections.GetValueOrDefault(key) is { } text)
         {
             <AppHint Text="@text" Class="portfolio-stack__section-hint" SpeakText="@speak" />
         }
@@ -356,6 +356,10 @@
         _ => _columns.FirstOrDefault(c => c.Key == key)?.Label
              ?? Apps.SelectMany(a => TechParts(a.Stack)).FirstOrDefault(p => p.Key == key)?.Label ?? key,
     };
+
+    /// <summary>Sections whose name says enough on its own: no ⓘ (owner's call, 2026-11-03).
+    /// Their meaning is still in the table's sr-only caption.</summary>
+    private static readonly HashSet<string> NoSectionIcon = ["app", "signIn", "techstack", "frontend", "backend"];
 
     /// <summary>One value, underlined, with its hint.</summary>
     private static RenderFragment Hinted(string value, string? note, string? appName) => __builder =>
