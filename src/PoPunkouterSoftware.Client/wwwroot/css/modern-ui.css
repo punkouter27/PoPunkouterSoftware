@@ -550,6 +550,9 @@ a {
 .app-hint--icon[tabindex] { text-decoration: none; }
 .app-hint--icon .material-symbols-outlined { font-size: 1.1em; }
 
+/* A hint is a sentence or two; without a cap Radzen's tooltip ran the width of the page. */
+html .rz-tooltip .rz-tooltip-content { max-width: min(24rem, calc(100vw - 2rem)); white-space: normal; }
+
 .app-hint[tabindex]:focus-visible {
     outline: 2px solid var(--app-accent);
     outline-offset: 2px;

@@ -313,9 +313,19 @@
 
 .portfolio-stack__table td ::deep .app-hint--icon { margin-left: var(--app-space-2xs); vertical-align: top; }
 
+/* The ⓘ beside a heading or a line label: says what that section means. Small and soft so a
+   column of them reads as labels, not as a second row of content. */
+.portfolio-stack ::deep .portfolio-stack__section-hint {
+    margin-left: 0.15em;
+    vertical-align: -0.15em;
+    opacity: 0.8;
+    text-transform: none;
+}
+.portfolio-stack ::deep .portfolio-stack__section-hint:hover { opacity: 1; }
+
 /* Tech stack: label: value lines inside one cell. */
 .portfolio-stack__tech { display: grid; gap: var(--app-space-3xs); margin: 0; }
-.portfolio-stack__tech > div { display: grid; grid-template-columns: 5.6rem minmax(0, 1fr); gap: var(--app-space-2xs); align-items: baseline; }
+.portfolio-stack__tech > div { display: grid; grid-template-columns: 7rem minmax(0, 1fr); gap: var(--app-space-2xs); align-items: baseline; }
 .portfolio-stack__tech dt {
     color: var(--app-text-soft);
     font-size: var(--app-step--2);

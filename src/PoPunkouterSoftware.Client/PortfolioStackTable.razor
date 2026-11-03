@@ -36,22 +36,13 @@
     {
         @* Outside the scroller, so it stays put when the columns scroll sideways. *@
         <div class="portfolio-stack__shared">
-            <span class="portfolio-stack__shared-title">Shared by all @Apps.Count</span>
+            <span class="portfolio-stack__shared-title">Shared by all @Apps.Count @SectionHint("shared", speak: true)</span>
             <dl>
                 @foreach (var shared in _shared)
                 {
                     <div>
-                        <dt>@shared.Label</dt>
-                        <dd>
-                            @if (shared.Detail is { } detail && detail != shared.Value)
-                            {
-                                <AppHint Text="@detail" Class="portfolio-stack__hint">@shared.Value</AppHint><span class="app-sr-only">: @detail</span>
-                            }
-                            else
-                            {
-                                @shared.Value
-                            }
-                        </dd>
+                        <dt>@shared.Label @SectionHint(shared.Key, speak: true)</dt>
+                        <dd>@Hinted(shared.Value, shared.Detail, null)</dd>
                     </div>
                 }
             </dl>
@@ -59,12 +50,15 @@
     }
     <div class="portfolio-stack__scroll" tabindex="0" role="group" aria-label="@($"{Label}. Scrolls sideways when the columns do not fit.")">
     <table class="portfolio-stack__table" role="table" aria-label="@Label">
+        @* What each column and Tech stack line means, once, for a screen reader — the ⓘ
+           beside each heading is silent, or every cell would repeat its paragraph. *@
+        <caption class="app-sr-only">@CaptionText</caption>
         <thead role="rowgroup">
             <tr role="row">
-                <th scope="col" role="columnheader">App</th>
+                <th scope="col" role="columnheader">App @SectionHint("app")</th>
                 @foreach (var column in _columns)
                 {
-                    <th scope="col" role="columnheader">@column.Label</th>
+                    <th scope="col" role="columnheader">@column.Label @SectionHint(column.Key)</th>
                 }
             </tr>
         </thead>
@@ -94,11 +88,13 @@
                             <h2 class="portfolio-stack__name">
                                 @if (string.IsNullOrWhiteSpace(app.Url))
                                 {
-                                    @app.Name
+                                    <AppHint Text="@AppSummary(app)">@app.Name</AppHint>
                                 }
                                 else
                                 {
-                                    <a class="portfolio-stack__link" href="@app.Url" target="_blank" rel="noopener noreferrer" data-sfx="tap">@app.Name</a>
+                                    @* The hint wraps the stretched link, so hovering anywhere on
+                                       the app cell (picture included) shows the app summary. *@
+                                    <AppHint Text="@AppSummary(app)"><a class="portfolio-stack__link" href="@app.Url" target="_blank" rel="noopener noreferrer" data-sfx="tap">@app.Name</a></AppHint>
                                 }
                             </h2>
                             <div class="portfolio-stack__meta">
@@ -171,12 +167,13 @@
                                     @foreach (var group in app.Stack.AiServices.GroupBy(a => a.Cloud))
                                     {
                                         <li>
-                                            <span class="portfolio-stack__cloud" data-cloud="@group.Key">@group.Key</span>
+                                            <AppHint Text="@(TechGlossary.Describe(group.Key) ?? group.Key)"><span class="portfolio-stack__cloud" data-cloud="@group.Key">@group.Key</span></AppHint>
                                             <ul>
                                                 @foreach (var service in group)
                                                 {
+                                                    var use = service.Use.TrimEnd('.') + (service.Optional ? ". Optional: off unless configured." : ".");
                                                     <li class="@(service.Optional ? "is-optional" : null)">
-                                                        <AppHint Text="@(service.Use + (service.Optional ? ". Optional: off unless configured." : "."))" Class="portfolio-stack__hint">@service.Name</AppHint>@if (service.Optional)
+                                                        <AppHint Text="@(TechGlossary.Hint(service.Name, use, app.Name) ?? use)" Class="portfolio-stack__hint">@service.Name</AppHint>@if (service.Optional)
                                                         {<span class="portfolio-stack__optional">optional</span>}<span class="app-sr-only">: @service.Use</span>
                                                     </li>
                                                 }
@@ -196,39 +193,23 @@
                                     {
                                         var partHint = app.Stack.Details.GetValueOrDefault(part.Key);
                                         <div>
-                                            <dt>@part.Label</dt>
+                                            <dt>@part.Label @SectionHint(part.Key == "frontend" && part.Label == "Engine" ? "engine" : part.Key)</dt>
                                             <dd>
                                                 @if (part.Key == "training" && app.SourceUrl is { } repo && app.Stack.TrainingPath is { } folder)
                                                 {
-                                                    <a class="portfolio-stack__cell-link" href="@($"{repo}/tree/HEAD/{folder}")" target="_blank" rel="noopener noreferrer">@part.Value<span class="app-sr-only">: training code on GitHub</span></a>
+                                                    <AppHint Text="@(TechGlossary.Hint(part.Value, partHint, app.Name) ?? "Training code on GitHub")" Class="portfolio-stack__hint"><a class="portfolio-stack__cell-link" href="@($"{repo}/tree/HEAD/{folder}")" target="_blank" rel="noopener noreferrer">@part.Value<span class="app-sr-only">: training code on GitHub</span></a></AppHint>
                                                     @if (partHint is not null)
                                                     {
-                                                        <AppHint Text="@partHint" />
+                                                        <span class="app-sr-only">: @partHint</span>
                                                     }
                                                 }
                                                 else if (part.Key == "data" && part.Value.Contains(" + "))
                                                 {
-                                                    @* One service per line: "Azure Table Storage + Azure Blob Storage" is two things. *@
-                                                    <span class="portfolio-stack__multi">
-                                                        <ul class="portfolio-stack__lines">
-                                                            @foreach (var service in part.Value.Split(" + "))
-                                                            {
-                                                                <li>@service</li>
-                                                            }
-                                                        </ul>
-                                                        @if (partHint is not null)
-                                                        {
-                                                            <AppHint Text="@partHint" />
-                                                        }
-                                                    </span>
-                                                }
-                                                else if (partHint is not null && partHint != part.Value)
-                                                {
-                                                    <AppHint Text="@partHint" Class="portfolio-stack__hint">@part.Value</AppHint><span class="app-sr-only">: @partHint</span>
+                                                    @HintedList(part.Value, partHint, app.Name)
                                                 }
                                                 else
                                                 {
-                                                    @part.Value
+                                                    @Hinted(part.Value, partHint, app.Name)
                                                 }
                                             </dd>
                                         </div>
@@ -241,31 +222,11 @@
                             }
                             else if (column.Key == "extras" && value.Contains(" + "))
                             {
-                                @* One service per line: "Azure Table Storage + Azure Blob Storage"
-                                   is two things, and on one line it was the widest cell. *@
-                                var hint = app.Stack.Details.GetValueOrDefault(column.Key);
-                                @* One wrapper, so on a phone (where the cell is a label | value grid)
-                                   the list and its ⓘ stay in the value column together. *@
-                                <span class="portfolio-stack__multi">
-                                    <ul class="portfolio-stack__lines">
-                                        @foreach (var part in value.Split(" + "))
-                                        {
-                                            <li>@part</li>
-                                        }
-                                    </ul>
-                                    @if (hint is not null)
-                                    {
-                                        <AppHint Text="@hint" />
-                                    }
-                                </span>
-                            }
-                            else if (app.Stack.Details.TryGetValue(column.Key, out var detail) && detail != value)
-                            {
-                                <AppHint Text="@detail" Class="portfolio-stack__hint">@value</AppHint><span class="app-sr-only">: @detail</span>
+                                @HintedList(value, app.Stack.Details.GetValueOrDefault(column.Key), app.Name)
                             }
                             else
                             {
-                                @value
+                                @Hinted(value, app.Stack.Details.GetValueOrDefault(column.Key), app.Name)
                             }
                         </td>
                     }
@@ -323,7 +284,7 @@
     private Column[] _columns = AllColumns;
 
     /// <summary>A column identical on every row, shown once above the table.</summary>
-    private sealed record SharedValue(string Label, string Value, string? Detail);
+    private sealed record SharedValue(string Key, string Label, string Value, string? Detail);
     private SharedValue[] _shared = [];
     private IReadOnlyList<PortfolioApp>? _rendered;
 
@@ -361,10 +322,95 @@
     private SharedValue Summarise(Column column, AppStack first)
     {
         if (column.Key == "ai" && first.AiServices.Count > 0)
-            return new(column.Label, string.Join(", ", first.AiServices.Select(s => s.Name)),
+            return new(column.Key, column.Label, string.Join(", ", first.AiServices.Select(s => s.Name)),
                 string.Join(" ", first.AiServices.Select(s => s.Use.TrimEnd('.') + ".")));
         var details = Apps.Select(a => a.Stack.Details.GetValueOrDefault(column.Key)).Distinct().ToArray();
-        return new(column.Label, column.Value(first)!, details is [{ } only] ? only : null);
+        return new(column.Key, column.Label, column.Value(first)!, details is [{ } only] ? only : null);
+    }
+
+    // ── Hints (owner's ask, 2026-11-03: a tooltip on every section and every piece of text).
+    // A value's hint is what it IS (TechGlossary) then how THIS app uses it (its stack.details
+    // note). Only the app-specific note is also sr-only text: the glossary would add a
+    // paragraph per cell to every screen-reader pass of the table.
+
+    /// <summary>The ⓘ beside a column heading or a Tech stack line label. Silent to a screen
+    /// reader, which repeats headings with every cell; the table's caption says it once.</summary>
+    private static RenderFragment SectionHint(string key, bool speak = false) => __builder =>
+    {
+        if (TechGlossary.Sections.GetValueOrDefault(key) is { } text)
+        {
+            <AppHint Text="@text" Class="portfolio-stack__section-hint" SpeakText="@speak" />
+        }
+    };
+
+    private string CaptionText => string.Join(" ",
+        new[] { "app" }.Concat(_columns.Select(c => c.Key))
+            .Concat(Apps.SelectMany(a => TechParts(a.Stack)).Select(p => p.Key == "frontend" && p.Label == "Engine" ? "engine" : p.Key).Distinct())
+            .Select(k => TechGlossary.Sections.GetValueOrDefault(k) is { } text ? $"{SectionName(k)}: {text}" : null)
+            .OfType<string>());
+
+    private string SectionName(string key) => key switch
+    {
+        "app" => "App",
+        "engine" => "Engine",
+        _ => _columns.FirstOrDefault(c => c.Key == key)?.Label
+             ?? Apps.SelectMany(a => TechParts(a.Stack)).FirstOrDefault(p => p.Key == key)?.Label ?? key,
+    };
+
+    /// <summary>One value, underlined, with its hint.</summary>
+    private static RenderFragment Hinted(string value, string? note, string? appName) => __builder =>
+    {
+        if (TechGlossary.Hint(value, note, appName) is { } text)
+        {
+            <AppHint Text="@text" Class="portfolio-stack__hint">@value</AppHint>
+            @if (note is not null && note != value)
+            {
+                <span class="app-sr-only">: @note</span>
+            }
+        }
+        else
+        {
+            @value
+        }
+    };
+
+    /// <summary>"A + B + C" as one line each, each with its own "what it is" hint; the app's
+    /// note covers the whole list, so it stays on one ⓘ after it. One wrapper, so on a phone
+    /// (where the cell is a label | value grid) the list and its ⓘ stay together.</summary>
+    private static RenderFragment HintedList(string value, string? note, string? appName) => __builder =>
+    {
+        <span class="portfolio-stack__multi">
+            <ul class="portfolio-stack__lines">
+                @foreach (var item in value.Split(" + "))
+                {
+                    <li>@Hinted(item, null, null)</li>
+                }
+            </ul>
+            @if (note is not null)
+            {
+                <AppHint Text="@(appName is null ? note : $"In {appName}: {note}")" />
+            }
+        </span>
+    };
+
+    /// <summary>The app cell's hint: where the name goes, and how the app is doing.</summary>
+    private static string AppSummary(PortfolioApp app)
+    {
+        var parts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(app.Url) && Uri.TryCreate(app.Url, UriKind.Absolute, out var url))
+            parts.Add($"Opens the live app at {url.Host} in a new tab.");
+        parts.Add(app.Status switch
+        {
+            "unavailable" => "It is down right now.",
+            "degraded" => "It is up but degraded right now.",
+            "healthy" => "It is up right now.",
+            _ => "",
+        });
+        if (app.CleanDays is > 0 and var days)
+            parts.Add(days >= 30 ? "No outage in the last 30 days." : $"{days} days without an outage.");
+        if (app.SourceUrl is not null) parts.Add("Its source code is public on GitHub.");
+        if (app.PlayStoreUrl is not null) parts.Add("It is on Google Play.");
+        return string.Join(" ", parts.Where(p => p.Length > 0));
     }
 
     /// <summary>Lighthouse's own bands: 90+ good, 50–89 needs work, below 50 poor.</summary>

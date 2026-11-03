@@ -39,7 +39,8 @@
       @onblur="Close">
     @if (ChildContent is null)
     {
-        <span class="material-symbols-outlined" aria-hidden="true">info</span><span class="app-sr-only">@Text</span>
+        <span class="material-symbols-outlined" aria-hidden="true">info</span>@if (SpeakText)
+        {<span class="app-sr-only">@Text</span>}
     }
     else
     {
@@ -63,6 +64,13 @@
     [Parameter] public string? Class { get; set; }
 
     [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Icon form only: whether the text is also in the tree as sr-only content (default true).
+    /// Off for an ⓘ inside a table heading, which a screen reader repeats with every cell of
+    /// that column — the caller must then say the same thing once somewhere else.
+    /// </summary>
+    [Parameter] public bool SpeakText { get; set; } = true;
 
     private ElementReference _element;
     private bool _open;
