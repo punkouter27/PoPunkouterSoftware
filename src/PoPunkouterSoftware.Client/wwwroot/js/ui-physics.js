@@ -1,22 +1,23 @@
 /**
  * ui-physics — physics applied to the DOM itself, not to a canvas.
  *
- * Two effects, both wired by delegation or observation so no Blazor component needs an
- * interop call, an OnAfterRender hook or a disposal path — the same contract audio-kit.js
- * follows for `[data-sfx]`:
+ * One effect, wired by observation so no Blazor component needs an interop call, an
+ * OnAfterRender hook or a disposal path — the same contract audio-kit.js follows for
+ * `[data-sfx]`:
  *
  *   ODOMETER  a KPI value (`.app-kpis strong`) counts up to its number on a damped spring
  *             the first time it appears. Only the text node's value changes; if Blazor
  *             writes the node mid-count the count stops and Blazor's value stands.
- *   TILT      a catalogue card leans toward a mouse pointer on an underdamped spring, so it
- *             wobbles into place rather than tracking rigidly.
+ *
+ * (A TILT effect leaned catalogue cards toward the mouse; it went with the cards when the
+ * home page became the stack matrix, 2026-11-03 — a table row that tilts reads as a glitch.)
  *
  * Bars springing into place (MetricBars) are CSS — a `linear()` spring curve on a keyframe
  * in modern-ui.css — because a native animation needs no script at all.
  *
  * Every per-frame effect is a named motionKit subscriber that unsubscribes when it settles,
  * so an idle page holds no subscription and the governor's gate stays closed. Reduced motion
- * and `motionKit.minimal` skip both; the page is identical without them.
+ * and `motionKit.minimal` skip it; the page is identical without it.
  */
 (function () {
     'use strict';
@@ -69,49 +70,6 @@
         var els = document.querySelectorAll('.app-kpis strong:not([data-odo])');
         for (var i = 0; i < els.length; i++) { els[i].setAttribute('data-odo', ''); startOdo(els[i]); }
     }
-
-    // ── Tilt ────────────────────────────────────────────────────────────────────────────
-    var tilt = { el: null, tx: 0, ty: 0, x: 0, y: 0, vx: 0, vy: 0, sub: 0 };
-
-    function tickTilt(dt) {
-        // Underdamped (ζ ≈ 0.5): it overshoots once and settles — a wobble, not a lag.
-        var k = 170, c = 13;
-        tilt.vx += ((tilt.tx - tilt.x) * k - tilt.vx * c) * dt;
-        tilt.vy += ((tilt.ty - tilt.y) * k - tilt.vy * c) * dt;
-        tilt.x += tilt.vx * dt; tilt.y += tilt.vy * dt;
-        var el = tilt.el;
-        if (!el) return;
-        el.style.setProperty('--tilt-x', tilt.x.toFixed(2) + 'deg');
-        el.style.setProperty('--tilt-y', tilt.y.toFixed(2) + 'deg');
-        var settled = Math.abs(tilt.x) + Math.abs(tilt.y) + Math.abs(tilt.vx) + Math.abs(tilt.vy) < 0.02;
-        if (settled && tilt.tx === 0 && tilt.ty === 0) release();
-    }
-
-    function release() {
-        if (tilt.el) {
-            tilt.el.classList.remove('is-tilting');
-            tilt.el.style.removeProperty('--tilt-x');
-            tilt.el.style.removeProperty('--tilt-y');
-        }
-        tilt.el = null;
-        tilt.x = tilt.y = tilt.vx = tilt.vy = tilt.tx = tilt.ty = 0;
-        if (tilt.sub) { window.motionKit.unsubscribe(tilt.sub); tilt.sub = 0; }
-    }
-
-    document.addEventListener('pointermove', function (e) {
-        if (e.pointerType !== 'mouse' || off()) return;
-        var card = e.target && e.target.closest && e.target.closest('.app-portfolio-card');
-        if (!card) { tilt.tx = tilt.ty = 0; return; }        // spring home, then release
-        if (card !== tilt.el) {
-            release();
-            tilt.el = card;
-            card.classList.add('is-tilting');
-        }
-        var r = card.getBoundingClientRect();
-        tilt.ty = ((e.clientX - r.left) / r.width - 0.5) * 7;
-        tilt.tx = -((e.clientY - r.top) / r.height - 0.5) * 7;
-        if (!tilt.sub) tilt.sub = window.motionKit.subscribe('ui-tilt', tickTilt, { fps: 60 });
-    }, { passive: true });
 
     // ── Wiring ──────────────────────────────────────────────────────────────────────────
     // One observer for the odometer: KPI tiles arrive whenever the WASM page finishes its

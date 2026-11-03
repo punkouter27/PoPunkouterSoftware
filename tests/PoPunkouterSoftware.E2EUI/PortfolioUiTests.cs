@@ -69,7 +69,12 @@ public class PortfolioUiTests : IAsyncLifetime
         await Assertions.Expect(page.GetByText("PoPunkouterSoftware").First).ToBeVisibleAsync();
         // The header is the brand and nothing else (links hidden 2026-10-20, removed 2026-10-30).
         await Assertions.Expect(page.Locator(".app-topbar a")).ToHaveCountAsync(1);
-        await Assertions.Expect(page.Locator(".app-portfolio-card").First).ToBeVisibleAsync();
+        await Assertions.Expect(page.Locator(".portfolio-stack__row").First).ToBeVisibleAsync();
+        // The matrix's point: every row says where it runs (Hosting is read from the scan, or
+        // the catalog when the scan has not seen the app — never blank for a listed app).
+        var rows = await page.Locator(".portfolio-stack__row").CountAsync();
+        (await page.Locator(".portfolio-stack__row td[data-label='Hosting']:not(.is-empty)").CountAsync())
+            .Should().Be(rows, $"every app row names its hosting at {label}");
         await CaptureAsync(page, $"01-home-{label}.png");
     }
 
@@ -148,7 +153,7 @@ public class PortfolioUiTests : IAsyncLifetime
     {
         var page = await NewPageAsync(width, height, isMobile);
         await page.GotoAsync(BaseUrl, new() { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForSelectorAsync(".app-portfolio-card", new() { Timeout = 30_000 });
+        await page.WaitForSelectorAsync(".portfolio-stack__row", new() { Timeout = 30_000 });
 
         // "webgpu" is deliberately absent: that rung was removed on 2026-09-05, so a browser
         // reporting it would mean the tier vocabulary and the ladder had drifted apart.
@@ -193,7 +198,7 @@ public class PortfolioUiTests : IAsyncLifetime
         });
         var page = await ctx.NewPageAsync();
         await page.GotoAsync(BaseUrl, new() { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForSelectorAsync(".app-portfolio-card", new() { Timeout = 30_000 });
+        await page.WaitForSelectorAsync(".portfolio-stack__row", new() { Timeout = 30_000 });
 
         // Two bools rather than the whole stats object: EvaluateAsync of a nested structure
         // adds a deserialisation step that can only obscure what is being asserted.
@@ -268,14 +273,14 @@ public class PortfolioUiTests : IAsyncLifetime
     /// half a card is not a card.</para>
     /// </summary>
     [Fact]
-    public async Task Home_FirstScreen_ShowsAWholeCard()
+    public async Task Home_FirstScreen_ShowsAWholeRow()
     {
         var page = await NewPageAsync(390, 844, isMobile: true);
         await page.GotoAsync(BaseUrl, new() { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForSelectorAsync(".app-portfolio-card", new() { Timeout = 30_000 });
+        await page.WaitForSelectorAsync(".portfolio-stack__row", new() { Timeout = 30_000 });
 
         var probe = await page.EvaluateAsync<double[]>(@"() => {
-            const card = document.querySelector('.app-portfolio-card');
+            const card = document.querySelector('.portfolio-stack__row');
             const summary = document.querySelector('.portfolio-summary');
             const h1 = document.querySelector('.portfolio-header h1');
             return [
@@ -290,7 +295,7 @@ public class PortfolioUiTests : IAsyncLifetime
         probe[0].Should().BeLessThan(fold, "the page title must be above the fold");
         probe[1].Should().BeLessThan(fold, "the freshness row must be above the fold");
         probe[2].Should().BeLessThanOrEqualTo(fold,
-            "the whole first card must fit the first screen at 390x844 — half a card is not a card");
+            "the whole first app row must fit the first screen at 390x844 — half a row is not an answer");
     }
 
     /// <summary>
@@ -469,7 +474,7 @@ public class PortfolioUiTests : IAsyncLifetime
         var page = await NewPageAsync(width, height, isMobile);
         var found = new List<string>();
 
-        foreach (var (route, ready) in new[] { ("/", ".app-portfolio-card"), ("/azure", ".azure-uptime"), ("/users", "main h1"), ("/settings", ".settings-row button:not([disabled])") })
+        foreach (var (route, ready) in new[] { ("/", ".portfolio-stack__row"), ("/azure", ".azure-uptime"), ("/users", "main h1"), ("/settings", ".settings-row button:not([disabled])") })
         {
             await page.GotoAsync($"{BaseUrl}{route}", new() { WaitUntil = WaitUntilState.NetworkIdle });
             await page.WaitForSelectorAsync(ready, new() { Timeout = 40_000 });

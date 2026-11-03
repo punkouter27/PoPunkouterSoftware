@@ -13,7 +13,15 @@
       "url": "https://app-polocalcompare-win2.azurewebsites.net",
       "healthUrl": "https://app-polocalcompare-win2.azurewebsites.net/health/live",
       "githubRepo": "punkouter26/PoLocalCompare",
-      "expect": "<title>PoLocalCompare</title>"
+      "expect": "<title>PoLocalCompare</title>",
+      "stack": {
+        "frontend": "Blazor WebAssembly",
+        "backend": "ASP.NET Core (.NET 10)",
+        "data": "Azure Table + Blob Storage",
+        "ai": "Azure AI Foundry, or a local Ollama model",
+        "signIn": "Microsoft account",
+        "delivery": "GitHub Actions → Azure"
+      }
     },
     {
       "id": "pomemevideo",
@@ -28,7 +36,12 @@
       "url": "https://app-pomemevideo2.azurewebsites.net",
       "healthUrl": "https://app-pomemevideo2.azurewebsites.net/health/live",
       "githubRepo": "punkouter26/PoMemeVideo",
-      "expect": "<title>PoMemeVideo</title>"
+      "expect": "<title>PoMemeVideo</title>",
+      "stack": {
+        "frontend": "Blazor WebAssembly",
+        "backend": "ASP.NET Core (.NET 10)",
+        "delivery": "GitHub Actions → Azure"
+      }
     },
     {
       "id": "5ln5hfdrvof5u",
@@ -43,7 +56,15 @@
       "url": "https://app-5ln5hfdrvof5u-f1win2.azurewebsites.net",
       "healthUrl": "https://app-5ln5hfdrvof5u-f1win2.azurewebsites.net/health/live",
       "githubRepo": "punkouter26/PoMiniGames",
-      "expect": "<title>PoMiniGames</title>"
+      "expect": "<title>PoMiniGames</title>",
+      "stack": {
+        "frontend": "Blazor WebAssembly",
+        "backend": "ASP.NET Core (.NET 10)",
+        "data": "Azure Table + Blob Storage",
+        "signIn": "Microsoft account",
+        "phone": "Installable web app (PWA)",
+        "delivery": "GitHub Actions → Azure"
+      }
     },
     {
       "id": "app-pomode2",
@@ -59,7 +80,16 @@
       "url": "https://app-pomode2.azurewebsites.net",
       "healthUrl": "https://app-pomode2.azurewebsites.net/health/live",
       "githubRepo": "punkouter26/PoMode",
-      "expect": "<title>PoMode</title>"
+      "expect": "<title>PoMode</title>",
+      "stack": {
+        "frontend": "Blazor WebAssembly",
+        "backend": "ASP.NET Core (.NET 10)",
+        "data": "Azure Blob Storage",
+        "ai": "On-device Whisper and ONNX audio models; optional Azure OpenAI",
+        "signIn": "Microsoft account (OneDrive files)",
+        "phone": "Installable web app (PWA)",
+        "delivery": "GitHub Actions → Azure"
+      }
     },
     {
       "id": "app-porepolinetracker2",
@@ -75,7 +105,14 @@
       "url": "https://app-porepolinetracker2.azurewebsites.net",
       "healthUrl": "https://app-porepolinetracker2.azurewebsites.net/health/live",
       "githubRepo": "punkouter26/PoRepoLineTracker",
-      "expect": "<title>PoRepoLineTracker</title>"
+      "expect": "<title>PoRepoLineTracker</title>",
+      "stack": {
+        "frontend": "Blazor WebAssembly",
+        "backend": "ASP.NET Core (.NET 10) + GitHub API",
+        "data": "Azure Table Storage",
+        "signIn": "GitHub",
+        "delivery": "GitHub Actions → Azure"
+      }
     },
     {
       "id": "potraffic-api",
@@ -90,7 +127,14 @@
       "url": "https://potraffic-api-win2.azurewebsites.net",
       "healthUrl": "https://potraffic-api-win2.azurewebsites.net/health/live",
       "githubRepo": "punkouter26/PoTraffic",
-      "expect": "<title>PoTraffic</title>"
+      "expect": "<title>PoTraffic</title>",
+      "stack": {
+        "frontend": "Blazor WebAssembly",
+        "backend": "ASP.NET Core (.NET 10) + Google Maps API",
+        "data": "Azure Table Storage",
+        "signIn": "Microsoft account",
+        "delivery": "GitHub Actions → Azure"
+      }
     },
     {
       "id": "app-powatch",
@@ -106,7 +150,16 @@
       "url": "https://app-powatch-win2.azurewebsites.net",
       "healthUrl": "https://app-powatch-win2.azurewebsites.net/health/live",
       "githubRepo": "punkouter26/PoWatch",
-      "expect": "<title>PoWatch</title>"
+      "expect": "<title>PoWatch</title>",
+      "stack": {
+        "frontend": "Blazor WebAssembly",
+        "backend": "ASP.NET Core (.NET 10) + Azure email",
+        "data": "Azure Table + Blob Storage",
+        "ai": "Azure OpenAI or Google Gemini",
+        "signIn": "Microsoft account",
+        "phone": "Installable web app (PWA)",
+        "delivery": "GitHub Actions → Azure"
+      }
     },
     {
       "id": "poseereview",
@@ -120,7 +173,16 @@
       ],
       "url": "https://app-poseereview2.azurewebsites.net",
       "healthUrl": "https://app-poseereview2.azurewebsites.net/health/live",
-      "githubRepo": null
+      "githubRepo": null,
+      "stack": {
+        "frontend": "Blazor WebAssembly",
+        "backend": "ASP.NET Core (.NET 10) + Google Maps reviews",
+        "data": "Azure Table + Blob Storage",
+        "ai": "Azure OpenAI: GPT-5.4 mini writes, gpt-image-1 mini draws",
+        "signIn": "Microsoft account",
+        "phone": "Installable web app (PWA)",
+        "delivery": "GitHub Actions → Azure"
+      }
     },
     {
       "id": "pobox",
@@ -135,7 +197,11 @@
       ],
       "url": "https://gentle-mushroom-0d162090f.6.azurestaticapps.net",
       "githubRepo": "punkouter27/PoBox",
-      "expect": "<title>PoBox</title>"
+      "expect": "<title>PoBox</title>",
+      "stack": {
+        "frontend": "Unity WebGL",
+        "ai": "Players are agents trained with reinforcement learning"
+      }
     },
     {
       "id": "pofootball",
@@ -150,7 +216,11 @@
       ],
       "url": "https://polite-coast-0ba40400f.4.azurestaticapps.net",
       "githubRepo": "punkouter27/PoFootball",
-      "expect": "<title>PoFootball</title>"
+      "expect": "<title>PoFootball</title>",
+      "stack": {
+        "frontend": "Unity WebGL",
+        "ai": "Players are agents trained with reinforcement learning"
+      }
     },
     {
       "id": "pohillking",
@@ -165,7 +235,11 @@
       ],
       "url": "https://white-bush-08dbace0f.4.azurestaticapps.net",
       "githubRepo": "punkouter27/PoHillKing",
-      "expect": "<title>PoHillKing</title>"
+      "expect": "<title>PoHillKing</title>",
+      "stack": {
+        "frontend": "Unity WebGL",
+        "ai": "Players are agents trained with reinforcement learning"
+      }
     },
     {
       "id": "poolympic",
@@ -180,7 +254,11 @@
       ],
       "url": "https://icy-field-055e0430f.6.azurestaticapps.net",
       "githubRepo": "punkouter27/PoOlympic",
-      "expect": "<title>PoOlympics</title>"
+      "expect": "<title>PoOlympics</title>",
+      "stack": {
+        "frontend": "Unity WebGL",
+        "ai": "Players are agents trained with reinforcement learning"
+      }
     },
     {
       "id": "porace",
@@ -195,7 +273,11 @@
       ],
       "url": "https://proud-sea-0d583fb0f.2.azurestaticapps.net",
       "githubRepo": "punkouter27/PoRace",
-      "expect": "<title>PoRace</title>"
+      "expect": "<title>PoRace</title>",
+      "stack": {
+        "frontend": "Unity WebGL",
+        "ai": "Players are agents trained with reinforcement learning"
+      }
     },
     {
       "id": "porumble",
@@ -210,7 +292,11 @@
       ],
       "url": "https://purple-sand-0067c2e0f.2.azurestaticapps.net",
       "githubRepo": "punkouter27/PoRumble",
-      "expect": "<title>PoRumble</title>"
+      "expect": "<title>PoRumble</title>",
+      "stack": {
+        "frontend": "Unity WebGL",
+        "ai": "Players are agents trained with reinforcement learning"
+      }
     },
     {
       "id": "posoccer",
@@ -225,7 +311,11 @@
       ],
       "url": "https://ambitious-plant-09c70a10f.4.azurestaticapps.net",
       "githubRepo": "punkouter27/PoSoccer",
-      "expect": "<title>PoSoccer</title>"
+      "expect": "<title>PoSoccer</title>",
+      "stack": {
+        "frontend": "Unity WebGL",
+        "ai": "Players are agents trained with reinforcement learning"
+      }
     },
     {
       "id": "posumo",
@@ -240,7 +330,11 @@
       ],
       "url": "https://thankful-beach-0a07eb70f.2.azurestaticapps.net",
       "githubRepo": "punkouter27/PoSumo",
-      "expect": "<title>PoSumo</title>"
+      "expect": "<title>PoSumo</title>",
+      "stack": {
+        "frontend": "Unity WebGL",
+        "ai": "Players are agents trained with reinforcement learning"
+      }
     },
     {
       "id": "poslapunreal",
@@ -255,7 +349,57 @@
       ],
       "url": "https://ashy-plant-0f75ec30f.3.azurestaticapps.net",
       "githubRepo": "punkouter27/PoSlapUnreal",
-      "expect": "<title>PoSlap Arena</title>"
+      "expect": "<title>PoSlap Arena</title>",
+      "stack": {
+        "frontend": "Unreal Engine",
+        "ai": "Players are agents trained with reinforcement learning"
+      }
+    },
+    {
+      "id": "pofightjudge",
+      "name": "PoFightJudge",
+      "description": "Pick two personas and a topic, then watch them argue it out in synthesised voices while an AI judge scores the rounds.",
+      "category": "creative",
+      "status": "active",
+      "technologies": [
+        "Azure App Service",
+        "C#",
+        "Blazor"
+      ],
+      "url": "https://app-pofightjudge2.azurewebsites.net",
+      "githubRepo": "punkouter26/PoFightJudge",
+      "stack": {
+        "frontend": "Blazor WebAssembly",
+        "backend": "ASP.NET Core (.NET 10) + SignalR",
+        "data": "Azure Table + Blob Storage",
+        "ai": "Azure OpenAI: GPT-5 mini judges, GPT-4o mini TTS speaks",
+        "signIn": "Microsoft account",
+        "phone": "Installable web app (PWA)",
+        "delivery": "GitHub Actions → Azure"
+      }
+    },
+    {
+      "id": "poredomedia",
+      "name": "PoRedoMedia",
+      "description": "Remix pictures and clips with AI: memes, roasts and restyles.",
+      "category": "creative",
+      "status": "active",
+      "technologies": [
+        "Azure App Service",
+        "C#",
+        "Blazor"
+      ],
+      "url": "https://app-poredomedia2.azurewebsites.net",
+      "githubRepo": "punkouter26/PoRedoMedia",
+      "stack": {
+        "frontend": "Blazor WebAssembly",
+        "backend": "ASP.NET Core (.NET 10)",
+        "data": "Azure Table + Blob Storage",
+        "ai": "Azure OpenAI and Google Gemini; on-device Whisper",
+        "signIn": "Microsoft account",
+        "phone": "Installable web app (PWA)",
+        "delivery": "GitHub Actions → Azure"
+      }
     }
   ]
 }

@@ -13,7 +13,7 @@
         @* No "PoPunkouterSoftware" eyebrow: the topbar wordmark directly above says it. *@
         <div>
             <h1>Web apps</h1>
-            <p>Small tools and experiments built with .NET and Azure.</p>
+            <p>Small tools and experiments built with .NET and Azure. Read across a row to see how one app is made, or down a column to compare them.</p>
         </div>
         @* The count, freshness and Sync sit on the title row. They had a bordered bar of their
            own beside a search box; the search went (owner's call, 2026-10-19 — eleven cards,
@@ -88,16 +88,8 @@
     }
     else if (data is not null)
     {
-        var webApps = data.Apps.Where(a => a.Category != PortfolioApp.RlTraining).ToList();
-        var rlApps = data.Apps.Where(a => a.Category == PortfolioApp.RlTraining).ToList();
-        <section class="app-grid cards" aria-label="Web applications">
-            @for (var i = 0; i < webApps.Count; i++)
-            {
-                var app = webApps[i];
-                <PortfolioAppCard @key="app.Id" App="app" IsFirst="@(i == 0)" />
-            }
-        </section>
-        @if (rlApps.Count > 0)
+        <PortfolioStackTable Apps="_webApps" Label="Web applications: how each one is built" FirstIsLcp="true" />
+        @if (_rlApps.Count > 0)
         {
             @* The Unity games: agents trained with reinforcement learning, playable in the
                browser as WebGL builds on Azure Static Web Apps. *@
@@ -105,18 +97,16 @@
                 <h2 id="rl-training">RL training</h2>
                 <p>Games whose players are trained with reinforcement learning, running in the browser.</p>
             </header>
-            <section class="app-grid cards" aria-labelledby="rl-training">
-                @foreach (var app in rlApps)
-                {
-                    <PortfolioAppCard @key="app.Id" App="app" IsFirst="false" />
-                }
-            </section>
+            <PortfolioStackTable Apps="_rlApps" Label="RL training games: how each one is built" />
         }
     }
 </main>
 
 @code {
     private PortfolioResponse? data;
+    // Built once per response, not per render: PortfolioStackTable guards on list identity.
+    private IReadOnlyList<PortfolioApp> _webApps = [];
+    private IReadOnlyList<PortfolioApp> _rlApps = [];
     private long? _buildIdAtLoad;
     private bool _buildMismatchDismissed;
     private bool _loading;
@@ -162,6 +152,8 @@
             // huge report endpoint; a hung portfolio call should fail in seconds, not minutes.
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             data = await Http.GetFromJsonAsync("/api/portfolio", AppJsonContext.Default.PortfolioResponse, cts.Token);
+            _webApps = data?.Apps.Where(a => a.Category != PortfolioApp.RlTraining).ToList() ?? [];
+            _rlApps = data?.Apps.Where(a => a.Category == PortfolioApp.RlTraining).ToList() ?? [];
             if (_buildIdAtLoad is null && data?.BuildId > 0)
                 _buildIdAtLoad = data.BuildId;
         }

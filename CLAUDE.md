@@ -219,6 +219,20 @@ running, the SDK retried a refused port (~2s each on Windows) and `/api/portfoli
 to fall back, so the client's 30s budget always lost and the home page said "could not be
 loaded". Now ~20s once, then instant.
 
+**`/` is a stack matrix, not a card grid (owner's ask, 2026-11-03).** `PortfolioStackTable`
+draws one row per app and one column per technical piece — Hosting, Frontend, Backend, Data,
+AI, Sign-in, Phone, Ships via — written for a visitor, not the owner: plain names, no SKUs or
+resource ids. A column empty on every row of a table is not drawn (the RL table has no
+backend). At 1200px and below each row becomes a labelled block, and the blocks tile.
+The data is `PortfolioApp.Stack` (`AppStack`), built by `AppStackBuilder`: **Hosting comes from
+the scan** (resource type, Linux/Windows kind, plan tier) and Data falls back to "Azure
+Storage" when the app's resource group holds a storage account; everything else is the
+`stack` block of each `apps.json` entry, because Key Vault, AI and App Insights all live in
+the shared PoShared group and the inventory cannot say which app uses which. Those blocks
+were filled 2026-11-03 from each repo's `Directory.Packages.props` and CLAUDE.md — when an
+app changes its database, AI or sign-in, its `stack` block is the line to change.
+PoMemeVideo's repo is private, so its row lists only what its live page and the scan show.
+
 **The report cache is server-side and must stay off the web root.** `ReportFileCache` keeps two
 paths apart on purpose: `GetCatalogDir` is `wwwroot/data` and holds **only** `apps.json`, which is
 public by nature; `GetCacheDir` is `ContentRootPath/App_Data` and holds the report. The cache used
@@ -284,7 +298,7 @@ management flag, cold starts) lives in an icon-only `AppHint`, not a paragraph.
   kicker.
   **A literal below that floor is now the app's smallest text**, which is why `AzureDashboard.razor.css`
   no longer carries a parallel scale in raw rems: eleven declarations between .68 and .75rem are now
-  `var(--app-step--2)`. The same sweep has NOT been done everywhere — Index/PortfolioAppCard/SignIns
+  `var(--app-step--2)`. The same sweep has NOT been done everywhere — Index/PortfolioStackTable/SignIns
   still hold literals in the 0.78–0.85rem band, which sit *above* the floor and are left alone.
 
 (A third, `--app-viewport-fit`, sized the phone pager's panes and went with it.)
@@ -299,8 +313,8 @@ screen, a JS dot strip — and that went (owner's call: "whatever is simpler"). 
 fill a whole screen, so "Needs attention" was ~150px of content in a 756px box, the hero sat
 centred under 230px of nothing, and four screens of paging held what now fits in two of
 scrolling; it also needed a `--tall` opt-out, a specificity hack and its own E2E test to stay
-honest. Do not bring it back. `/` is a 10-item catalogue and guarantees its first screen is
-complete (`Home_FirstScreen_ShowsAWholeCard`). **No route truncates.** Advanced diagnostics is
+honest. Do not bring it back. `/` is a ~19-row catalogue and guarantees its first screen is
+complete (`Home_FirstScreen_ShowsAWholeRow`). **No route truncates.** Advanced diagnostics is
 not a pane but a drawer (see "Drawers are native dialogs" below).
 `Azure_MobilePortrait_UptimeOpensOnToday_AndNothingOverflows` holds the phone layout.
 
@@ -365,7 +379,7 @@ comment in each before changing it; they document the reasoning, this is the map
 | `audio-kit.js` | Programmatic Web Audio — synthesis only, **zero audio assets**. UI SFX, the refresh drone (plus a sub "boom" and a three-note outcome motif at its end), the `/azure` sonification, and the analyser tap the shaders read. Everything runs through one synthesised-impulse convolution reverb send. |
 | `gpu-backdrop.js` | Orchestrator for `#app-gpu-backdrop`: tier selection, colour tokens, glass rects, audio energy, and the DOM reads that feed the simulations (pointer stir, `[data-fx-flock]` homes, uptime-scar seeds, palette lens/jump, the hero orb canvas). Owns no pixels. |
 | `gfx-webgl.js` | WebGL2 renderer (curl-noise field, stable-fluids sim, transform-feedback particles with per-service flocks, dual-Kawase blur + bloom, Gray-Scott scars, glass composite with prism edges) with a WebGL1 field-only fallback. **The top of the ladder.** Also `createOrb()`, the hero's metaball health orb on its own small canvas. |
-| `ui-physics.js` | Physics on the DOM, not a canvas: KPI values count up on a spring, catalogue cards tilt toward the mouse on an underdamped spring. Per-frame work is motionKit subscribers that unsubscribe when settled. |
+| `ui-physics.js` | Physics on the DOM, not a canvas: KPI values count up on a spring. (The catalogue-card tilt went with the cards, 2026-11-03.) Per-frame work is motionKit subscribers that unsubscribe when settled. |
 | `helpers.js` | Topbar, clipboard, download, `appRevealFocus` (the `/azure?focus=` scroll), `appShowDialog` (opens an `AppDrawer`) — plus the Radzen accessibility repairs (`appRepairRadzenA11y`). Unrelated to the animation layers. (The `appMedia` matchMedia bridge went with the resource explorer's data-grid branch — it had exactly one caller.) |
 | `theme-kit.js` | The visitor's light/dark choice and the compact-density flag, plus `window.appSettings` — the one facade `/settings` reads (`read()` → `theme|density|sound|fx`) and writes all four preferences through. Applies `data-app-theme` to `<html>` and rewrites the two Radzen theme sheets' `media` attributes. Must load before Blazor. |
 | `app-boot.js` | Host-page boot: dismisses the loading splash, drives the nav progress bar, filters hot-reload console noise. Not an animation layer — no rAF. Was inline in `App.razor` until the CSP banned inline script. |
@@ -518,7 +532,7 @@ proves a context and program were created, not that anything reached the screen.
   parameter as "may have changed" on every parent render, so without one, a page render walks
   every child — 23 portfolio cards, a 30-day uptime grid, ~48 resource explorer cards. The
   guard is reference identity on the data (`AzureUptimeHeatmap`, `AzureCostForecast`,
-  `AzureWhatChanged`, `AzurePriorityQueue`, `MetricBars`, `PortfolioAppCard`) plus any scalar that
+  `AzureWhatChanged`, `AzurePriorityQueue`, `MetricBars`, `PortfolioStackTable`) plus any scalar that
   changes what is drawn (`AzureResourceExplorer` also compares `SelectedView`).
   This is sound only because the page **replaces** its DTOs rather than mutating them. Two rules
   follow: never include a `Func`/`EventCallback` parameter in the comparison — those are fresh
@@ -605,8 +619,7 @@ proves a context and program were created, not that anything reached the screen.
   It carries the clean streak ("up 12d · 99% 30d"): `UptimeRow.CleanDays`, OBSERVED days since
   the row's last down/degraded day — an unobserved day is not a clean one (it used to count
   them, so every card claimed "30d+" off one day of data) — which `/api/portfolio` also puts on each card
-  (`PortfolioApp.CleanDays`, the flame chip on the card's host line — on that line, not a new
-  one, because a taller card fails `Home_FirstScreen_ShowsAWholeCard`).
+  (`PortfolioApp.CleanDays`, the flame chip in the row's app cell).
 - **Every scanned service carries its last deploy.** GitHub correlation now runs for all services,
   not only broken ones, and asks for the latest **push**-event run on the default branch (a
   scheduled workflow would otherwise read as a deploy every night). It becomes

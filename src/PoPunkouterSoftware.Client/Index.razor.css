@@ -133,9 +133,9 @@
 /* ── First-screen contract (mobile portrait) ─────────────────────────────────────
    A 24-item catalogue is a list, and paging a list fights the reader — so `/` keeps
    ordinary scrolling and instead guarantees that the FIRST SCREEN is complete:
-   title, the freshness/reload row, and a whole first card, inside 844px minus the
+   title, the freshness/reload row, and a whole first app row, inside 844px minus the
    chrome. That budget is what the numbers below are sized against, and
-   `PortfolioUiTests.Home_FirstScreen_ShowsAWholeCard` is what stops them drifting.
+   `PortfolioUiTests.Home_FirstScreen_ShowsAWholeRow` is what stops them drifting.
 
    The lede paragraph is the one thing dropped, not truncated: at 390px it wraps to three
    lines that restate the h1 and the wordmark above it. It stays in the DOM

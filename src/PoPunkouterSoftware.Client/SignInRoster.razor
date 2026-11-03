@@ -101,7 +101,7 @@
     /// <summary>
     /// The roster is a pure projection of <see cref="People"/>, and the page REPLACES the
     /// whole report on every load rather than mutating its lists, so reference identity is a
-    /// sound staleness test — the same contract MetricBars and PortfolioAppCard rely on.
+    /// sound staleness test — the same contract MetricBars and PortfolioStackTable rely on.
     /// This component holds no internal state, which is what makes the guard safe: it is
     /// consulted on a component's own StateHasChanged too.
     /// </summary>

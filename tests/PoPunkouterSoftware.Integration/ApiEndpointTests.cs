@@ -165,7 +165,12 @@ public class PortfolioEndpointTests
             app.TryGetProperty("description", out var description).Should().BeTrue();
             description.GetString().Should().NotBeNullOrWhiteSpace();
             app.TryGetProperty("status", out _).Should().BeTrue();
+            // The home page matrix's row: always an object, so the client never null-checks it.
+            app.GetProperty("stack").ValueKind.Should().Be(JsonValueKind.Object);
         }
+        // The catalog's stack block reaches the wire, and hosting is filled in (scan, else catalog).
+        apps.EnumerateArray().Select(a => a.GetProperty("stack").ToString())
+            .Should().Contain(s => s.Contains("\"frontend\":\"Blazor WebAssembly\"") && s.Contains("\"hosting\":\"Azure "));
 
         // Every card has a README badge at /badge/<id>.svg, built from the same list — so the
         // badge can never describe an app the catalogue does not show. Unknown ids are 404s.

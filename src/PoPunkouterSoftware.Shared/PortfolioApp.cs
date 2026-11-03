@@ -1,10 +1,10 @@
 namespace PoPunkouterSoftware.Shared;
 
 /// <summary>
-/// One stable home-page portfolio card. The catalog in apps.json is authoritative and
+/// One stable home-page portfolio row. The catalog in apps.json is authoritative and
 /// live Azure inventory decorates it with current reachability.
 ///
-/// <para>Deliberately narrow: this is exactly what <c>PortfolioAppCard</c> binds, plus
+/// <para>Deliberately narrow: this is exactly what <c>PortfolioStackTable</c> binds, plus
 /// <see cref="Status"/>, which the API contract tests pin, and <see cref="Category"/>.
 /// <c>InventoryGeneratedAt</c> and <c>Technologies</c> were serialised onto every card in
 /// the response and read by nothing after the design pass stripped the card down to
@@ -34,4 +34,6 @@ public record PortfolioApp
     public int? CleanDays { get; init; }
     /// <summary>"owner/repo" from the catalog — the Ctrl+K palette's repo and Actions links. Null when the catalog names none.</summary>
     public string? GithubRepo { get; init; }
+    /// <summary>The home page matrix's row: what the app is built from.</summary>
+    public AppStack Stack { get; init; } = new();
 }

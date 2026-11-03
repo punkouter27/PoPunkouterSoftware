@@ -1362,7 +1362,7 @@ html.is-theme-reveal::view-transition-new(root) {
    no rAF, off the main thread. Only the ENTRY range animates and the fill is
    `backwards`, which is what makes it safe:
      · anything already on screen at load is past the range and draws exactly as it
-       did before — the first catalogue card `Home_FirstScreen_ShowsAWholeCard`
+       did before — the first catalogue card `Home_FirstScreen_ShowsAWholeRow`
        measures, the first /azure pane;
      · nothing keeps a transform once it has arrived, so no permanent stacking context.
    Opacity and `translate` only — NO `scale`. Backwards fill applies the from-state to
@@ -1380,7 +1380,7 @@ html.is-theme-reveal::view-transition-new(root) {
 
 @supports (animation-timeline: view()) {
     @media (prefers-reduced-motion: no-preference) {
-        .app-portfolio-card,
+        .portfolio-stack,
         .app-pane,
         .signins-page .app-card {
             animation: app-rise linear backwards;
@@ -1393,8 +1393,7 @@ html.is-theme-reveal::view-transition-new(root) {
 @media (prefers-reduced-motion: reduce) {
     .app-page,
     .app-card,
-    .app-portfolio-card,
-    .app-screenshot-thumb img,
+    .portfolio-stack,
     .rz-header {
         animation: none !important;
         transition: none !important;

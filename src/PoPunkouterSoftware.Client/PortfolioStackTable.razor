@@ -1,0 +1,159 @@
+@using PoPunkouterSoftware.Shared
+@using Radzen
+
+@* The home page catalogue as a matrix: one row per app, one column per technical piece, so a
+   visitor reads across a row to see how one app is made and down a column to compare all of
+   them. It replaced a grid of screenshot cards (2026-11-03, owner's ask) that said what each
+   app was but never what it was built from.
+
+   A column that is empty on every row of this table is not drawn — the RL games have no
+   backend, sign-in or delivery to list, and a column of dashes is noise, not information.
+
+   At 1200px and below the table reflows into one stacked block per app (label: value),
+   because nine columns of real text cannot honestly fit a phone or a tablet. Explicit table roles keep the semantics a
+   `display: block` table otherwise loses in some browsers.
+
+   ONE link per row: the app name, stretched over the row's app cell by `::after`. *@
+<div class="app-card portfolio-stack" data-glass>
+    <table class="portfolio-stack__table" role="table" aria-label="@Label">
+        <thead role="rowgroup">
+            <tr role="row">
+                <th scope="col" role="columnheader">App</th>
+                @foreach (var column in _columns)
+                {
+                    <th scope="col" role="columnheader">@column.Label</th>
+                }
+            </tr>
+        </thead>
+        <tbody role="rowgroup">
+            @for (var i = 0; i < Apps.Count; i++)
+            {
+                var app = Apps[i];
+                var first = i == 0 && FirstIsLcp;
+                <tr @key="app.Id" role="row" class="portfolio-stack__row" data-sfx-hover="hover">
+                    <th scope="row" role="rowheader" class="portfolio-stack__app">
+                        @* width/height are the box the CSS draws (16:10), not the phone-shaped
+                           source, so nothing shifts when the stylesheet arrives. The first row's
+                           image is the LCP element and loads eagerly; the rest are lazy. *@
+                        <div class="portfolio-stack__thumb" aria-hidden="true">
+                            @if (!string.IsNullOrEmpty(app.ScreenshotUrl))
+                            {
+                                <img src="@app.ScreenshotUrl" alt="" width="160" height="100"
+                                     loading="@(first ? "eager" : "lazy")" fetchpriority="@(first ? "high" : "auto")"
+                                     decoding="async" onerror="this.style.display='none'" />
+                            }
+                        </div>
+                        <div class="portfolio-stack__id">
+                            <h2 class="portfolio-stack__name">
+                                @if (string.IsNullOrWhiteSpace(app.Url))
+                                {
+                                    @app.Name
+                                }
+                                else
+                                {
+                                    <a class="portfolio-stack__link" href="@app.Url" target="_blank" rel="noopener noreferrer" data-sfx="tap">@app.Name</a>
+                                }
+                            </h2>
+                            <p class="portfolio-stack__copy">@app.Description</p>
+                            <div class="portfolio-stack__meta">
+                                @* Live status only when it is news — see the streak beside it. *@
+                                @if (app.Status is "unavailable" or "degraded")
+                                {
+                                    <RadzenBadge Text="@(app.Status == "unavailable" ? "Down" : "Degraded")" IsPill="true"
+                                                 BadgeStyle="@(app.Status == "unavailable" ? BadgeStyle.Danger : BadgeStyle.Warning)" />
+                                }
+                                @if (app.CleanDays is > 0 and var days)
+                                {
+                                    <span class="portfolio-stack__streak">
+                                        <RadzenIcon Icon="local_fire_department" /><span aria-hidden="true">@(days >= 30 ? "30d+" : $"{days}d")</span>
+                                        <span class="app-sr-only">@(days >= 30 ? "No outage in 30 days" : $"{days} days without an outage")</span>
+                                    </span>
+                                }
+                                @* Nightly PageSpeed Insights, mobile. A Details control: hidden
+                                   unless /settings → Details → Full. *@
+                                @if (app.Scores is { } scores)
+                                {
+                                    <ul class="portfolio-stack__scores" aria-label="PageSpeed Insights, mobile" data-detail>
+                                        <li class="@ScoreClass(scores.Performance)"><span aria-hidden="true">Perf</span><span class="app-sr-only">Performance</span> @scores.Performance</li>
+                                        <li class="@ScoreClass(scores.Accessibility)"><span aria-hidden="true">A11y</span><span class="app-sr-only">Accessibility</span> @scores.Accessibility</li>
+                                        <li class="@ScoreClass(scores.BestPractices)"><span aria-hidden="true">BP</span><span class="app-sr-only">Best practices</span> @scores.BestPractices</li>
+                                        <li class="@ScoreClass(scores.Seo)"><span aria-hidden="true">SEO</span><span class="app-sr-only">Search engine optimisation</span> @scores.Seo</li>
+                                    </ul>
+                                    @if (scores.PerformanceHistory.Count > 1)
+                                    {
+                                        var history = scores.PerformanceHistory;
+                                        <span class="portfolio-stack__trend" data-detail>
+                                            <Sparkline Points="@history.Select((p, n) => new OpsMetricPoint(n.ToString(), p)).ToList()"
+                                                       Tone="@(history[^1] >= history[0] ? "good" : "warn")"
+                                                       AriaLabel="@($"Performance over {history.Count} nights, from {history[0]} to {history[^1]}")" />
+                                        </span>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </th>
+                    @foreach (var column in _columns)
+                    {
+                        var value = column.Value(app.Stack);
+                        <td role="cell" data-label="@column.Label" class="@(value is null ? "is-empty" : null)">
+                            @if (value is null)
+                            {
+                                <span aria-hidden="true">–</span><span class="app-sr-only">None listed</span>
+                            }
+                            else
+                            {
+                                @value
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<PortfolioApp> Apps { get; set; } = [];
+
+    /// <summary>The table's accessible name, e.g. "Web applications".</summary>
+    [Parameter, EditorRequired] public string Label { get; set; } = "";
+
+    /// <summary>True for the table holding the page's LCP image — its first row loads eagerly.</summary>
+    [Parameter] public bool FirstIsLcp { get; set; }
+
+    private sealed record Column(string Label, Func<AppStack, string?> Value);
+
+    /// <summary>The matrix, in the order a request travels: where it runs, what the visitor
+    /// loads, what answers it, where data lands, then the extras.</summary>
+    private static readonly Column[] AllColumns =
+    [
+        new("Hosting", s => s.Hosting),
+        new("Frontend", s => s.Frontend),
+        new("Backend", s => s.Backend),
+        new("Data", s => s.Data),
+        new("AI", s => s.Ai),
+        new("Sign-in", s => s.SignIn),
+        new("Phone", s => s.Phone),
+        new("Ships via", s => s.Delivery),
+    ];
+
+    private Column[] _columns = AllColumns;
+    private IReadOnlyList<PortfolioApp>? _rendered;
+
+    /// <summary>
+    /// A pure projection of <see cref="Apps"/>, guarded on reference identity: the parent builds
+    /// each list once per response, and replaces the response rather than mutating it.
+    /// </summary>
+    protected override bool ShouldRender()
+    {
+        if (ReferenceEquals(_rendered, Apps)) return false;
+        _rendered = Apps;
+        return true;
+    }
+
+    protected override void OnParametersSet() =>
+        _columns = AllColumns.Where(c => Apps.Any(a => c.Value(a.Stack) is not null)).ToArray();
+
+    /// <summary>Lighthouse's own bands: 90+ good, 50–89 needs work, below 50 poor.</summary>
+    private static string ScoreClass(int score) => score >= 90 ? "is-good" : score >= 50 ? "is-warn" : "is-bad";
+}

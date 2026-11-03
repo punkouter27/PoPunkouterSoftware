@@ -56,7 +56,8 @@ internal static partial class PortfolioEndpoints
         }
         // The streak chip: days since each card's last bad day on the /azure uptime grid —
         // the same row, so the card can never claim a streak the grid contradicts.
-        var apps = BuildApps(services, metadata, screenshotVersions, scoresTask.Result, screenshots.ScreenshotsEnabled)
+        var apps = BuildApps(services, metadata, screenshotVersions, scoresTask.Result, screenshots.ScreenshotsEnabled,
+                StorageGroups(report))
             .Select(a => a with { CleanDays = RowFor(uptimeTask.Result, a)?.CleanDays })
             .ToList();
 
@@ -102,8 +103,10 @@ internal static partial class PortfolioEndpoints
     private static List<PortfolioApp> BuildApps(
         List<WebService> services, List<AppMeta> metadata,
         IReadOnlyDictionary<string, long> screenshotVersions,
-        IReadOnlyDictionary<string, LighthouseScores> scores, bool captureOnDemand = false)
+        IReadOnlyDictionary<string, LighthouseScores> scores, bool captureOnDemand = false,
+        IReadOnlySet<string>? storageGroups = null)
     {
+        storageGroups ??= NoGroups;
         var metaByName = metadata
             .GroupBy(m => PortfolioIdentity.NormalizeName(m.Name), StringComparer.OrdinalIgnoreCase)
             .ToDictionary(g => g.Key, g => g.OrderBy(m => StatusRank(m.Status)).First(), StringComparer.OrdinalIgnoreCase);
@@ -122,7 +125,7 @@ internal static partial class PortfolioEndpoints
                 {
                     var key = PortfolioIdentity.NormalizeName(string.IsNullOrWhiteSpace(s.FriendlyName) ? s.Name : s.FriendlyName);
                     metaByName.TryGetValue(key, out var meta);
-                    return ToPortfolioApp(meta, s, screenshotVersions, scores, captureOnDemand);
+                    return ToPortfolioApp(meta, s, screenshotVersions, scores, captureOnDemand, storageGroups);
                 },
                 StringComparer.OrdinalIgnoreCase);
 
@@ -134,7 +137,7 @@ internal static partial class PortfolioEndpoints
             // Catalog entries marked active are the stable showcase, visible even when
             // Azure inventory is stale or unavailable. Only added when no live service
             // already claimed the key — otherwise the live entry's status wins.
-            appsByName.TryAdd(key, ToPortfolioApp(meta, null, screenshotVersions, scores, captureOnDemand));
+            appsByName.TryAdd(key, ToPortfolioApp(meta, null, screenshotVersions, scores, captureOnDemand, storageGroups));
         }
 
         return appsByName.Values.OrderBy(a => a.Name, StringComparer.OrdinalIgnoreCase).ToList();
@@ -287,7 +290,8 @@ internal static partial class PortfolioEndpoints
 
     private static PortfolioApp ToPortfolioApp(
         AppMeta? meta, WebService? service, IReadOnlyDictionary<string, long> screenshotVersions,
-        IReadOnlyDictionary<string, LighthouseScores> scores, bool captureOnDemand)
+        IReadOnlyDictionary<string, LighthouseScores> scores, bool captureOnDemand,
+        IReadOnlySet<string> storageGroups)
     {
         var name = meta?.Name ?? service?.FriendlyName ?? service?.Name ?? "Unnamed app";
         // The curated catalog URL wins over the scanned one: inventory can lag reality by
@@ -313,8 +317,18 @@ internal static partial class PortfolioEndpoints
                 ? $"/api/portfolio/screenshots/{host}?v={version}" : null,
             Scores = host is not null && scores.TryGetValue(host, out var score) ? score : null,
             GithubRepo = string.IsNullOrWhiteSpace(meta?.GithubRepo) ? null : meta.GithubRepo,
+            Stack = AppStackBuilder.Build(meta?.Stack, meta?.Technologies, service, storageGroups),
         };
     }
+
+    /// <summary>Resource groups holding a storage account, from the scan's storage inventory.</summary>
+    private static IReadOnlySet<string> StorageGroups(AzureReport? report) =>
+        (report?.StorageInventory ?? [])
+            .Select(s => s.ResourceGroup)
+            .OfType<string>()
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    private static readonly IReadOnlySet<string> NoGroups = new HashSet<string>();
 
     private static int StatusRank(string? status) => status?.ToLowerInvariant() switch
     {
@@ -333,6 +347,7 @@ internal static partial class PortfolioEndpoints
         string? Status,
         string? Url,
         List<string>? Technologies,
-        string? GithubRepo);
+        string? GithubRepo,
+        AppStack? Stack);
 }
 
