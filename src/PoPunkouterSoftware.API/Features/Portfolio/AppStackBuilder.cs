@@ -25,6 +25,15 @@ internal static class AppStackBuilder
             details.TryAdd("data", "The Azure scan found a storage account in this app's resource group");
         }
 
+        // A backend with no sign-in listed means no login, so a hint left behind from when it
+        // had one would contradict the "None" cell.
+        var signIn = Blank(catalog.SignIn);
+        if (signIn is null && Blank(catalog.Backend) is not null)
+        {
+            signIn = "None";
+            details.Remove("signIn");
+        }
+
         return catalog with
         {
             Frontend = Blank(catalog.Frontend),
@@ -37,7 +46,9 @@ internal static class AppStackBuilder
             Training = Blank(catalog.Training),
             TrainingPath = Blank(catalog.TrainingPath)?.Trim('/'),
             Inference = Blank(catalog.Inference),
-            SignIn = Blank(catalog.SignIn),
+            // "None" in words, not a dash (owner's call, 2026-11-03 — some apps will drop
+            // login). A game has no backend and nothing to sign in to: empty, column hidden.
+            SignIn = signIn,
             Phone = Blank(catalog.Phone),
             Delivery = Blank(catalog.Delivery),
             Details = details,

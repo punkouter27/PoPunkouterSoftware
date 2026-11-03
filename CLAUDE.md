@@ -236,7 +236,8 @@ FLUX.1 Kontext pro there; PoRedoMedia's Google key is in the vault, so its Googl
 response. Only an IDENTICAL column moves up: an "all but one, naming the exception" rule
 (Sign-in: "Microsoft, except PoRepoLineTracker: GitHub") was tried and removed the same day,
 2026-11-03 — sign-in differs between apps (PoRepoLineTracker is GitHub-only on purpose, see
-its SPEC.md §9) and some apps will drop login, so Sign-in is a column. The RL table has its own columns, empty
+its SPEC.md §9) and some apps will drop login, so Sign-in is a column; an app with a backend and no
+`signIn` in the catalog reads "None" (`AppStackBuilder`), never a dash. The RL table has its own columns, empty
 for web apps: Physics (MuJoCo vs Unity physics), RL training (Unity ML-Agents vs MuJoCo Warp /
 Playground + Brax) and Policy runtime (Unity Inference Engine vs Unreal NNE), read from each
 game repo's ProjectVersion.txt, Packages/manifest.json, .uproject and training/pyproject.toml.
