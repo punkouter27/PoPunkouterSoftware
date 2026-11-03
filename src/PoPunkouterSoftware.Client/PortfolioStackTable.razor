@@ -14,7 +14,9 @@
    the Backend column comes back on its own. A column where every app but ONE agrees moves
    up too, naming the exception ("Microsoft account, except PoRepoLineTracker: GitHub"):
    one odd row is a footnote, not a column (owner's call on Sign-in, 2026-11-03). It needs
-   three or more apps, or "all but one" would be half the table. What a shared column hid per app — SignalR,
+   three or more apps, or "all but one" would be half the table — and it is opt-in per
+   column (AllowException): the RL table's engine is Unity OR Unreal, a real difference
+   that a "Unity, except PoSlapUnreal" footnote hid (owner's call, same day). What a shared column hid per app — SignalR,
    the Google Maps API — lives in the rightmost "Unique tech" column, which names the
    libraries and APIs only that app uses (three.js, LibGit2Sharp, WebLLM…).
 
@@ -225,18 +227,22 @@
     [Parameter] public bool FirstIsLcp { get; set; }
 
     /// <summary>Key is the property's camelCase JSON name, which is also its <see cref="AppStack.Details"/> key.</summary>
-    private sealed record Column(string Key, string Label, Func<AppStack, string?> Value);
+    private sealed record Column(string Key, string Label, Func<AppStack, string?> Value, bool AllowException = false);
 
     /// <summary>The matrix, in the order a request travels: what the visitor loads, what
     /// answers it, how it pushes back live, what else it calls, where data lands, then the rest.</summary>
     private static readonly Column[] AllColumns =
     [
         new("frontend", "Frontend", s => s.Frontend),
+        // The RL games' columns; empty for every web app, so that table never draws them.
+        new("physics", "Physics", s => s.Physics),
+        new("training", "RL training", s => s.Training),
+        new("inference", "Policy runtime", s => s.Inference),
         new("backend", "Backend", s => s.Backend),
         new("realtime", "Real-time", s => s.Realtime),
         new("data", "Data", s => s.Data),
         new("ai", "AI", s => s.Ai),
-        new("signIn", "Sign-in", s => s.SignIn),
+        new("signIn", "Sign-in", s => s.SignIn, AllowException: true),
         new("phone", "Phone", s => s.Phone),
         new("delivery", "Ships via", s => s.Delivery),
         // Last: what makes THIS app different, after the columns most apps share.
@@ -273,7 +279,7 @@
         // Not for AI, whose cell is a list — "except" a whole list says nothing useful.
         var nearly = Apps.Count > 2
             ? present.Except(shared)
-                .Where(c => c.Key != "ai" && Apps.All(a => c.Value(a.Stack) is not null))
+                .Where(c => c.AllowException && Apps.All(a => c.Value(a.Stack) is not null))
                 .Select(c => (Column: c, Groups: Apps.GroupBy(a => c.Value(a.Stack)).OrderByDescending(g => g.Count()).ToArray()))
                 .Where(x => x.Groups.Length == 2 && x.Groups[1].Count() == 1)
                 .ToArray()

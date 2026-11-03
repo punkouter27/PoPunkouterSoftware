@@ -235,7 +235,13 @@ FLUX.1 Kontext pro there; PoRedoMedia's Google key is in the vault, so its Googl
 "Shared by all N" strip above that table, outside its scroller, worked out per table on every
 response; so does a column where all but ONE of 3+ apps agree, naming the exception (Sign-in:
 "Microsoft, except PoRepoLineTracker: GitHub" — that repo dropped Microsoft sign-in on purpose,
-see its SPEC.md §9). A Hosting column was removed 2026-11-03 (owner's call). Real-time
+see its SPEC.md §9) — but only for a column marked `AllowException` (Sign-in alone): the RL
+engine is Unity OR Unreal, and a footnote hid that. The RL table has its own columns, empty
+for web apps: Physics (MuJoCo vs Unity physics), RL training (Unity ML-Agents vs MuJoCo Warp /
+Playground + Brax) and Policy runtime (Unity Inference Engine vs Unreal NNE), read from each
+game repo's ProjectVersion.txt, Packages/manifest.json, .uproject and training/pyproject.toml.
+None of the games has a public Play Store page yet (2026-11-03: every package id 404s), so
+none is linked. A Hosting column was removed 2026-11-03 (owner's call). Real-time
 (`AppStack.Realtime`: SignalR, WebSockets, server-sent events, Web Push) was read from each
 repo's `MapHub`, `text/event-stream` and `PushServiceClient` use. Data names the services
 ("Azure Table Storage + Azure Blob Storage", one per line), never "Table + Blob", and lists

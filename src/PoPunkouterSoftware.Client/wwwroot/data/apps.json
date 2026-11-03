@@ -389,10 +389,16 @@
       "githubRepo": "punkouter27/PoBox",
       "expect": "<title>PoBox</title>",
       "stack": {
-        "frontend": "Unity WebGL",
+        "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
+        "physics": "MuJoCo 3.5",
+        "training": "MuJoCo Warp + PPO (PyTorch)",
+        "inference": "Unity Inference Engine",
         "details": {
-          "frontend": "Unity game compiled to WebGL, running in the browser"
+          "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
+          "physics": "The official MuJoCo Unity plugin 3.5 runs the fight's physics; there is no PhysX in the arena",
+          "training": "Trained offline in Python: MuJoCo Warp simulates thousands of boxers at once on the GPU, and an rsl_rl-style PPO in PyTorch learns each boxer's brain",
+          "inference": "Unity Inference Engine (formerly Sentis) runs the trained ONNX policies on the CPU inside the browser build"
         },
         "aiServices": [
           {
@@ -418,10 +424,16 @@
       "githubRepo": "punkouter27/PoFootball",
       "expect": "<title>PoFootball</title>",
       "stack": {
-        "frontend": "Unity WebGL",
+        "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
+        "physics": "Unity physics",
+        "training": "Unity ML-Agents 4.1",
+        "inference": "Unity Inference Engine",
         "details": {
-          "frontend": "Unity game compiled to WebGL, running in the browser"
+          "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
+          "physics": "Unity's built-in physics engine (PhysX) moves the players",
+          "training": "Unity ML-Agents 4.1 in the game and mlagents 1.1 (PyTorch) in Python train separate offense and defense brains",
+          "inference": "Unity Inference Engine (formerly Sentis) runs the trained ONNX policies on the CPU inside the browser build"
         },
         "aiServices": [
           {
@@ -447,10 +459,16 @@
       "githubRepo": "punkouter27/PoHillKing",
       "expect": "<title>PoHillKing</title>",
       "stack": {
-        "frontend": "Unity WebGL",
+        "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
+        "physics": "MuJoCo",
+        "training": "MuJoCo Warp + rsl_rl PPO (PyTorch)",
+        "inference": "Unity Inference Engine",
         "details": {
-          "frontend": "Unity game compiled to WebGL, running in the browser"
+          "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
+          "physics": "MuJoCo simulates every body in the browser through its WebGL plugin; Unity only draws them",
+          "training": "Trained offline: MuJoCo 3.15 and MuJoCo Warp on the GPU, with rsl_rl PPO on PyTorch 2.9, one policy per fighter role",
+          "inference": "Unity Inference Engine (formerly Sentis) runs the trained ONNX policies on the CPU inside the browser build"
         },
         "aiServices": [
           {
@@ -476,10 +494,16 @@
       "githubRepo": "punkouter27/PoOlympic",
       "expect": "<title>PoOlympics</title>",
       "stack": {
-        "frontend": "Unity WebGL",
+        "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
+        "physics": "MuJoCo",
+        "training": "MuJoCo Warp + PyTorch",
+        "inference": "Unity Inference Engine",
         "details": {
-          "frontend": "Unity game compiled to WebGL, running in the browser"
+          "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
+          "physics": "MuJoCo simulates every body in the browser through its WebGL plugin; Unity only draws them",
+          "training": "Trained offline: MuJoCo 3.11 and MuJoCo Warp on the GPU with PyTorch, one brain per athlete and event",
+          "inference": "Unity Inference Engine (formerly Sentis) runs the trained ONNX policies on the CPU inside the browser build"
         },
         "aiServices": [
           {
@@ -505,10 +529,16 @@
       "githubRepo": "punkouter27/PoRace",
       "expect": "<title>PoRace</title>",
       "stack": {
-        "frontend": "Unity WebGL",
+        "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
+        "physics": "MuJoCo",
+        "training": "MuJoCo Playground + Brax PPO (JAX)",
+        "inference": "Unity Inference Engine",
         "details": {
-          "frontend": "Unity game compiled to WebGL, running in the browser"
+          "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
+          "physics": "MuJoCo simulates every body in the browser through its WebGL plugin; Unity only draws them",
+          "training": "Trained offline with MuJoCo Playground and Brax PPO (JAX) on MuJoCo Warp; the robots are Unitree Go2 and G1 models",
+          "inference": "Unity Inference Engine (formerly Sentis) runs the trained ONNX policies on the CPU inside the browser build"
         },
         "aiServices": [
           {
@@ -534,10 +564,16 @@
       "githubRepo": "punkouter27/PoRumble",
       "expect": "<title>PoRumble</title>",
       "stack": {
-        "frontend": "Unity WebGL",
+        "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
+        "physics": "Unity physics",
+        "training": "Unity ML-Agents 4.1",
+        "inference": "Unity Inference Engine",
         "details": {
-          "frontend": "Unity game compiled to WebGL, running in the browser"
+          "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
+          "physics": "Unity's built-in physics engine (PhysX) moves the players",
+          "training": "Unity ML-Agents 4.1 with self-play configs for 1v1 bouts and a 10-way free-for-all",
+          "inference": "Unity Inference Engine (formerly Sentis) runs the trained ONNX policies on the CPU inside the browser build"
         },
         "aiServices": [
           {
@@ -563,10 +599,16 @@
       "githubRepo": "punkouter27/PoSoccer",
       "expect": "<title>PoSoccer</title>",
       "stack": {
-        "frontend": "Unity WebGL",
+        "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
+        "physics": "Unity physics",
+        "training": "Unity ML-Agents",
+        "inference": "Unity Inference Engine",
         "details": {
-          "frontend": "Unity game compiled to WebGL, running in the browser"
+          "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
+          "physics": "Unity's built-in physics engine (PhysX) moves the players",
+          "training": "Unity ML-Agents (an embedded copy of the package), one training config per player",
+          "inference": "Unity Inference Engine (formerly Sentis) runs the trained ONNX policies on the CPU inside the browser build"
         },
         "aiServices": [
           {
@@ -592,10 +634,16 @@
       "githubRepo": "punkouter27/PoSumo",
       "expect": "<title>PoSumo</title>",
       "stack": {
-        "frontend": "Unity WebGL",
+        "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
+        "physics": "Unity physics",
+        "training": "Unity ML-Agents",
+        "inference": "ML-Agents inference",
         "details": {
-          "frontend": "Unity game compiled to WebGL, running in the browser"
+          "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
+          "physics": "Unity's built-in physics engine (PhysX) moves the players",
+          "training": "Unity ML-Agents, built from a vendored copy of its source, one brain per wrestler",
+          "inference": "ML-Agents runs the trained ONNX brains inside the browser build"
         },
         "aiServices": [
           {
@@ -621,10 +669,16 @@
       "githubRepo": "punkouter27/PoSlapUnreal",
       "expect": "<title>PoSlap Arena</title>",
       "stack": {
-        "frontend": "Unreal Engine",
+        "frontend": "Unreal Engine 5.8",
         "ai": "RL agents",
+        "physics": "MuJoCo 3.10",
+        "training": "MuJoCo Warp + PyTorch",
+        "inference": "Unreal NNE (ONNX Runtime)",
         "details": {
-          "frontend": "Unreal Engine build running in the browser"
+          "frontend": "Unreal Engine 5.8; Unreal only draws the athletes, its Chaos physics is switched off",
+          "physics": "MuJoCo 3.10 at 200 Hz through the Unreal Robotics Lab plugin moves every athlete",
+          "training": "Trained offline in Python with MuJoCo Warp and PyTorch, in curriculum levels",
+          "inference": "Unreal's Neural Network Engine runs the ONNX policies on the CPU at 50 Hz"
         },
         "aiServices": [
           {

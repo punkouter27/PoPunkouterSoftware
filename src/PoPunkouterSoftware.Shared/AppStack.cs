@@ -24,6 +24,12 @@ public record AppStack
     public string? Data { get; init; }
     /// <summary>Short summary; the matrix draws <see cref="AiServices"/> instead when there are any.</summary>
     public string? Ai { get; init; }
+    /// <summary>RL games: what simulates the bodies in the game, e.g. "MuJoCo" or "Unity physics".</summary>
+    public string? Physics { get; init; }
+    /// <summary>RL games: how the policies were trained, offline, e.g. "Unity ML-Agents 4.1".</summary>
+    public string? Training { get; init; }
+    /// <summary>RL games: what runs the trained ONNX policies inside the game.</summary>
+    public string? Inference { get; init; }
     /// <summary>Every AI model or service the app calls, grouped by cloud in the AI column.</summary>
     public List<AiService> AiServices { get; init; } = new();
     public string? SignIn { get; init; }
