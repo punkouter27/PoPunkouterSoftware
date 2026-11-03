@@ -221,7 +221,8 @@ loaded". Now ~20s once, then instant.
 
 **`/` is a stack matrix, not a card grid (owner's ask, 2026-11-03).** `PortfolioStackTable`
 draws one row per app and one column per technical piece — Frontend, Backend, Real-time,
-Extras, Data, AI, Sign-in, Phone, Ships via — written for a visitor, not the owner: plain names, no SKUs or
+Data, AI, Sign-in, Phone, Ships via, and rightmost "Unique tech" (`AppStack.Extras`: the
+libraries and APIs only that app uses, read from its packages and code) — written for a visitor, not the owner: plain names, no SKUs or
 resource ids. Cells are SHORT labels ("Table + Blob", "Azure OpenAI", "PWA") so a column
 scans; the full wording is `AppStack.Details[<camelCase key>]`, shown as an `AppHint` on the
 cell plus sr-only text. **The AI column is the exception**: it lists `AppStack.AiServices`
@@ -237,7 +238,12 @@ response; so does a column where all but ONE of 3+ apps agree, naming the except
 see its SPEC.md §9). A Hosting column was removed 2026-11-03 (owner's call). Real-time
 (`AppStack.Realtime`: SignalR, WebSockets, server-sent events, Web Push) was read from each
 repo's `MapHub`, `text/event-stream` and `PushServiceClient` use. Data names the services
-("Azure Table Storage + Azure Blob Storage", one per line), never "Table + Blob"; per-app add-ons a shared Backend would hide sit in `AppStack.Extras` (its own column).
+("Azure Table Storage + Azure Blob Storage", one per line), never "Table + Blob", and lists
+Blob Storage only for an app whose non-test code really reads or writes blobs (checked
+2026-11-03: all but PoRepoLineTracker and PoTraffic). The app cell carries the FULL
+`description` sentence under the picture, unclamped — the catalog's descriptions were
+rewritten from each README then, and three were simply wrong (PoWatch, PoSeeReview,
+PoLocalCompare); per-app add-ons a shared Backend would hide sit in `AppStack.Extras` (its own column).
 A column empty on every row of a table is not drawn (the RL table has
 no backend). **It stays a table down to 641px**: when the columns outgrow the card, the card
 scrolls sideways (tabindex + role=group) with the app column `position: sticky` and opaque.

@@ -156,16 +156,13 @@
 
 .portfolio-stack__row:hover .portfolio-stack__link { color: var(--app-accent); }
 
+/* The full sentence, under the picture and name, across the whole cell. Unclamped. */
 .portfolio-stack__copy {
-    margin: 0;
+    margin: var(--app-space-xs) 0 0;
     color: var(--app-text-muted);
     font-size: var(--app-step--1);
     line-height: 1.45;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    white-space: normal;
 }
 
 .portfolio-stack__meta {
@@ -285,7 +282,8 @@
 
 .portfolio-stack__except { color: var(--app-text-muted); font-size: var(--app-step--1); }
 
-/* Data and Real-time: one service per line when an app uses several. */
+/* Data, Real-time and Unique tech: one item per line when an app has several. */
+.portfolio-stack__multi { display: inline-flex; align-items: flex-start; }
 .portfolio-stack__lines {
     display: inline-grid;
     gap: 0.1rem;

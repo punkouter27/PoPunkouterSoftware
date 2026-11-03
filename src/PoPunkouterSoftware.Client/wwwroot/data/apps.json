@@ -3,7 +3,7 @@
     {
       "id": "polocalcompare",
       "name": "PoLocalCompare",
-      "description": "Side-by-side comparison tool for local options",
+      "description": "A live arena where two AI models race to build the same web page from one prompt, one running in your browser on WebGPU and one in Azure, and the better page wins.",
       "category": "productivity",
       "status": "active",
       "technologies": [
@@ -22,13 +22,15 @@
         "signIn": "Microsoft",
         "delivery": "GitHub Actions",
         "realtime": "SignalR",
+        "extras": "WebLLM + WebGPU",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage holds the records (schemaless rows); Azure Blob Storage holds files",
+          "data": "Azure Table Storage holds duels, ratings and tournaments; Azure Blob Storage holds generated pages too large for a table row",
           "signIn": "Sign in with a Microsoft account",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "realtime": "A SignalR hub streams each duel's progress and results to the people watching it"
+          "realtime": "A SignalR hub streams each duel's progress and results to the people watching it",
+          "extras": "WebLLM runs open models entirely in your browser on the GPU (WebGPU), racing the Azure models"
         },
         "aiServices": [
           {
@@ -72,7 +74,7 @@
     {
       "id": "pomemevideo",
       "name": "PoMemeVideo",
-      "description": "Meme video creation tool",
+      "description": "A tool for making meme videos in the browser.",
       "category": "creative",
       "status": "active",
       "technologies": [
@@ -99,7 +101,7 @@
     {
       "id": "5ln5hfdrvof5u",
       "name": "PoMiniGames",
-      "description": "Collection of browser mini-games",
+      "description": "Instant-play browser mini-games, many of them real-time multiplayer: races, brawls, quizzes and board games against friends.",
       "category": "games",
       "status": "active",
       "technologies": [
@@ -118,21 +120,23 @@
         "phone": "PWA",
         "delivery": "GitHub Actions",
         "realtime": "SignalR",
+        "extras": "three.js + Tone.js + SharpGLTF + QRCoder",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage holds the records (schemaless rows); Azure Blob Storage holds files",
+          "data": "Azure Table Storage holds the game records; Azure Blob Storage holds saved PoEcosystem worlds and the sign-in encryption keys",
           "signIn": "Sign in with a Microsoft account",
           "phone": "Installable web app (PWA): add it to a phone home screen",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "realtime": "13 SignalR hubs: multiplayer lobbies, 30 Hz race ticks, lockstep matches and live quizzes"
+          "realtime": "13 SignalR hubs: multiplayer lobbies, 30 Hz race ticks, lockstep matches and live quizzes",
+          "extras": "three.js draws the 3D games, Tone.js plays the music, SharpGLTF reads glTF 3D models and QRCoder makes QR codes"
         }
       }
     },
     {
       "id": "app-pomode2",
       "name": "PoMode",
-      "description": "Drop in a song and hear what it is made of — stems, pitch, chords and the mode it sits in, plus a Mode Lab that plays each mode over harmony rooted to match.",
+      "description": "Drop in a song and hear what it is made of: stems, pitch, chords and the mode it sits in, plus a Mode Lab that plays each mode over harmony rooted to match.",
       "category": "creative",
       "status": "active",
       "technologies": [
@@ -153,14 +157,16 @@
         "phone": "PWA",
         "delivery": "GitHub Actions",
         "realtime": "SignalR + Server-sent events + Web Push",
+        "extras": "ONNX Runtime + Whisper.net + AcoustID + DryWetMidi + tus uploads",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Blob Storage holds the uploaded songs and analysis files",
+          "data": "Azure Blob Storage holds each analysis job's files: the upload and its results. No tables",
           "signIn": "Microsoft account, to open OneDrive files",
           "phone": "Installable web app (PWA): add it to a phone home screen",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "realtime": "SignalR pushes live analysis updates, server-sent events stream the song statistics text as it is written, and Web Push says when a job finishes"
+          "realtime": "SignalR pushes live analysis updates, server-sent events stream the song statistics text as it is written, and Web Push says when a job finishes",
+          "extras": "ONNX Runtime runs the audio models, Whisper.net transcribes lyrics, AcoustID fingerprints the song, DryWetMidi writes MIDI and tus makes big uploads resumable"
         },
         "aiServices": [
           {
@@ -185,7 +191,7 @@
     {
       "id": "app-porepolinetracker2",
       "name": "PoRepoLineTracker",
-      "description": "Track lines of code across all your GitHub repositories over time — point it at an account and watch each repo grow or shrink.",
+      "description": "Tracks lines of code across all your GitHub repositories over time, so you can point it at an account and watch each repo grow or shrink.",
       "category": "productivity",
       "status": "active",
       "technologies": [
@@ -203,23 +209,23 @@
         "data": "Azure Table Storage",
         "signIn": "GitHub",
         "delivery": "GitHub Actions",
-        "extras": "GitHub API",
         "realtime": "SignalR",
+        "extras": "LibGit2Sharp + Roslyn + GitHub API",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage holds the repositories and line-count history",
+          "data": "Azure Table Storage holds the repositories and line-count history. No blobs",
           "signIn": "Sign in with GitHub",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "extras": "Reads repositories and commit history through the GitHub API",
-          "realtime": "A SignalR hub shows analysis progress for your own repositories"
+          "realtime": "A SignalR hub shows analysis progress for your own repositories",
+          "extras": "LibGit2Sharp clones each repository and walks its commit history, Roslyn reads C# source, and the GitHub API lists your repositories"
         }
       }
     },
     {
       "id": "potraffic-api",
       "name": "PoTraffic",
-      "description": "Traffic monitoring dashboard and API",
+      "description": "Measures how unpredictable your commute is, building a baseline from Google Maps travel times for each route and time slot and alerting you when a drive runs long.",
       "category": "productivity",
       "status": "active",
       "technologies": [
@@ -236,23 +242,23 @@
         "data": "Azure Table Storage",
         "signIn": "Microsoft",
         "delivery": "GitHub Actions",
-        "extras": "Google Maps API",
         "realtime": "Web Push",
+        "extras": "Google Maps API + Leaflet maps",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage holds routes, baselines and the scheduled job rows",
+          "data": "Azure Table Storage holds routes, baselines and the scheduled job rows. No blobs",
           "signIn": "Sign in with a Microsoft account",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "extras": "Google Maps supplies the live traffic times for each route",
-          "realtime": "Web Push notifications when a saved route is congested; a background job checks every 15 minutes"
+          "realtime": "Web Push notifications when a saved route is congested; a background job checks every 15 minutes",
+          "extras": "The Google Maps API supplies live travel times; Leaflet draws the route maps"
         }
       }
     },
     {
       "id": "app-powatch",
       "name": "PoWatch",
-      "description": "Personal watchlist app",
+      "description": "Point a webcam at anything, walk away, and come back to a statistical picture of what happened: motion, objects, regular visitors, time patterns and captions.",
       "category": "productivity",
       "status": "active",
       "technologies": [
@@ -272,17 +278,17 @@
         "signIn": "Microsoft",
         "phone": "PWA",
         "delivery": "GitHub Actions",
-        "extras": "Azure email",
         "realtime": "SignalR",
+        "extras": "transformers.js + QuestPDF + Azure email",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage holds the records (schemaless rows); Azure Blob Storage holds files",
+          "data": "Azure Table Storage holds the stats; Azure Blob Storage holds snapshots, user data and the sign-in encryption keys",
           "signIn": "Sign in with a Microsoft account",
           "phone": "Installable web app (PWA): add it to a phone home screen",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "extras": "Sends the recaps through Azure Communication Services email",
-          "realtime": "A SignalR hub tells every open tab when your stats change, so nothing polls"
+          "realtime": "A SignalR hub tells every open tab when your stats change, so nothing polls",
+          "extras": "transformers.js runs vision and audio models in the browser on the webcam feed, QuestPDF builds PDF reports, and Azure Communication Services sends the email"
         },
         "aiServices": [
           {
@@ -303,7 +309,7 @@
     {
       "id": "poseereview",
       "name": "PoSeeReview",
-      "description": "Review and feedback productivity tool",
+      "description": "Turns the strangest Google Maps restaurant reviews into AI-drawn four-panel comic strips and ranks them on a Hall of Fame leaderboard.",
       "category": "productivity",
       "status": "disabled",
       "technologies": [
@@ -321,8 +327,8 @@
         "signIn": "Microsoft",
         "phone": "PWA",
         "delivery": "GitHub Actions",
-        "extras": "Google Places API",
         "realtime": "Server-sent events",
+        "extras": "SkiaSharp + Google Places API",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
@@ -330,8 +336,8 @@
           "signIn": "Sign in with a Microsoft account",
           "phone": "Installable web app (PWA): add it to a phone home screen",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "extras": "Google Places supplies the restaurant reviews the comics are drawn from",
-          "realtime": "Comic generation streams its real stages to the page as server-sent events"
+          "realtime": "Comic generation streams its real stages to the page as server-sent events",
+          "extras": "SkiaSharp processes the comic images; the Google Places API supplies the restaurant reviews"
         },
         "aiServices": [
           {
@@ -371,7 +377,7 @@
     {
       "id": "pobox",
       "name": "PoBox",
-      "description": "A boxing broadcast: physics-driven boxers with trained brains, cut by cameras that follow the action, scored by three judges.",
+      "description": "A boxing broadcast where physics-driven boxers with trained brains fight, cameras follow the action and three judges score it.",
       "category": "rl-training",
       "status": "active",
       "technologies": [
@@ -400,7 +406,7 @@
     {
       "id": "pofootball",
       "name": "PoFootball",
-      "description": "An AI football sim: trained players run full downs, or take the snap yourself in QB challenge mode.",
+      "description": "An AI football sim where trained players run full downs, or you take the snap yourself in QB challenge mode.",
       "category": "rl-training",
       "status": "active",
       "technologies": [
@@ -429,7 +435,7 @@
     {
       "id": "pohillking",
       "name": "PoHillKing",
-      "description": "King of the hill between physics-simulated human bodies, each driven by its own trained policy.",
+      "description": "Physics-simulated human bodies play king of the hill, each one driven by its own trained policy.",
       "category": "rl-training",
       "status": "active",
       "technologies": [
@@ -458,7 +464,7 @@
     {
       "id": "poolympic",
       "name": "PoOlympic",
-      "description": "Olympic events contested by MuJoCo-simulated athletes trained with reinforcement learning.",
+      "description": "Athletes simulated in MuJoCo physics and trained with reinforcement learning contest Olympic events.",
       "category": "rl-training",
       "status": "active",
       "technologies": [
@@ -487,7 +493,7 @@
     {
       "id": "porace",
       "name": "PoRace",
-      "description": "Robots race on MuJoCo physics, every stride from a trained locomotion policy.",
+      "description": "Robots race on MuJoCo physics, with every stride coming from a trained locomotion policy.",
       "category": "rl-training",
       "status": "active",
       "technologies": [
@@ -516,7 +522,7 @@
     {
       "id": "porumble",
       "name": "PoRumble",
-      "description": "A top-down boxing battle royale: sixteen fighters with ML-Agents-trained opponents, last one standing.",
+      "description": "A top-down boxing battle royale where sixteen fighters face ML-Agents-trained opponents until one is left standing.",
       "category": "rl-training",
       "status": "active",
       "technologies": [
@@ -545,7 +551,7 @@
     {
       "id": "posoccer",
       "name": "PoSoccer",
-      "description": "Pocket soccer between ML-Agents-trained players.",
+      "description": "Pocket soccer played between players trained with Unity ML-Agents.",
       "category": "rl-training",
       "status": "active",
       "technologies": [
@@ -574,7 +580,7 @@
     {
       "id": "posumo",
       "name": "PoSumo",
-      "description": "Sumo bouts under real sumo rules between trained agents.",
+      "description": "Trained agents wrestle sumo bouts under real sumo rules.",
       "category": "rl-training",
       "status": "active",
       "technologies": [
@@ -603,7 +609,7 @@
     {
       "id": "poslapunreal",
       "name": "PoSlapUnreal",
-      "description": "A slap-fight arena whose fighters are trained with reinforcement learning, running in the browser.",
+      "description": "A slap-fight arena built in Unreal Engine whose fighters are trained with reinforcement learning, playable in the browser.",
       "category": "rl-training",
       "status": "active",
       "technologies": [
@@ -651,14 +657,16 @@
         "phone": "PWA",
         "delivery": "GitHub Actions",
         "realtime": "SignalR + WebSockets",
+        "extras": "Opus audio (Concentus) + transformers.js + MessagePack",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage holds the records (schemaless rows); Azure Blob Storage holds files",
+          "data": "Azure Table Storage holds the records; Azure Blob Storage holds recorded fight audio and profile images",
           "signIn": "Sign in with a Microsoft account",
           "phone": "Installable web app (PWA): add it to a phone home screen",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "realtime": "SignalR (MessagePack) carries microphone frames up and the host's voice, captions and snapshots down; the server talks to GPT-Realtime over a WebSocket"
+          "realtime": "SignalR (MessagePack) carries microphone frames up and the host's voice, captions and snapshots down; the server talks to GPT-Realtime over a WebSocket",
+          "extras": "Concentus encodes microphone audio as Opus; transformers.js runs Whisper in the browser; MessagePack keeps the SignalR traffic compact"
         },
         "aiServices": [
           {
@@ -703,7 +711,7 @@
     {
       "id": "poredomedia",
       "name": "PoRedoMedia",
-      "description": "Remix pictures and clips with AI: memes, roasts and restyles.",
+      "description": "Remix your pictures and clips with AI into memes, roasts, restyled images, music clips and photo-to-video.",
       "category": "creative",
       "status": "active",
       "technologies": [
@@ -722,14 +730,16 @@
         "phone": "PWA",
         "delivery": "GitHub Actions",
         "realtime": "SignalR",
+        "extras": "SkiaSharp + transformers.js",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage holds the records (schemaless rows); Azure Blob Storage holds files; everything an item owns sits under one blob prefix",
+          "data": "Azure Table Storage holds runs and items; Azure Blob Storage holds every picture, clip and the sound library",
           "signIn": "Sign in with a Microsoft account",
           "phone": "Installable web app (PWA): add it to a phone home screen",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "realtime": "A SignalR hub shows each run's progress live, to its owner only"
+          "realtime": "A SignalR hub shows each run's progress live, to its owner only",
+          "extras": "SkiaSharp renders captions and memes onto images; transformers.js runs Whisper and Florence-2 on your device"
         },
         "aiServices": [
           {

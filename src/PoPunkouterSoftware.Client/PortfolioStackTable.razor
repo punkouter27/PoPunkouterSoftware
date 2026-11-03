@@ -15,7 +15,8 @@
    up too, naming the exception ("Microsoft account, except PoRepoLineTracker: GitHub"):
    one odd row is a footnote, not a column (owner's call on Sign-in, 2026-11-03). It needs
    three or more apps, or "all but one" would be half the table. What a shared column hid per app — SignalR,
-   the Google Maps API — lives in its own Extras column.
+   the Google Maps API — lives in the rightmost "Unique tech" column, which names the
+   libraries and APIs only that app uses (three.js, LibGit2Sharp, WebLLM…).
 
    Cells are SHORT labels ("Table + Blob", "Azure OpenAI") so a column scans at a glance;
    the full wording is a hint on the cell (AppHint: hover, focus or tap) and sr-only text
@@ -104,7 +105,6 @@
                                     <a class="portfolio-stack__link" href="@app.Url" target="_blank" rel="noopener noreferrer" data-sfx="tap">@app.Name</a>
                                 }
                             </h2>
-                            <p class="portfolio-stack__copy">@app.Description</p>
                             <div class="portfolio-stack__meta">
                                 @* Live status only when it is news — see the streak beside it. *@
                                 @if (app.Status is "unavailable" or "degraded")
@@ -142,6 +142,10 @@
                             </div>
                         </div>
                         </div>
+                        @* Below the picture, across the whole cell, never clamped: the space
+                           under the thumbnail was empty, and a two-line clamp beside it cut
+                           every description mid-sentence (owner's ask, 2026-11-03). *@
+                        <p class="portfolio-stack__copy">@app.Description</p>
                     </th>
                     @foreach (var column in _columns)
                     {
@@ -174,21 +178,25 @@
                             {
                                 <span aria-hidden="true">–</span><span class="app-sr-only">None listed</span>
                             }
-                            else if (column.Key is "data" or "realtime" && value.Contains(" + "))
+                            else if (column.Key is "data" or "realtime" or "extras" && value.Contains(" + "))
                             {
                                 @* One service per line: "Azure Table Storage + Azure Blob Storage"
                                    is two things, and on one line it was the widest cell. *@
                                 var hint = app.Stack.Details.GetValueOrDefault(column.Key);
-                                <ul class="portfolio-stack__lines">
-                                    @foreach (var part in value.Split(" + "))
+                                @* One wrapper, so on a phone (where the cell is a label | value grid)
+                                   the list and its ⓘ stay in the value column together. *@
+                                <span class="portfolio-stack__multi">
+                                    <ul class="portfolio-stack__lines">
+                                        @foreach (var part in value.Split(" + "))
+                                        {
+                                            <li>@part</li>
+                                        }
+                                    </ul>
+                                    @if (hint is not null)
                                     {
-                                        <li>@part</li>
+                                        <AppHint Text="@hint" />
                                     }
-                                </ul>
-                                @if (hint is not null)
-                                {
-                                    <AppHint Text="@hint" />
-                                }
+                                </span>
                             }
                             else if (app.Stack.Details.TryGetValue(column.Key, out var detail) && detail != value)
                             {
@@ -226,12 +234,13 @@
         new("frontend", "Frontend", s => s.Frontend),
         new("backend", "Backend", s => s.Backend),
         new("realtime", "Real-time", s => s.Realtime),
-        new("extras", "Extras", s => s.Extras),
         new("data", "Data", s => s.Data),
         new("ai", "AI", s => s.Ai),
         new("signIn", "Sign-in", s => s.SignIn),
         new("phone", "Phone", s => s.Phone),
         new("delivery", "Ships via", s => s.Delivery),
+        // Last: what makes THIS app different, after the columns most apps share.
+        new("extras", "Unique tech", s => s.Extras),
     ];
 
     private Column[] _columns = AllColumns;

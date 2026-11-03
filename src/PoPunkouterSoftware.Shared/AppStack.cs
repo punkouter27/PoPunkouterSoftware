@@ -14,9 +14,8 @@ public record AppStack
 {
     public string? Frontend { get; init; }
     public string? Backend { get; init; }
-    /// <summary>What this app adds on top of the common stack, e.g. "SignalR", "Google Maps API".
-    /// Its own column, so a Backend shared by every app can move into the summary without
-    /// hiding the parts that differ.</summary>
+    /// <summary>The libraries and APIs only this app uses, joined with " + " — the rightmost
+    /// "Unique tech" column, e.g. "LibGit2Sharp + Roslyn + GitHub API".</summary>
     public string? Extras { get; init; }
     /// <summary>How the server pushes to the browser while something happens: "SignalR",
     /// "Server-sent events", "Web Push" — joined with " + " when an app uses several.</summary>
