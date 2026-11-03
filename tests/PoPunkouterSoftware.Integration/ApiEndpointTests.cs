@@ -173,6 +173,10 @@ public class PortfolioEndpointTests
         apps.EnumerateArray().Select(a => a.GetProperty("stack").ToString())
             .Should().Contain(s => s.Contains("\"frontend\":\"Blazor WASM\"") && s.Contains("\"realtime\":\"SignalR")
                 && s.Contains("\"frontend\":\"Blazor WebAssembly: "));
+        // Catalog repos become source links (no scan has said any is private in the seed).
+        apps.EnumerateArray()
+            .Select(a => a.TryGetProperty("sourceUrl", out var u) ? u.GetString() : null)
+            .Should().Contain(u => u != null && u.StartsWith("https://github.com/"));
         // The AI column's list: each service names its cloud and what it is for.
         apps.EnumerateArray().Select(a => a.GetProperty("stack").ToString())
             .Should().Contain(s => s.Contains("\"aiServices\":[{\"cloud\":\"Azure\",\"name\":") && s.Contains("\"use\":"));

@@ -35,6 +35,7 @@ internal static class AppStackBuilder
             Ai = Blank(catalog.Ai),
             Physics = Blank(catalog.Physics),
             Training = Blank(catalog.Training),
+            TrainingPath = Blank(catalog.TrainingPath)?.Trim('/'),
             Inference = Blank(catalog.Inference),
             SignIn = Blank(catalog.SignIn),
             Phone = Blank(catalog.Phone),

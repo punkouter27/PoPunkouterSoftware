@@ -39,6 +39,8 @@ public record AzureReport
     public List<TierPrice> TierPrices { get; init; } = new();
     /// <summary>Registration expiry of every custom domain the scanned apps answer on (RDAP).</summary>
     public List<DomainExpiry> DomainExpiries { get; init; } = new();
+    /// <summary>Per catalog app: is its repo public, is its Google Play listing live.</summary>
+    public List<PublicLinkCheck> PublicLinks { get; init; } = new();
 }
 
 /// <summary>One App Service plan SKU's pay-as-you-go price, per month (730 hours).</summary>

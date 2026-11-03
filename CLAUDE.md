@@ -233,15 +233,20 @@ was gathered 2026-11-03 from each repo's appsettings, option classes and client 
 secret names and each App Service's app settings (PoSeeReview overrides its image model to
 FLUX.1 Kontext pro there; PoRedoMedia's Google key is in the vault, so its Google models are live). A column IDENTICAL on every row of a table (for AI: the same service list) moves into a
 "Shared by all N" strip above that table, outside its scroller, worked out per table on every
-response; so does a column where all but ONE of 3+ apps agree, naming the exception (Sign-in:
-"Microsoft, except PoRepoLineTracker: GitHub" — that repo dropped Microsoft sign-in on purpose,
-see its SPEC.md §9) — but only for a column marked `AllowException` (Sign-in alone): the RL
-engine is Unity OR Unreal, and a footnote hid that. The RL table has its own columns, empty
+response. Only an IDENTICAL column moves up: an "all but one, naming the exception" rule
+(Sign-in: "Microsoft, except PoRepoLineTracker: GitHub") was tried and removed the same day,
+2026-11-03 — sign-in differs between apps (PoRepoLineTracker is GitHub-only on purpose, see
+its SPEC.md §9) and some apps will drop login, so Sign-in is a column. The RL table has its own columns, empty
 for web apps: Physics (MuJoCo vs Unity physics), RL training (Unity ML-Agents vs MuJoCo Warp /
 Playground + Brax) and Policy runtime (Unity Inference Engine vs Unreal NNE), read from each
 game repo's ProjectVersion.txt, Packages/manifest.json, .uproject and training/pyproject.toml.
-None of the games has a public Play Store page yet (2026-11-03: every package id 404s), so
-none is linked. A Hosting column was removed 2026-11-03 (owner's call). Real-time
+Outward links come from a scan step (`.PublicLinks`): an ANONYMOUS GET, through
+`public-api` and never the GitHub PAT, of github.com/<githubRepo> and of the Play Store page
+for each catalog `androidPackage`, stored as `AzureReport.PublicLinks`. `PortfolioApp.SourceUrl`
+is hidden only when that check saw a 404 (private — PoMemeVideo); `PlayStoreUrl` appears only
+once the listing answers, so a game shows "Google Play" the night after it is published. On
+2026-11-03 every game's package id 404'd (unpublished), so none is linked yet. The RL training
+cell links to the repo folder in `AppStack.TrainingPath`. A Hosting column was removed 2026-11-03 (owner's call). Real-time
 (`AppStack.Realtime`: SignalR, WebSockets, server-sent events, Web Push) was read from each
 repo's `MapHub`, `text/event-stream` and `PushServiceClient` use. Data names the services
 ("Azure Table Storage + Azure Blob Storage", one per line), never "Table + Blob", and lists

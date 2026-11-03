@@ -11,12 +11,10 @@
    A column IDENTICAL on every row is not drawn either: it moves into the "Shared by all N"
    strip above the table, so the grid shows only what differs (owner's ask, 2026-11-03).
    It is worked out per table on every new response, so the day one app changes backend,
-   the Backend column comes back on its own. A column where every app but ONE agrees moves
-   up too, naming the exception ("Microsoft account, except PoRepoLineTracker: GitHub"):
-   one odd row is a footnote, not a column (owner's call on Sign-in, 2026-11-03). It needs
-   three or more apps, or "all but one" would be half the table — and it is opt-in per
-   column (AllowException): the RL table's engine is Unity OR Unreal, a real difference
-   that a "Unity, except PoSlapUnreal" footnote hid (owner's call, same day). What a shared column hid per app — SignalR,
+   the Backend column comes back on its own. Only an IDENTICAL column moves: an "all but
+   one, named as the exception" rule was tried for Sign-in and removed the same day (owner's
+   call, 2026-11-03) — apps differ in sign-in, and some will drop login altogether, which a
+   footnote would hide. What a shared column hid per app — SignalR,
    the Google Maps API — lives in the rightmost "Unique tech" column, which names the
    libraries and APIs only that app uses (three.js, LibGit2Sharp, WebLLM…).
 
@@ -52,10 +50,6 @@
                             else
                             {
                                 @shared.Value
-                            }
-                            @if (shared.Exception is { } exception)
-                            {
-                                <span class="portfolio-stack__except">, except @exception</span>
                             }
                         </dd>
                     </div>
@@ -148,6 +142,21 @@
                            under the thumbnail was empty, and a two-line clamp beside it cut
                            every description mid-sentence (owner's ask, 2026-11-03). *@
                         <p class="portfolio-stack__copy">@app.Description</p>
+                        @if (app.SourceUrl is not null || app.PlayStoreUrl is not null)
+                        {
+                            @* Above the name's stretched link (z-index in the CSS), or the
+                               whole-cell overlay would swallow these clicks. *@
+                            <p class="portfolio-stack__links">
+                                @if (app.SourceUrl is { } source)
+                                {
+                                    <a href="@source" target="_blank" rel="noopener noreferrer">Source code<span class="app-sr-only"> for @app.Name on GitHub</span></a>
+                                }
+                                @if (app.PlayStoreUrl is { } play)
+                                {
+                                    <a href="@play" target="_blank" rel="noopener noreferrer">Google Play<span class="app-sr-only">: @app.Name</span></a>
+                                }
+                            </p>
+                        }
                     </th>
                     @foreach (var column in _columns)
                     {
@@ -179,6 +188,15 @@
                             else if (value is null)
                             {
                                 <span aria-hidden="true">–</span><span class="app-sr-only">None listed</span>
+                            }
+                            else if (column.Key == "training" && app.SourceUrl is { } repo && app.Stack.TrainingPath is { } folder)
+                            {
+                                @* The training code itself, for anyone who wants to see how. *@
+                                <a class="portfolio-stack__cell-link" href="@($"{repo}/tree/HEAD/{folder}")" target="_blank" rel="noopener noreferrer">@value<span class="app-sr-only">: training code on GitHub</span></a>
+                                @if (app.Stack.Details.GetValueOrDefault(column.Key) is { } why)
+                                {
+                                    <AppHint Text="@why" />
+                                }
                             }
                             else if (column.Key is "data" or "realtime" or "extras" && value.Contains(" + "))
                             {
@@ -227,7 +245,7 @@
     [Parameter] public bool FirstIsLcp { get; set; }
 
     /// <summary>Key is the property's camelCase JSON name, which is also its <see cref="AppStack.Details"/> key.</summary>
-    private sealed record Column(string Key, string Label, Func<AppStack, string?> Value, bool AllowException = false);
+    private sealed record Column(string Key, string Label, Func<AppStack, string?> Value);
 
     /// <summary>The matrix, in the order a request travels: what the visitor loads, what
     /// answers it, how it pushes back live, what else it calls, where data lands, then the rest.</summary>
@@ -242,7 +260,7 @@
         new("realtime", "Real-time", s => s.Realtime),
         new("data", "Data", s => s.Data),
         new("ai", "AI", s => s.Ai),
-        new("signIn", "Sign-in", s => s.SignIn, AllowException: true),
+        new("signIn", "Sign-in", s => s.SignIn),
         new("phone", "Phone", s => s.Phone),
         new("delivery", "Ships via", s => s.Delivery),
         // Last: what makes THIS app different, after the columns most apps share.
@@ -252,7 +270,7 @@
     private Column[] _columns = AllColumns;
 
     /// <summary>A column identical on every row, shown once above the table.</summary>
-    private sealed record SharedValue(string Label, string Value, string? Detail, string? Exception = null);
+    private sealed record SharedValue(string Label, string Value, string? Detail);
     private SharedValue[] _shared = [];
     private IReadOnlyList<PortfolioApp>? _rendered;
 
@@ -275,25 +293,8 @@
             ? present.Where(c => Apps.All(a => Signature(c, a.Stack) is not null)
                                  && Apps.Select(a => Signature(c, a.Stack)).Distinct().Count() == 1).ToArray()
             : [];
-        // All but one: every app has a value, exactly one differs, and there are 3+ apps.
-        // Not for AI, whose cell is a list — "except" a whole list says nothing useful.
-        var nearly = Apps.Count > 2
-            ? present.Except(shared)
-                .Where(c => c.AllowException && Apps.All(a => c.Value(a.Stack) is not null))
-                .Select(c => (Column: c, Groups: Apps.GroupBy(a => c.Value(a.Stack)).OrderByDescending(g => g.Count()).ToArray()))
-                .Where(x => x.Groups.Length == 2 && x.Groups[1].Count() == 1)
-                .ToArray()
-            : [];
-        _columns = present.Except(shared).Except(nearly.Select(n => n.Column)).ToArray();
-        _shared = shared.Select(c => Summarise(c, Apps[0].Stack))
-            .Concat(nearly.Select(n =>
-            {
-                var odd = n.Groups[1].Single();
-                return Summarise(n.Column, n.Groups[0].First().Stack, n.Groups[0].ToArray())
-                    with { Exception = $"{odd.Name}: {n.Column.Value(odd.Stack)}" };
-            }))
-            .OrderBy(v => Array.FindIndex(AllColumns, c => c.Label == v.Label))
-            .ToArray();
+        _columns = present.Except(shared).ToArray();
+        _shared = shared.Select(c => Summarise(c, Apps[0].Stack)).ToArray();
     }
 
     /// <summary>What "the same" means for a column: the short value, or for AI the whole list
@@ -304,12 +305,12 @@
             : column.Value(stack);
 
     /// <summary>The strip's entry: the value, with a hint only when every app agrees on that too.</summary>
-    private SharedValue Summarise(Column column, AppStack first, IReadOnlyList<PortfolioApp>? agreeing = null)
+    private SharedValue Summarise(Column column, AppStack first)
     {
         if (column.Key == "ai" && first.AiServices.Count > 0)
             return new(column.Label, string.Join(", ", first.AiServices.Select(s => s.Name)),
                 string.Join(" ", first.AiServices.Select(s => s.Use.TrimEnd('.') + ".")));
-        var details = (agreeing ?? Apps).Select(a => a.Stack.Details.GetValueOrDefault(column.Key)).Distinct().ToArray();
+        var details = Apps.Select(a => a.Stack.Details.GetValueOrDefault(column.Key)).Distinct().ToArray();
         return new(column.Label, column.Value(first)!, details is [{ } only] ? only : null);
     }
 

@@ -392,7 +392,8 @@ public partial class AzureReportService
         string? Url,
         System.Collections.Generic.List<string>? Technologies,
         string? GithubRepo,
-        string? Expect = null);
+        string? Expect = null,
+        string? AndroidPackage = null);
 
     private static string NormalizeKey(string? friendlyName, string? resourceName) =>
         string.IsNullOrWhiteSpace(friendlyName)

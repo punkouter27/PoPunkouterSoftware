@@ -318,7 +318,7 @@
       ],
       "url": "https://app-poseereview2.azurewebsites.net",
       "healthUrl": "https://app-poseereview2.azurewebsites.net/health/live",
-      "githubRepo": null,
+      "githubRepo": "punkouter26/PoSeeReview",
       "stack": {
         "frontend": "Blazor WASM",
         "backend": "ASP.NET Core",
@@ -388,12 +388,14 @@
       "url": "https://gentle-mushroom-0d162090f.6.azurestaticapps.net",
       "githubRepo": "punkouter27/PoBox",
       "expect": "<title>PoBox</title>",
+      "androidPackage": "com.punkoutersoftware.pobox",
       "stack": {
         "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
         "physics": "MuJoCo 3.5",
         "training": "MuJoCo Warp + PPO (PyTorch)",
         "inference": "Unity Inference Engine",
+        "trainingPath": "training",
         "details": {
           "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
           "physics": "The official MuJoCo Unity plugin 3.5 runs the fight's physics; there is no PhysX in the arena",
@@ -423,12 +425,14 @@
       "url": "https://polite-coast-0ba40400f.4.azurestaticapps.net",
       "githubRepo": "punkouter27/PoFootball",
       "expect": "<title>PoFootball</title>",
+      "androidPackage": "com.punkoutersoftware.pofootball",
       "stack": {
         "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
         "physics": "Unity physics",
         "training": "Unity ML-Agents 4.1",
         "inference": "Unity Inference Engine",
+        "trainingPath": "Config",
         "details": {
           "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
           "physics": "Unity's built-in physics engine (PhysX) moves the players",
@@ -458,12 +462,14 @@
       "url": "https://white-bush-08dbace0f.4.azurestaticapps.net",
       "githubRepo": "punkouter27/PoHillKing",
       "expect": "<title>PoHillKing</title>",
+      "androidPackage": "com.punkoutersoftware.pohillking",
       "stack": {
         "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
         "physics": "MuJoCo",
         "training": "MuJoCo Warp + rsl_rl PPO (PyTorch)",
         "inference": "Unity Inference Engine",
+        "trainingPath": "training",
         "details": {
           "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
           "physics": "MuJoCo simulates every body in the browser through its WebGL plugin; Unity only draws them",
@@ -493,12 +499,14 @@
       "url": "https://icy-field-055e0430f.6.azurestaticapps.net",
       "githubRepo": "punkouter27/PoOlympic",
       "expect": "<title>PoOlympics</title>",
+      "androidPackage": "com.punkoutersoftware.poolympic",
       "stack": {
         "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
         "physics": "MuJoCo",
         "training": "MuJoCo Warp + PyTorch",
         "inference": "Unity Inference Engine",
+        "trainingPath": "training",
         "details": {
           "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
           "physics": "MuJoCo simulates every body in the browser through its WebGL plugin; Unity only draws them",
@@ -528,12 +536,14 @@
       "url": "https://proud-sea-0d583fb0f.2.azurestaticapps.net",
       "githubRepo": "punkouter27/PoRace",
       "expect": "<title>PoRace</title>",
+      "androidPackage": "com.punkoutersoftware.poracer",
       "stack": {
         "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
         "physics": "MuJoCo",
         "training": "MuJoCo Playground + Brax PPO (JAX)",
         "inference": "Unity Inference Engine",
+        "trainingPath": "training",
         "details": {
           "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
           "physics": "MuJoCo simulates every body in the browser through its WebGL plugin; Unity only draws them",
@@ -563,12 +573,14 @@
       "url": "https://purple-sand-0067c2e0f.2.azurestaticapps.net",
       "githubRepo": "punkouter27/PoRumble",
       "expect": "<title>PoRumble</title>",
+      "androidPackage": "com.punkoutersoftware.porumble",
       "stack": {
         "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
         "physics": "Unity physics",
         "training": "Unity ML-Agents 4.1",
         "inference": "Unity Inference Engine",
+        "trainingPath": "Assets/Config/Training",
         "details": {
           "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
           "physics": "Unity's built-in physics engine (PhysX) moves the players",
@@ -598,12 +610,14 @@
       "url": "https://ambitious-plant-09c70a10f.4.azurestaticapps.net",
       "githubRepo": "punkouter27/PoSoccer",
       "expect": "<title>PoSoccer</title>",
+      "androidPackage": "com.punkoutersoftware.posoccer",
       "stack": {
         "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
         "physics": "Unity physics",
         "training": "Unity ML-Agents",
         "inference": "Unity Inference Engine",
+        "trainingPath": "config",
         "details": {
           "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
           "physics": "Unity's built-in physics engine (PhysX) moves the players",
@@ -633,12 +647,14 @@
       "url": "https://thankful-beach-0a07eb70f.2.azurestaticapps.net",
       "githubRepo": "punkouter27/PoSumo",
       "expect": "<title>PoSumo</title>",
+      "androidPackage": "com.punkoutersoftware.posumo",
       "stack": {
         "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
         "physics": "Unity physics",
         "training": "Unity ML-Agents",
         "inference": "ML-Agents inference",
+        "trainingPath": "Training",
         "details": {
           "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
           "physics": "Unity's built-in physics engine (PhysX) moves the players",
@@ -668,12 +684,14 @@
       "url": "https://ashy-plant-0f75ec30f.3.azurestaticapps.net",
       "githubRepo": "punkouter27/PoSlapUnreal",
       "expect": "<title>PoSlap Arena</title>",
+      "androidPackage": "com.poslap.unreal",
       "stack": {
         "frontend": "Unreal Engine 5.8",
         "ai": "RL agents",
         "physics": "MuJoCo 3.10",
         "training": "MuJoCo Warp + PyTorch",
         "inference": "Unreal NNE (ONNX Runtime)",
+        "trainingPath": "training",
         "details": {
           "frontend": "Unreal Engine 5.8; Unreal only draws the athletes, its Chaos physics is switched off",
           "physics": "MuJoCo 3.10 at 200 Hz through the Unreal Robotics Lab plugin moves every athlete",

@@ -77,6 +77,14 @@ public class PortfolioUiTests : IAsyncLifetime
             .flatMap(t => [...t.querySelectorAll('.portfolio-stack__row')])
             .filter(r => !r.querySelector(""td[data-label='Frontend']:not(.is-empty)"")).length");
         unnamed.Should().Be(0, $"every app row names its frontend, in its cell or the shared strip, at {label}");
+        // The name link is stretched over its OWN cell only. With the cell left `static` on a
+        // phone, its overlay covered the whole table and every tap opened the last app — and
+        // the source / training links below it could not be clicked at all.
+        var stolen = await page.EvaluateAsync<int>(@"() => [...document.querySelectorAll('.portfolio-stack__row td:not(.is-empty)')]
+            .filter(td => { td.scrollIntoView({ block: 'center' }); const r = td.getBoundingClientRect();
+                const hit = document.elementFromPoint(r.left + Math.min(8, r.width / 2), r.top + Math.min(8, r.height / 2));
+                return hit && hit.closest('.portfolio-stack__app'); }).length");
+        stolen.Should().Be(0, $"a tap on a data cell must not land on an app's name link at {label}");
         await CaptureAsync(page, $"01-home-{label}.png");
     }
 

@@ -165,6 +165,26 @@
     white-space: normal;
 }
 
+/* Source and Google Play: real links inside a cell whose name link is stretched over it,
+   so they sit above that overlay. */
+.portfolio-stack__links {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--app-space-2xs) var(--app-space-sm);
+    margin: var(--app-space-2xs) 0 0;
+    font-size: var(--app-step--1);
+}
+
+.portfolio-stack__links a,
+.portfolio-stack__cell-link {
+    color: var(--app-accent);
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
 .portfolio-stack__meta {
     display: flex;
     flex-wrap: wrap;
@@ -280,8 +300,6 @@
     cursor: help;
 }
 
-.portfolio-stack__except { color: var(--app-text-muted); font-size: var(--app-step--1); }
-
 /* Data, Real-time and Unique tech: one item per line when an app has several. */
 .portfolio-stack__multi { display: inline-flex; align-items: flex-start; }
 .portfolio-stack__lines {
@@ -387,8 +405,12 @@
 
     .portfolio-stack__scroll { overflow-x: visible; }
 
+    /* relative, NOT static: the name link's ::after overlay is positioned against this cell.
+       `static` (undoing the pinned column) let it stretch over the whole table, so a tap
+       anywhere on a phone opened the table's LAST app (caught 2026-11-03, a link in another
+       cell would not take a click). */
     .portfolio-stack__table th.portfolio-stack__app {
-        position: static;
+        position: relative;
         padding-right: 0;
         background: none;
         box-shadow: none;

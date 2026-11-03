@@ -34,6 +34,11 @@ public record PortfolioApp
     public int? CleanDays { get; init; }
     /// <summary>"owner/repo" from the catalog — the Ctrl+K palette's repo and Actions links. Null when the catalog names none.</summary>
     public string? GithubRepo { get; init; }
+    /// <summary>github.com link to the app's source; null when the catalog names no repo or the
+    /// scan found it private (an anonymous visitor would get a 404).</summary>
+    public string? SourceUrl { get; init; }
+    /// <summary>Google Play listing; set only once the scan has seen the public page answer.</summary>
+    public string? PlayStoreUrl { get; init; }
     /// <summary>The home page matrix's row: what the app is built from.</summary>
     public AppStack Stack { get; init; } = new();
 }

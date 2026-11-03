@@ -57,7 +57,7 @@ internal static partial class PortfolioEndpoints
         // The streak chip: days since each card's last bad day on the /azure uptime grid —
         // the same row, so the card can never claim a streak the grid contradicts.
         var apps = BuildApps(services, metadata, screenshotVersions, scoresTask.Result, screenshots.ScreenshotsEnabled,
-                StorageGroups(report))
+                StorageGroups(report), report?.PublicLinks)
             .Select(a => a with { CleanDays = RowFor(uptimeTask.Result, a)?.CleanDays })
             .ToList();
 
@@ -104,9 +104,12 @@ internal static partial class PortfolioEndpoints
         List<WebService> services, List<AppMeta> metadata,
         IReadOnlyDictionary<string, long> screenshotVersions,
         IReadOnlyDictionary<string, LighthouseScores> scores, bool captureOnDemand = false,
-        IReadOnlySet<string>? storageGroups = null)
+        IReadOnlySet<string>? storageGroups = null, IReadOnlyList<PublicLinkCheck>? publicLinks = null)
     {
         storageGroups ??= NoGroups;
+        var links = (publicLinks ?? [])
+            .GroupBy(l => PortfolioIdentity.NormalizeName(l.App), StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
         var metaByName = metadata
             .GroupBy(m => PortfolioIdentity.NormalizeName(m.Name), StringComparer.OrdinalIgnoreCase)
             .ToDictionary(g => g.Key, g => g.OrderBy(m => StatusRank(m.Status)).First(), StringComparer.OrdinalIgnoreCase);
@@ -125,7 +128,7 @@ internal static partial class PortfolioEndpoints
                 {
                     var key = PortfolioIdentity.NormalizeName(string.IsNullOrWhiteSpace(s.FriendlyName) ? s.Name : s.FriendlyName);
                     metaByName.TryGetValue(key, out var meta);
-                    return ToPortfolioApp(meta, s, screenshotVersions, scores, captureOnDemand, storageGroups);
+                    return ToPortfolioApp(meta, s, screenshotVersions, scores, captureOnDemand, storageGroups, links);
                 },
                 StringComparer.OrdinalIgnoreCase);
 
@@ -137,7 +140,7 @@ internal static partial class PortfolioEndpoints
             // Catalog entries marked active are the stable showcase, visible even when
             // Azure inventory is stale or unavailable. Only added when no live service
             // already claimed the key — otherwise the live entry's status wins.
-            appsByName.TryAdd(key, ToPortfolioApp(meta, null, screenshotVersions, scores, captureOnDemand, storageGroups));
+            appsByName.TryAdd(key, ToPortfolioApp(meta, null, screenshotVersions, scores, captureOnDemand, storageGroups, links));
         }
 
         return appsByName.Values.OrderBy(a => a.Name, StringComparer.OrdinalIgnoreCase).ToList();
@@ -291,7 +294,7 @@ internal static partial class PortfolioEndpoints
     private static PortfolioApp ToPortfolioApp(
         AppMeta? meta, WebService? service, IReadOnlyDictionary<string, long> screenshotVersions,
         IReadOnlyDictionary<string, LighthouseScores> scores, bool captureOnDemand,
-        IReadOnlySet<string> storageGroups)
+        IReadOnlySet<string> storageGroups, IReadOnlyDictionary<string, PublicLinkCheck> links)
     {
         var name = meta?.Name ?? service?.FriendlyName ?? service?.Name ?? "Unnamed app";
         // The curated catalog URL wins over the scanned one: inventory can lag reality by
@@ -317,6 +320,15 @@ internal static partial class PortfolioEndpoints
                 ? $"/api/portfolio/screenshots/{host}?v={version}" : null,
             Scores = host is not null && scores.TryGetValue(host, out var score) ? score : null,
             GithubRepo = string.IsNullOrWhiteSpace(meta?.GithubRepo) ? null : meta.GithubRepo,
+            // Source: hidden only when the scan SAW the repo answer 404 (private). No check yet
+            // (a fresh deploy, a failed request) still links — a public repo is the norm here.
+            // Play: shown only on a positive check, because an unpublished listing is the norm.
+            SourceUrl = string.IsNullOrWhiteSpace(meta?.GithubRepo)
+                        || links.GetValueOrDefault(PortfolioIdentity.NormalizeName(name))?.RepoPublic == false
+                ? null : $"https://github.com/{meta!.GithubRepo}",
+            PlayStoreUrl = !string.IsNullOrWhiteSpace(meta?.AndroidPackage)
+                           && links.GetValueOrDefault(PortfolioIdentity.NormalizeName(name))?.PlayStoreLive == true
+                ? $"https://play.google.com/store/apps/details?id={Uri.EscapeDataString(meta!.AndroidPackage!)}" : null,
             Stack = AppStackBuilder.Build(meta?.Stack, service, storageGroups),
         };
     }
@@ -348,6 +360,7 @@ internal static partial class PortfolioEndpoints
         string? Url,
         List<string>? Technologies,
         string? GithubRepo,
-        AppStack? Stack);
+        AppStack? Stack,
+        string? AndroidPackage = null);
 }
 

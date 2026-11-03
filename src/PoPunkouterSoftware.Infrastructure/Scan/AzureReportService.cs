@@ -222,6 +222,7 @@ public partial class AzureReportService(
             () => GetTierPricesAsync(connectedSvcs.Where(s => s.ResourceTypeRaw == "Microsoft.Web/sites").Select(s => s.Region), ct));
         var domainExpiries = await RunTimedStepAsync("Checking domain expiry",
             () => GetDomainExpiriesAsync(connectedSvcs.SelectMany(s => s.CustomHosts), ct));
+        var publicLinks = await RunTimedStepAsync("Checking source and Google Play links", () => CheckPublicLinksAsync(ct));
 
         var servicesList = connectedSvcs.Select((s, i) =>
         {
@@ -301,6 +302,7 @@ public partial class AzureReportService(
             AppErrors = appErrors,
             TierPrices = tierPrices,
             DomainExpiries = domainExpiries,
+            PublicLinks = publicLinks,
         };
 
         var delta = ComputeDelta(report, previousReport);
