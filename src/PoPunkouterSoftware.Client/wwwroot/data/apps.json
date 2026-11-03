@@ -386,13 +386,13 @@
         "ai": "RL agents",
         "physics": "MuJoCo 3.5",
         "training": "MuJoCo Warp + PPO (PyTorch)",
-        "inference": "Unity Inference Engine",
         "trainingPath": "training",
+        "extras": "Cinemachine + glTFast",
         "details": {
           "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
           "physics": "The official MuJoCo Unity plugin 3.5 runs the fight's physics; there is no PhysX in the arena",
           "training": "Trained offline in Python: MuJoCo Warp simulates thousands of boxers at once on the GPU, and an rsl_rl-style PPO in PyTorch learns each boxer's brain",
-          "inference": "Unity Inference Engine (formerly Sentis) runs the trained ONNX policies on the CPU inside the browser build"
+          "extras": "Cinemachine directs the cameras, cutting and following the action automatically; glTFast loads the glTF 3D character models at runtime"
         },
         "aiServices": [
           {
@@ -423,13 +423,13 @@
         "ai": "RL agents",
         "physics": "Unity physics",
         "training": "Unity ML-Agents 4.1",
-        "inference": "Unity Inference Engine",
         "trainingPath": "Config",
+        "extras": "VContainer + MessagePipe + UniTask + Burst",
         "details": {
           "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
           "physics": "Unity's built-in physics engine (PhysX) moves the players",
           "training": "Unity ML-Agents 4.1 in the game and mlagents 1.1 (PyTorch) in Python train separate offense and defense brains",
-          "inference": "Unity Inference Engine (formerly Sentis) runs the trained ONNX policies on the CPU inside the browser build"
+          "extras": "VContainer wires the game together with dependency injection; MessagePipe carries game events between systems; UniTask runs async game logic without allocating; Burst compiles the hot loops to fast native code"
         },
         "aiServices": [
           {
@@ -460,13 +460,13 @@
         "ai": "RL agents",
         "physics": "MuJoCo",
         "training": "MuJoCo Warp + rsl_rl PPO (PyTorch)",
-        "inference": "Unity Inference Engine",
         "trainingPath": "training",
+        "extras": "Cinemachine + glTFast",
         "details": {
           "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
           "physics": "MuJoCo simulates every body in the browser through its WebGL plugin; Unity only draws them",
           "training": "Trained offline: MuJoCo 3.15 and MuJoCo Warp on the GPU, with rsl_rl PPO on PyTorch 2.9, one policy per fighter role",
-          "inference": "Unity Inference Engine (formerly Sentis) runs the trained ONNX policies on the CPU inside the browser build"
+          "extras": "Cinemachine directs the cameras, cutting and following the action automatically; glTFast loads the glTF 3D character models at runtime"
         },
         "aiServices": [
           {
@@ -497,13 +497,13 @@
         "ai": "RL agents",
         "physics": "MuJoCo",
         "training": "MuJoCo Warp + PyTorch",
-        "inference": "Unity Inference Engine",
         "trainingPath": "training",
+        "extras": "Cinemachine + glTFast + VFX Graph + PrimeTween",
         "details": {
           "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
           "physics": "MuJoCo simulates every body in the browser through its WebGL plugin; Unity only draws them",
           "training": "Trained offline: MuJoCo 3.11 and MuJoCo Warp on the GPU with PyTorch, one brain per athlete and event",
-          "inference": "Unity Inference Engine (formerly Sentis) runs the trained ONNX policies on the CPU inside the browser build"
+          "extras": "Cinemachine directs the cameras, cutting and following the action automatically; glTFast loads the glTF 3D character models at runtime; VFX Graph draws the GPU particle effects; PrimeTween is the tweening library"
         },
         "aiServices": [
           {
@@ -534,13 +534,13 @@
         "ai": "RL agents",
         "physics": "MuJoCo",
         "training": "MuJoCo Playground + Brax PPO (JAX)",
-        "inference": "Unity Inference Engine",
         "trainingPath": "training",
+        "extras": "Unitree Go2 and G1 models + AI Navigation",
         "details": {
           "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
           "physics": "MuJoCo simulates every body in the browser through its WebGL plugin; Unity only draws them",
           "training": "Trained offline with MuJoCo Playground and Brax PPO (JAX) on MuJoCo Warp; the robots are Unitree Go2 and G1 models",
-          "inference": "Unity Inference Engine (formerly Sentis) runs the trained ONNX policies on the CPU inside the browser build"
+          "extras": "The racers are MuJoCo models of the Unitree Go2 and G1 robots; the Unity AI Navigation package (NavMesh pathfinding) is included"
         },
         "aiServices": [
           {
@@ -571,13 +571,13 @@
         "ai": "RL agents",
         "physics": "Unity physics",
         "training": "Unity ML-Agents 4.1",
-        "inference": "Unity Inference Engine",
         "trainingPath": "Assets/Config/Training",
+        "extras": "Cinemachine + VContainer + MessagePipe + UniTask + Recorder",
         "details": {
           "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
           "physics": "Unity's built-in physics engine (PhysX) moves the players",
           "training": "Unity ML-Agents 4.1 with self-play configs for 1v1 bouts and a 10-way free-for-all",
-          "inference": "Unity Inference Engine (formerly Sentis) runs the trained ONNX policies on the CPU inside the browser build"
+          "extras": "Cinemachine directs the cameras, cutting and following the action automatically; VContainer wires the game together with dependency injection; MessagePipe carries game events between systems; UniTask runs async game logic without allocating; Unity Recorder captures match footage"
         },
         "aiServices": [
           {
@@ -608,13 +608,13 @@
         "ai": "RL agents",
         "physics": "Unity physics",
         "training": "Unity ML-Agents",
-        "inference": "Unity Inference Engine",
         "trainingPath": "config",
+        "extras": "UniTask + 2D Tilemap + Burst",
         "details": {
           "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
           "physics": "Unity's built-in physics engine (PhysX) moves the players",
           "training": "Unity ML-Agents (an embedded copy of the package), one training config per player",
-          "inference": "Unity Inference Engine (formerly Sentis) runs the trained ONNX policies on the CPU inside the browser build"
+          "extras": "UniTask runs async game logic without allocating; 2D Tilemap builds the pitch; Burst compiles the hot loops to fast native code"
         },
         "aiServices": [
           {
@@ -645,13 +645,13 @@
         "ai": "RL agents",
         "physics": "Unity physics",
         "training": "Unity ML-Agents",
-        "inference": "ML-Agents inference",
         "trainingPath": "Training",
+        "extras": "ML-Agents built from source + Unity MCP",
         "details": {
           "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
           "physics": "Unity's built-in physics engine (PhysX) moves the players",
           "training": "Unity ML-Agents, built from a vendored copy of its source, one brain per wrestler",
-          "inference": "ML-Agents runs the trained ONNX brains inside the browser build"
+          "extras": "Unity ML-Agents is built from a vendored copy of its source; Unity MCP lets an AI agent drive the editor"
         },
         "aiServices": [
           {
@@ -682,13 +682,13 @@
         "ai": "RL agents",
         "physics": "MuJoCo 3.10",
         "training": "MuJoCo Warp + PyTorch",
-        "inference": "Unreal NNE (ONNX Runtime)",
         "trainingPath": "training",
+        "extras": "Unreal Robotics Lab + NNE (ONNX Runtime) + Pixel Streaming 2",
         "details": {
           "frontend": "Unreal Engine 5.8; Unreal only draws the athletes, its Chaos physics is switched off",
           "physics": "MuJoCo 3.10 at 200 Hz through the Unreal Robotics Lab plugin moves every athlete",
           "training": "Trained offline in Python with MuJoCo Warp and PyTorch, in curriculum levels",
-          "inference": "Unreal's Neural Network Engine runs the ONNX policies on the CPU at 50 Hz"
+          "extras": "Unreal Robotics Lab embeds MuJoCo in Unreal; NNE runs the ONNX policies on the CPU at 50 Hz; Pixel Streaming 2 can stream the game to a browser"
         },
         "aiServices": [
           {

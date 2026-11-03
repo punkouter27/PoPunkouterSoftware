@@ -239,8 +239,10 @@ response. Only an IDENTICAL column moves up: an "all but one, naming the excepti
 its SPEC.md §9) and some apps will drop login, so Sign-in is a column; an app with a backend and no
 `signIn` in the catalog reads "None" (`AppStackBuilder`), never a dash. The RL table has its own columns, empty
 for web apps: Physics (MuJoCo vs Unity physics), RL training (Unity ML-Agents vs MuJoCo Warp /
-Playground + Brax) and Policy runtime (Unity Inference Engine vs Unreal NNE), read from each
-game repo's ProjectVersion.txt, Packages/manifest.json, .uproject and training/pyproject.toml.
+Playground + Brax) and the shared rightmost Unique tech (Cinemachine, glTFast, VContainer,
+Unreal Robotics Lab…), read from each game repo's ProjectVersion.txt, Packages/manifest.json,
+.uproject and training/pyproject.toml. A Policy runtime column (Unity Inference Engine vs
+Unreal NNE) went 2026-11-03 (owner's call); NNE now sits in PoSlapUnreal's Unique tech.
 Outward links come from a scan step (`.PublicLinks`): an ANONYMOUS GET, through
 `public-api` and never the GitHub PAT, of github.com/<githubRepo> and of the Play Store page
 for each catalog `androidPackage`, stored as `AzureReport.PublicLinks`. `PortfolioApp.SourceUrl`

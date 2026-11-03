@@ -45,7 +45,6 @@ internal static class AppStackBuilder
             Physics = Blank(catalog.Physics),
             Training = Blank(catalog.Training),
             TrainingPath = Blank(catalog.TrainingPath)?.Trim('/'),
-            Inference = Blank(catalog.Inference),
             // "None" in words, not a dash (owner's call, 2026-11-03 — some apps will drop
             // login). A game has no backend and nothing to sign in to: empty, column hidden.
             SignIn = signIn,

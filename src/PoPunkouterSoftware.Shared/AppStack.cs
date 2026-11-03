@@ -31,8 +31,6 @@ public record AppStack
     /// <summary>RL games: the repo folder the training lives in, e.g. "training"; the RL training
     /// cell links to it when the source is public.</summary>
     public string? TrainingPath { get; init; }
-    /// <summary>RL games: what runs the trained ONNX policies inside the game.</summary>
-    public string? Inference { get; init; }
     /// <summary>Every AI model or service the app calls, grouped by cloud in the AI column.</summary>
     public List<AiService> AiServices { get; init; } = new();
     public string? SignIn { get; init; }
