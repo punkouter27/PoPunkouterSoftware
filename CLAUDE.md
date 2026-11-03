@@ -220,8 +220,8 @@ to fall back, so the client's 30s budget always lost and the home page said "cou
 loaded". Now ~20s once, then instant.
 
 **`/` is a stack matrix, not a card grid (owner's ask, 2026-11-03).** `PortfolioStackTable`
-draws one row per app and one column per technical piece — Hosting, Frontend, Backend, Data,
-AI, Sign-in, Phone, Ships via — written for a visitor, not the owner: plain names, no SKUs or
+draws one row per app and one column per technical piece — Frontend, Backend, Real-time,
+Extras, Data, AI, Sign-in, Phone, Ships via — written for a visitor, not the owner: plain names, no SKUs or
 resource ids. Cells are SHORT labels ("Table + Blob", "Azure OpenAI", "PWA") so a column
 scans; the full wording is `AppStack.Details[<camelCase key>]`, shown as an `AppHint` on the
 cell plus sr-only text. **The AI column is the exception**: it lists `AppStack.AiServices`
@@ -232,16 +232,20 @@ was gathered 2026-11-03 from each repo's appsettings, option classes and client 
 secret names and each App Service's app settings (PoSeeReview overrides its image model to
 FLUX.1 Kontext pro there; PoRedoMedia's Google key is in the vault, so its Google models are live). A column IDENTICAL on every row of a table (for AI: the same service list) moves into a
 "Shared by all N" strip above that table, outside its scroller, worked out per table on every
-response; per-app add-ons a shared Backend would hide sit in `AppStack.Extras` (its own column).
+response; so does a column where all but ONE of 3+ apps agree, naming the exception (Sign-in:
+"Microsoft, except PoRepoLineTracker: GitHub" — that repo dropped Microsoft sign-in on purpose,
+see its SPEC.md §9). A Hosting column was removed 2026-11-03 (owner's call). Real-time
+(`AppStack.Realtime`: SignalR, WebSockets, server-sent events, Web Push) was read from each
+repo's `MapHub`, `text/event-stream` and `PushServiceClient` use. Data names the services
+("Azure Table Storage + Azure Blob Storage", one per line), never "Table + Blob"; per-app add-ons a shared Backend would hide sit in `AppStack.Extras` (its own column).
 A column empty on every row of a table is not drawn (the RL table has
 no backend). **It stays a table down to 641px**: when the columns outgrow the card, the card
 scrolls sideways (tabindex + role=group) with the app column `position: sticky` and opaque.
 A 1200px stacking breakpoint was tried first and took the comparison away in any window
 narrower than a desktop, VS Code's browser pane included. At 640px and below each row
 becomes a labelled block.
-The data is `PortfolioApp.Stack` (`AppStack`), built by `AppStackBuilder`: **Hosting comes from
-the scan** (resource type, Linux/Windows kind, plan tier) and Data falls back to "Azure
-Storage" when the app's resource group holds a storage account; everything else is the
+The data is `PortfolioApp.Stack` (`AppStack`), built by `AppStackBuilder`: Data falls back to
+"Azure Storage" when the app's resource group holds a storage account; everything else is the
 `stack` block of each `apps.json` entry, because Key Vault, AI and App Insights all live in
 the shared PoShared group and the inventory cannot say which app uses which. Those blocks
 were filled 2026-11-03 from each repo's `Directory.Packages.props` and CLAUDE.md — when an

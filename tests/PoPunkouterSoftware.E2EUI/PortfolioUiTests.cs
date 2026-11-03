@@ -70,14 +70,13 @@ public class PortfolioUiTests : IAsyncLifetime
         // The header is the brand and nothing else (links hidden 2026-10-20, removed 2026-10-30).
         await Assertions.Expect(page.Locator(".app-topbar a")).ToHaveCountAsync(1);
         await Assertions.Expect(page.Locator(".portfolio-stack__row").First).ToBeVisibleAsync();
-        // The matrix's point: every row says where it runs (Hosting is read from the scan, or
-        // the catalog when the scan has not seen the app — never blank for a listed app) —
-        // in its own cell, or once in its table's "Shared by all" strip when every app agrees.
+        // The matrix's point: every row says what it is built with — its Frontend, in its own
+        // cell, or once in its table's "Shared by all" strip when every app agrees.
         var unnamed = await page.EvaluateAsync<int>(@"() => [...document.querySelectorAll('.portfolio-stack')]
-            .filter(t => ![...t.querySelectorAll('.portfolio-stack__shared dt')].some(d => d.textContent.trim() === 'Hosting'))
+            .filter(t => ![...t.querySelectorAll('.portfolio-stack__shared dt')].some(d => d.textContent.trim() === 'Frontend'))
             .flatMap(t => [...t.querySelectorAll('.portfolio-stack__row')])
-            .filter(r => !r.querySelector(""td[data-label='Hosting']:not(.is-empty)"")).length");
-        unnamed.Should().Be(0, $"every app row names its hosting, in its cell or the shared strip, at {label}");
+            .filter(r => !r.querySelector(""td[data-label='Frontend']:not(.is-empty)"")).length");
+        unnamed.Should().Be(0, $"every app row names its frontend, in its cell or the shared strip, at {label}");
         await CaptureAsync(page, $"01-home-{label}.png");
     }
 

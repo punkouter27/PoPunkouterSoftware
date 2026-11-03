@@ -169,9 +169,9 @@ public class PortfolioEndpointTests
             app.GetProperty("stack").ValueKind.Should().Be(JsonValueKind.Object);
         }
         // The catalog's stack block reaches the wire as short labels plus the long wording in
-        // details, and hosting is filled in (scan, else catalog — "Azure " trimmed either way).
+        // details — the real-time column included.
         apps.EnumerateArray().Select(a => a.GetProperty("stack").ToString())
-            .Should().Contain(s => s.Contains("\"frontend\":\"Blazor WASM\"") && s.Contains("\"hosting\":\"")
+            .Should().Contain(s => s.Contains("\"frontend\":\"Blazor WASM\"") && s.Contains("\"realtime\":\"SignalR")
                 && s.Contains("\"frontend\":\"Blazor WebAssembly: "));
         // The AI column's list: each service names its cloud and what it is for.
         apps.EnumerateArray().Select(a => a.GetProperty("stack").ToString())

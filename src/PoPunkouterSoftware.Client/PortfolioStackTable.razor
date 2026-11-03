@@ -11,7 +11,10 @@
    A column IDENTICAL on every row is not drawn either: it moves into the "Shared by all N"
    strip above the table, so the grid shows only what differs (owner's ask, 2026-11-03).
    It is worked out per table on every new response, so the day one app changes backend,
-   the Backend column comes back on its own. What a shared column hid per app — SignalR,
+   the Backend column comes back on its own. A column where every app but ONE agrees moves
+   up too, naming the exception ("Microsoft account, except PoRepoLineTracker: GitHub"):
+   one odd row is a footnote, not a column (owner's call on Sign-in, 2026-11-03). It needs
+   three or more apps, or "all but one" would be half the table. What a shared column hid per app — SignalR,
    the Google Maps API — lives in its own Extras column.
 
    Cells are SHORT labels ("Table + Blob", "Azure OpenAI") so a column scans at a glance;
@@ -46,6 +49,10 @@
                             else
                             {
                                 @shared.Value
+                            }
+                            @if (shared.Exception is { } exception)
+                            {
+                                <span class="portfolio-stack__except">, except @exception</span>
                             }
                         </dd>
                     </div>
@@ -167,6 +174,22 @@
                             {
                                 <span aria-hidden="true">–</span><span class="app-sr-only">None listed</span>
                             }
+                            else if (column.Key is "data" or "realtime" && value.Contains(" + "))
+                            {
+                                @* One service per line: "Azure Table Storage + Azure Blob Storage"
+                                   is two things, and on one line it was the widest cell. *@
+                                var hint = app.Stack.Details.GetValueOrDefault(column.Key);
+                                <ul class="portfolio-stack__lines">
+                                    @foreach (var part in value.Split(" + "))
+                                    {
+                                        <li>@part</li>
+                                    }
+                                </ul>
+                                @if (hint is not null)
+                                {
+                                    <AppHint Text="@hint" />
+                                }
+                            }
                             else if (app.Stack.Details.TryGetValue(column.Key, out var detail) && detail != value)
                             {
                                 <AppHint Text="@detail" Class="portfolio-stack__hint">@value</AppHint><span class="app-sr-only">: @detail</span>
@@ -196,13 +219,13 @@
     /// <summary>Key is the property's camelCase JSON name, which is also its <see cref="AppStack.Details"/> key.</summary>
     private sealed record Column(string Key, string Label, Func<AppStack, string?> Value);
 
-    /// <summary>The matrix, in the order a request travels: where it runs, what the visitor
-    /// loads, what answers it, where data lands, then the extras.</summary>
+    /// <summary>The matrix, in the order a request travels: what the visitor loads, what
+    /// answers it, how it pushes back live, what else it calls, where data lands, then the rest.</summary>
     private static readonly Column[] AllColumns =
     [
-        new("hosting", "Hosting", s => s.Hosting),
         new("frontend", "Frontend", s => s.Frontend),
         new("backend", "Backend", s => s.Backend),
+        new("realtime", "Real-time", s => s.Realtime),
         new("extras", "Extras", s => s.Extras),
         new("data", "Data", s => s.Data),
         new("ai", "AI", s => s.Ai),
@@ -214,7 +237,7 @@
     private Column[] _columns = AllColumns;
 
     /// <summary>A column identical on every row, shown once above the table.</summary>
-    private sealed record SharedValue(string Label, string Value, string? Detail);
+    private sealed record SharedValue(string Label, string Value, string? Detail, string? Exception = null);
     private SharedValue[] _shared = [];
     private IReadOnlyList<PortfolioApp>? _rendered;
 
@@ -237,8 +260,25 @@
             ? present.Where(c => Apps.All(a => Signature(c, a.Stack) is not null)
                                  && Apps.Select(a => Signature(c, a.Stack)).Distinct().Count() == 1).ToArray()
             : [];
-        _columns = present.Except(shared).ToArray();
-        _shared = shared.Select(c => Summarise(c, Apps[0].Stack)).ToArray();
+        // All but one: every app has a value, exactly one differs, and there are 3+ apps.
+        // Not for AI, whose cell is a list — "except" a whole list says nothing useful.
+        var nearly = Apps.Count > 2
+            ? present.Except(shared)
+                .Where(c => c.Key != "ai" && Apps.All(a => c.Value(a.Stack) is not null))
+                .Select(c => (Column: c, Groups: Apps.GroupBy(a => c.Value(a.Stack)).OrderByDescending(g => g.Count()).ToArray()))
+                .Where(x => x.Groups.Length == 2 && x.Groups[1].Count() == 1)
+                .ToArray()
+            : [];
+        _columns = present.Except(shared).Except(nearly.Select(n => n.Column)).ToArray();
+        _shared = shared.Select(c => Summarise(c, Apps[0].Stack))
+            .Concat(nearly.Select(n =>
+            {
+                var odd = n.Groups[1].Single();
+                return Summarise(n.Column, n.Groups[0].First().Stack, n.Groups[0].ToArray())
+                    with { Exception = $"{odd.Name}: {n.Column.Value(odd.Stack)}" };
+            }))
+            .OrderBy(v => Array.FindIndex(AllColumns, c => c.Label == v.Label))
+            .ToArray();
     }
 
     /// <summary>What "the same" means for a column: the short value, or for AI the whole list
@@ -249,12 +289,12 @@
             : column.Value(stack);
 
     /// <summary>The strip's entry: the value, with a hint only when every app agrees on that too.</summary>
-    private SharedValue Summarise(Column column, AppStack first)
+    private SharedValue Summarise(Column column, AppStack first, IReadOnlyList<PortfolioApp>? agreeing = null)
     {
         if (column.Key == "ai" && first.AiServices.Count > 0)
             return new(column.Label, string.Join(", ", first.AiServices.Select(s => s.Name)),
                 string.Join(" ", first.AiServices.Select(s => s.Use.TrimEnd('.') + ".")));
-        var details = Apps.Select(a => a.Stack.Details.GetValueOrDefault(column.Key)).Distinct().ToArray();
+        var details = (agreeing ?? Apps).Select(a => a.Stack.Details.GetValueOrDefault(column.Key)).Distinct().ToArray();
         return new(column.Label, column.Value(first)!, details is [{ } only] ? only : null);
     }
 

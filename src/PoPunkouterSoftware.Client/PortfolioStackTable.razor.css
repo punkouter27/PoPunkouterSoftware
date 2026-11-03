@@ -283,6 +283,20 @@
     cursor: help;
 }
 
+.portfolio-stack__except { color: var(--app-text-muted); font-size: var(--app-step--1); }
+
+/* Data and Real-time: one service per line when an app uses several. */
+.portfolio-stack__lines {
+    display: inline-grid;
+    gap: 0.1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    vertical-align: top;
+}
+
+.portfolio-stack__table td ::deep .app-hint--icon { margin-left: var(--app-space-2xs); vertical-align: top; }
+
 /* ── AI column: a list per app, grouped by cloud ──────────────────────────────
    The one column that wraps: it names every model, so it gets a real width instead of
    one line. The cloud tag is text ("Azure", "Google", "In-app"), not a colour key, so it

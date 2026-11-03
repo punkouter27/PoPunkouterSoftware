@@ -317,7 +317,7 @@ internal static partial class PortfolioEndpoints
                 ? $"/api/portfolio/screenshots/{host}?v={version}" : null,
             Scores = host is not null && scores.TryGetValue(host, out var score) ? score : null,
             GithubRepo = string.IsNullOrWhiteSpace(meta?.GithubRepo) ? null : meta.GithubRepo,
-            Stack = AppStackBuilder.Build(meta?.Stack, meta?.Technologies, service, storageGroups),
+            Stack = AppStackBuilder.Build(meta?.Stack, service, storageGroups),
         };
     }
 

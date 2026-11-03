@@ -17,16 +17,18 @@
       "stack": {
         "frontend": "Blazor WASM",
         "backend": "ASP.NET Core",
-        "data": "Table + Blob",
+        "data": "Azure Table Storage + Azure Blob Storage",
         "ai": "AI Foundry",
         "signIn": "Microsoft",
         "delivery": "GitHub Actions",
+        "realtime": "SignalR",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage for records, Blob Storage for files",
+          "data": "Azure Table Storage holds the records (schemaless rows); Azure Blob Storage holds files",
           "signIn": "Sign in with a Microsoft account",
-          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
+          "realtime": "A SignalR hub streams each duel's progress and results to the people watching it"
         },
         "aiServices": [
           {
@@ -85,10 +87,12 @@
         "frontend": "Blazor WASM",
         "backend": "ASP.NET Core",
         "delivery": "GitHub Actions",
+        "signIn": "Microsoft",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
-          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
+          "signIn": "Sign in with a Microsoft account (checked on the live site: its login goes to login.microsoftonline.com)"
         }
       }
     },
@@ -109,17 +113,19 @@
       "stack": {
         "frontend": "Blazor WASM",
         "backend": "ASP.NET Core",
-        "data": "Table + Blob",
+        "data": "Azure Table Storage + Azure Blob Storage",
         "signIn": "Microsoft",
         "phone": "PWA",
         "delivery": "GitHub Actions",
+        "realtime": "SignalR",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage for records, Blob Storage for files",
+          "data": "Azure Table Storage holds the records (schemaless rows); Azure Blob Storage holds files",
           "signIn": "Sign in with a Microsoft account",
           "phone": "Installable web app (PWA): add it to a phone home screen",
-          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
+          "realtime": "13 SignalR hubs: multiplayer lobbies, 30 Hz race ticks, lockstep matches and live quizzes"
         }
       }
     },
@@ -141,18 +147,20 @@
       "stack": {
         "frontend": "Blazor WASM",
         "backend": "ASP.NET Core",
-        "data": "Blob",
+        "data": "Azure Blob Storage",
         "ai": "On-device",
         "signIn": "Microsoft",
         "phone": "PWA",
         "delivery": "GitHub Actions",
+        "realtime": "SignalR + Server-sent events + Web Push",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Blob Storage for uploaded songs and stems",
+          "data": "Azure Blob Storage holds the uploaded songs and analysis files",
           "signIn": "Microsoft account, to open OneDrive files",
           "phone": "Installable web app (PWA): add it to a phone home screen",
-          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
+          "realtime": "SignalR pushes live analysis updates, server-sent events stream the song statistics text as it is written, and Web Push says when a job finishes"
         },
         "aiServices": [
           {
@@ -192,17 +200,19 @@
       "stack": {
         "frontend": "Blazor WASM",
         "backend": "ASP.NET Core",
-        "data": "Table",
+        "data": "Azure Table Storage",
         "signIn": "GitHub",
         "delivery": "GitHub Actions",
         "extras": "GitHub API",
+        "realtime": "SignalR",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage",
+          "data": "Azure Table Storage holds the repositories and line-count history",
           "signIn": "Sign in with GitHub",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "extras": "Reads repositories and commit history through the GitHub API"
+          "extras": "Reads repositories and commit history through the GitHub API",
+          "realtime": "A SignalR hub shows analysis progress for your own repositories"
         }
       }
     },
@@ -223,17 +233,19 @@
       "stack": {
         "frontend": "Blazor WASM",
         "backend": "ASP.NET Core",
-        "data": "Table",
+        "data": "Azure Table Storage",
         "signIn": "Microsoft",
         "delivery": "GitHub Actions",
         "extras": "Google Maps API",
+        "realtime": "Web Push",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage",
+          "data": "Azure Table Storage holds routes, baselines and the scheduled job rows",
           "signIn": "Sign in with a Microsoft account",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "extras": "Google Maps supplies the live traffic times for each route"
+          "extras": "Google Maps supplies the live traffic times for each route",
+          "realtime": "Web Push notifications when a saved route is congested; a background job checks every 15 minutes"
         }
       }
     },
@@ -255,20 +267,22 @@
       "stack": {
         "frontend": "Blazor WASM",
         "backend": "ASP.NET Core",
-        "data": "Table + Blob",
+        "data": "Azure Table Storage + Azure Blob Storage",
         "ai": "OpenAI / Gemini",
         "signIn": "Microsoft",
         "phone": "PWA",
         "delivery": "GitHub Actions",
         "extras": "Azure email",
+        "realtime": "SignalR",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage for records, Blob Storage for files",
+          "data": "Azure Table Storage holds the records (schemaless rows); Azure Blob Storage holds files",
           "signIn": "Sign in with a Microsoft account",
           "phone": "Installable web app (PWA): add it to a phone home screen",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "extras": "Sends the recaps through Azure Communication Services email"
+          "extras": "Sends the recaps through Azure Communication Services email",
+          "realtime": "A SignalR hub tells every open tab when your stats change, so nothing polls"
         },
         "aiServices": [
           {
@@ -302,20 +316,22 @@
       "stack": {
         "frontend": "Blazor WASM",
         "backend": "ASP.NET Core",
-        "data": "Table + Blob",
+        "data": "Azure Table Storage + Azure Blob Storage",
         "ai": "Azure OpenAI",
         "signIn": "Microsoft",
         "phone": "PWA",
         "delivery": "GitHub Actions",
         "extras": "Google Places API",
+        "realtime": "Server-sent events",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage for records, Blob Storage for files",
+          "data": "Azure Table Storage holds restaurants, scores and moderation; Azure Blob Storage holds the comic images",
           "signIn": "Sign in with a Microsoft account",
           "phone": "Installable web app (PWA): add it to a phone home screen",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "extras": "Google Places supplies the restaurant reviews the comics are drawn from"
+          "extras": "Google Places supplies the restaurant reviews the comics are drawn from",
+          "realtime": "Comic generation streams its real stages to the page as server-sent events"
         },
         "aiServices": [
           {
@@ -629,20 +645,20 @@
       "stack": {
         "frontend": "Blazor WASM",
         "backend": "ASP.NET Core",
-        "data": "Table + Blob",
+        "data": "Azure Table Storage + Azure Blob Storage",
         "ai": "Azure OpenAI",
         "signIn": "Microsoft",
         "phone": "PWA",
         "delivery": "GitHub Actions",
-        "extras": "SignalR",
+        "realtime": "SignalR + WebSockets",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage for records, Blob Storage for files",
+          "data": "Azure Table Storage holds the records (schemaless rows); Azure Blob Storage holds files",
           "signIn": "Sign in with a Microsoft account",
           "phone": "Installable web app (PWA): add it to a phone home screen",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "extras": "SignalR pushes each live round to the browser as it happens"
+          "realtime": "SignalR (MessagePack) carries microphone frames up and the host's voice, captions and snapshots down; the server talks to GPT-Realtime over a WebSocket"
         },
         "aiServices": [
           {
@@ -700,18 +716,20 @@
       "stack": {
         "frontend": "Blazor WASM",
         "backend": "ASP.NET Core",
-        "data": "Table + Blob",
+        "data": "Azure Table Storage + Azure Blob Storage",
         "ai": "OpenAI + Gemini",
         "signIn": "Microsoft",
         "phone": "PWA",
         "delivery": "GitHub Actions",
+        "realtime": "SignalR",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage for records, Blob Storage for files",
+          "data": "Azure Table Storage holds the records (schemaless rows); Azure Blob Storage holds files; everything an item owns sits under one blob prefix",
           "signIn": "Sign in with a Microsoft account",
           "phone": "Installable web app (PWA): add it to a phone home screen",
-          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
+          "realtime": "A SignalR hub shows each run's progress live, to its owner only"
         },
         "aiServices": [
           {
