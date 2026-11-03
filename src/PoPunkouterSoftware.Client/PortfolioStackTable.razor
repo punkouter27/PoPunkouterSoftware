@@ -188,8 +188,8 @@
                             else if (column.Key == "techstack")
                             {
                                 @* Everything technical in one cell, as labelled lines: Frontend /
-                                   Backend / Real-time for a web app, Engine / Physics / RL training
-                                   for a game. Each line keeps its hint; RL training keeps its link
+                                   Backend / Real-time / Data for a web app, Engine / Physics /
+                                   RL training / Data for a game. Each line keeps its hint; RL training keeps its link
                                    to the training code. *@
                                 <dl class="portfolio-stack__tech">
                                     @foreach (var part in TechParts(app.Stack))
@@ -205,6 +205,22 @@
                                                     {
                                                         <AppHint Text="@partHint" />
                                                     }
+                                                }
+                                                else if (part.Key == "data" && part.Value.Contains(" + "))
+                                                {
+                                                    @* One service per line: "Azure Table Storage + Azure Blob Storage" is two things. *@
+                                                    <span class="portfolio-stack__multi">
+                                                        <ul class="portfolio-stack__lines">
+                                                            @foreach (var service in part.Value.Split(" + "))
+                                                            {
+                                                                <li>@service</li>
+                                                            }
+                                                        </ul>
+                                                        @if (partHint is not null)
+                                                        {
+                                                            <AppHint Text="@partHint" />
+                                                        }
+                                                    </span>
                                                 }
                                                 else if (partHint is not null && partHint != part.Value)
                                                 {
@@ -223,7 +239,7 @@
                             {
                                 <span aria-hidden="true">–</span><span class="app-sr-only">None listed</span>
                             }
-                            else if (column.Key is "data" or "extras" && value.Contains(" + "))
+                            else if (column.Key == "extras" && value.Contains(" + "))
                             {
                                 @* One service per line: "Azure Table Storage + Azure Blob Storage"
                                    is two things, and on one line it was the widest cell. *@
@@ -288,16 +304,16 @@
             ("realtime", "Real-time", s.Realtime),
             ("physics", "Physics", s.Physics),
             ("training", "RL training", s.Training),
+            ("data", "Data", s.Data),
         ];
         return parts.Where(p => p.Value is not null).Select(p => new TechPart(p.Key, p.Label, p.Value!));
     }
 
-    /// <summary>The same first four in both tables — Sign-in, Tech stack, Data, AI — then the rest.</summary>
+    /// <summary>The same first three in both tables — Sign-in, Tech stack (Data included), AI — then the rest.</summary>
     private static readonly Column[] AllColumns =
     [
         new("signIn", "Sign-in", s => s.SignIn, Pinned: true),
         new("techstack", "Tech stack", s => TechParts(s).Any() ? string.Join(" | ", TechParts(s).Select(p => p.Value)) : null, Pinned: true),
-        new("data", "Data", s => s.Data, Pinned: true),
         new("ai", "AI", s => s.Ai, Pinned: true),
         new("delivery", "Ships via", s => s.Delivery),
         // Last: what makes THIS app different, after the columns most apps share.
