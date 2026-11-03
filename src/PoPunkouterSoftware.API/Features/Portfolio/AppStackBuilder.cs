@@ -49,7 +49,6 @@ internal static class AppStackBuilder
             // "None" in words, not a dash (owner's call, 2026-11-03 — some apps will drop
             // login). A game has no backend and nothing to sign in to: empty, column hidden.
             SignIn = signIn,
-            Phone = Blank(catalog.Phone),
             Delivery = Blank(catalog.Delivery),
             Details = details,
             AiServices = (catalog.AiServices ?? []).Where(a => !string.IsNullOrWhiteSpace(a.Name)).ToList(),

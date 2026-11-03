@@ -221,8 +221,8 @@ loaded". Now ~20s once, then instant.
 
 **`/` is a stack matrix, not a card grid (owner's ask, 2026-11-03).** `PortfolioStackTable`
 draws one row per app and one column per technical piece — Frontend, Backend, Real-time,
-Data, AI, Sign-in, Phone, Ships via, and rightmost "Unique tech" (`AppStack.Extras`: the
-libraries and APIs only that app uses, read from its packages and code) — written for a visitor, not the owner: plain names, no SKUs or
+Data, AI, Sign-in, Ships via, and rightmost "Unique tech" (`AppStack.Extras`: the
+libraries and APIs only that app uses, read from its packages and code) — written for a visitor, not the owner (a Phone/PWA column went 2026-11-03 to save width): plain names, no SKUs or
 resource ids. Cells are SHORT labels ("Table + Blob", "Azure OpenAI", "PWA") so a column
 scans; the full wording is `AppStack.Details[<camelCase key>]`, shown as an `AppHint` on the
 cell plus sr-only text. **The AI column is the exception**: it lists `AppStack.AiServices`

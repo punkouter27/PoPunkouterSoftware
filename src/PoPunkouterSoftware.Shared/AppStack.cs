@@ -36,8 +36,6 @@ public record AppStack
     /// <summary>Every AI model or service the app calls, grouped by cloud in the AI column.</summary>
     public List<AiService> AiServices { get; init; } = new();
     public string? SignIn { get; init; }
-    /// <summary>How it reaches a phone: an installable PWA, a store build, or a mobile web page.</summary>
-    public string? Phone { get; init; }
     /// <summary>How a change ships, e.g. "GitHub Actions".</summary>
     public string? Delivery { get; init; }
     /// <summary>The full wording behind a short label: "ai" → "Azure OpenAI: GPT-5 mini judges…".</summary>
