@@ -322,8 +322,8 @@
           },
           {
             "cloud": "Azure",
-            "name": "gpt-image-1 mini",
-            "use": "Draws the comic strip"
+            "name": "FLUX.1 Kontext pro",
+            "use": "Draws the comic strip, through Azure AI Foundry (gpt-image-1 mini is the code default)"
           },
           {
             "cloud": "Azure",
@@ -732,26 +732,22 @@
           {
             "cloud": "Google",
             "name": "Gemini Flash-Lite",
-            "use": "Looks at pictures and clips first, with Azure as the fallback",
-            "optional": true
+            "use": "Looks at pictures and clips first, with Azure as the fallback"
           },
           {
             "cloud": "Google",
             "name": "Gemini 2.5 Flash Image",
-            "use": "Makes and restyles images",
-            "optional": true
+            "use": "Makes and restyles images"
           },
           {
             "cloud": "Google",
             "name": "Gemini Omni",
-            "use": "Turns a photo into a short video",
-            "optional": true
+            "use": "Turns a photo into a short video"
           },
           {
             "cloud": "Google",
             "name": "Lyria 3",
-            "use": "Writes short music clips",
-            "optional": true
+            "use": "Writes short music clips"
           },
           {
             "cloud": "In-app",
