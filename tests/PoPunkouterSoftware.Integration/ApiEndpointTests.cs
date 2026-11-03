@@ -173,6 +173,9 @@ public class PortfolioEndpointTests
         apps.EnumerateArray().Select(a => a.GetProperty("stack").ToString())
             .Should().Contain(s => s.Contains("\"frontend\":\"Blazor WASM\"") && s.Contains("\"hosting\":\"")
                 && s.Contains("\"frontend\":\"Blazor WebAssembly: "));
+        // The AI column's list: each service names its cloud and what it is for.
+        apps.EnumerateArray().Select(a => a.GetProperty("stack").ToString())
+            .Should().Contain(s => s.Contains("\"aiServices\":[{\"cloud\":\"Azure\",\"name\":") && s.Contains("\"use\":"));
 
         // Every card has a README badge at /badge/<id>.svg, built from the same list — so the
         // badge can never describe an app the catalogue does not show. Unknown ids are 404s.

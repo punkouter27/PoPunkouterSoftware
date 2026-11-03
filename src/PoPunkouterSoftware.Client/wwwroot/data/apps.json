@@ -25,10 +25,46 @@
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
           "data": "Azure Table Storage for records, Blob Storage for files",
-          "ai": "Azure AI Foundry, or a local Ollama model",
           "signIn": "Sign in with a Microsoft account",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
-        }
+        },
+        "aiServices": [
+          {
+            "cloud": "Azure",
+            "name": "GPT-5.4 mini",
+            "use": "Judges which side of each duel did better"
+          },
+          {
+            "cloud": "Azure",
+            "name": "GPT-5.4",
+            "use": "Breaks ties when the two judge orderings disagree"
+          },
+          {
+            "cloud": "Azure",
+            "name": "GPT-4.1 nano",
+            "use": "Cheaper text-only judge when vision is off"
+          },
+          {
+            "cloud": "Azure",
+            "name": "GPT-5.5, GPT-5 mini/nano, GPT-4.1 mini",
+            "use": "Contestant models you can pit against each other, via Azure AI Foundry"
+          },
+          {
+            "cloud": "Google",
+            "name": "Gemini 3.5 Flash-Lite",
+            "use": "Cross-checks every verdict with a second model family"
+          },
+          {
+            "cloud": "Google",
+            "name": "Gemini 2.5 Flash-Lite",
+            "use": "A contestant model from Google"
+          },
+          {
+            "cloud": "In-app",
+            "name": "WebLLM browser models",
+            "use": "Small open models from Hugging Face that run in your browser on WebGPU"
+          }
+        ]
       }
     },
     {
@@ -114,11 +150,28 @@
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
           "data": "Azure Blob Storage for uploaded songs and stems",
-          "ai": "On-device Whisper and ONNX audio models; optional Azure OpenAI",
           "signIn": "Microsoft account, to open OneDrive files",
           "phone": "Installable web app (PWA): add it to a phone home screen",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
-        }
+        },
+        "aiServices": [
+          {
+            "cloud": "Azure",
+            "name": "Azure OpenAI",
+            "use": "Writes the plain-English interpretation of a song. The one paid piece, off unless configured",
+            "optional": true
+          },
+          {
+            "cloud": "In-app",
+            "name": "Whisper.net",
+            "use": "Transcribes the lyrics on the server"
+          },
+          {
+            "cloud": "In-app",
+            "name": "ONNX audio models",
+            "use": "Split stems and track pitch, beats and chords on the server"
+          }
+        ]
       }
     },
     {
@@ -207,11 +260,24 @@
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10, sending email through Azure",
           "data": "Azure Table Storage for records, Blob Storage for files",
-          "ai": "Azure OpenAI or Google Gemini writes the recaps",
           "signIn": "Sign in with a Microsoft account",
           "phone": "Installable web app (PWA): add it to a phone home screen",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
-        }
+        },
+        "aiServices": [
+          {
+            "cloud": "Azure",
+            "name": "GPT-5.4 nano",
+            "use": "Rewrites the weekly recap in plain words; production uses a template unless switched on",
+            "optional": true
+          },
+          {
+            "cloud": "Google",
+            "name": "Gemini Flash-Lite",
+            "use": "The alternative recap writer",
+            "optional": true
+          }
+        ]
       }
     },
     {
@@ -239,11 +305,43 @@
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10, reading Google Maps reviews",
           "data": "Azure Table Storage for records, Blob Storage for files",
-          "ai": "Azure OpenAI: GPT-5.4 mini writes, gpt-image-1 mini draws",
           "signIn": "Sign in with a Microsoft account",
           "phone": "Installable web app (PWA): add it to a phone home screen",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
-        }
+        },
+        "aiServices": [
+          {
+            "cloud": "Azure",
+            "name": "GPT-5.4 nano",
+            "use": "Reads the restaurant reviews, scores them and writes the comic"
+          },
+          {
+            "cloud": "Azure",
+            "name": "GPT-5.4 mini",
+            "use": "Writes the audio-comic script and triages moderation reports"
+          },
+          {
+            "cloud": "Azure",
+            "name": "gpt-image-1 mini",
+            "use": "Draws the comic strip"
+          },
+          {
+            "cloud": "Azure",
+            "name": "GPT-4o mini TTS",
+            "use": "Reads the comic aloud with acting directions per line"
+          },
+          {
+            "cloud": "Azure",
+            "name": "AI Content Safety",
+            "use": "Screens the text before a paid image is drawn"
+          },
+          {
+            "cloud": "Google",
+            "name": "Gemini 2.5 Flash Image",
+            "use": "Re-draws the top comics; off by default",
+            "optional": true
+          }
+        ]
       }
     },
     {
@@ -264,9 +362,15 @@
         "frontend": "Unity WebGL",
         "ai": "RL agents",
         "details": {
-          "frontend": "Unity game compiled to WebGL, running in the browser",
-          "ai": "The players are agents trained with reinforcement learning"
-        }
+          "frontend": "Unity game compiled to WebGL, running in the browser"
+        },
+        "aiServices": [
+          {
+            "cloud": "In-app",
+            "name": "Reinforcement-learning agents",
+            "use": "The players were trained by trial and error, then ship inside the game"
+          }
+        ]
       }
     },
     {
@@ -287,9 +391,15 @@
         "frontend": "Unity WebGL",
         "ai": "RL agents",
         "details": {
-          "frontend": "Unity game compiled to WebGL, running in the browser",
-          "ai": "The players are agents trained with reinforcement learning"
-        }
+          "frontend": "Unity game compiled to WebGL, running in the browser"
+        },
+        "aiServices": [
+          {
+            "cloud": "In-app",
+            "name": "Reinforcement-learning agents",
+            "use": "The players were trained by trial and error, then ship inside the game"
+          }
+        ]
       }
     },
     {
@@ -310,9 +420,15 @@
         "frontend": "Unity WebGL",
         "ai": "RL agents",
         "details": {
-          "frontend": "Unity game compiled to WebGL, running in the browser",
-          "ai": "The players are agents trained with reinforcement learning"
-        }
+          "frontend": "Unity game compiled to WebGL, running in the browser"
+        },
+        "aiServices": [
+          {
+            "cloud": "In-app",
+            "name": "Reinforcement-learning agents",
+            "use": "The players were trained by trial and error, then ship inside the game"
+          }
+        ]
       }
     },
     {
@@ -333,9 +449,15 @@
         "frontend": "Unity WebGL",
         "ai": "RL agents",
         "details": {
-          "frontend": "Unity game compiled to WebGL, running in the browser",
-          "ai": "The players are agents trained with reinforcement learning"
-        }
+          "frontend": "Unity game compiled to WebGL, running in the browser"
+        },
+        "aiServices": [
+          {
+            "cloud": "In-app",
+            "name": "Reinforcement-learning agents",
+            "use": "The players were trained by trial and error, then ship inside the game"
+          }
+        ]
       }
     },
     {
@@ -356,9 +478,15 @@
         "frontend": "Unity WebGL",
         "ai": "RL agents",
         "details": {
-          "frontend": "Unity game compiled to WebGL, running in the browser",
-          "ai": "The players are agents trained with reinforcement learning"
-        }
+          "frontend": "Unity game compiled to WebGL, running in the browser"
+        },
+        "aiServices": [
+          {
+            "cloud": "In-app",
+            "name": "Reinforcement-learning agents",
+            "use": "The players were trained by trial and error, then ship inside the game"
+          }
+        ]
       }
     },
     {
@@ -379,9 +507,15 @@
         "frontend": "Unity WebGL",
         "ai": "RL agents",
         "details": {
-          "frontend": "Unity game compiled to WebGL, running in the browser",
-          "ai": "The players are agents trained with reinforcement learning"
-        }
+          "frontend": "Unity game compiled to WebGL, running in the browser"
+        },
+        "aiServices": [
+          {
+            "cloud": "In-app",
+            "name": "Reinforcement-learning agents",
+            "use": "The players were trained by trial and error, then ship inside the game"
+          }
+        ]
       }
     },
     {
@@ -402,9 +536,15 @@
         "frontend": "Unity WebGL",
         "ai": "RL agents",
         "details": {
-          "frontend": "Unity game compiled to WebGL, running in the browser",
-          "ai": "The players are agents trained with reinforcement learning"
-        }
+          "frontend": "Unity game compiled to WebGL, running in the browser"
+        },
+        "aiServices": [
+          {
+            "cloud": "In-app",
+            "name": "Reinforcement-learning agents",
+            "use": "The players were trained by trial and error, then ship inside the game"
+          }
+        ]
       }
     },
     {
@@ -425,9 +565,15 @@
         "frontend": "Unity WebGL",
         "ai": "RL agents",
         "details": {
-          "frontend": "Unity game compiled to WebGL, running in the browser",
-          "ai": "The players are agents trained with reinforcement learning"
-        }
+          "frontend": "Unity game compiled to WebGL, running in the browser"
+        },
+        "aiServices": [
+          {
+            "cloud": "In-app",
+            "name": "Reinforcement-learning agents",
+            "use": "The players were trained by trial and error, then ship inside the game"
+          }
+        ]
       }
     },
     {
@@ -448,9 +594,15 @@
         "frontend": "Unreal Engine",
         "ai": "RL agents",
         "details": {
-          "frontend": "Unreal Engine build running in the browser",
-          "ai": "The players are agents trained with reinforcement learning"
-        }
+          "frontend": "Unreal Engine build running in the browser"
+        },
+        "aiServices": [
+          {
+            "cloud": "In-app",
+            "name": "Reinforcement-learning agents",
+            "use": "The players were trained by trial and error, then ship inside the game"
+          }
+        ]
       }
     },
     {
@@ -478,11 +630,48 @@
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10, with SignalR for live rounds",
           "data": "Azure Table Storage for records, Blob Storage for files",
-          "ai": "Azure OpenAI: GPT-5 mini judges, GPT-4o mini TTS speaks",
           "signIn": "Sign in with a Microsoft account",
           "phone": "Installable web app (PWA): add it to a phone home screen",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
-        }
+        },
+        "aiServices": [
+          {
+            "cloud": "Azure",
+            "name": "GPT-4.1 mini",
+            "use": "Writes each argument round in the personas' voices"
+          },
+          {
+            "cloud": "Azure",
+            "name": "GPT-5 mini",
+            "use": "Judges the fight, rewrites personas and fact-checks claims with web search"
+          },
+          {
+            "cloud": "Azure",
+            "name": "GPT-4o mini TTS",
+            "use": "Speaks every line in a synthesised voice"
+          },
+          {
+            "cloud": "Azure",
+            "name": "GPT-Realtime mini",
+            "use": "The live host who interrupts and cross-examines in FIGHT mode"
+          },
+          {
+            "cloud": "Azure",
+            "name": "GPT-4o Transcribe",
+            "use": "Transcribes the fight with speaker labels (who said what)"
+          },
+          {
+            "cloud": "Google",
+            "name": "Gemini Live, TTS and Search",
+            "use": "The original provider: live host, voices and Search-grounded fact checks. Kept as a fallback when the Azure endpoint is empty",
+            "optional": true
+          },
+          {
+            "cloud": "In-app",
+            "name": "Whisper tiny",
+            "use": "Transcribes a spoken turn in the browser (WebGPU or WASM) before falling back to the server"
+          }
+        ]
       }
     },
     {
@@ -510,11 +699,66 @@
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
           "data": "Azure Table Storage for records, Blob Storage for files",
-          "ai": "Azure OpenAI and Google Gemini; on-device Whisper",
           "signIn": "Sign in with a Microsoft account",
           "phone": "Installable web app (PWA): add it to a phone home screen",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
-        }
+        },
+        "aiServices": [
+          {
+            "cloud": "Azure",
+            "name": "GPT-5.4 nano",
+            "use": "Chat, captions and roasts"
+          },
+          {
+            "cloud": "Azure",
+            "name": "GPT-5.4 mini",
+            "use": "Looks at pictures when Gemini cannot"
+          },
+          {
+            "cloud": "Azure",
+            "name": "Whisper",
+            "use": "Transcribes the audio in clips"
+          },
+          {
+            "cloud": "Azure",
+            "name": "GPT-4o mini TTS",
+            "use": "Speaks roasts and captions aloud"
+          },
+          {
+            "cloud": "Azure",
+            "name": "FLUX.1 Kontext pro",
+            "use": "Edits and restyles images, through Azure AI Foundry"
+          },
+          {
+            "cloud": "Google",
+            "name": "Gemini Flash-Lite",
+            "use": "Looks at pictures and clips first, with Azure as the fallback",
+            "optional": true
+          },
+          {
+            "cloud": "Google",
+            "name": "Gemini 2.5 Flash Image",
+            "use": "Makes and restyles images",
+            "optional": true
+          },
+          {
+            "cloud": "Google",
+            "name": "Gemini Omni",
+            "use": "Turns a photo into a short video",
+            "optional": true
+          },
+          {
+            "cloud": "Google",
+            "name": "Lyria 3",
+            "use": "Writes short music clips",
+            "optional": true
+          },
+          {
+            "cloud": "In-app",
+            "name": "Whisper and Florence-2",
+            "use": "Transcribe and describe on your device before any paid call"
+          }
+        ]
       }
     }
   ]

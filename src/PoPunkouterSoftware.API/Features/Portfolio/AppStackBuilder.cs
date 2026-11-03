@@ -43,6 +43,7 @@ internal static class AppStackBuilder
             Phone = Blank(catalog.Phone),
             Delivery = Blank(catalog.Delivery),
             Details = details,
+            AiServices = (catalog.AiServices ?? []).Where(a => !string.IsNullOrWhiteSpace(a.Name)).ToList(),
         };
     }
 

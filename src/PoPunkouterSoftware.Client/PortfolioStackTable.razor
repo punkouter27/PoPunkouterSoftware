@@ -40,6 +40,10 @@
                 var first = i == 0 && FirstIsLcp;
                 <tr @key="app.Id" role="row" class="portfolio-stack__row" data-sfx-hover="hover">
                     <th scope="row" role="rowheader" class="portfolio-stack__app">
+                        @* The grid is on this wrapper, not the <th>: a display:grid cell stops
+                           being a table cell, so it no longer stretches to the row's height and
+                           the pinned column's opaque background ended halfway down the row. *@
+                        <div class="portfolio-stack__app-grid">
                         @* width/height are the box the CSS draws (16:10), not the phone-shaped
                            source, so nothing shifts when the stylesheet arrives. The first row's
                            image is the LCP element and loads eagerly; the rest are lazy. *@
@@ -99,12 +103,36 @@
                                 }
                             </div>
                         </div>
+                        </div>
                     </th>
                     @foreach (var column in _columns)
                     {
                         var value = column.Value(app.Stack);
-                        <td role="cell" data-label="@column.Label" class="@(value is null ? "is-empty" : null)">
-                            @if (value is null)
+                        <td role="cell" data-label="@column.Label" class="@(value is null ? "is-empty" : null) @(column.Key == "ai" ? "is-ai" : null)">
+                            @if (column.Key == "ai" && app.Stack.AiServices.Count > 0)
+                            {
+                                @* The AI column lists every model, grouped by where it runs:
+                                   Azure, Google, In-app. A name is a hint saying what it is for;
+                                   "optional" marks one wired in the code but off by default. *@
+                                <ul class="portfolio-stack__ai">
+                                    @foreach (var group in app.Stack.AiServices.GroupBy(a => a.Cloud))
+                                    {
+                                        <li>
+                                            <span class="portfolio-stack__cloud" data-cloud="@group.Key">@group.Key</span>
+                                            <ul>
+                                                @foreach (var service in group)
+                                                {
+                                                    <li class="@(service.Optional ? "is-optional" : null)">
+                                                        <AppHint Text="@(service.Use + (service.Optional ? ". Optional: off unless configured." : "."))" Class="portfolio-stack__hint">@service.Name</AppHint>@if (service.Optional)
+                                                        {<span class="portfolio-stack__optional">optional</span>}<span class="app-sr-only">: @service.Use</span>
+                                                    </li>
+                                                }
+                                            </ul>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else if (value is null)
                             {
                                 <span aria-hidden="true">–</span><span class="app-sr-only">None listed</span>
                             }

@@ -224,7 +224,12 @@ draws one row per app and one column per technical piece — Hosting, Frontend, 
 AI, Sign-in, Phone, Ships via — written for a visitor, not the owner: plain names, no SKUs or
 resource ids. Cells are SHORT labels ("Table + Blob", "Azure OpenAI", "PWA") so a column
 scans; the full wording is `AppStack.Details[<camelCase key>]`, shown as an `AppHint` on the
-cell plus sr-only text. A column empty on every row of a table is not drawn (the RL table has
+cell plus sr-only text. **The AI column is the exception**: it lists `AppStack.AiServices`
+(`AiService`: cloud Azure/Google/In-app, model name, what it is used for, `optional` when
+wired but off by default), grouped by cloud, and it is the one column that wraps. That list
+was gathered 2026-11-03 from each repo's appsettings, option classes and client code
+(tests and vendored JS excluded); `optional` was judged from the repo's own config
+defaults, not from production settings, which live in Key Vault. A column empty on every row of a table is not drawn (the RL table has
 no backend). **It stays a table down to 641px**: when the columns outgrow the card, the card
 scrolls sideways (tabindex + role=group) with the app column `position: sticky` and opaque.
 A 1200px stacking breakpoint was tried first and took the comparison away in any window
