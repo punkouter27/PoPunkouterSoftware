@@ -80,10 +80,16 @@ public class TestWebApp : WebApplicationFactory<Program>
         // because they happened not to look at the differing fields. A fixture that silently
         // defers to ambient machine state is the same undeclared dependency the committed
         // wwwroot report was, one directory over.
-        if (File.Exists(path))
+        //
+        // Only the FIRST host displaces. A run builds several hosts, and the second one finds
+        // the first one's seed in place: moving that aside with overwrite clobbered the real
+        // report the first host had set aside, so a test run deleted the developer's local
+        // cache outright (2026-11-03). A seed already displaced is never displaced again.
+        var displaced = path + ".displaced-by-tests";
+        if (File.Exists(path) && !File.Exists(displaced))
         {
-            _displacedReportPath = path + ".displaced-by-tests";
-            File.Move(path, _displacedReportPath, overwrite: true);
+            File.Move(path, displaced);
+            _displacedReportPath = displaced;
         }
 
         File.WriteAllText(path, JsonSerializer.Serialize(BuildSeedReport(), SeedJsonOptions));
@@ -150,13 +156,19 @@ public class TestWebApp : WebApplicationFactory<Program>
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing && _seededReportPath is not null && File.Exists(_seededReportPath))
+        // Runs once. WebApplicationFactory reaches Dispose(true) from both DisposeAsync and
+        // Dispose, and the second pass deleted the REAL report the first had just restored —
+        // a test run wiped the developer's local cache (2026-11-03). The fields are cleared
+        // before anything can throw, so a second call finds nothing to do.
+        if (disposing && _seededReportPath is { } seeded)
         {
+            var displaced = _displacedReportPath;
+            _seededReportPath = _displacedReportPath = null;
             try
             {
-                File.Delete(_seededReportPath);
-                if (_displacedReportPath is not null && File.Exists(_displacedReportPath))
-                    File.Move(_displacedReportPath, _seededReportPath, overwrite: true);
+                File.Delete(seeded);
+                if (displaced is not null && File.Exists(displaced))
+                    File.Move(displaced, seeded, overwrite: true);
             }
             catch (IOException) { /* best effort */ }
         }

@@ -15,12 +15,20 @@
       "githubRepo": "punkouter26/PoLocalCompare",
       "expect": "<title>PoLocalCompare</title>",
       "stack": {
-        "frontend": "Blazor WebAssembly",
-        "backend": "ASP.NET Core (.NET 10)",
-        "data": "Azure Table + Blob Storage",
-        "ai": "Azure AI Foundry, or a local Ollama model",
-        "signIn": "Microsoft account",
-        "delivery": "GitHub Actions → Azure"
+        "frontend": "Blazor WASM",
+        "backend": "ASP.NET Core",
+        "data": "Table + Blob",
+        "ai": "AI Foundry",
+        "signIn": "Microsoft",
+        "delivery": "GitHub Actions",
+        "details": {
+          "frontend": "Blazor WebAssembly: the C# app runs in the browser",
+          "backend": "ASP.NET Core on .NET 10",
+          "data": "Azure Table Storage for records, Blob Storage for files",
+          "ai": "Azure AI Foundry, or a local Ollama model",
+          "signIn": "Sign in with a Microsoft account",
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+        }
       }
     },
     {
@@ -38,9 +46,14 @@
       "githubRepo": "punkouter26/PoMemeVideo",
       "expect": "<title>PoMemeVideo</title>",
       "stack": {
-        "frontend": "Blazor WebAssembly",
-        "backend": "ASP.NET Core (.NET 10)",
-        "delivery": "GitHub Actions → Azure"
+        "frontend": "Blazor WASM",
+        "backend": "ASP.NET Core",
+        "delivery": "GitHub Actions",
+        "details": {
+          "frontend": "Blazor WebAssembly: the C# app runs in the browser",
+          "backend": "ASP.NET Core on .NET 10",
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+        }
       }
     },
     {
@@ -58,12 +71,20 @@
       "githubRepo": "punkouter26/PoMiniGames",
       "expect": "<title>PoMiniGames</title>",
       "stack": {
-        "frontend": "Blazor WebAssembly",
-        "backend": "ASP.NET Core (.NET 10)",
-        "data": "Azure Table + Blob Storage",
-        "signIn": "Microsoft account",
-        "phone": "Installable web app (PWA)",
-        "delivery": "GitHub Actions → Azure"
+        "frontend": "Blazor WASM",
+        "backend": "ASP.NET Core",
+        "data": "Table + Blob",
+        "signIn": "Microsoft",
+        "phone": "PWA",
+        "delivery": "GitHub Actions",
+        "details": {
+          "frontend": "Blazor WebAssembly: the C# app runs in the browser",
+          "backend": "ASP.NET Core on .NET 10",
+          "data": "Azure Table Storage for records, Blob Storage for files",
+          "signIn": "Sign in with a Microsoft account",
+          "phone": "Installable web app (PWA): add it to a phone home screen",
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+        }
       }
     },
     {
@@ -82,13 +103,22 @@
       "githubRepo": "punkouter26/PoMode",
       "expect": "<title>PoMode</title>",
       "stack": {
-        "frontend": "Blazor WebAssembly",
-        "backend": "ASP.NET Core (.NET 10)",
-        "data": "Azure Blob Storage",
-        "ai": "On-device Whisper and ONNX audio models; optional Azure OpenAI",
-        "signIn": "Microsoft account (OneDrive files)",
-        "phone": "Installable web app (PWA)",
-        "delivery": "GitHub Actions → Azure"
+        "frontend": "Blazor WASM",
+        "backend": "ASP.NET Core",
+        "data": "Blob",
+        "ai": "On-device",
+        "signIn": "Microsoft",
+        "phone": "PWA",
+        "delivery": "GitHub Actions",
+        "details": {
+          "frontend": "Blazor WebAssembly: the C# app runs in the browser",
+          "backend": "ASP.NET Core on .NET 10",
+          "data": "Azure Blob Storage for uploaded songs and stems",
+          "ai": "On-device Whisper and ONNX audio models; optional Azure OpenAI",
+          "signIn": "Microsoft account, to open OneDrive files",
+          "phone": "Installable web app (PWA): add it to a phone home screen",
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+        }
       }
     },
     {
@@ -107,11 +137,18 @@
       "githubRepo": "punkouter26/PoRepoLineTracker",
       "expect": "<title>PoRepoLineTracker</title>",
       "stack": {
-        "frontend": "Blazor WebAssembly",
-        "backend": "ASP.NET Core (.NET 10) + GitHub API",
-        "data": "Azure Table Storage",
+        "frontend": "Blazor WASM",
+        "backend": "ASP.NET Core",
+        "data": "Table",
         "signIn": "GitHub",
-        "delivery": "GitHub Actions → Azure"
+        "delivery": "GitHub Actions",
+        "details": {
+          "frontend": "Blazor WebAssembly: the C# app runs in the browser",
+          "backend": "ASP.NET Core on .NET 10, reading the GitHub API",
+          "data": "Azure Table Storage",
+          "signIn": "Sign in with GitHub",
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+        }
       }
     },
     {
@@ -129,11 +166,18 @@
       "githubRepo": "punkouter26/PoTraffic",
       "expect": "<title>PoTraffic</title>",
       "stack": {
-        "frontend": "Blazor WebAssembly",
-        "backend": "ASP.NET Core (.NET 10) + Google Maps API",
-        "data": "Azure Table Storage",
-        "signIn": "Microsoft account",
-        "delivery": "GitHub Actions → Azure"
+        "frontend": "Blazor WASM",
+        "backend": "ASP.NET Core",
+        "data": "Table",
+        "signIn": "Microsoft",
+        "delivery": "GitHub Actions",
+        "details": {
+          "frontend": "Blazor WebAssembly: the C# app runs in the browser",
+          "backend": "ASP.NET Core on .NET 10, calling the Google Maps API",
+          "data": "Azure Table Storage",
+          "signIn": "Sign in with a Microsoft account",
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+        }
       }
     },
     {
@@ -152,13 +196,22 @@
       "githubRepo": "punkouter26/PoWatch",
       "expect": "<title>PoWatch</title>",
       "stack": {
-        "frontend": "Blazor WebAssembly",
-        "backend": "ASP.NET Core (.NET 10) + Azure email",
-        "data": "Azure Table + Blob Storage",
-        "ai": "Azure OpenAI or Google Gemini",
-        "signIn": "Microsoft account",
-        "phone": "Installable web app (PWA)",
-        "delivery": "GitHub Actions → Azure"
+        "frontend": "Blazor WASM",
+        "backend": "ASP.NET Core",
+        "data": "Table + Blob",
+        "ai": "OpenAI / Gemini",
+        "signIn": "Microsoft",
+        "phone": "PWA",
+        "delivery": "GitHub Actions",
+        "details": {
+          "frontend": "Blazor WebAssembly: the C# app runs in the browser",
+          "backend": "ASP.NET Core on .NET 10, sending email through Azure",
+          "data": "Azure Table Storage for records, Blob Storage for files",
+          "ai": "Azure OpenAI or Google Gemini writes the recaps",
+          "signIn": "Sign in with a Microsoft account",
+          "phone": "Installable web app (PWA): add it to a phone home screen",
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+        }
       }
     },
     {
@@ -175,13 +228,22 @@
       "healthUrl": "https://app-poseereview2.azurewebsites.net/health/live",
       "githubRepo": null,
       "stack": {
-        "frontend": "Blazor WebAssembly",
-        "backend": "ASP.NET Core (.NET 10) + Google Maps reviews",
-        "data": "Azure Table + Blob Storage",
-        "ai": "Azure OpenAI: GPT-5.4 mini writes, gpt-image-1 mini draws",
-        "signIn": "Microsoft account",
-        "phone": "Installable web app (PWA)",
-        "delivery": "GitHub Actions → Azure"
+        "frontend": "Blazor WASM",
+        "backend": "ASP.NET Core",
+        "data": "Table + Blob",
+        "ai": "Azure OpenAI",
+        "signIn": "Microsoft",
+        "phone": "PWA",
+        "delivery": "GitHub Actions",
+        "details": {
+          "frontend": "Blazor WebAssembly: the C# app runs in the browser",
+          "backend": "ASP.NET Core on .NET 10, reading Google Maps reviews",
+          "data": "Azure Table Storage for records, Blob Storage for files",
+          "ai": "Azure OpenAI: GPT-5.4 mini writes, gpt-image-1 mini draws",
+          "signIn": "Sign in with a Microsoft account",
+          "phone": "Installable web app (PWA): add it to a phone home screen",
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+        }
       }
     },
     {
@@ -200,7 +262,11 @@
       "expect": "<title>PoBox</title>",
       "stack": {
         "frontend": "Unity WebGL",
-        "ai": "Players are agents trained with reinforcement learning"
+        "ai": "RL agents",
+        "details": {
+          "frontend": "Unity game compiled to WebGL, running in the browser",
+          "ai": "The players are agents trained with reinforcement learning"
+        }
       }
     },
     {
@@ -219,7 +285,11 @@
       "expect": "<title>PoFootball</title>",
       "stack": {
         "frontend": "Unity WebGL",
-        "ai": "Players are agents trained with reinforcement learning"
+        "ai": "RL agents",
+        "details": {
+          "frontend": "Unity game compiled to WebGL, running in the browser",
+          "ai": "The players are agents trained with reinforcement learning"
+        }
       }
     },
     {
@@ -238,7 +308,11 @@
       "expect": "<title>PoHillKing</title>",
       "stack": {
         "frontend": "Unity WebGL",
-        "ai": "Players are agents trained with reinforcement learning"
+        "ai": "RL agents",
+        "details": {
+          "frontend": "Unity game compiled to WebGL, running in the browser",
+          "ai": "The players are agents trained with reinforcement learning"
+        }
       }
     },
     {
@@ -257,7 +331,11 @@
       "expect": "<title>PoOlympics</title>",
       "stack": {
         "frontend": "Unity WebGL",
-        "ai": "Players are agents trained with reinforcement learning"
+        "ai": "RL agents",
+        "details": {
+          "frontend": "Unity game compiled to WebGL, running in the browser",
+          "ai": "The players are agents trained with reinforcement learning"
+        }
       }
     },
     {
@@ -276,7 +354,11 @@
       "expect": "<title>PoRace</title>",
       "stack": {
         "frontend": "Unity WebGL",
-        "ai": "Players are agents trained with reinforcement learning"
+        "ai": "RL agents",
+        "details": {
+          "frontend": "Unity game compiled to WebGL, running in the browser",
+          "ai": "The players are agents trained with reinforcement learning"
+        }
       }
     },
     {
@@ -295,7 +377,11 @@
       "expect": "<title>PoRumble</title>",
       "stack": {
         "frontend": "Unity WebGL",
-        "ai": "Players are agents trained with reinforcement learning"
+        "ai": "RL agents",
+        "details": {
+          "frontend": "Unity game compiled to WebGL, running in the browser",
+          "ai": "The players are agents trained with reinforcement learning"
+        }
       }
     },
     {
@@ -314,7 +400,11 @@
       "expect": "<title>PoSoccer</title>",
       "stack": {
         "frontend": "Unity WebGL",
-        "ai": "Players are agents trained with reinforcement learning"
+        "ai": "RL agents",
+        "details": {
+          "frontend": "Unity game compiled to WebGL, running in the browser",
+          "ai": "The players are agents trained with reinforcement learning"
+        }
       }
     },
     {
@@ -333,7 +423,11 @@
       "expect": "<title>PoSumo</title>",
       "stack": {
         "frontend": "Unity WebGL",
-        "ai": "Players are agents trained with reinforcement learning"
+        "ai": "RL agents",
+        "details": {
+          "frontend": "Unity game compiled to WebGL, running in the browser",
+          "ai": "The players are agents trained with reinforcement learning"
+        }
       }
     },
     {
@@ -352,7 +446,11 @@
       "expect": "<title>PoSlap Arena</title>",
       "stack": {
         "frontend": "Unreal Engine",
-        "ai": "Players are agents trained with reinforcement learning"
+        "ai": "RL agents",
+        "details": {
+          "frontend": "Unreal Engine build running in the browser",
+          "ai": "The players are agents trained with reinforcement learning"
+        }
       }
     },
     {
@@ -369,13 +467,22 @@
       "url": "https://app-pofightjudge2.azurewebsites.net",
       "githubRepo": "punkouter26/PoFightJudge",
       "stack": {
-        "frontend": "Blazor WebAssembly",
-        "backend": "ASP.NET Core (.NET 10) + SignalR",
-        "data": "Azure Table + Blob Storage",
-        "ai": "Azure OpenAI: GPT-5 mini judges, GPT-4o mini TTS speaks",
-        "signIn": "Microsoft account",
-        "phone": "Installable web app (PWA)",
-        "delivery": "GitHub Actions → Azure"
+        "frontend": "Blazor WASM",
+        "backend": "ASP.NET Core",
+        "data": "Table + Blob",
+        "ai": "Azure OpenAI",
+        "signIn": "Microsoft",
+        "phone": "PWA",
+        "delivery": "GitHub Actions",
+        "details": {
+          "frontend": "Blazor WebAssembly: the C# app runs in the browser",
+          "backend": "ASP.NET Core on .NET 10, with SignalR for live rounds",
+          "data": "Azure Table Storage for records, Blob Storage for files",
+          "ai": "Azure OpenAI: GPT-5 mini judges, GPT-4o mini TTS speaks",
+          "signIn": "Sign in with a Microsoft account",
+          "phone": "Installable web app (PWA): add it to a phone home screen",
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+        }
       }
     },
     {
@@ -392,13 +499,22 @@
       "url": "https://app-poredomedia2.azurewebsites.net",
       "githubRepo": "punkouter26/PoRedoMedia",
       "stack": {
-        "frontend": "Blazor WebAssembly",
-        "backend": "ASP.NET Core (.NET 10)",
-        "data": "Azure Table + Blob Storage",
-        "ai": "Azure OpenAI and Google Gemini; on-device Whisper",
-        "signIn": "Microsoft account",
-        "phone": "Installable web app (PWA)",
-        "delivery": "GitHub Actions → Azure"
+        "frontend": "Blazor WASM",
+        "backend": "ASP.NET Core",
+        "data": "Table + Blob",
+        "ai": "OpenAI + Gemini",
+        "signIn": "Microsoft",
+        "phone": "PWA",
+        "delivery": "GitHub Actions",
+        "details": {
+          "frontend": "Blazor WebAssembly: the C# app runs in the browser",
+          "backend": "ASP.NET Core on .NET 10",
+          "data": "Azure Table Storage for records, Blob Storage for files",
+          "ai": "Azure OpenAI and Google Gemini; on-device Whisper",
+          "signIn": "Sign in with a Microsoft account",
+          "phone": "Installable web app (PWA): add it to a phone home screen",
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
+        }
       }
     }
   ]

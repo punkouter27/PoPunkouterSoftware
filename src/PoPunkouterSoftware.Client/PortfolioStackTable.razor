@@ -9,12 +9,20 @@
    A column that is empty on every row of this table is not drawn — the RL games have no
    backend, sign-in or delivery to list, and a column of dashes is noise, not information.
 
-   At 1200px and below the table reflows into one stacked block per app (label: value),
-   because nine columns of real text cannot honestly fit a phone or a tablet. Explicit table roles keep the semantics a
-   `display: block` table otherwise loses in some browsers.
+   Cells are SHORT labels ("Table + Blob", "Azure OpenAI") so a column scans at a glance;
+   the full wording is a hint on the cell (AppHint: hover, focus or tap) and sr-only text
+   after it, so a screen reader gets it without the hint and without 100 extra tab stops.
+
+   Above 640px it stays a real table: when the columns outgrow the card the card scrolls
+   sideways and the app column stays pinned (owner's call, 2026-11-03 — comparing down a
+   column was the point, and the 1200px stacking breakpoint took that away in any window
+   narrower than a desktop). The scroller is tabindex="0" + role="group", the uptime grid's
+   treatment, so a keyboard can scroll it. At 640px and below each row becomes a stacked
+   block of label: value lines. Explicit table roles keep the semantics a `display: block`
+   table otherwise loses in some browsers.
 
    ONE link per row: the app name, stretched over the row's app cell by `::after`. *@
-<div class="app-card portfolio-stack" data-glass>
+<div class="app-card portfolio-stack" data-glass tabindex="0" role="group" aria-label="@($"{Label}. Scrolls sideways when the columns do not fit.")">
     <table class="portfolio-stack__table" role="table" aria-label="@Label">
         <thead role="rowgroup">
             <tr role="row">
@@ -100,6 +108,10 @@
                             {
                                 <span aria-hidden="true">–</span><span class="app-sr-only">None listed</span>
                             }
+                            else if (app.Stack.Details.TryGetValue(column.Key, out var detail) && detail != value)
+                            {
+                                <AppHint Text="@detail" Class="portfolio-stack__hint">@value</AppHint><span class="app-sr-only">: @detail</span>
+                            }
                             else
                             {
                                 @value
@@ -121,20 +133,21 @@
     /// <summary>True for the table holding the page's LCP image — its first row loads eagerly.</summary>
     [Parameter] public bool FirstIsLcp { get; set; }
 
-    private sealed record Column(string Label, Func<AppStack, string?> Value);
+    /// <summary>Key is the property's camelCase JSON name, which is also its <see cref="AppStack.Details"/> key.</summary>
+    private sealed record Column(string Key, string Label, Func<AppStack, string?> Value);
 
     /// <summary>The matrix, in the order a request travels: where it runs, what the visitor
     /// loads, what answers it, where data lands, then the extras.</summary>
     private static readonly Column[] AllColumns =
     [
-        new("Hosting", s => s.Hosting),
-        new("Frontend", s => s.Frontend),
-        new("Backend", s => s.Backend),
-        new("Data", s => s.Data),
-        new("AI", s => s.Ai),
-        new("Sign-in", s => s.SignIn),
-        new("Phone", s => s.Phone),
-        new("Ships via", s => s.Delivery),
+        new("hosting", "Hosting", s => s.Hosting),
+        new("frontend", "Frontend", s => s.Frontend),
+        new("backend", "Backend", s => s.Backend),
+        new("data", "Data", s => s.Data),
+        new("ai", "AI", s => s.Ai),
+        new("signIn", "Sign-in", s => s.SignIn),
+        new("phone", "Phone", s => s.Phone),
+        new("delivery", "Ships via", s => s.Delivery),
     ];
 
     private Column[] _columns = AllColumns;

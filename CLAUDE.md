@@ -222,8 +222,14 @@ loaded". Now ~20s once, then instant.
 **`/` is a stack matrix, not a card grid (owner's ask, 2026-11-03).** `PortfolioStackTable`
 draws one row per app and one column per technical piece — Hosting, Frontend, Backend, Data,
 AI, Sign-in, Phone, Ships via — written for a visitor, not the owner: plain names, no SKUs or
-resource ids. A column empty on every row of a table is not drawn (the RL table has no
-backend). At 1200px and below each row becomes a labelled block, and the blocks tile.
+resource ids. Cells are SHORT labels ("Table + Blob", "Azure OpenAI", "PWA") so a column
+scans; the full wording is `AppStack.Details[<camelCase key>]`, shown as an `AppHint` on the
+cell plus sr-only text. A column empty on every row of a table is not drawn (the RL table has
+no backend). **It stays a table down to 641px**: when the columns outgrow the card, the card
+scrolls sideways (tabindex + role=group) with the app column `position: sticky` and opaque.
+A 1200px stacking breakpoint was tried first and took the comparison away in any window
+narrower than a desktop, VS Code's browser pane included. At 640px and below each row
+becomes a labelled block.
 The data is `PortfolioApp.Stack` (`AppStack`), built by `AppStackBuilder`: **Hosting comes from
 the scan** (resource type, Linux/Windows kind, plan tier) and Data falls back to "Azure
 Storage" when the app's resource group holds a storage account; everything else is the
@@ -1012,6 +1018,12 @@ served until the facts happen to change. It produces the
   removed phone pager learned this the hard way: its `display: block` lost to the scoped
   `display: grid`, the panes became grid rows a sixth of a screen tall painting over one another,
   and every E2E assertion that measured CONTENT still passed. Measure the rendered box.
+- **The Integration fixture must hand back a developer's local report.** `TestWebApp` sets
+  `App_Data/azure-full-report.json` aside, seeds its own, and restores on dispose. Its
+  `Dispose(true)` runs TWICE (`WebApplicationFactory` reaches it from `DisposeAsync` and
+  `Dispose`), and until 2026-11-03 the second pass deleted the real report the first had just
+  put back — every test run wiped the local cache. It clears its fields before touching a
+  file, and it never moves aside a seed it finds in place.
 - **`Testing` is the hermetic switch.** It skips Key Vault entirely. Integration tests boot the real
   entry point via `WebApplicationFactory`, and collections run sequentially (`AssemblyInfo.cs`)
   because concurrent entry-point boots race.

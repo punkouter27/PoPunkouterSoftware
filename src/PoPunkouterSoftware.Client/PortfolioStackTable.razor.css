@@ -1,14 +1,22 @@
 /* The stack matrix. Desktop: a real table inside one glass card (one [data-glass] rect, not
-   one per row — the shader pass is per rect). At 1200px and below each row reflows into a stacked
+   one per row — the shader pass is per rect) that scrolls sideways with the app column pinned
+   when the columns do not fit. At 640px and below each row reflows into a stacked
    block of label: value lines; see the media query at the end.
 
    RadzenBadge, RadzenIcon and Sparkline are child components, so their elements carry no
    scope attribute — every rule reaching them goes through ::deep. */
-/* overflow-x: auto, not hidden: the columns are sized to fit from 1201px up, and if a long
-   value ever beats that, a scroll is honest where a clip silently hides a column. */
+/* The card is the sideways scroller. Values are short labels kept to one line, so the table
+   is ~1150px wide: it fits a desktop and scrolls in anything narrower, never wraps a cell
+   into a four-line paragraph. */
 .portfolio-stack {
     padding: 0;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.portfolio-stack:focus-visible {
+    outline: 2px solid var(--app-accent);
+    outline-offset: 2px;
 }
 
 .portfolio-stack__table {
@@ -44,7 +52,7 @@
 
 .portfolio-stack__row:hover { background: var(--app-hover-wash); }
 
-.portfolio-stack__table td { color: var(--app-text); min-width: 6rem; }
+.portfolio-stack__table td { color: var(--app-text); white-space: nowrap; }
 .portfolio-stack__table td.is-empty { color: var(--app-text-soft); }
 
 /* ── App cell: thumbnail beside name, description and status ─────────────────
@@ -59,8 +67,36 @@
     font-weight: 400;
 }
 
-/* (0,3,1) to beat the shared `th` padding rule above. */
-.portfolio-stack__table th.portfolio-stack__app { padding-right: var(--app-space-md); }
+/* (0,3,1) to beat the shared `th` padding rule above. Pinned: the columns scroll under it.
+   Its own background must be OPAQUE or the scrolled cells show through — the card's is
+   translucent wherever [data-glass] is active — so it is the surface laid over the page
+   colour, the AppDrawer's recipe. The hairline shadow marks the pinned edge. */
+.portfolio-stack__table th.portfolio-stack__app,
+.portfolio-stack__table thead th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    padding-right: var(--app-space-md);
+    background: linear-gradient(var(--app-surface), var(--app-surface)), var(--app-bg);
+    box-shadow: 1px 0 0 var(--app-border);
+}
+
+.portfolio-stack__table thead th:first-child {
+    background: linear-gradient(var(--app-surface-soft), var(--app-surface-soft)),
+                linear-gradient(var(--app-surface), var(--app-surface)), var(--app-bg);
+}
+
+.portfolio-stack__row:hover > th.portfolio-stack__app {
+    background: linear-gradient(var(--app-hover-wash), var(--app-hover-wash)),
+                linear-gradient(var(--app-surface), var(--app-surface)), var(--app-bg);
+}
+
+/* A cell with more to say: dotted underline, the hint opens on hover, focus or tap. */
+.portfolio-stack__table td ::deep .portfolio-stack__hint {
+    text-decoration: underline dotted var(--app-text-soft);
+    text-underline-offset: 3px;
+    cursor: help;
+}
 
 .portfolio-stack__thumb {
     aspect-ratio: 16 / 10;
@@ -188,21 +224,21 @@
 .portfolio-stack__trend ::deep .app-sparkline.tone-good { --trend: #217a52; }
 .portfolio-stack__trend ::deep .app-sparkline.tone-warn { --trend: var(--app-accent-warm); }
 
-/* ── Below 1200px: one stacked block per app ──────────────────────────────────
-   Nine columns need ~1100px of card, so a tablet or a narrow desktop window stacks too.
-   The header row goes — each cell prints its own column name from data-label, which is
+/* ── Phone: one stacked block per app ─────────────────────────────────────────
+   Below 640px even the pinned app column would leave room for one other column, so the
+   table stops being one. The header row goes — each cell prints its own column name from data-label, which is
    also what a screen reader hears, so a hidden header row would only say it twice. (An
    sr-only thead still laid out a full-width row, clipped but measured past the viewport.)
    Each row becomes a
    block, and each cell a "Label  value" line from its data-label. An empty cell is dropped
    rather than printed as a dash — on a phone it is a whole line saying nothing. */
-@media (max-width: 1200px) {
+@media (max-width: 640px) {
     .portfolio-stack__table,
     .portfolio-stack__row {
         display: block;
     }
 
-    /* The blocks tile: two or three across a tablet, one on a phone. */
+    /* One block per line on a phone; a wide landscape phone fits two. */
     .portfolio-stack__table tbody {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
@@ -225,7 +261,16 @@
         border-bottom: 0;
     }
 
-    .portfolio-stack__table th.portfolio-stack__app { padding-right: 0; }
+    .portfolio-stack { overflow-x: visible; }
+
+    .portfolio-stack__table th.portfolio-stack__app {
+        position: static;
+        padding-right: 0;
+        background: none;
+        box-shadow: none;
+    }
+
+    .portfolio-stack__table td { white-space: normal; }
 
     .portfolio-stack__app {
         width: auto;
