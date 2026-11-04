@@ -74,7 +74,7 @@
     {
       "id": "pomemevideo",
       "name": "PoMemeVideo",
-      "description": "A tool for making meme videos in the browser.",
+      "description": "Upload a video and an AI director watches it, then drops meme sound effects on the right moments, ready to share or remix.",
       "category": "creative",
       "status": "active",
       "technologies": [
@@ -90,12 +90,33 @@
         "backend": "ASP.NET Core",
         "delivery": "GitHub Actions",
         "signIn": "Microsoft",
+        "data": "Azure Table Storage + Azure Blob Storage",
+        "ai": "Azure OpenAI",
         "details": {
           "frontend": "Blazor WebAssembly: the C# app runs in the browser",
           "backend": "ASP.NET Core on .NET 10",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "signIn": "Sign in with a Microsoft account (checked on the live site: its login goes to login.microsoftonline.com)"
-        }
+          "signIn": "Sign in with a Microsoft account (checked on the live site: its login goes to login.microsoftonline.com)",
+          "data": "Azure Blob Storage holds uploaded and rendered videos and the meme sound library; Azure Table Storage holds sessions and favourites (from its vault connection strings and the client's upload calls)"
+        },
+        "aiServices": [
+          {
+            "cloud": "Azure",
+            "name": "GPT-4o",
+            "use": "The AI director: reads what is happening in the video and decides which meme sound plays where (configured deployment: gpt-4o)"
+          },
+          {
+            "cloud": "Azure",
+            "name": "Azure AI Vision",
+            "use": "Labels the video's frames, so sounds land on the moments they match"
+          },
+          {
+            "cloud": "Azure",
+            "name": "Speech transcription",
+            "use": "Transcribes speech and burns subtitles into the video",
+            "optional": true
+          }
+        ]
       }
     },
     {

@@ -72,6 +72,9 @@ public static class TechGlossary
         // AI models
         ["GPT-5"] = "A model from OpenAI's GPT-5 family. Mini and nano versions are smaller, faster and cheaper.",
         ["GPT-4.1"] = "A model from OpenAI's GPT-4.1 family. Mini and nano versions are smaller, faster and cheaper.",
+        ["GPT-4o"] = "OpenAI's GPT-4o model, which reads both text and images.",
+        ["Azure AI Vision"] = "Azure's image-analysis service: it recognises objects, scenes and text in pictures.",
+        ["Speech transcription"] = "Speech-to-text: it turns what people say into written words.",
         ["GPT-4o Transcribe"] = "OpenAI's speech-to-text model: it turns recorded speech into text.",
         ["GPT-4o mini TTS"] = "OpenAI's text-to-speech model: it reads text aloud in a chosen voice.",
         ["GPT-Realtime"] = "OpenAI's live voice model: it listens and talks back in real time.",

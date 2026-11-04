@@ -281,7 +281,7 @@ The data is `PortfolioApp.Stack` (`AppStack`), built by `AppStackBuilder`: Data 
 the shared PoShared group and the inventory cannot say which app uses which. Those blocks
 were filled 2026-11-03 from each repo's `Directory.Packages.props` and CLAUDE.md — when an
 app changes its database, AI or sign-in, its `stack` block is the line to change.
-PoMemeVideo's repo is private, so its row lists only what its live page and the scan show.
+PoMemeVideo's repo is private, so its row was filled 2026-11-03 from what is public or ours: its compiled WASM client (AI director, AI Vision frame labels, optional transcription), its `/api/config` (`useMockAI: false`, `transcriptionEnabled: false`) and its `kv-poshared2` secret names. Its configured `gpt-4o` deployment does NOT exist on `po-aiservices-shared2`.
 
 **The report cache is server-side and must stay off the web root.** `ReportFileCache` keeps two
 paths apart on purpose: `GetCatalogDir` is `wwwroot/data` and holds **only** `apps.json`, which is
