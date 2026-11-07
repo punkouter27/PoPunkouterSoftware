@@ -312,7 +312,7 @@ public class AppScreenshotService
             if (pw is null)
                 return;
 
-            await using var browser = await pw.Chromium.LaunchAsync(new() { Headless = true });
+            await using var browser = await pw.Chromium.LaunchAsync(LaunchOptions);
             var captured = 0;
 
             foreach (var (host, url) in targets)
@@ -364,7 +364,7 @@ public class AppScreenshotService
                 return null;
             }
 
-            await using var browser = await pw.Chromium.LaunchAsync(new() { Headless = true });
+            await using var browser = await pw.Chromium.LaunchAsync(LaunchOptions);
             return new MemoryStream(await CaptureAndStoreAsync(browser, container, host, url, ct));
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
@@ -378,6 +378,18 @@ public class AppScreenshotService
             _captureLock.Release();
         }
     }
+
+    /// <summary>
+    /// Headless Chromium has no GPU, so WebGL is off and every Unity game card captured its own
+    /// "Your browser does not support WebGL" error on a black page. SwiftShader is Chromium's
+    /// software rasteriser; recent versions only allow it for WebGL behind the "unsafe" flag.
+    /// Keep in step with the launch args in .github/workflows/screenshots.yml.
+    /// </summary>
+    private static readonly BrowserTypeLaunchOptions LaunchOptions = new()
+    {
+        Headless = true,
+        Args = ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"],
+    };
 
     /// <summary>
     /// Captures one page and persists it to blob storage (when configured) and the local disk

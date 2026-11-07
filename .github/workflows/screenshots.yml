@@ -101,7 +101,8 @@ jobs:
           console.log(`${targets.length} targets`);
           writeFileSync('targets.json', JSON.stringify(targets));
 
-          const browser = await chromium.launch();
+          // No GPU on the runner: SwiftShader gives the Unity games WebGL (see AppScreenshotService.LaunchOptions).
+          const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
           let captured = 0;
           for (const { host, url } of targets) {
             const page = await browser.newPage({
