@@ -744,7 +744,7 @@ html[data-app-theme="dark"] .azure-ops-page {
 
 .azure-ops-page ::deep .azure-forecast__pct {
     font-family: var(--app-headline-font);
-    font-size: 1.5rem;
+    font-size: var(--app-step-2);
     line-height: 1;
     color: var(--app-text);
     font-variant-numeric: tabular-nums;

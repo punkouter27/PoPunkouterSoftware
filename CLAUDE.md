@@ -350,8 +350,10 @@ management flag, cold starts) lives in an icon-only `AppHint`, not a paragraph.
   kicker.
   **A literal below that floor is now the app's smallest text**, which is why `AzureDashboard.razor.css`
   no longer carries a parallel scale in raw rems: eleven declarations between .68 and .75rem are now
-  `var(--app-step--2)`. The same sweep has NOT been done everywhere — Index/PortfolioStackTable/SignIns
-  still hold literals in the 0.78–0.85rem band, which sit *above* the floor and are left alone.
+  `var(--app-step--2)`. The sweep was finished 2026-11-07 (the command palette held two 0.72rem
+  labels and chart axis text was 10px, both below the floor). Every text size is now a step; the
+  only literals left are icon glyph sizes, which are not type, and the palette input's 1rem,
+  which must stay 16px or iOS zooms the page when it is focused.
 
 (A third, `--app-viewport-fit`, sized the phone pager's panes and went with it.)
 
