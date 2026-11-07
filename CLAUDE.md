@@ -1070,7 +1070,7 @@ served until the facts happen to change. It produces the
   `AzureBlobStorage:Endpoint` in Azure, without which `GetContainerAsync` returns null and stored
   images never appear — indistinguishable from never having captured any.
 
-## Tests — four projects, one per tier (budget 100/50/25/25, currently 100/45/21/24)
+## Tests — four projects, one per tier (budget 100/50/25/25, currently 91/42/21/24)
 
 **The budget is a ceiling, not a target.** All four tiers are at or under it. Adding a test means
 finding one to remove, so prefer widening an existing test's assertions to adding a new method — the
