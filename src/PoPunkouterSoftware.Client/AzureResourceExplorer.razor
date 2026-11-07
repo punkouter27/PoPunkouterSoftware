@@ -86,7 +86,13 @@
                                 </span>
                             </th>
                             <td><SeverityBadge Text="@item.Status" Style="@StatusBadgeFor(item.Status)" /></td>
-                            <td class="azure-risk-label @RiskClassFor(item.Risk)">@item.Risk</td>
+                            <td class="azure-risk-label @RiskClassFor(item.Risk)">
+                                @item.Risk
+                                @if (item.Detail is { } detail)
+                                {
+                                    <span class="azure-risk-detail">@detail</span>
+                                }
+                            </td>
                             <td class="is-numeric is-metric-col">@item.Requests7d.ToString("N0") / @item.Errors7d.ToString("N0")</td>
                             <td class="is-numeric is-metric-col">@response</td>
                         </tr>

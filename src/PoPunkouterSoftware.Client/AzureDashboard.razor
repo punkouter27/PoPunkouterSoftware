@@ -272,10 +272,10 @@ else if (_summary is not null)
         }
         else if (report is not null)
         {
-            var currentReport = report;
-            var securityIssueCount = (currentReport.StorageInventory ?? new()).Sum(s => s.IssueCount)
-                + (currentReport.ConfigDrift ?? new()).Sum(d => d.IssueCount);
-
+            @* One list. The "Evidence" disclosures that sat below this table (security findings,
+               downtime diagnosis, scan step timings) were removed 2026-11-07: each finding is now
+               the Detail line under its row's concern, and the step timings were owner trivia
+               already in the log and the Report JSON download. *@
             <AzureResourceExplorer Items="@FilteredResourceExplorerItems"
                                    TotalCount="@ResourceExplorerItems.Count"
                                    Views="@ResourceViews"
@@ -291,10 +291,6 @@ else if (_summary is not null)
                                   ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" Click="DownloadReportAsync" />
                 </HeadingActions>
             </AzureResourceExplorer>
-
-            <AzureEvidenceDisclosures Report="@currentReport"
-                                      SecurityIssueCount="@securityIssueCount"
-                                      StepTimingTotalMs="@StepTimingTotalMs" />
         }
     </AppDrawer>
 

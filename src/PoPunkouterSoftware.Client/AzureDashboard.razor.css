@@ -193,8 +193,7 @@
     color: var(--app-text-muted);
 }
 
-.azure-ops-page ::deep .azure-attention-list,
-.azure-ops-page ::deep .azure-disclosure-stack {
+.azure-ops-page ::deep .azure-attention-list {
     display: grid;
     gap: .6rem;
 }
@@ -385,6 +384,18 @@
 .azure-ops-page ::deep .azure-risk-label.warning { color: var(--app-accent-warm); }
 .azure-ops-page ::deep .azure-risk-label.muted { color: var(--app-text-soft); }
 
+/* The finding behind the concern, in body colour so it reads as the explanation, not a
+   second label. */
+.azure-ops-page ::deep .azure-risk-detail {
+    display: block;
+    margin-top: var(--app-space-3xs);
+    max-width: 16rem;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    color: var(--app-text-muted);
+    font-weight: 400;
+}
+
 /* Contrast: this renders both nested inside an already-opaque panel (.app-card,
    .app-disclosure, .azure-attention-summary — all var(--app-surface)) AND, in
    AzurePriorityQueue's empty state, directly inside .azure-anchor-section with no opaque
@@ -409,35 +420,6 @@
 .azure-ops-page ::deep .azure-compact-state.success {
     color: var(--app-accent);
     border-color: var(--app-accent-edge);
-}
-
-/* Disclosure chrome is the shared `.app-disclosure` in modern-ui.css. */
-
-.azure-ops-page ::deep .azure-finding {
-    display: grid;
-    grid-template-columns: minmax(190px, .5fr) minmax(160px, .45fr) minmax(220px, 1.35fr) auto;
-    gap: .75rem;
-    align-items: start;
-    padding: .75rem;
-    border-radius: var(--app-radius-md);
-    background: var(--app-surface-soft);
-}
-
-.azure-ops-page ::deep .azure-finding span,
-.azure-ops-page ::deep .azure-finding p {
-    margin: 0;
-    color: var(--app-text-muted);
-    font-size: var(--app-step--1);
-}
-
-.azure-ops-page ::deep .azure-timing-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: .55rem .7rem;
-    border-bottom: 1px solid var(--app-border);
-    color: var(--app-text-muted);
-    font-size: var(--app-step--1);
 }
 
 /* The "30-day cost" chart's category labels (e.g. "Azure App Service
@@ -517,11 +499,6 @@
     .azure-ops-page ::deep .azure-section-heading,
     .azure-ops-page ::deep .azure-resource-heading {
         display: block;
-    }
-
-    .azure-ops-page ::deep .azure-finding {
-        grid-template-columns: 1fr;
-        gap: var(--app-space-3xs);
     }
 }
 

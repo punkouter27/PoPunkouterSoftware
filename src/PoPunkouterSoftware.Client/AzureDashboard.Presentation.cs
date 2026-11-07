@@ -10,8 +10,6 @@ namespace PoPunkouterSoftware.Client;
 // every chart-data property in it had been orphaned by the compact-dashboard redesign.)
 public partial class AzureDashboard
 {
-    private long StepTimingTotalMs => report?.StepTimings?.Sum(x => x.ElapsedMs) ?? 0;
-
     private static BadgeStyle ActionabilityBadge(string? tier) => tier switch
     {
         "Fix Now" => BadgeStyle.Danger,

@@ -1,13 +1,10 @@
 @using Radzen
 
-@* Shared markup for the Azure dashboard's three severity/status indicators: priority-queue
-   actionability (AzurePriorityQueue), resource-explorer status (AzureResourceExplorer), and
-   cleanup-candidate confidence (AzureEvidenceDisclosures). The domain-to-colour mapping stays
-   where it always lived — AzureDashboard.Presentation's ActionabilityBadge / ExplorerStatusBadge
-   / ConfidenceBadge — so this component only owns the shared markup and sizing (IsPill, no
-   custom classes); callers keep their own domain meaning behind the resolved BadgeStyle they
-   pass in. This is a markup refactor, not a redesign: it renders exactly what the three call
-   sites rendered inline before. *@
+@* Shared markup for the Azure dashboard's two severity/status indicators: priority-queue
+   actionability (AzurePriorityQueue) and resource-explorer status (AzureResourceExplorer).
+   The domain-to-colour mapping stays in AzureDashboard.Presentation (ActionabilityBadge /
+   ExplorerStatusBadge), so this component only owns the shared markup and sizing (IsPill, no
+   custom classes); callers keep their own domain meaning behind the BadgeStyle they pass in. *@
 <RadzenBadge Text="@Text" BadgeStyle="@Style" IsPill="true" />
 
 @code {
