@@ -129,12 +129,18 @@
     protected override async Task OnInitializedAsync()
     {
         await Task.WhenAll(LoadAppsAsync(), LoadSyncAvailabilityAsync());
+        // A visitor who leaves before the first load finishes has already disposed this page;
+        // a timer created after that would never be disposed and would keep the page alive.
+        if (_disposed) return;
         _autoRefreshTimer = new Timer(
             _ => _ = InvokeAsync(LoadAppsAsync), null, AutoRefreshEvery, AutoRefreshEvery);
     }
 
+    private bool _disposed;
+
     public ValueTask DisposeAsync()
     {
+        _disposed = true;
         _autoRefreshTimer?.Dispose();
         return ValueTask.CompletedTask;
     }

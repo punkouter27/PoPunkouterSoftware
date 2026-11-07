@@ -63,7 +63,7 @@ public partial class AzureReportService
         while (true)
         {
             var url = $"https://api.github.com/user/repos?visibility=all&affiliation=owner&per_page=100&page={page}";
-            var resp = await http.GetAsync(url, ct);
+            using var resp = await http.GetAsync(url, ct);
             if (!resp.IsSuccessStatusCode)
                 break;
 
@@ -123,7 +123,7 @@ public partial class AzureReportService
         try
         {
             var url = $"https://api.github.com/repos/{fullName}/actions/runs?branch={Uri.EscapeDataString(defaultBranch)}&event=push&per_page=1";
-            var resp = await http.GetAsync(url, ct);
+            using var resp = await http.GetAsync(url, ct);
             if (!resp.IsSuccessStatusCode)
                 return (null, null, null, null, null, null);
 
