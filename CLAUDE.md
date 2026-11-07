@@ -249,7 +249,7 @@ Unreal NNE) went 2026-11-03 (owner's call); NNE now sits in PoSlapUnreal's Uniqu
 Outward links come from a scan step (`.PublicLinks`): an ANONYMOUS GET, through
 `public-api` and never the GitHub PAT, of github.com/<githubRepo> and of the Play Store page
 for each catalog `androidPackage`, stored as `AzureReport.PublicLinks`. `PortfolioApp.SourceUrl`
-is hidden only when that check saw a 404 (private — PoMemeVideo); `PlayStoreUrl` appears only
+is hidden only when that check saw a 404 (a private repo); `PlayStoreUrl` appears only
 once the listing answers, so a game shows "Google Play" the night after it is published. On
 2026-11-03 every game's package id 404'd (unpublished), so none is linked yet. The RL training
 cell links to the repo folder in `AppStack.TrainingPath`. A Hosting column was removed 2026-11-03 (owner's call). Real-time
@@ -281,7 +281,7 @@ The data is `PortfolioApp.Stack` (`AppStack`), built by `AppStackBuilder`: Data 
 the shared PoShared group and the inventory cannot say which app uses which. Those blocks
 were filled 2026-11-03 from each repo's `Directory.Packages.props` and CLAUDE.md — when an
 app changes its database, AI or sign-in, its `stack` block is the line to change.
-PoMemeVideo's repo is private, so its row was filled 2026-11-03 from what is public or ours: its compiled WASM client (AI director, AI Vision frame labels, optional transcription), its `/api/config` (`useMockAI: false`, `transcriptionEnabled: false`) and its `kv-poshared2` secret names. Its configured `gpt-4o` deployment does NOT exist on `po-aiservices-shared2`.
+PoMemeVideo was deleted from Azure and the catalog on 2026-11-07; its history rows age out of the uptime grid within 30 days.
 
 **The report cache is server-side and must stay off the web root.** `ReportFileCache` keeps two
 paths apart on purpose: `GetCatalogDir` is `wwwroot/data` and holds **only** `apps.json`, which is
