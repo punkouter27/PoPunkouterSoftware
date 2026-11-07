@@ -162,7 +162,7 @@ jobs:
             --timeout 600
 
       # A green deploy step proves the zip was accepted, not that the app starts. Three
-      # checks a broken release fails: liveness (/healthz), the deep probe (/health answers
+      # checks a broken release fails: liveness (/health/live), the deep probe (/health answers
       # 200 even when degraded — a 5xx means the pipeline itself is broken), and the
       # first-paint contract /azure renders from. Generous retries: F1 cold-starts slowly.
       - name: Smoke test

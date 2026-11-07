@@ -131,7 +131,7 @@ public class ProductionBootTests : IClassFixture<ProductionApp>
         hasConfig.Should().BeFalse(because: "the masked config block is a development diagnostic");
 
         // 3. The security headers ship from middleware now, on every response.
-        var page = await _client.GetAsync("/healthz");
+        var page = await _client.GetAsync("/health/live");
         page.Headers.GetValues("X-Content-Type-Options").Should().ContainSingle().Which.Should().Be("nosniff");
         page.Headers.GetValues("X-Frame-Options").Should().ContainSingle().Which.Should().Be("DENY");
         page.Headers.GetValues("Referrer-Policy").Should().ContainSingle();

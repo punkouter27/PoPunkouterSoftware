@@ -73,7 +73,7 @@ jobs:
       # cannot drift from the render set. Waking the site first: F1 has no Always-On, and a
       # cold start answers the first request slowly rather than not at all.
       - name: Wake the site
-        run: curl -fsS --max-time 180 --retry 3 --retry-all-errors "$SITE_URL/healthz" > /dev/null
+        run: curl -fsS --max-time 180 --retry 3 --retry-all-errors "$SITE_URL/health/live" > /dev/null
 
       - name: Capture screenshots
         run: |

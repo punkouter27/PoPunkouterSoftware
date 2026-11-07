@@ -54,7 +54,7 @@ Standing instructions from the owner. They outrank default habits and apply to e
   One line, casual — "fixed the busted app cards", "cleaned up the dead scan code". No formal
   subject/body essays, no bullet lists, no changelog voice.
 - **Restart the app after any code change and confirm it came back up.** `./SCRIPTS/run-dev.ps1`,
-  then check it actually serves (`/healthz` returns 200) before claiming the change works. A build
+  then check it actually serves (`/health/live` returns 200) before claiming the change works. A build
   that compiles is not a running app — and this project's stale-process footgun means a "successful"
   build can leave the old binary serving on :8000.
 - **No `dotnet user-secrets`.** Local config goes in `appsettings*.json`; real secrets go in the
@@ -441,9 +441,8 @@ comment in each before changing it; they document the reasoning, this is the map
 **There is no service worker and no offline mode** (owner's call, 2026-10-19). One served every
 page and script cache-first under a hand-bumped cache name, so a returning visitor saw the
 PREVIOUS deploy until someone remembered to bump it — observed live: a header with no Settings
-link. `wwwroot/service-worker.js` survives only as a self-removing stub (deletes its caches,
-unregisters, has no fetch handler) because a browser that installed the old one keeps it until
-that URL serves a replacement. Nothing registers it. Delete the file once old installs have aged out.
+link. A self-removing stub served at that URL for three weeks so old installs could unregister;
+it and the PWA `manifest.json` were deleted 2026-11-07.
 
 **One rAF loop, and reduced motion stops it.** Every animated layer is a named `motionKit`
 subscriber. Nothing else may call `requestAnimationFrame` for animation. The governor's gate
@@ -623,12 +622,9 @@ proves a context and program were created, not that anything reached the screen.
   of the deleted Session/Logout slot, had no caller left, and were removed under the
   "every endpoint needs a consumer" rule — `/api/config` is now the only route in the Config slice.
   Do not add a real identity provider unless the owner reverses this.
-- **The header is just the brand, at every width.** The four links stay in `MainLayout`'s markup
-  but are `display: none` everywhere (owner's call, 2026-10-20: "the links exist but hidden from
-  UI"; phones only since 2026-10-19, when a hamburger drawer that dropped over the page went).
-  The other pages are reached from the brand link home, the 404 page's list, Ctrl+K, or a typed
-  URL. The palette's View Transition still looks the link up and simply finds it unrendered.
-  The empty `.app-topbar-session` div is a leftover spacer from the centred nav.
+- **The header is just the brand, at every width.** The four page links were hidden on
+  2026-10-20 and removed from `MainLayout` on 2026-10-30. The other pages are reached from the
+  brand link home, the 404 page's list, Ctrl+K, or a typed URL.
 - **No login UI in the header, deliberately.** `MainLayout.razor` is statically server-rendered
   (`<Routes />` carries no render mode), so `@onclick` never fires and its injected `HttpClient` has
   no `BaseAddress`. A Session/Logout slot and "MOCK DATA" banner were built, could never render, and
@@ -736,7 +732,7 @@ proves a context and program were created, not that anything reached the screen.
   needs Website Contributor, which infra deliberately does not grant — it 403s cleanly there.
   Note a local Development run restarts the REAL site with your `az login`.
 - **Routing.** `/api/diag/*` and `/api/portfolio/*` use `MapGroup`. `/health` (deep probe, one
-  `IHealthCheck` per external dependency) and `/healthz` (static liveness) sit off the `/api` group.
+  `IHealthCheck` per external dependency) and `/health/live` (static liveness) sit off the `/api` group.
   **`/openapi/v1.json` and `/scalar/v1` are mapped only outside Production** — they were
   unconditional, so the live site published its full route table, parameter shapes and response
   schemas (management routes included) to anonymous callers, for an API whose only client is
@@ -1147,7 +1143,7 @@ three tiers still run locally before a push.
 
 - [deploy.yml](.github/workflows/deploy.yml) — build, **unit tests**, back up, deploy, **smoke
   test**, roll back. The live site is downloaded through Kudu's zip API (same OIDC identity)
-  before the deploy; afterwards `/healthz`, `/health` and `/api/diag/summary` (200, or 404
+  before the deploy; afterwards `/health/live`, `/health` and `/api/diag/summary` (200, or 404
   before any scan) must answer within ~3 minutes of retries, or the backup is redeployed, the
   job goes red and ntfy is told. No backup (first deploy, SCM down) means no rollback, with a
   warning. Target is App

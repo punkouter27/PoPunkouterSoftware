@@ -33,7 +33,7 @@ public class ApiSmokeTests : IClassFixture<ApiSmokeFixture>
     // ─── Broad availability sweep ─────────────────────────────────────────────
 
     [Theory]
-    [InlineData("/healthz")]
+    [InlineData("/health/live")]
     [InlineData("/health")]
     [InlineData("/api/config")]
     [InlineData("/api/portfolio")]
@@ -51,9 +51,9 @@ public class ApiSmokeTests : IClassFixture<ApiSmokeFixture>
     // ─── Health ───────────────────────────────────────────────────────────────
 
     [Fact]
-    public async Task Healthz_Returns200_WithOkStatus()
+    public async Task Liveness_Returns200_WithOkStatus()
     {
-        var resp = await _client.GetAsync("/healthz");
+        var resp = await _client.GetAsync("/health/live");
 
         resp.StatusCode.Should().Be(HttpStatusCode.OK);
         using var doc = await ReadJsonAsync(resp);

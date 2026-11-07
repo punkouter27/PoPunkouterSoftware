@@ -21,7 +21,7 @@ internal static class DiagEndpoints
         // in CLAUDE.md exists to catch, and the comments describing it as "the /diag Blazor
         // page" referred to a page this app has never had. It also answered anonymously in
         // Production with the server's absolute ContentRoot path, the environment name, and
-        // masked-but-suffixed connection strings. /health (deep probe) and /healthz (liveness)
+        // masked-but-suffixed connection strings. /health (deep probe) and /health/live (liveness)
         // cover everything it was actually used for.
         var diag = app.MapGroup("/api/diag").WithTags("Diag");
 

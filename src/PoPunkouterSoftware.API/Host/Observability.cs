@@ -99,7 +99,7 @@ internal static class Observability
             o.SamplingRatio = samplingRatio;
         });
 
-        // Heartbeat traffic is not signal: drop /health and /healthz before it is sampled and billed.
+        // Heartbeat traffic is not signal: drop /health and /health/live before it is sampled and billed.
         builder.Services.Configure<AspNetCoreTraceInstrumentationOptions>(o =>
             o.Filter = ctx =>
             {
