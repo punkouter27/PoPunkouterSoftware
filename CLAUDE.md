@@ -994,7 +994,7 @@ served until the facts happen to change. It produces the
   Material Symbols variable font (~3,600 glyphs, 1,068,920 bytes) and self-hosts it as family
   `"Material Symbols"`. This app draws about thirty of those glyphs, so
   [SCRIPTS/Build-IconFontSubset.py](SCRIPTS/Build-IconFontSubset.py) builds
-  `wwwroot/fonts/material-symbols-subset.woff2` (17,344 bytes, from the Radzen version pinned in
+  `wwwroot/fonts/material-symbols-subset.woff2` (16,744 bytes, from the Radzen version pinned in
   `Directory.Packages.props` — the script used to take the "newest" cache folder by string
   sort, which picked 8.7.3) and `modern-ui.css` declares the
   family against that. **Material Symbols renders through LIGATURES** — the element's text is the
