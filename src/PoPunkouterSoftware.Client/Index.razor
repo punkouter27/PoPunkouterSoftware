@@ -115,8 +115,7 @@
     // Auto-refresh: every visit reads the catalog fresh, and a tab left open re-reads it
     // weekly. There is no "Reload catalog" button (owner's call, 2026-09-26): re-reading
     // the same stored list answers a question nobody asks. Sync below is a different
-    // thing (owner's ask, 2026-10-19): it rescans Azure, so the list has something new to show. Screenshots follow the same
-    // weekly rhythm server-side (AppScreenshotService.MaxAge).
+    // thing (owner's ask, 2026-10-19): it rescans Azure, so the list has something new to show.
     private static readonly TimeSpan AutoRefreshEvery = TimeSpan.FromDays(7);
     private Timer? _autoRefreshTimer;
 

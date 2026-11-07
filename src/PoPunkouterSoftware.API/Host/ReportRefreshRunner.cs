@@ -159,22 +159,6 @@ internal sealed class ReportRefreshRunner(
                     var filePath = ReportFileCache.EnsureReportPath(env);
                     await File.WriteAllTextAsync(filePath, json, ct);
 
-                    // Refresh the home-page screenshots alongside the inventory (non-fatal).
-                    try
-                    {
-                        await hubCtx.Clients.All.SendAsync("RefreshProgress",
-                            new { step = "Capturing app screenshots…", percent = 99, done = false }, CancellationToken.None);
-                        var screenshots = scope.ServiceProvider.GetRequiredService<AppScreenshotService>();
-                        // Scan-derived targets first; catalog fills the gap so a dev
-                        // environment with no live Azure report still produces previews.
-                        var captureTargets = AppScreenshotService.CombinedTargets(env, report);
-                        await screenshots.CaptureAsync(captureTargets, ct);
-                    }
-                    catch (Exception shotEx)
-                    {
-                        logger.LogWarning(shotEx, "App screenshot capture failed (non-fatal)");
-                    }
-
                     sw.Stop();
                     RecordOutcome("success");
                     Telemetry.RefreshDuration.Record(sw.Elapsed.TotalMilliseconds);

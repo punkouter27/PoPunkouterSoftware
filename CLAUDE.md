@@ -292,7 +292,7 @@ every resource id, cost figures and SSL state, and it was committed to the repo 
 never had a browser consumer. Do not put it back under any served directory, and do not "fix" a
 future leak with a static-file exclusion when the file simply does not belong there.
 `App_Data/` is gitignored; the Integration fixture seeds its own copy (see below).
-Local screenshot captures live there too (`App_Data/screenshots`, `GetScreenshotsDir`): they sat
+Local screenshot captures lived there too (`App_Data/screenshots`, removed 2026-11-07 with in-process capture): they sat
 in the Client's `wwwroot/screenshots`, were committed, churned the tree on every local capture,
 and were served statically beside `/api/portfolio/screenshots/{host}`. Production reads blobs.
 
@@ -1072,21 +1072,18 @@ served until the facts happen to change. It produces the
 - **UI tests must cover both viewports.** `PortfolioUiTests` drives every test at mobile-portrait
   (390×844) and desktop-landscape (1440×1000) through the shared `Viewports` theory data. Visual
   parity is a hard rule, not a preference.
-- **Screenshots pin `PLAYWRIGHT_BROWSERS_PATH`** to the persistent `%HOME%` share and install only
-  the Chromium headless shell — the worker's ephemeral disk previously filled with a full Chromium
-  download and broke every deployment (2026-07-10). Kill switch:
-  `FeatureFlags:EnableScreenshots=false`. Since 2026-10-05, a cache miss on
-  `GET /api/portfolio/screenshots/{host}` launches a headless browser and captures that host on
-  demand (`AppScreenshotService.CaptureOneAsync`). While the flag is on, every card gets a
-  `screenshotUrl` even if no image exists yet. On-demand capture never waits behind a batch run,
-  and it backs off for 30 minutes after a failure. That endpoint is anonymous, so leave the flag
-  off anywhere a crawler can reach. In-process capture is off in Production for that reason,
-  and `appsettings.json` said the capture happened in `screenshots.yml` instead — **a workflow that
-  did not exist**, so every production card rendered `screenshotUrl: null` for months. It exists now
-  (see CI/CD below) and writes the same container, blob names and viewport as `AppScreenshotService`,
-  so the two paths are interchangeable. Serving those blobs also needs `AzureBlobStorage:Endpoint`,
-  without which `GetContainerAsync` returns null and stored images never appear —
-  indistinguishable from never having captured any.
+- **Screenshots are captured ONLY by `screenshots.yml`; the app only reads them**
+  (`AppScreenshotStore`). Until 2026-11-07 the app also captured in-process with Playwright —
+  after each scan, on a stale home page, and on a cache miss at the anonymous
+  `GET /api/portfolio/screenshots/{host}` — behind `FeatureFlags:EnableScreenshots`. It could
+  never run in Production (the F1 sandbox has no Chromium; an install once filled the worker
+  disk and broke every deploy, 2026-07-10), it was a second copy of the workflow's capture (a
+  WebGL launch fix had to land in both), and it put a headless browser behind an anonymous URL.
+  The flag, the Playwright reference in Infrastructure and `App_Data/screenshots` all went with
+  it. A card gets `screenshotUrl` only when a blob exists; locally that is whatever Azurite
+  holds, so a new app shows its placeholder until a capture lands. Serving the blobs needs
+  `AzureBlobStorage:Endpoint` in Azure, without which `GetContainerAsync` returns null and stored
+  images never appear — indistinguishable from never having captured any.
 
 ## Tests — four projects, one per tier (budget 100/50/25/25, currently 100/45/21/24)
 
@@ -1186,7 +1183,7 @@ three tiers still run locally before a push.
   `app-screenshots` blob container under the host name
   the card looks up. A second pass calls PageSpeed Insights (mobile; `PAGESPEED_API_KEY`
   optional) and MERGES the scores into `lighthouse.json` in the same container, which
-  `AppScreenshotService.LoadScoresAsync` reads into `PortfolioApp.Scores` — the card's chips.
+  `AppScreenshotStore.LoadScoresAsync` reads into `PortfolioApp.Scores` — the card's chips.
   The merge also appends each scored host's performance to `performanceHistory` (30 nights),
   the sparkline on the card's foot line. **Anonymous PageSpeed calls answer 429**: the run on
   2026-10-30 scored 0/19 and production `lighthouse.json` holds no scores, so neither the

@@ -131,7 +131,7 @@ try
 
     builder.Services.AddSingleton<AzureReportStore>();
     builder.Services.AddSingleton<UptimeSampleStore>();
-    builder.Services.AddSingleton<AppScreenshotService>();
+    builder.Services.AddSingleton<AppScreenshotStore>();
     builder.Services.AddTransient<AzureReportService>();
     builder.Services.AddTransient<DowntimeDiagnosisService>();
     builder.Services.AddSingleton<ServicePingerService>();

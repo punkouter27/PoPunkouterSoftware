@@ -59,10 +59,9 @@ Vault `kv-poshared2` under the prefix `PoPunkouterSoftware--` and are never comm
 
 | Key | What it does |
 |---|---|
-| `AzureBlobStorage:Endpoint` | Public endpoint of the account holding the `app-screenshots` container, used on the managed-identity path. Without it stored screenshots never serve, which looks exactly like none were ever captured. Azurite wins in Development. |
+| `AzureBlobStorage:Endpoint` | Public endpoint of the account holding the `app-screenshots` container, used on the managed-identity path. `screenshots.yml` is the only writer; the app only reads. Without it stored screenshots never serve, which looks exactly like none were ever captured. Azurite wins in Development. |
 | `ApplicationInsights:ConnectionString` | Left blank; supplied by the vault secret `ApplicationInsights--ConnectionString` or `APPLICATIONINSIGHTS_CONNECTION_STRING`. |
 | `FeatureFlags:EnableManagementActions` | On everywhere so `uptime-scan.yml` can `POST /api/diag/refresh`. Production still demands `Security:ManagementApiKey`, and `/api/config` reports `false` there, so no visitor sees a button that would 401. |
-| `FeatureFlags:EnableScreenshots` | In-process capture; off in Production (the F1 sandbox cannot run Chromium). `screenshots.yml` captures nightly into the same container. |
 | `FeatureFlags:EnableAutoInventoryRefresh` | A portfolio load with a report older than 12h starts a background rescan (30-min cooldown). Defaults on outside Development/Testing. |
 | `FeatureFlags:EnableAiSummary` | The AI status paragraph on `/azure`; `false` falls back to the rule-based narrative. |
 | `StatusNarrator:*` | Azure AI Foundry chat completions on `po-aiservices-shared2` (`gpt-5.4-nano`). Deliberately NOT named `AzureAi`: the vault's estate-wide `AzureAI--*` secrets would be picked up case-insensitively and 401 every call. Blank `ApiKey` means Entra ID (needs Cognitive Services OpenAI User), falling back to the vault's `AzureOpenAI--ApiKey`. |

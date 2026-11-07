@@ -13,7 +13,6 @@
     <PackageReference Include="Azure.Data.Tables" />
     <PackageReference Include="Azure.Storage.Blobs" />
     <!-- Headless Chromium for home-page screenshot capture (browsers installed on demand at runtime) -->
-    <PackageReference Include="Microsoft.Playwright" />
     <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" />
     <PackageReference Include="Azure.Identity" />
     <PackageReference Include="Azure.Monitor.Query" />

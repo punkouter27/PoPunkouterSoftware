@@ -30,7 +30,7 @@ internal static partial class PortfolioEndpoints
     }
 
     internal static async Task<IResult> GetPortfolio(
-        IWebHostEnvironment env, IConfiguration config, AzureReportStore store, AppScreenshotService screenshots,
+        IWebHostEnvironment env, IConfiguration config, AzureReportStore store, AppScreenshotStore screenshots,
         UptimeSampleStore uptimeSamples, TimeProvider clock,
         ReportRefreshRunner refreshRunner, ILogger<Program> logger, CancellationToken ct)
     {
@@ -56,31 +56,10 @@ internal static partial class PortfolioEndpoints
         }
         // The streak chip: days since each card's last bad day on the /azure uptime grid —
         // the same row, so the card can never claim a streak the grid contradicts.
-        var apps = BuildApps(services, metadata, screenshotVersions, scoresTask.Result, screenshots.ScreenshotsEnabled,
+        var apps = BuildApps(services, metadata, screenshotVersions, scoresTask.Result,
                 StorageGroups(report), report?.PublicLinks)
             .Select(a => a with { CleanDays = RowFor(uptimeTask.Result, a)?.CleanDays })
             .ToList();
-
-        // Any app whose screenshot is missing or over a week old: serve what is stored now
-        // and capture just those in the background for the next visitor. Scan-derived
-        // targets first; catalog fills the gap so a dev environment with no live Azure
-        // report still produces previews. Detached from the request lifetime on purpose —
-        // must not die when this response completes.
-        var targets = screenshots.DueForCapture(AppScreenshotService.CombinedTargets(env, report), screenshotVersions);
-        if (targets.Count > 0)
-        {
-            _ = Task.Run(async () =>
-            {
-                try
-                {
-                    await screenshots.CaptureAsync(targets, CancellationToken.None);
-                }
-                catch (Exception ex)
-                {
-                    logger.LogWarning(ex, "Background screenshot refresh failed");
-                }
-            }, CancellationToken.None);
-        }
 
         return Results.Json(new PortfolioResponse
         {
@@ -103,7 +82,7 @@ internal static partial class PortfolioEndpoints
     private static List<PortfolioApp> BuildApps(
         List<WebService> services, List<AppMeta> metadata,
         IReadOnlyDictionary<string, long> screenshotVersions,
-        IReadOnlyDictionary<string, LighthouseScores> scores, bool captureOnDemand = false,
+        IReadOnlyDictionary<string, LighthouseScores> scores,
         IReadOnlySet<string>? storageGroups = null, IReadOnlyList<PublicLinkCheck>? publicLinks = null)
     {
         storageGroups ??= NoGroups;
@@ -128,7 +107,7 @@ internal static partial class PortfolioEndpoints
                 {
                     var key = PortfolioIdentity.NormalizeName(string.IsNullOrWhiteSpace(s.FriendlyName) ? s.Name : s.FriendlyName);
                     metaByName.TryGetValue(key, out var meta);
-                    return ToPortfolioApp(meta, s, screenshotVersions, scores, captureOnDemand, storageGroups, links);
+                    return ToPortfolioApp(meta, s, screenshotVersions, scores, storageGroups, links);
                 },
                 StringComparer.OrdinalIgnoreCase);
 
@@ -140,7 +119,7 @@ internal static partial class PortfolioEndpoints
             // Catalog entries marked active are the stable showcase, visible even when
             // Azure inventory is stale or unavailable. Only added when no live service
             // already claimed the key — otherwise the live entry's status wins.
-            appsByName.TryAdd(key, ToPortfolioApp(meta, null, screenshotVersions, scores, captureOnDemand, storageGroups, links));
+            appsByName.TryAdd(key, ToPortfolioApp(meta, null, screenshotVersions, scores, storageGroups, links));
         }
 
         return appsByName.Values.OrderBy(a => a.Name, StringComparer.OrdinalIgnoreCase).ToList();
@@ -210,33 +189,14 @@ internal static partial class PortfolioEndpoints
     private static readonly IReadOnlyDictionary<string, LighthouseScores> EmptyScores = new Dictionary<string, LighthouseScores>();
 
     private static async Task<IResult> GetScreenshot(
-        string host, IWebHostEnvironment env, AzureReportStore store, AppScreenshotService screenshots,
-        HttpContext http, ILogger<Program> logger, CancellationToken ct)
+        string host, AppScreenshotStore screenshots, HttpContext http, CancellationToken ct)
     {
         if (!HostPattern().IsMatch(host))
             return Results.BadRequest(new { error = "Invalid host." });
 
+        // Read-only: screenshots.yml is the only writer. On-demand capture lived here until
+        // 2026-11-07 and launched a headless browser behind an anonymous URL.
         var stream = await screenshots.OpenReadAsync(host, ct);
-        if (stream is null && screenshots.ScreenshotsEnabled)
-        {
-            // On-demand capture fallback: find matching app URL from catalog or inventory
-            try
-            {
-                var (report, _) = await LoadInventoryAsync(env, store, logger, ct);
-                var target = AppScreenshotService.CombinedTargets(env, report)
-                    .FirstOrDefault(t => string.Equals(t.Host, host, StringComparison.OrdinalIgnoreCase));
-                if (target.Url is not null)
-                {
-                    logger.LogInformation("No screenshot exists for {Host} — navigating to {Url} to capture live", host, target.Url);
-                    stream = await screenshots.CaptureOneAsync(host, target.Url, ct);
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogWarning(ex, "Live screenshot capture on demand failed for {Host}", host);
-            }
-        }
-
         if (stream is null)
             return Results.NotFound();
 
@@ -293,14 +253,14 @@ internal static partial class PortfolioEndpoints
 
     private static PortfolioApp ToPortfolioApp(
         AppMeta? meta, WebService? service, IReadOnlyDictionary<string, long> screenshotVersions,
-        IReadOnlyDictionary<string, LighthouseScores> scores, bool captureOnDemand,
+        IReadOnlyDictionary<string, LighthouseScores> scores,
         IReadOnlySet<string> storageGroups, IReadOnlyDictionary<string, PublicLinkCheck> links)
     {
         var name = meta?.Name ?? service?.FriendlyName ?? service?.Name ?? "Unnamed app";
         // The curated catalog URL wins over the scanned one: inventory can lag reality by
         // hours (or weeks), and a card must never send visitors to a decommissioned host.
         var url = !string.IsNullOrWhiteSpace(meta?.Url) ? meta.Url : service?.Url ?? "";
-        var host = AppScreenshotService.HostOf(url);
+        var host = AppScreenshotStore.HostOf(url);
         long version = 0;
         var hasScreenshot = host is not null && screenshotVersions.TryGetValue(host, out version);
         var status = service is null ? "not-monitored" :
@@ -315,9 +275,7 @@ internal static partial class PortfolioEndpoints
                 !string.IsNullOrWhiteSpace(service?.Description) ? service.Description : $"Open {name}.",
             Url = url,
             Status = status,
-            // With capture on, a missing image is captured when the card requests it.
-            ScreenshotUrl = hasScreenshot || (host is not null && captureOnDemand)
-                ? $"/api/portfolio/screenshots/{host}?v={version}" : null,
+            ScreenshotUrl = hasScreenshot ? $"/api/portfolio/screenshots/{host}?v={version}" : null,
             Scores = host is not null && scores.TryGetValue(host, out var score) ? score : null,
             GithubRepo = string.IsNullOrWhiteSpace(meta?.GithubRepo) ? null : meta.GithubRepo,
             // Source: hidden only when the scan SAW the repo answer 404 (private). No check yet

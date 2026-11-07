@@ -37,12 +37,6 @@ public static class ReportFileCache
     // publishes client assets under ContentRootPath/wwwroot, so WebRootPath is non-null.
     public static string GetCatalogDir(IWebHostEnvironment env) => Path.Combine(GetWebRoot(env), "data");
 
-    /// <summary>
-    /// Local screenshots directory fallback when blob storage is unavailable or offline.
-    /// Under <c>App_Data</c>, not the web root: it was committed under <c>wwwroot</c>, churned
-    /// the tree on every local capture and was served statically beside the endpoint.
-    /// </summary>
-    public static string GetScreenshotsDir(IWebHostEnvironment env) => Path.Combine(GetCacheDir(env), "screenshots");
 
     private static string GetWebRoot(IWebHostEnvironment env) =>
         env.WebRootPath
