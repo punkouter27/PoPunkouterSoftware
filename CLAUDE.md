@@ -328,7 +328,9 @@ it used to be two lists, plus count badges that repeated two of the sentences. T
 evidence" disclosure is gone (every row was already a "Remove Candidate" in the queue, with a
 second snooze button), and so is the 30-day history disclosure with its `/api/diag/history`
 endpoint (both charts were the hero sparklines' series). The resource explorer is a table, not
-a card per resource. Methodology and owner-facing config text (uptime method, budget key,
+a card per resource, and opens on "Needs a look" (rows with a concern; "All" is the other
+chip) — 2026-11-07, when "All" was 58 rows around 8 worth reading. The scan no longer flags
+Always-On on F1/D1 plans, which cannot enable it: it marked every Po app "Drift". Methodology and owner-facing config text (uptime method, budget key,
 management flag, cold starts) lives in an icon-only `AppHint`, not a paragraph.
 
 **One design system, two dials.** Everything visual resolves from the token block at the top of

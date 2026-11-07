@@ -54,8 +54,12 @@ public partial class AzureDashboard
     private List<ResourceExplorerItem> ResourceExplorerItems => _resourceExplorerItems;
     private List<ResourceExplorerItem> FilteredResourceExplorerItems => _filteredResourceExplorerItems;
 
-    private static readonly string[] ResourceViews = ["All", "Unhealthy", "Waste", "Security", "Drift"];
-    private string _resourceView = "All";
+    // Opens on the flagged rows only: "All" was 58 rows of storage accounts, plans and
+    // healthy sites around a handful worth reading. Per-concern chips went with it — the
+    // Concern column already names each row's reason, and the flagged list is short.
+    private const string FlaggedView = "Needs a look";
+    private static readonly string[] ResourceViews = [FlaggedView, "All"];
+    private string _resourceView = FlaggedView;
 
     private void RebuildDerivedState()
     {
@@ -73,14 +77,7 @@ public partial class AzureDashboard
 
     private void ApplyResourceFilter() =>
         _filteredResourceExplorerItems = _resourceExplorerItems
-            .Where(item => _resourceView switch
-            {
-                "Unhealthy" => item.Risk.Contains("Unhealthy", StringComparison.OrdinalIgnoreCase),
-                "Waste" => item.Risk.Contains("Waste", StringComparison.OrdinalIgnoreCase),
-                "Security" => item.Risk.Contains("Security", StringComparison.OrdinalIgnoreCase),
-                "Drift" => item.Risk.Contains("Drift", StringComparison.OrdinalIgnoreCase),
-                _ => true,
-            })
+            .Where(item => _resourceView != FlaggedView || item.Risk != "None")
             .ToList();
 
     private bool _refreshing;

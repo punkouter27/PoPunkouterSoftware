@@ -18,16 +18,16 @@
     </div>
     <div class="azure-disclosure-stack">
 
-        <details class="app-disclosure" open="@(SecurityIssueCount > 0)">
+        @* Drawn only when it has findings: a closed "0 findings / Checks passed" block was a
+           row of chrome saying nothing. It opens itself, because a finding is why it exists. *@
+        @if (SecurityIssueCount > 0)
+        {
+        <details class="app-disclosure" open>
             <summary class="app-disclosure__heading">
                 <span><RadzenIcon Icon="security" /><strong>Security and configuration</strong></span>
                 <RadzenBadge Text="@($"{SecurityIssueCount} findings")" IsPill="true" />
             </summary>
             <div class="app-disclosure__body">
-                @if (SecurityIssueCount == 0)
-                {
-                    <div class="azure-compact-state success">Checks passed.</div>
-                }
                 @foreach (var storage in (Report.StorageInventory ?? []).Where(s => s.IssueCount > 0))
                 {
                     <article class="azure-finding">
@@ -46,6 +46,7 @@
                 }
             </div>
         </details>
+        }
 
         @if (Report.DowntimeDiagnoses?.Count > 0)
         {
