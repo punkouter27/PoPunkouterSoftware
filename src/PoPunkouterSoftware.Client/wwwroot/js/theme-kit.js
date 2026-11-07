@@ -178,14 +178,14 @@
     };
 
     // Only primitives cross the Blazor interop boundary, so read() is one delimited string
-    // in a fixed order: theme|density|sound|fx|details. Every default is the simplest choice.
+    // in a fixed order: theme|density|sound|details. Every default is the simplest choice.
+    // (An "fx" Effects choice sat between sound and details until 2026-11-07.)
     window.appSettings = {
         read: function () {
             return [
                 read() || 'system',
                 readDensity() ? 'compact' : 'comfortable',
                 window.audioKit && window.audioKit.enabled ? 'on' : 'off',
-                window.appFx && window.appFx.full ? 'full' : 'simple',
                 readDetails() ? 'full' : 'simple'
             ].join('|');
         },
@@ -193,7 +193,6 @@
             if (key === 'theme') choose(value === 'system' ? null : value, x || y ? { x: x, y: y } : null);
             else if (key === 'density') setDensity(value === 'compact');
             else if (key === 'sound' && window.audioKit) window.audioKit.setEnabled(value === 'on');
-            else if (key === 'fx' && window.appFx) window.appFx.setFull(value === 'full');
             else if (key === 'details') setDetails(value === 'full');
         }
     };

@@ -56,10 +56,6 @@ else if (_summary is not null)
     @* data-fx-origin: where the GPU backdrop's recovery bloom starts (js/gpu-backdrop.js). *@
     <header class="azure-command-header @(summary.AttentionCount > 0 ? "has-attention" : "is-healthy")" data-glass data-fx-origin="health">
         <div class="azure-command-copy">
-            @* The health orb: one liquid-metal bead per service, drawn on its own canvas by
-               js/gpu-backdrop.js. Decorative — the percentage below is the fact. Floated so
-               the kicker and heading wrap around it instead of under it. *@
-            <canvas class="azure-orb" data-fx-orb aria-hidden="true"></canvas>
             <div class="app-kicker">Azure · @summary.SubscriptionName</div>
             @* No badge beside the h1 any more. It said "N actionable", which differed from the
                headline count only by the staleness flag — and staleness has its own badge in
@@ -115,9 +111,6 @@ else if (_summary is not null)
                 {
                     <RadzenButton Text="Cancel" Icon="close" ButtonStyle="ButtonStyle.Danger" Size="ButtonSize.Small" Click="CancelRefreshAsync" />
                 }
-                @* A hint each for Rescan and Listen, not one for both: Listen is a Details
-                   control and can be hidden, and a shared hint would then describe a button
-                   that is not there. Each used to carry a `title` — mouse-only (see AppHint). *@
                 <AppHint Focusable="true" Text="Rescan runs a full Azure subscription scan (about 30 seconds); progress streams live and you can leave the page." />
             }
             else
@@ -128,22 +121,6 @@ else if (_summary is not null)
                 <span class="app-note">Read-only <AppHint Focusable="true"
                     Text="Management actions are disabled on this deployment. Set FeatureFlags:EnableManagementActions=true (and Security:ManagementApiKey for the extra API-key gate) to enable rescan and cancel." /></span>
             }
-            @* Sonification. A second MODALITY on facts this page already renders — not a
-               second copy of them — so the "each fact appears once" rule is intact: nothing
-               new is reported here, the same summary is played instead of read.
-
-               Outside the management gate on purpose: it costs nothing, calls no endpoint
-               and mutates nothing, so it belongs with /api/diag/ai on the unprivileged
-               side. Clicking it while sound is off turns sound on — the
-               click is itself the user gesture the autoplay policy requires, so this is the
-               one place where opting in and hearing the result can happen in one action.
-               A Details control: hidden unless /settings → Details → Full. *@
-            <span class="azure-listen" data-detail>
-                <RadzenButton Text="Listen" Icon="graphic_eq" ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Small"
-                              Click="SonifyAsync" Disabled="@_sonifying" />
-                <AppHint Focusable="true"
-                         Text="Listen plays the fleet status as a four-second sound: health tunes the chord, outages add dissonance, spend sets the pulse rate, uptime opens the filter. It turns sound on if it is off." />
-            </span>
         </div>
     </header>
 

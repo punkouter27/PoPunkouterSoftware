@@ -7,23 +7,21 @@
  * gpu-backdrop.js drives (resize / setColors / setQuality / setGlass / frame / dispose).
  *
  * ── WebGL2 pipeline ─────────────────────────────────────────────────────────────────────
- *   0. SIM       (float targets only) stable-fluids step on a ~128-cell grid, splatted by
- *                the pointer, the shockwave, bursts and the palette jump; plus a density
- *                splat of the flock particles for their separation term.
- *   1. FIELD     fullscreen → sceneFBO.  Aurora blobs + 3-octave curl-noise flow, displaced
- *                by the fluid velocity, dithered.
- *   2. PARTICLES transform feedback advects N points through the same curl field and the
- *                fluid; the first 60% of seeds fly as one flock per service (setFlocks).
- *                Drawn as additive soft sprites into sceneFBO.
+ *   1. FIELD     fullscreen → sceneFBO.  Aurora blobs + 3-octave curl-noise flow, dithered.
+ *   2. PARTICLES transform feedback advects N points through the same curl field. Drawn as
+ *                additive soft sprites into sceneFBO.
  *   3. DOWN/UP   dual-Kawase: sceneFBO → half-res → back up. Two 4-tap passes total; one
  *                more step down to quarter res feeds the bloom.
- *   4. SCARS     (float targets only, only while the uptime card is near the viewport)
- *                eight Gray-Scott reaction-diffusion steps around its bad rows.
- *   5. COMPOSITE sceneFBO + blur + glass mask → canvas, with edge refraction, a prism
- *                (per-channel) split on glass edges, bloom, scars, the palette lens/streaks
- *                and dither.
+ *   4. COMPOSITE sceneFBO + blur + glass mask → canvas, with edge refraction, a prism
+ *                (per-channel) split on glass edges, bloom, the palette lens and dither.
  *
- * `createOrb(canvas)` is a second, tiny renderer: the /azure hero's metaball health orb.
+ * ── Removed 2026-11-07: the "Full" effects ──────────────────────────────────────────────
+ * A stable-fluids sim, per-service particle flocks, Gray-Scott "scars" around the uptime
+ * card, a metaball health orb on its own canvas and the palette's hyperspace jump. All five
+ * were opt-in (/settings → Effects → Full) — the default most visitors saw never drew them —
+ * yet they were about half of this file, needed float render targets, and more than doubled
+ * the measured dispatch cost (~6.4ms vs ~1.6ms). Every one had to be verified by looking
+ * at pixels, which is exactly the cost CLAUDE.md warns a decorative layer carries.
  *
  * ── Event effects (driven by gpu-backdrop.js, never by a timer of their own) ────────────
  *   ATTRACT  up to 4 points the particle field bends toward and orbits (live findings).
@@ -70,9 +68,6 @@
 
     var MAX_GLASS_RECTS = 24;
     var BASE_PARTICLES = 20000;
-    // Seeds below this fly in a service flock; the rest stay ambient field. A third: enough
-    // for a flock to read as a murmuration, few enough that the field keeps its texture.
-    var FLOCK_SHARE = '0.35';
 
     // ── Shared GLSL ─────────────────────────────────────────────────────────────────────
 
@@ -144,10 +139,7 @@
       // layer that composites to nothing. Keep this term small enough to WARP the blobs
       // rather than teleport them.
       vec2 flow = curl(p * 1.35, u_time * 0.35) * 0.012;
-      // The fluid sim's velocity (WebGL2 with float targets only; zero otherwise) displaces
-      // the sample point, so a pointer drag visibly stirs the aurora. z is "how stirred".
-      vec3 fw = fluidWarp(uv);
-      vec2 pf = p + flow + fw.xy;
+      vec2 pf = p + flow;
 
       vec2 o1 = vec2(sin(t * 1.1) * 0.35, cos(t * 0.9) * 0.25);
       vec2 o2 = vec2(cos(t * 0.7) * -0.40, sin(t * 1.3) * 0.30);
@@ -170,7 +162,7 @@
       float detail = fil * 0.16 * mask;
 
       // Audio coupling: output level brightens the field and widens the vignette slightly.
-      // Bounded at +35% so a loud sonification cannot wash the page out.
+      // Bounded at +35% so a loud refresh motif cannot wash the page out.
       float pulse = 1.0 + u_energy * 0.35;
 
       // 1.0 - smoothstep(lo, hi, x), NOT smoothstep(hi, lo, x). Passing edge0 > edge1 is
@@ -184,9 +176,8 @@
       // where they meet, and the additive particle pass lands on top of that — the centre
       // of the viewport clipped to pure white and the whole layer read as fog rather than
       // as an aurora behind the page. Headroom here is what keeps the particles legible.
-      vec3 col = (u_c1 * g1 + u_c2 * g2 + u_c3 * g3) * pulse * 0.42 + u_c3 * detail * 0.5
-               + u_c3 * fw.z * 0.35;
-      float a = (mask + detail + fw.z * 0.5) * vig * 0.30;`;
+      vec3 col = (u_c1 * g1 + u_c2 * g2 + u_c3 * g3) * pulse * 0.42 + u_c3 * detail * 0.5;
+      float a = (mask + detail) * vig * 0.30;`;
 
     var VERT2 = `#version 300 es
     in vec2 a_pos;
@@ -196,18 +187,10 @@
     precision highp float;
     uniform vec2 u_res; uniform float u_time; uniform float u_energy;
     uniform vec3 u_c1, u_c2, u_c3;
-    uniform sampler2D u_flow; uniform vec2 u_flowRes; uniform float u_fluidOn;
     out vec4 fragColor;
     ${SNOISE}
     ${CURL}
     ${DITHER}
-    // Velocity is stored in grid texels/second; /u_flowRes makes it uv/second, and 0.08s
-    // of it is the displacement — a smear that relaxes as the fluid dissipates.
-    vec3 fluidWarp(vec2 uv){
-      if (u_fluidOn < 0.5) return vec3(0.0);
-      vec2 v = texture(u_flow, uv).xy / u_flowRes;
-      return vec3(-v * vec2(u_res.x / u_res.y, 1.0) * 0.08, clamp(length(v) * 0.5, 0.0, 1.0));
-    }
     void main(){
       ${FIELD_BODY}
       fragColor = vec4(dither(col * vig, gl_FragCoord.xy), a);
@@ -222,55 +205,13 @@
     uniform float u_dt; uniform float u_time; uniform float u_aspect; uniform float u_energy;
     uniform vec4 u_attract[4]; uniform int u_attractCount;   // xy = point, z = weight
     uniform vec4 u_burst[4];                                 // xy = origin, z = age s, w = strength
-    uniform sampler2D u_flow; uniform sampler2D u_density;   // fluid velocity, particle density
-    uniform vec2 u_flowRes; uniform float u_fluidOn;
-    uniform vec4 u_flock[8]; uniform int u_flockCount;       // xy = home, z = state 0 up/1 warn/2 down
-    uniform vec3 u_jump;                                     // xy = origin, z = strength
     ${SNOISE}
     ${CURL}
-    vec2 toUv(vec2 p){ return vec2(p.x / u_aspect, p.y) * 0.5 + 0.5; }
     void main(){
       vec2 f = curl(a_pos * 1.6, u_time * 0.35);
       // Audio raises the drive term, so the field visibly accelerates on a loud transient.
       float drive = 0.18 + u_energy * 0.35;
       vec2 acc = f * drive;
-
-      // ── Flocks: one per service, the first FLOCK_SHARE of seeds split between them ────
-      // Cohesion is a spring toward a ring of radius R0 around the home, plus a tangential
-      // term so the group circles like starlings instead of collapsing to a dot. Separation
-      // comes from the gradient of a splatted density field — boids without neighbour
-      // search, which a vertex shader cannot do. Alignment is free: neighbours ride the same
-      // fluid velocity below. Healthy holds a tight ring; degraded wobbles; down scatters.
-      bool flocked = u_flockCount > 0 && a_seed < ${FLOCK_SHARE};
-      if (flocked){
-        int fid = min(int(a_seed / ${FLOCK_SHARE} * float(u_flockCount)), u_flockCount - 1);
-        vec4 fl = u_flock[fid];
-        vec2 d = fl.xy - a_pos;
-        float r = length(d) + 1e-3;
-        vec2 n = d / r;
-        float st = fl.z;
-        float R0 = st < 0.5 ? 0.09 : (st < 1.5 ? 0.16 : 0.30);
-        float k = st < 0.5 ? 3.0 : (st < 1.5 ? 1.6 : 0.6);
-        acc += n * (r - R0) * k * 3.0 / (1.0 + r) + vec2(-n.y, n.x) * (st < 1.5 ? 0.8 : 0.3);
-        if (st > 0.5){
-          vec2 jit = vec2(snoise(vec2(a_seed * 97.0, u_time * 2.3)), snoise(vec2(u_time * 2.1, a_seed * 61.0)));
-          acc += jit * (st < 1.5 ? 1.2 : 3.2);
-        }
-        if (u_fluidOn > 0.5){
-          // Capped: a crowded ring otherwise produces a gradient that out-pulls cohesion and
-          // smears the flock into a band.
-          vec2 e = 1.0 / u_flowRes, q = toUv(a_pos);
-          vec2 dg = vec2(texture(u_density, q + vec2(e.x, 0.0)).r - texture(u_density, q - vec2(e.x, 0.0)).r,
-                         texture(u_density, q + vec2(0.0, e.y)).r - texture(u_density, q - vec2(0.0, e.y)).r);
-          acc -= dg / max(1.0, length(dg)) * 0.9;
-        }
-      }
-
-      // Hyperspace jump: everything streams outward from the origin for ~a second.
-      if (u_jump.z > 0.001){
-        vec2 d = a_pos - u_jump.xy;
-        acc += normalize(d + 1e-4) * u_jump.z * 9.0 * (0.3 + length(d));
-      }
 
       // Pull toward each live finding, plus a tangential term 1.2x as strong so particles
       // ORBIT the point rather than collapsing onto it — a clump reads as a rendering bug,
@@ -295,9 +236,6 @@
 
       vec2 vel = a_vel * 0.94 + acc * u_dt;
       vec2 pos = a_pos + vel * u_dt;
-      // Ride the fluid: pure advection on top of the particle's own motion, so a field at
-      // rest leaves the curl drift exactly as it was. texels/s → particle units/s.
-      if (u_fluidOn > 0.5) pos += texture(u_flow, toUv(a_pos)).xy / u_flowRes * vec2(2.0 * u_aspect, 2.0) * u_dt;
 
       // Toroidal wrap in aspect-corrected clip space. Respawning instead would make the
       // density visibly pulse; wrapping keeps the field statistically stationary.
@@ -313,25 +251,16 @@
     in vec2 a_pos; in vec2 a_vel; in float a_seed;
     out float v_alpha; out vec3 v_col;
     uniform float u_aspect; uniform float u_size; uniform float u_energy;
-    uniform vec3 u_c1, u_c2, u_c3, u_c4;
-    uniform vec4 u_flock[8]; uniform int u_flockCount;
+    uniform vec3 u_c1, u_c2;
     void main(){
       gl_Position = vec4(a_pos / vec2(u_aspect, 1.0), 0.0, 1.0);
       float speed = clamp(length(a_vel) * 1.6, 0.0, 1.0);
       // "Hot" = well above the curl field's steady ~0.7 units/s, so only a burst reaches it
       // and idle drift draws exactly as before. Hot sprites grow, brighten and warm up.
-      // A flock member wears its service's health (accent, warm, danger) and never goes
-      // "hot": flocking speeds are routine, and hot sprites are reserved for bursts.
-      bool flocked = u_flockCount > 0 && a_seed < ${FLOCK_SHARE};
-      float hot = flocked ? 0.0 : smoothstep(1.1, 2.4, length(a_vel));
+      float hot = smoothstep(1.1, 2.4, length(a_vel));
       gl_PointSize = u_size * (0.55 + a_seed * 0.9) * (1.0 + u_energy * 0.5) * (1.0 + hot * 1.5);
       v_alpha = (0.025 + speed * 0.085) * (0.4 + a_seed * 0.6) + hot * 0.6;
       v_col = mix(u_c1, u_c2, smoothstep(0.62, 1.0, max(a_seed, hot)));
-      if (flocked){
-        float st = u_flock[min(int(a_seed / ${FLOCK_SHARE} * float(u_flockCount)), u_flockCount - 1)].z;
-        v_col = st < 0.5 ? u_c3 : (st < 1.5 ? u_c2 : u_c4);
-        v_alpha = 0.05 + (0.4 + a_seed) * 0.04;
-      }
     }`;
 
     var PARTICLE_DRAW_FS = `#version 300 es
@@ -344,136 +273,6 @@
       float d = length(gl_PointCoord - 0.5) * 2.0;
       float fall = exp(-d * d * 3.2) * step(d, 1.0);
       fragColor = vec4(v_col * fall * v_alpha, fall * v_alpha);
-    }`;
-
-    // Density splat for flock separation: every particle adds a little into a low-res
-    // float target; the update pass reads its gradient. Cleared every frame.
-    var DENSITY_VS = `#version 300 es
-    in vec2 a_pos;
-    uniform float u_aspect;
-    void main(){ gl_Position = vec4(a_pos / vec2(u_aspect, 1.0), 0.0, 1.0); gl_PointSize = 2.0; }`;
-
-    var DENSITY_FS = `#version 300 es
-    precision mediump float;
-    out vec4 c;
-    void main(){ c = vec4(0.01); }`;
-
-    // ── Fluid (WebGL2 + EXT_color_buffer_float only) ────────────────────────────────────
-    // Stam's stable fluids on a ~128-cell grid: splat → advect → divergence → Jacobi
-    // pressure → gradient subtract. Velocity is in grid texels/second. There is no dye: the
-    // velocity field is made visible by what it moves (the aurora's sample points and the
-    // particles), which costs nothing extra and keeps the field the backdrop's own.
-    // Twelve Jacobi iterations do not fully converge at the lowest frequencies, so a radial
-    // push (the scan shockwave) survives partially as a compressible-looking wave instead of
-    // being projected away — the wrong answer for a physics engine, the right one here.
-
-    var FLUID_SPLAT_FS = `#version 300 es
-    precision highp float;
-    uniform sampler2D u_vel; uniform sampler2D u_mask;
-    uniform vec2 u_res; uniform float u_aspect; uniform float u_dt;
-    uniform vec4 u_pointer;            // xy = uv (y up), zw = impulse, texels/s
-    uniform vec4 u_ring;               // xy = uv, z = radius (y units), w = strength
-    uniform vec4 u_kick[4];            // xy = uv, z = strength, w unused (bursts)
-    out vec4 o;
-    void main(){
-      vec2 uv = gl_FragCoord.xy / u_res;
-      vec2 asp = vec2(u_aspect, 1.0);
-      vec2 v = texture(u_vel, uv).xy;
-      vec2 d = (uv - u_pointer.xy) * asp;
-      v += u_pointer.zw * exp(-dot(d, d) / 0.0035);
-      if (u_ring.w > 0.0){
-        vec2 s = (uv - u_ring.xy) * asp;
-        float r = length(s);
-        v += s / max(r, 1e-3) * exp(-pow((r - u_ring.z) / 0.05, 2.0)) * u_ring.w * u_dt;
-      }
-      for (int i = 0; i < 4; i++){
-        if (u_kick[i].z <= 0.0) continue;
-        vec2 s = (uv - u_kick[i].xy) * asp;
-        v += s / max(length(s), 1e-3) * u_kick[i].z * exp(-dot(s, s) / 0.01) * u_dt;
-      }
-      // Drag under glass: the fluid moves slower beneath a card, so flow bends around them.
-      v *= (1.0 - texture(u_mask, uv).r * 0.12) * 0.985;
-      o = vec4(v, 0.0, 1.0);
-    }`;
-
-    var FLUID_ADVECT_FS = `#version 300 es
-    precision highp float;
-    uniform sampler2D u_vel; uniform vec2 u_res; uniform float u_dt;
-    out vec4 o;
-    void main(){
-      vec2 uv = gl_FragCoord.xy / u_res;
-      vec2 back = uv - u_dt * texture(u_vel, uv).xy / u_res;
-      o = vec4(texture(u_vel, back).xy, 0.0, 1.0);
-    }`;
-
-    var FLUID_DIV_FS = `#version 300 es
-    precision highp float;
-    uniform sampler2D u_vel; uniform vec2 u_res;
-    out vec4 o;
-    void main(){
-      vec2 uv = gl_FragCoord.xy / u_res, e = 1.0 / u_res;
-      float L = texture(u_vel, uv - vec2(e.x, 0.0)).x, R = texture(u_vel, uv + vec2(e.x, 0.0)).x;
-      float B = texture(u_vel, uv - vec2(0.0, e.y)).y, T = texture(u_vel, uv + vec2(0.0, e.y)).y;
-      o = vec4(0.5 * (R - L + T - B), 0.0, 0.0, 1.0);
-    }`;
-
-    var FLUID_JACOBI_FS = `#version 300 es
-    precision highp float;
-    uniform sampler2D u_p; uniform sampler2D u_div; uniform vec2 u_res;
-    out vec4 o;
-    void main(){
-      vec2 uv = gl_FragCoord.xy / u_res, e = 1.0 / u_res;
-      float s = texture(u_p, uv - vec2(e.x, 0.0)).x + texture(u_p, uv + vec2(e.x, 0.0)).x
-              + texture(u_p, uv - vec2(0.0, e.y)).x + texture(u_p, uv + vec2(0.0, e.y)).x;
-      o = vec4((s - texture(u_div, uv).x) * 0.25, 0.0, 0.0, 1.0);
-    }`;
-
-    var FLUID_GRAD_FS = `#version 300 es
-    precision highp float;
-    uniform sampler2D u_vel; uniform sampler2D u_p; uniform vec2 u_res;
-    out vec4 o;
-    void main(){
-      vec2 uv = gl_FragCoord.xy / u_res, e = 1.0 / u_res;
-      vec2 g = vec2(texture(u_p, uv + vec2(e.x, 0.0)).x - texture(u_p, uv - vec2(e.x, 0.0)).x,
-                    texture(u_p, uv + vec2(0.0, e.y)).x - texture(u_p, uv - vec2(0.0, e.y)).x);
-      o = vec4(texture(u_vel, uv).xy - 0.5 * g, 0.0, 1.0);
-    }`;
-
-    // ── Scars: Gray-Scott reaction-diffusion around the uptime grid's bad rows ──────────
-    // Coral parameters (F .055, k .062). Each seed is a noisy stamp of B at the card's edge
-    // that then grows by itself, and growth is confined to a disc whose radius the caller scales by how many bad
-    // days that row has — so the size of the scar IS the size of the outage record.
-    var RD_FS = `#version 300 es
-    precision highp float;
-    uniform sampler2D u_state; uniform vec2 u_res;
-    uniform vec4 u_seeds[24]; uniform int u_seedCount;   // xy texel, z radius texels, w weight
-    uniform float u_jitter; uniform float u_stamp;
-    out vec4 o;
-    float h21(vec2 p){ vec3 q = fract(vec3(p.xyx) * 0.1031); q += dot(q, q.yzx + 33.33); return fract((q.x + q.y) * q.z); }
-    void main(){
-      vec2 uv = gl_FragCoord.xy / u_res, e = 1.0 / u_res;
-      vec2 c = texture(u_state, uv).rg;
-      vec2 lap = -c
-        + 0.2 * (texture(u_state, uv + vec2(e.x, 0.0)).rg + texture(u_state, uv - vec2(e.x, 0.0)).rg
-               + texture(u_state, uv + vec2(0.0, e.y)).rg + texture(u_state, uv - vec2(0.0, e.y)).rg)
-        + 0.05 * (texture(u_state, uv + e).rg + texture(u_state, uv - e).rg
-                + texture(u_state, uv + vec2(e.x, -e.y)).rg + texture(u_state, uv + vec2(-e.x, e.y)).rg);
-      float abb = c.r * c.g * c.g;
-      float a = c.r + (lap.r - abb + 0.055 * (1.0 - c.r));
-      float b = c.g + (0.5 * lap.g + abb - 0.117 * c.g);
-      float inside = 0.0;
-      for (int i = 0; i < 24; i++){
-        if (i >= u_seedCount) break;
-        float d = length(gl_FragCoord.xy - u_seeds[i].xy);
-        inside = max(inside, 1.0 - smoothstep(u_seeds[i].z * 0.8, u_seeds[i].z, d));
-        // Stamped once, noisily, when the seeds change: a CONSTANT source keeps emitting
-        // target waves and the scar reads as ripples, never as coral.
-        if (u_stamp > 0.5 && d < 7.0 && h21(gl_FragCoord.xy) > 0.45) b = 0.9 * u_seeds[i].w;
-      }
-      // A perfectly symmetric source grows perfectly symmetric target rings. A whisper of
-      // fresh noise each step lets the instability that makes coral actually branch.
-      b += (h21(gl_FragCoord.xy + u_jitter) - 0.5) * 0.004 * inside;
-      o = vec4(clamp(a, 0.0, 1.0), clamp(b * mix(0.7, 1.0, inside), 0.0, 1.0), 0.0, 1.0);
     }`;
 
     // ── Dual-Kawase ─────────────────────────────────────────────────────────────────────
@@ -548,10 +347,7 @@
     uniform vec4 u_puff[4];                     // xy = px, z = age s, w = strength (bursts)
     uniform vec3 u_puffColor;
     uniform sampler2D u_bloom; uniform float u_bloomAmt;
-    uniform sampler2D u_flow; uniform vec2 u_flowRes; uniform float u_fluidOn;
-    uniform sampler2D u_rd; uniform vec4 u_rdRect; uniform float u_rdOn;   // rect: uv min (y up), size
-    uniform vec3 u_warm, u_danger;
-    uniform vec4 u_warp;                        // xy = px, z = lens 0..1, w = streak 0..1
+    uniform vec3 u_warp;                        // xy = px, z = lens 0..1
     out vec4 fragColor;
     ${DITHER}
     void main(){
@@ -564,9 +360,6 @@
       vec2 wc = u_warp.xy / u_res;
       float wr = length((uv - wc) * asp);
       if (u_warp.z > 0.001) uv = wc + (uv - wc) * (1.0 - u_warp.z * 0.22 * exp(-wr * wr * 3.0));
-
-      // The fluid bends light a touch as well as moving the field.
-      if (u_fluidOn > 0.5) uv -= texture(u_flow, uv).xy / u_flowRes * 0.004;
 
       // ── Shock ring: a refraction band expanding from the button that caused it ──────
       float shockFade = u_shock.w * exp(-u_shock.z * 1.6);
@@ -613,13 +406,6 @@
         col.b = mix(texture(u_scene, uv + refr - ca).b, texture(u_blur, uv + refr - ca).b, mm);
       }
 
-      // ── Zoom streak (hyperspace jump): radial blur toward the warp centre ──────────
-      if (u_warp.w > 0.001){
-        vec4 z = vec4(0.0);
-        for (int i = 1; i <= 6; i++) z += texture(u_blur, uv + (wc - uv) * float(i) * 0.03 * u_warp.w);
-        col = mix(col, z / 6.0, u_warp.w * 0.85);
-      }
-
       // Chromatic split on failure only. Four extra taps, skipped entirely when idle.
       if (glitch > 0.001){
         vec2 ca = vec2(glitch * 0.006, 0.0);
@@ -652,7 +438,7 @@
       }
 
       // Rim light along the glass edge, lifted slightly by output level so the frame
-      // catches the beat of a sonification.
+      // catches the beat of the refresh motif.
       col.rgb += u_tint * rim * (0.045 + u_energy * 0.05);
 
       // Specular sheen: strongest on the rim nearest the light, faint across the pane face.
@@ -671,80 +457,10 @@
       vec3 bp = bl.rgb * bl.a;
       emit += bp * smoothstep(0.02, 0.16, dot(bp, vec3(0.299, 0.587, 0.114))) * u_bloomAmt * (1.0 + u_energy * 1.5);
 
-      // ── Scars: the reaction-diffusion field around the uptime grid's bad rows ───────
-      if (u_rdOn > 0.5){
-        vec2 ru = (gl_FragCoord.xy / u_res - u_rdRect.xy) / u_rdRect.zw;
-        if (ru.x > 0.0 && ru.y > 0.0 && ru.x < 1.0 && ru.y < 1.0){
-          float b = texture(u_rd, ru).g;
-          float s = smoothstep(0.10, 0.30, b);
-          emit += mix(u_warm, u_danger, s) * s * 0.6;
-        }
-      }
-
-      // ── Hyperspace streaks: hashed radial lines rushing outward ─────────────────────
-      if (u_warp.w > 0.001){
-        float ang = atan(uv.y - wc.y, (uv.x - wc.x) * asp.x);
-        float line = pow(hash12(vec2(floor(ang * 90.0), 7.0)), 12.0);
-        emit += mix(u_tint, vec3(1.0), 0.5) * line * smoothstep(0.08, 0.7, wr) * u_warp.w * 1.4;
-      }
-
       float ea = clamp(col.a + max(emit.r, max(emit.g, emit.b)), 0.0, 1.0);
       col = vec4((col.rgb * col.a + emit) / max(ea, 1e-4), ea);
 
       fragColor = vec4(dither(col.rgb, gl_FragCoord.xy), col.a);
-    }`;
-
-    // ── Health orb (its own small canvas in the /azure hero) ─────────────────────────────
-    // A 2D metaball field shaded as a height surface — liquid metal without a raymarch.
-    // One bead per service plus a core; the caller moves the beads (healthy ones merge into
-    // the core, a down one pulls away and drips). Reflection is a procedural studio env,
-    // tinted per bead, so the orb reads as chrome in either theme.
-    var ORB_FS = `#version 300 es
-    precision highp float;
-    uniform vec2 u_res;
-    uniform vec4 u_beads[13]; uniform int u_beadCount;   // xy = centre, z = radius, w = state
-    uniform vec3 u_cUp, u_cWarn, u_cDown;
-    uniform vec2 u_light;                                // -1..1, orb space, y up
-    out vec4 o;
-    void main(){
-      vec2 p = (gl_FragCoord.xy / u_res) * 2.0 - 1.0;
-      float f = 0.0; vec2 grad = vec2(0.0); vec3 tint = vec3(0.0); float tw = 0.0;
-      for (int i = 0; i < 13; i++){
-        if (i >= u_beadCount) break;
-        // Wyvill's soft-object kernel, (1 - d²/R²)³ with R = 2r: bounded, zero gradient at
-        // the centre, zero beyond R. The 1/d² kernel's singularity at each centre showed
-        // through the shading as a crater per bead.
-        vec4 b = u_beads[i];
-        vec2 d = p - b.xy;
-        float R2 = 4.0 * b.z * b.z;
-        float u = max(0.0, 1.0 - dot(d, d) / R2);
-        float w = u * u * u;
-        f += w;
-        grad += -6.0 * u * u * d / R2;
-        vec3 c = b.w < 0.5 ? u_cUp : (b.w < 1.5 ? u_cWarn : u_cDown);
-        tint += c * w * w; tw += w * w;
-      }
-      tint /= max(tw, 1e-4);
-      f /= 0.3; grad /= 0.3;                       // iso-surface at 0.3 → f = 1 on the edge
-      float alpha = smoothstep(0.92, 1.08, f);
-      if (alpha <= 0.0) { o = vec4(0.0); return; }
-      // Shade from the distance to the edge, not from the field's own gradient: (f-1)/|∇f|
-      // estimates it to first order, a quarter-circle profile turns it into a rounded rim,
-      // and the interior goes nearly flat with a little of the field kept as relief. The
-      // raw gradient creased every place two beads met.
-      float gn = max(length(grad), 1e-3);
-      float s = clamp((f - 1.0) / gn / 0.22, 0.0, 1.0);
-      float slope = (1.0 - s) / max(sqrt(1.0 - (1.0 - s) * (1.0 - s)), 0.08);
-      vec3 n = normalize(vec3(-grad / gn * slope - grad / (f * f) * 0.12, 1.0));
-      vec3 r = reflect(vec3(0.0, 0.0, -1.0), n);
-      // Studio env: dark floor, bright sky, a hot horizon line — the classic chrome read.
-      vec3 env = mix(vec3(0.18), vec3(1.0), smoothstep(-0.3, 0.7, r.y))
-               + vec3(1.0) * exp(-abs(r.y - 0.05) * 22.0) * 0.5;
-      vec3 l = normalize(vec3(u_light, 0.9));
-      float sp = pow(max(dot(r, l), 0.0), 48.0);
-      float fres = pow(1.0 - n.z, 2.0);
-      vec3 col = env * mix(tint, vec3(1.0), 0.35) + sp * 1.2 + tint * (fres * 0.8 + 0.15);
-      o = vec4(col, alpha);
     }`;
 
     // ── WebGL1 fallback shaders ─────────────────────────────────────────────────────────
@@ -757,7 +473,6 @@
     ${SNOISE}
     ${CURL}
     ${DITHER}
-    vec3 fluidWarp(vec2 uv){ return vec3(0.0); }
     void main(){
       ${FIELD_BODY}
       gl_FragColor = vec4(dither(col * vig, gl_FragCoord.xy), a);
@@ -825,41 +540,7 @@
         if (t.w === w && t.h === h) return;
         t.w = w; t.h = h;
         gl.bindTexture(gl.TEXTURE_2D, t.tex);
-        if (t.full) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, w, h, 0, gl.RGBA, gl.FLOAT, null);
-        else if (t.half) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, w, h, 0, gl.RGBA, gl.HALF_FLOAT, null);
-        else gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-    }
-
-    /** Signed, unclamped target for the simulations. Requires EXT_color_buffer_float. */
-    function makeHalfTarget(gl, w, h) {
-        var t = makeTarget(gl, 1, 1);
-        t.half = true; t.w = 0;
-        resizeTarget(gl, t, w, h);
-        return t;
-    }
-
-    /**
-     * Full float, for reaction-diffusion: Gray-Scott's per-step increments near 1.0 are
-     * below half float's 10-bit resolution there, so on RGBA16F the pattern never grows —
-     * it compiles, runs and silently stays a dot. Linear filtering on 32F needs its own
-     * extension; without it the composite samples the field nearest-neighbour.
-     */
-    function makeFullTarget(gl, w, h) {
-        var t = makeTarget(gl, 1, 1);
-        t.full = true; t.w = 0;
-        resizeTarget(gl, t, w, h);
-        if (!gl.getExtension('OES_texture_float_linear')) {
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        }
-        return t;
-    }
-
-    function clearTarget(gl, t, r, g, b, a) {
-        gl.bindFramebuffer(gl.FRAMEBUFFER, t.fbo);
-        gl.viewport(0, 0, t.w, t.h);
-        gl.clearColor(r, g, b, a);
-        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
     }
 
     // ── Renderer ────────────────────────────────────────────────────────────────────────
@@ -881,19 +562,11 @@
         var p3 = 'drawingBufferColorSpace' in gl && window.matchMedia('(color-gamut: p3)').matches;
         if (p3) gl.drawingBufferColorSpace = 'display-p3';
 
-        var colors = [[0.357, 0.486, 0.839], [0.945, 0.714, 0.388], [0.576, 0.706, 0.961], [0.949, 0.533, 0.533]];
+        var colors = [[0.357, 0.486, 0.839], [0.945, 0.714, 0.388], [0.576, 0.706, 0.961]];
         var quality = { scale: 0.5, particles: 0.55, effects: false };
         var W = 1, H = 1;
         var energy = 0;
-
-        // Simulation inputs. Fluid, flocks, scars and warp — see the shader comments.
-        var pointer = new Float32Array(4);            // uv (y up), impulse texels/s — consumed per frame
-        var flock = new Float32Array(32), flockCount = 0;
-        var fluidOn = true;                // off unless the visitor picked full effects (gpu-backdrop.js)
-        var jumpAt = -1e3, jumpAt2 = [0, 0];
-        var warp = [0.5, 0.5, 0, 0];                  // uv (y down), lens, streak
-        var scar = { on: false, rect: [0, 0, 1, 1], seeds: new Float32Array(96), n: 0, w: 0, h: 0, stamp: 0, key: '' };
-        var kick = new Float32Array(16);
+        var warp = [0.5, 0.5, 0];                     // uv (y down), lens 0..1 — the palette lens
 
         // Event-effect state. `clock` advances only on drawn frames — see the header.
         var clock = 0;
@@ -952,31 +625,8 @@
                 bufs: null, tf: null, count: 0, capacity: 0,
                 maskDirty: true, glassCount: 0,
                 rects: new Float32Array(MAX_GLASS_RECTS * 4),
-                radii: new Float32Array(MAX_GLASS_RECTS),
-                sim: null
+                radii: new Float32Array(MAX_GLASS_RECTS)
             };
-
-            // The simulations need signed, unclamped render targets. Without
-            // EXT_color_buffer_float (a real slice of mobile drivers) they are simply off:
-            // the flocks still fly, just without separation, and nothing else changes.
-            if (gl.getExtension('EXT_color_buffer_float')) {
-                var progs = {
-                    density: link(gl, DENSITY_VS, DENSITY_FS),
-                    splat: link(gl, VERT2, FLUID_SPLAT_FS),
-                    advect: link(gl, VERT2, FLUID_ADVECT_FS),
-                    div: link(gl, VERT2, FLUID_DIV_FS),
-                    jacobi: link(gl, VERT2, FLUID_JACOBI_FS),
-                    grad: link(gl, VERT2, FLUID_GRAD_FS),
-                    rd: link(gl, VERT2, RD_FS)
-                };
-                var ok = Object.keys(progs).every(function (k) { return progs[k]; });
-                if (ok) {
-                    r.sim = { p: progs, u: {}, vel: null, velB: null, div: null, pA: null, pB: null, density: null, rd: null, rdB: null, fw: 0, fh: 0 };
-                    Object.keys(progs).forEach(function (k) { r.sim.u[k] = uniforms(gl, progs[k]); });
-                } else {
-                    console.warn('gfx-webgl: simulation programs unavailable, fluid off');
-                }
-            }
             return r;
         }
 
@@ -1046,19 +696,7 @@
         function frame(dt, elapsed, level) {
             energy = level || 0;
             clock += dt;
-            var sim = fluidOn && g2 && g2.sim && g2.sim.vel ? g2.sim : null;
             var aspect = W / Math.max(1, H);
-            var jumpAge = clock - jumpAt;
-            var jump = jumpAge < 1.4 ? Math.exp(-jumpAge * 2.6) : 0;
-
-            if (sim && dt > 0) stepSim(sim, dt, aspect, jumpAge);
-
-            // Units 6/7 are reserved for the simulation fields so a sampler can never alias
-            // the render target of the pass that declares it (WebGL rejects the draw).
-            if (g2) {
-                bindUnit(6, sim ? sim.vel.tex : blank);
-                bindUnit(7, sim ? sim.density.tex : blank);
-            }
 
             // ── Field ───────────────────────────────────────────────────────────────────
             var target = g2 ? g2.scene : null;
@@ -1073,11 +711,6 @@
             gl.uniform3fv(fieldU.u_c1, colors[0]);
             gl.uniform3fv(fieldU.u_c2, colors[1]);
             gl.uniform3fv(fieldU.u_c3, colors[2]);
-            if (fieldU.u_flow) {
-                gl.uniform1i(fieldU.u_flow, 6);
-                gl.uniform2f(fieldU.u_flowRes, sim ? sim.fw : 1, sim ? sim.fh : 1);
-                gl.uniform1f(fieldU.u_fluidOn, sim ? 1 : 0);
-            }
             drawFullscreen();
 
             if (!g2) return;
@@ -1100,14 +733,6 @@
                     burstUniform[b * 4 + 3] = age < 2 ? bursts[b * 4 + 3] : 0;
                 }
                 gl.uniform4fv(g2.updateU.u_burst, burstUniform);
-                gl.uniform1i(g2.updateU.u_flow, 6);
-                gl.uniform1i(g2.updateU.u_density, 7);
-                gl.uniform2f(g2.updateU.u_flowRes, sim ? sim.fw : 1, sim ? sim.fh : 1);
-                gl.uniform1f(g2.updateU.u_fluidOn, sim ? 1 : 0);
-                gl.uniform1i(g2.updateU.u_flockCount, flockCount);
-                if (flockCount > 0) gl.uniform4fv(g2.updateU.u_flock, flock);
-                var jp = toParticle(jumpAt2[0], jumpAt2[1]);
-                gl.uniform3f(g2.updateU.u_jump, jp[0], jp[1], jump);
 
                 gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, g2.tf);
                 gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, g2.bufs[1].pos);
@@ -1133,10 +758,6 @@
                 gl.uniform1f(g2.drawU.u_energy, energy);
                 gl.uniform3fv(g2.drawU.u_c1, colors[0]);
                 gl.uniform3fv(g2.drawU.u_c2, colors[1]);
-                gl.uniform3fv(g2.drawU.u_c3, colors[2]);
-                gl.uniform3fv(g2.drawU.u_c4, colors[3]);
-                gl.uniform1i(g2.drawU.u_flockCount, flockCount);
-                if (flockCount > 0) gl.uniform4fv(g2.drawU.u_flock, flock);
                 gl.enable(gl.BLEND);
                 // Alpha channel ONE,ONE: with plain SRC_ALPHA,ONE the scene's alpha grew by a²,
                 // and the non-premultiplied composite then scaled each sprite by that — a
@@ -1181,9 +802,6 @@
             gl.uniform1f(g2.downU.u_offset, 2.0);
             drawFullscreen();
 
-            var rdOn = !!(sim && scar.on && sim.rd);
-            if (rdOn) stepScars(sim);
-
             // ── Composite to canvas ─────────────────────────────────────────────────────
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             gl.viewport(0, 0, W, H);
@@ -1218,126 +836,8 @@
             gl.activeTexture(gl.TEXTURE3); gl.bindTexture(gl.TEXTURE_2D, g2.bloom.tex);
             gl.uniform1i(g2.compU.u_bloom, 3);
             gl.uniform1f(g2.compU.u_bloomAmt, quality.effects ? 0.9 : 0.6);
-            gl.uniform1i(g2.compU.u_flow, 6);
-            gl.uniform2f(g2.compU.u_flowRes, sim ? sim.fw : 1, sim ? sim.fh : 1);
-            gl.uniform1f(g2.compU.u_fluidOn, sim ? 1 : 0);
-            bindUnit(5, rdOn ? sim.rd.tex : blank);
-            gl.uniform1i(g2.compU.u_rd, 5);
-            gl.uniform1f(g2.compU.u_rdOn, rdOn ? 1 : 0);
-            gl.uniform4fv(g2.compU.u_rdRect, scar.rect);
-            gl.uniform3fv(g2.compU.u_warm, colors[1]);
-            gl.uniform3fv(g2.compU.u_danger, colors[3]);
-            gl.uniform4f(g2.compU.u_warp, warp[0] * W, (1 - warp[1]) * H, warp[2], Math.max(warp[3], jump));
+            gl.uniform3f(g2.compU.u_warp, warp[0] * W, (1 - warp[1]) * H, warp[2]);
             drawFullscreen();
-        }
-
-        function bindUnit(unit, tex) {
-            gl.activeTexture(gl.TEXTURE0 + unit);
-            gl.bindTexture(gl.TEXTURE_2D, tex);
-            gl.activeTexture(gl.TEXTURE0);
-        }
-
-        function simPass(prog, target, w, h) {
-            gl.bindFramebuffer(gl.FRAMEBUFFER, target.fbo);
-            gl.viewport(0, 0, w, h);
-            gl.useProgram(prog);
-            bindQuad(prog, gl.getAttribLocation(prog, 'a_pos'));
-        }
-
-        function swap(o, a, b) { var t = o[a]; o[a] = o[b]; o[b] = t; }
-
-        /** One fluid step plus the flock density splat. */
-        function stepSim(s, dt, aspect, jumpAge) {
-            var u = s.u, p = s.p, fw = s.fw, fh = s.fh;
-            gl.disable(gl.BLEND);
-
-            // Splat. The ring is the most recent of the scan shockwave and the palette jump;
-            // bursts (recovery bloom, sign-in comets) are short radial kicks.
-            simPass(p.splat, s.velB, fw, fh);
-            bindUnit(0, s.vel.tex); gl.uniform1i(u.splat.u_vel, 0);
-            bindUnit(1, g2.maskTarget.tex); gl.uniform1i(u.splat.u_mask, 1);
-            gl.uniform2f(u.splat.u_res, fw, fh);
-            gl.uniform1f(u.splat.u_aspect, aspect);
-            gl.uniform1f(u.splat.u_dt, dt);
-            gl.uniform4fv(u.splat.u_pointer, pointer);
-            var sAge = clock - shockAt, useJump = jumpAge < sAge;
-            var rAge = useJump ? jumpAge : sAge;
-            var big = Math.max(W, H);
-            if (rAge < 1.5) {
-                var ox = useJump ? jumpAt2[0] : shock[0], oy = useJump ? jumpAt2[1] : shock[1];
-                gl.uniform4f(u.splat.u_ring, ox, 1 - oy, rAge * big * 0.9 / H, (useJump ? 1500 : 900) * Math.exp(-rAge * 1.6));
-            } else {
-                gl.uniform4f(u.splat.u_ring, 0, 0, 0, 0);
-            }
-            for (var b = 0; b < 4; b++) {
-                var age = clock - burstAt[b];
-                kick[b * 4] = burstUv[b * 2]; kick[b * 4 + 1] = 1 - burstUv[b * 2 + 1];
-                kick[b * 4 + 2] = age < 0.6 ? bursts[b * 4 + 3] * 500 * Math.exp(-age * 4) : 0;
-            }
-            gl.uniform4fv(u.splat.u_kick, kick);
-            drawFullscreen();
-            swap(s, 'vel', 'velB');
-            pointer[2] = pointer[3] = 0;          // an impulse is spent once
-
-            simPass(p.advect, s.velB, fw, fh);
-            bindUnit(0, s.vel.tex); gl.uniform1i(u.advect.u_vel, 0);
-            gl.uniform2f(u.advect.u_res, fw, fh);
-            gl.uniform1f(u.advect.u_dt, dt);
-            drawFullscreen();
-            swap(s, 'vel', 'velB');
-
-            simPass(p.div, s.div, fw, fh);
-            bindUnit(0, s.vel.tex); gl.uniform1i(u.div.u_vel, 0);
-            gl.uniform2f(u.div.u_res, fw, fh);
-            drawFullscreen();
-
-            gl.useProgram(p.jacobi);
-            for (var i = 0; i < 12; i++) {
-                simPass(p.jacobi, s.pB, fw, fh);
-                bindUnit(0, s.pA.tex); gl.uniform1i(u.jacobi.u_p, 0);
-                bindUnit(1, s.div.tex); gl.uniform1i(u.jacobi.u_div, 1);
-                gl.uniform2f(u.jacobi.u_res, fw, fh);
-                drawFullscreen();
-                swap(s, 'pA', 'pB');
-            }
-
-            simPass(p.grad, s.velB, fw, fh);
-            bindUnit(0, s.vel.tex); gl.uniform1i(u.grad.u_vel, 0);
-            bindUnit(1, s.pA.tex); gl.uniform1i(u.grad.u_p, 1);
-            gl.uniform2f(u.grad.u_res, fw, fh);
-            drawFullscreen();
-            swap(s, 'vel', 'velB');
-
-            // Density splat for the flocks' separation term, from this frame's positions.
-            if (g2.count > 0 && flockCount > 0) {
-                clearTarget(gl, s.density, 0, 0, 0, 0);
-                gl.useProgram(p.density);
-                var loc = gl.getAttribLocation(p.density, 'a_pos');
-                gl.bindBuffer(gl.ARRAY_BUFFER, g2.bufs[0].pos);
-                gl.enableVertexAttribArray(loc);
-                gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-                gl.uniform1f(u.density.u_aspect, aspect);
-                gl.enable(gl.BLEND);
-                gl.blendFunc(gl.ONE, gl.ONE);
-                gl.drawArrays(gl.POINTS, 0, Math.round(g2.count * parseFloat(FLOCK_SHARE)));
-                gl.disable(gl.BLEND);
-            }
-        }
-
-        /** Eight reaction-diffusion steps per frame: a scar grows over a few seconds. */
-        function stepScars(s) {
-            for (var i = 0; i < 8; i++) {
-                simPass(s.p.rd, s.rdB, scar.w, scar.h);
-                bindUnit(0, s.rd.tex); gl.uniform1i(s.u.rd.u_state, 0);
-                gl.uniform2f(s.u.rd.u_res, scar.w, scar.h);
-                gl.uniform1i(s.u.rd.u_seedCount, scar.n);
-                gl.uniform1f(s.u.rd.u_jitter, Math.random() * 1000);
-                gl.uniform1f(s.u.rd.u_stamp, scar.stamp > 0 ? 1 : 0);
-                if (scar.stamp > 0) scar.stamp--;
-                if (scar.n > 0) gl.uniform4fv(s.u.rd.u_seeds, scar.seeds);
-                drawFullscreen();
-                swap(s, 'rd', 'rdB');
-            }
         }
 
         /** Viewport uv (0..1, y DOWN, as the DOM measures it) → particle space. */
@@ -1366,24 +866,7 @@
                 resizeTarget(gl, g2.maskTarget, half.w, half.h);
             }
             g2.maskDirty = true;
-
-            // Fluid grid: 128 cells on the long side, square cells, whatever the aspect.
-            var s = g2.sim;
-            if (!s) return;
-            var fw = W >= H ? 128 : Math.max(16, Math.round(128 * W / H));
-            var fh = W >= H ? Math.max(16, Math.round(128 * H / W)) : 128;
-            if (fw === s.fw && fh === s.fh) return;
-            s.fw = fw; s.fh = fh;
-            ['vel', 'velB', 'div', 'pA', 'pB', 'density'].forEach(function (k) {
-                if (!s[k]) s[k] = makeHalfTarget(gl, fw, fh); else resizeTarget(gl, s[k], fw, fh);
-                clearTarget(gl, s[k], 0, 0, 0, 0);
-            });
         }
-
-        // 1x1 stand-in for a sampler whose field does not exist (no float targets, no scars).
-        var blank = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, blank);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
 
         return {
             tier: isGL2 ? (g2 ? 'webgl2' : 'webgl2-field') : 'webgl1',
@@ -1393,9 +876,6 @@
             resize: resize,
 
             setColors: function (c) { colors = c; },
-
-            /** The fluid sim, and the scars that grow on it. Off: neither is stepped. */
-            setFluid: function (on) { fluidOn = !!on; },
 
             setQuality: function (q) {
                 quality = q;
@@ -1459,65 +939,8 @@
 
             setLight: function (u, v, strength) { light[0] = u; light[1] = v; light[2] = strength; },
 
-            /** Pointer impulse into the fluid. du/dv in viewport uv per second, y down. */
-            stir: function (u, v, du, dv) {
-                var s = g2 && g2.sim;
-                if (!s) return;
-                pointer[0] = u; pointer[1] = 1 - v;
-                pointer[2] = du * s.fw * 0.35; pointer[3] = -dv * s.fh * 0.35;
-            },
-
-            /** list: [u, v, state] × n, n ≤ 8; state 0 up, 1 degraded, 2 down. */
-            setFlocks: function (list, n) {
-                flockCount = Math.min(8, n | 0);
-                for (var i = 0; i < flockCount; i++) {
-                    var p = toParticle(list[i * 3], list[i * 3 + 1]);
-                    flock[i * 4] = p[0]; flock[i * 4 + 1] = p[1]; flock[i * 4 + 2] = list[i * 3 + 2]; flock[i * 4 + 3] = 1;
-                }
-            },
-
-            /**
-             * rect: [left, top, width, height] in CSS px, or null to stop. seeds: [x, y, radius,
-             * weight] × n in px relative to the rect's top-left, n ≤ 24. A new rect size resets
-             * the field; moving the rect (scroll) carries the grown pattern with it.
-             */
-            setScars: function (rect, seeds, n, vw, vh) {
-                var s = g2 && g2.sim;
-                if (!s || !rect) { scar.on = false; return; }
-                var rw = Math.max(16, Math.min(512, Math.round(rect[2] * 0.5)));
-                var rh = Math.max(16, Math.min(512, Math.round(rect[3] * rw / rect[2])));
-                if (rw !== scar.w || rh !== scar.h || !s.rd) {
-                    scar.w = rw; scar.h = rh;
-                    if (!s.rd) { s.rd = makeFullTarget(gl, rw, rh); s.rdB = makeFullTarget(gl, rw, rh); }
-                    else { resizeTarget(gl, s.rd, rw, rh); resizeTarget(gl, s.rdB, rw, rh); }
-                    clearTarget(gl, s.rd, 1, 0, 0, 1);
-                    scar.key = '';
-                }
-                var k = rw / rect[2];
-                var key = '';
-                for (var j = 0; j < Math.min(24, n | 0); j++) key += Math.round(seeds[j * 4 + 1] / 8) + ',' + seeds[j * 4 + 3] + ';';
-                if (key !== scar.key) { scar.key = key; scar.stamp = 2; }
-                scar.n = Math.min(24, n | 0);
-                for (var i = 0; i < scar.n; i++) {
-                    scar.seeds[i * 4] = seeds[i * 4] * k;
-                    scar.seeds[i * 4 + 1] = (rect[3] - seeds[i * 4 + 1]) * k;
-                    scar.seeds[i * 4 + 2] = seeds[i * 4 + 2] * k;
-                    scar.seeds[i * 4 + 3] = seeds[i * 4 + 3];
-                }
-                scar.rect = [rect[0] / vw, 1 - (rect[1] + rect[3]) / vh, rect[2] / vw, rect[3] / vh];
-                scar.on = scar.n > 0;
-            },
-
-            /** Diagnostics: which simulations are live. */
-            fx: function () {
-                return { fluid: !!(fluidOn && g2 && g2.sim && g2.sim.vel), scars: scar.on ? scar.n : 0 };
-            },
-
-            /** Hyperspace: particles and fluid rush outward from (u, v), streaks flare. */
-            jump: function (u, v) { jumpAt = clock; jumpAt2 = [u, v]; },
-
-            /** Lens toward (u, v): lens 0..1 magnifies, streak 0..1 zoom-blurs. */
-            setWarp: function (u, v, lens, streak) { warp[0] = u; warp[1] = v; warp[2] = lens; warp[3] = streak; },
+            /** Lens toward (u, v), 0..1: magnifies the backdrop toward the open command palette. */
+            setWarp: function (u, v, lens) { warp[0] = u; warp[1] = v; warp[2] = lens; },
 
             dispose: function () {
                 var lose = gl.getExtension('WEBGL_lose_context');
@@ -1526,94 +949,5 @@
         };
     }
 
-    /**
-     * The /azure hero's health orb, on its own small canvas. A separate context because the
-     * hero is an 88%-opaque glass card: anything the backdrop draws beneath it shows at 12%.
-     * It is ~100px square, so the second context costs next to nothing.
-     *
-     * Bead physics: each service is a bead on a damped spring toward a target that depends
-     * on its health — healthy ones sit inside the core and merge with it, degraded ones
-     * wobble on the surface, a down one hangs off the side and drips. A state change is a
-     * spring transition, never a jump.
-     */
-    function createOrb(canvas) {
-        var gl = canvas.getContext('webgl2', {
-            alpha: true, antialias: false, depth: false, stencil: false,
-            premultipliedAlpha: false, powerPreference: 'low-power', failIfMajorPerformanceCaveat: true
-        });
-        if (!gl) return null;
-        var prog = link(gl, VERT2, ORB_FS);
-        if (!prog) return null;
-        var U = uniforms(gl, prog);
-        var quad = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, quad);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-        var loc = gl.getAttribLocation(prog, 'a_pos');
-
-        var beads = [], buf = new Float32Array(52), t = 0;
-
-        function target(b, i, n, out) {
-            var a = i * 2.399963 + t * (0.35 + (i % 3) * 0.08);
-            // Healthy beads ride the core's surface, so the fleet reads as one lumpy, living
-            // body; inside it they only dimpled the chrome.
-            if (b.state === 0) { out[0] = Math.cos(a) * 0.4; out[1] = Math.sin(a) * 0.4; out[2] = 0.15; return; }
-            if (b.state === 1) {
-                var r = 0.46 + Math.sin(t * 3.1 + i) * 0.05;
-                out[0] = Math.cos(a) * r; out[1] = Math.sin(a) * r; out[2] = 0.15; return;
-            }
-            // Down: off to one side, sliding down and thinning, then re-forming — a drip.
-            var drip = (t * 0.32 + i * 0.37) % 1;
-            var side = i % 2 ? 1 : -1;
-            out[0] = side * (0.42 + drip * 0.1); out[1] = -0.1 - drip * 0.8; out[2] = 0.19 * (1 - drip * 0.5);
-        }
-
-        var goal = [0, 0, 0];
-        return {
-            /** states: 0 up / 1 degraded / 2 down, one per service (≤ 12). light: -1..1, y up. */
-            frame: function (dt, states, lx, ly, colors) {
-                t += dt;
-                var n = Math.min(12, states.length);
-                while (beads.length < n) beads.push({ x: 0, y: 0, r: 0, vx: 0, vy: 0, state: 0 });
-                beads.length = n;
-                buf[0] = 0; buf[1] = 0; buf[2] = 0.32 + Math.sin(t * 1.3) * 0.012; buf[3] = 0;
-                for (var i = 0; i < n; i++) {
-                    var b = beads[i];
-                    b.state = states[i];
-                    target(b, i, n, goal);
-                    // Critically-damped-ish spring; a down bead's drip is loose on purpose.
-                    var k = b.state === 2 ? 40 : 60, c = b.state === 2 ? 7 : 11;
-                    b.vx += ((goal[0] - b.x) * k - b.vx * c) * dt;
-                    b.vy += ((goal[1] - b.y) * k - b.vy * c) * dt;
-                    b.x += b.vx * dt; b.y += b.vy * dt;
-                    b.r += (goal[2] - b.r) * Math.min(1, dt * 6);
-                    buf[(i + 1) * 4] = b.x; buf[(i + 1) * 4 + 1] = b.y; buf[(i + 1) * 4 + 2] = b.r; buf[(i + 1) * 4 + 3] = b.state;
-                }
-
-                var dpr = Math.min(2, window.devicePixelRatio || 1);
-                var px = Math.max(1, Math.round(canvas.clientWidth * dpr));
-                if (canvas.width !== px) { canvas.width = px; canvas.height = px; }
-                gl.viewport(0, 0, px, px);
-                gl.clearColor(0, 0, 0, 0);
-                gl.clear(gl.COLOR_BUFFER_BIT);
-                gl.useProgram(prog);
-                gl.bindBuffer(gl.ARRAY_BUFFER, quad);
-                gl.enableVertexAttribArray(loc);
-                gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-                gl.uniform2f(U.u_res, px, px);
-                gl.uniform1i(U.u_beadCount, n + 1);
-                gl.uniform4fv(U.u_beads, buf);
-                gl.uniform3fv(U.u_cUp, colors[0]);
-                gl.uniform3fv(U.u_cWarn, colors[1]);
-                gl.uniform3fv(U.u_cDown, colors[2]);
-                gl.uniform2f(U.u_light, lx, ly);
-                gl.drawArrays(gl.TRIANGLES, 0, 3);
-            },
-            dispose: function () {
-                var lose = gl.getExtension('WEBGL_lose_context');
-                if (lose) lose.loseContext();
-            }
-        };
-    }
-
-    window.gfxWebgl = { create: create, createOrb: createOrb };
+    window.gfxWebgl = { create: create };
 })();

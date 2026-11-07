@@ -79,22 +79,6 @@
     color: var(--app-text);
 }
 
-/* The health orb (js/gpu-backdrop.js). Floated with a circular shape-outside so the kicker
-   and heading wrap around the sphere, not its square box. Hidden until a GPU context is
-   actually drawing it — reduced motion, no WebGL2 and minimal devices get no empty hole. */
-.azure-ops-page ::deep .azure-orb {
-    float: right;
-    width: 5.5rem;
-    aspect-ratio: 1;
-    margin: -.35rem -.35rem .25rem .75rem;
-    shape-outside: circle(50%);
-    pointer-events: none;
-}
-
-.azure-ops-page ::deep .azure-orb:not([data-gpu="webgl2"]) {
-    display: none;
-}
-
 .azure-ops-page ::deep .azure-command-meta,
 .azure-ops-page ::deep .azure-command-actions {
     display: flex;
@@ -457,11 +441,6 @@
 
     .azure-ops-page ::deep .azure-command-kpis {
         margin: 1rem 0;
-    }
-
-    .azure-ops-page ::deep .azure-orb {
-        width: 3.25rem;
-        margin: -.4rem -.4rem 0 .5rem;
     }
 
     .azure-ops-page ::deep .azure-command-actions {

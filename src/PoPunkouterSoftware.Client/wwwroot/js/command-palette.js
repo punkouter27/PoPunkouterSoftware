@@ -84,15 +84,7 @@
      * animates between the two boxes. Skipped under reduced motion or without the API: a plain navigation, same URL.
      */
     function navigate(url) {
-        fx('jump');
-        // For the jump's ~second the backdrop canvas screens over the page, so the streaks
-        // are seen across the content and not only in the gutters between cards. Full
-        // effects only (/settings): without the jump there are no streaks to screen.
-        var root = document.documentElement;
-        if (window.appFx && window.appFx.full) {
-            root.classList.add('is-palette-jump');
-            setTimeout(function () { root.classList.remove('is-palette-jump'); }, 900);
-        }
+        fx('jump');   // the backdrop drops its lens; the hyperspace jump went 2026-11-07
         if (!window.Blazor || !window.Blazor.navigateTo) { window.location.href = url; return; }
         var go = function () { window.Blazor.navigateTo(url); };
         if (!document.startViewTransition || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { go(); return; }

@@ -50,13 +50,10 @@
                        is down (or, more gently, degraded). Absent — not "0" — on a healthy row. *@
                     var latest = row.Cells.Count > 0 ? row.Cells[^1] : null;
                     var attract = latest == UptimeState.Broken ? "1" : latest == UptimeState.Degraded ? "0.5" : null;
-                    @* data-fx-flock: this service's particle flock and its bead in the hero orb
-                       (js/gpu-backdrop.js). Absent for a row with no observation on its latest day. *@
-                    var flock = latest == UptimeState.Healthy ? "up" : latest == UptimeState.Degraded ? "warn" : latest == UptimeState.Broken ? "down" : null;
                     @* The row name opens the app's drawer (AzureAppDetail), which now carries what
                        the `title` tooltips on the name, the chips, every cell and the percentage
                        used to — mouse-only text no phone or keyboard visitor could reach. *@
-                    <button type="button" class="azure-uptime__label @(focused ? "is-focused" : "")" data-fx-attract="@attract" data-fx-flock="@flock"
+                    <button type="button" class="azure-uptime__label @(focused ? "is-focused" : "")" data-fx-attract="@attract"
                             @onclick="() => OnSelect.InvokeAsync(row)">
                         <span class="azure-uptime__name">@row.Name</span>
                         @if (row.Errors24h is > 0)

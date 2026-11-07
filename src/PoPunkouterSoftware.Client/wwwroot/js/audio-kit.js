@@ -3,8 +3,7 @@
  *
  * Every sound here is synthesised at runtime from oscillators, a procedurally filled noise
  * buffer, and filter/envelope automation. Nothing is fetched. That is a deliberate match
- * for a page whose budget is the WASM runtime: a handful of .mp3 one-shots would have cost more bytes than this entire file,
- * and a sample cannot be retuned per-datum the way `sonifyOps()` below needs.
+ * for a page whose budget is the WASM runtime: a handful of .mp3 one-shots would have cost more bytes than this entire file.
  *
  * ── Silence is the default, and it is an accessibility floor ─────────────────────────────
  * `enabled` starts false and is only ever true because a visitor turned it on; the choice
@@ -22,28 +21,23 @@
  * ── The bus ─────────────────────────────────────────────────────────────────────────────
  *     voices → masterGain → limiter (DynamicsCompressor) → analyser → destination
  *
- * The limiter is not decoration. `sonifyOps()` can stack a dozen simultaneous partials whose
- * count is driven by live Azure findings — an unbounded sum of oscillators clips hard and
- * sounds like a fault. The analyser sits AFTER the limiter so the visual coupling in
+ * The limiter is not decoration: the refresh drone, boom and motif overlap, and an unbounded
+ * sum of oscillators clips hard and sounds like a fault. The analyser sits AFTER the limiter so the visual coupling in
  * gpu-backdrop.js tracks what the visitor actually hears, not what was requested.
  *
  * ── Why the dashboard makes sound at all ────────────────────────────────────────────────
- * Two of the three consumers carry information the eye is not looking at:
+ * One of the two consumers carries information the eye is not looking at:
  *   • `refreshStart/Progress/End` — a full ARM subscription scan takes ~30 seconds, which is
  *     precisely the duration after which someone switches tabs. The rising filter sweep and
  *     the resolving chord say "it finished, and it worked" without the page being on screen.
  *     A failure resolves to a minor second instead; the two are unmistakable.
- *   • `sonifyOps` — the whole fleet state as one four-second gesture. This is a second
- *     MODALITY on facts the page already renders, not a second copy of them, so it does not
- *     violate the "each fact appears once on /azure" rule.
- * The third (`play('tap')` and friends) is ordinary UI feedback and is the least important.
+ *   (A third, `sonifyOps` — the fleet as a four-second chord behind a Listen button — was
+ *   removed 2026-11-07.)
+ * The other (`play('tap')` and friends) is ordinary UI feedback and is the least important.
  *
  * ── Space and touch ─────────────────────────────────────────────────────────────────────
  * Every voice can be panned. A `[data-sfx]` click is panned to where the element sits on
- * screen, so the sound comes from where you touched. The sonification pans its partials by
- * fleet HEALTH (a healthy fleet is wide, a failing one collapses to the centre) and walks
- * its countable ticks left → right, which makes eight ticks easier to count than eight
- * ticks in one spot.
+ * screen, so the sound comes from where you touched.
  * Where the platform has `navigator.vibrate` (Android), the outcome sounds also buzz. Same
  * opt-in as sound — `enabled` gates both — because a phone that vibrates at a visitor who
  * never asked for feedback reads as broken in exactly the way unrequested sound does.
@@ -231,7 +225,7 @@
     /**
      * One synth voice: oscillator → gain (ADSR) → optional lowpass → master.
      * Everything is scheduled against `ctx.currentTime`; nothing uses setTimeout, so a busy
-     * main thread cannot smear the rhythm of a sonification.
+     * main thread cannot smear the rhythm of the refresh motif.
      */
     function voice(opts) {
         if (!ensureContext()) return null;
@@ -490,126 +484,6 @@
         }
     }
 
-    // ── Sonification of the fleet (#2) ──────────────────────────────────────────────────
-
-    /**
-     * Render the whole ops summary as one ~4.2 second gesture.
-     *
-     * Only primitives cross the interop boundary — seven numbers — matching the discipline
-     * every interop call in this app already follows. Nothing here needs a serialised DTO, and the
-     * WASM trim analyzer stays clean because no new type is reflected over.
-     *
-     * The mapping, and why each choice is the honest one:
-     *   • health      → detune of the upper partials. A perfectly healthy fleet is a pure
-     *                   stacked fifth; degradation literally puts the chord out of tune.
-     *   • broken      → a tritone partial, gain scaled by count and hard-capped. The most
-     *                   dissonant interval in the western system, reserved for the most
-     *                   serious fact, and capped so 40 outages are not 40x louder than 4.
-     *   • actionable  → the number of ticks, capped at 8. Countable by ear up to about that.
-     *   • security    → a bright high partial; findings are "sharp", not "loud".
-     *   • cleanup     → a soft low pulse; waste is dull weight, not an alarm.
-     *   • forecast    → tremolo RATE. Over budget beats faster: urgency, not volume.
-     *   • uptime      → master lowpass cutoff. A fleet with poor uptime sounds muffled and
-     *                   distant; a perfect one is open and present.
-     */
-    function sonifyOps(health, broken, actionable, security, cleanup, forecastRatio, uptime) {
-        if (!ensureContext()) return;
-
-        var t = now() + 0.05;
-        var root = 110;                                        // A2
-        var detune = (100 - clamp(health, 0, 100)) * 0.9;      // cents, 0..90
-        var cutoff = 500 + clamp(uptime, 0, 100) * 60;         // 500..6500 Hz
-        var lfoHz = 1.2 + clamp(forecastRatio, 0, 2) * 3.9;    // 1.2..9 Hz
-
-        var bus = ctx.createGain();
-        bus.gain.setValueAtTime(0.0001, t);
-        bus.gain.exponentialRampToValueAtTime(0.5, t + 0.5);
-        bus.gain.setValueAtTime(0.5, t + 3.2);
-        bus.gain.exponentialRampToValueAtTime(0.0001, t + 4.2);
-
-        var lp = ctx.createBiquadFilter();
-        lp.type = 'lowpass';
-        lp.frequency.setValueAtTime(cutoff, t);
-        lp.Q.value = 1.1;
-
-        var lfo = ctx.createOscillator();
-        var lfoGain = ctx.createGain();
-        lfo.frequency.value = lfoHz;
-        lfoGain.gain.value = 0.10;
-        lfo.connect(lfoGain);
-        lfoGain.connect(bus.gain);
-        lfo.start(t);
-        lfo.stop(t + 4.3);
-
-        lp.connect(bus);
-        bus.connect(master);
-
-        var partials = [
-            { mul: 1.0, gain: 0.22, cents: 0 },
-            { mul: 1.5, gain: 0.15, cents: detune },
-            { mul: 2.0, gain: 0.11, cents: -detune },
-            { mul: 3.0, gain: 0.07, cents: detune * 1.5 }
-        ];
-
-        if (broken > 0) {
-            partials.push({
-                mul: 1.4142,                                  // tritone
-                gain: Math.min(0.20, 0.05 + broken * 0.035),
-                cents: 0, type: 'sawtooth'
-            });
-        }
-        if (security > 0) {
-            partials.push({ mul: 6.0, gain: Math.min(0.05, 0.012 * security), cents: 0 });
-        }
-        if (cleanup > 0) {
-            partials.push({ mul: 0.5, gain: Math.min(0.09, 0.02 * cleanup), cents: 0 });
-        }
-
-        // Stereo width IS health: partials fan out across the field in proportion to it, so
-        // a degrading fleet audibly narrows toward mono. The tritone (outages) and the low
-        // cleanup pulse sit dead centre — the serious facts are never off to one side.
-        var width = clamp(health, 0, 100) / 100;
-        var fan = [0, -0.55, 0.55, -0.85, 0.85, 0.3, -0.3];
-
-        for (var i = 0; i < partials.length; i++) {
-            var p = partials[i];
-            var osc = ctx.createOscillator();
-            osc.type = p.type || 'triangle';
-            osc.frequency.value = root * p.mul;
-            osc.detune.value = p.cents;
-            var g = ctx.createGain();
-            g.gain.value = p.gain;
-            osc.connect(g);
-            var centred = p.type === 'sawtooth' || p.mul < 1;
-            if (!centred && ctx.createStereoPanner) {
-                var sp = ctx.createStereoPanner();
-                sp.pan.value = (fan[i] || 0) * width;
-                g.connect(sp);
-                sp.connect(lp);
-            } else {
-                g.connect(lp);
-            }
-            osc.start(t);
-            osc.stop(t + 4.3);
-        }
-
-        // Countable ticks for the actionable items, inside the sustained section, walking
-        // left → right so each one has its own place as well as its own moment.
-        var ticks = Math.min(8, Math.max(0, actionable | 0));
-        for (var k = 0; k < ticks; k++) {
-            noise({ delay: 0.9 + k * 0.22, freq: 2600, duration: 0.05, gain: 0.09,
-                    pan: ticks > 1 ? -0.8 + 1.6 * k / (ticks - 1) : 0 });
-        }
-
-        // Resolve. A healthy fleet ends on a consonant cadence; a broken one does not get
-        // one — the drone simply fades, which is the point.
-        if (broken === 0 && actionable === 0) {
-            chord([root * 2, root * 3, root * 4], { delay: 3.3, duration: 0.9, gain: 0.16, stagger: 0.07 });
-        }
-    }
-
-    function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
-
     // ── Analyser tap for the audio-reactive shaders (#4) ────────────────────────────────
 
     /**
@@ -722,10 +596,6 @@
         refreshProgress: function (percent) { announce({ phase: 'progress', percent: percent }); if (enabled) refreshProgress(percent); },
         refreshIndeterminate: function () { announce({ phase: 'indeterminate' }); if (enabled) refreshIndeterminate(); },
         refreshEnd: function (outcome) { announce({ phase: 'end', outcome: outcome }); if (enabled) refreshEnd(outcome); },
-
-        sonifyOps: function (health, broken, actionable, security, cleanup, forecastRatio, uptime) {
-            if (enabled) sonifyOps(health, broken, actionable, security, cleanup, forecastRatio, uptime);
-        },
 
         energy: energy,
         spectrum: spectrum,

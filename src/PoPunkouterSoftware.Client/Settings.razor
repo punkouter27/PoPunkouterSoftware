@@ -45,18 +45,16 @@
     private sealed record Choice(string Value, string Label);
     private sealed record Setting(string Key, string Title, string Help, Choice[] Choices);
 
-    // Order matches appSettings.read(): theme|density|sound|fx|details. The first choice is the default.
+    // Order matches appSettings.read(): theme|density|sound|details. The first choice is the default.
     private static readonly Setting[] All =
     [
         new("theme", "Theme", "Follow your device, or pin light or dark.",
             [new("system", "System"), new("light", "Light"), new("dark", "Dark")]),
         new("density", "Density", "Compact fits more on a small screen.",
             [new("comfortable", "Comfortable"), new("compact", "Compact")]),
-        new("sound", "Sound", "Click sounds, the rescan drone and the /azure Listen sonification.",
+        new("sound", "Sound", "Click sounds and the rescan drone.",
             [new("off", "Off"), new("on", "On")]),
-        new("fx", "Effects", "Full adds the fluid, service flocks, uptime scars, the health orb and the palette jump. Uses more battery.",
-            [new("simple", "Simple"), new("full", "Full")]),
-        new("details", "Details", "Full adds the CI, page, package and exception chips on uptime rows, a performance trend on each app card, the /azure Listen button, and repo and GitHub Actions rows in Ctrl+K.",
+        new("details", "Details", "Full adds the CI, page, package and exception chips on uptime rows, a performance trend on each app card, and repo and GitHub Actions rows in Ctrl+K.",
             [new("simple", "Simple"), new("full", "Full")]),
     ];
 
