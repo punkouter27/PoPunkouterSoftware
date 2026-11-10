@@ -99,15 +99,15 @@ public class PortfolioUiTests : IAsyncLifetime
         response!.Ok.Should().BeTrue();
         // "Month-end forecast" is the first always-present glance card heading; the hero h1
         // is dynamic ("Everything looks good" / "N items need attention") so it is not a
-        // stable anchor. "All resources" only exists once the advanced section is expanded.
+        // stable anchor. "Resources" only exists once the advanced section is expanded.
         await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Month-end forecast" })).ToBeVisibleAsync();
         await Assertions.Expect(page.GetByRole(AriaRole.Button, new() { Name = "Advanced diagnostics" })).ToBeVisibleAsync();
-        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "All resources" })).ToHaveCountAsync(0);
+        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Resources", Exact = true })).ToHaveCountAsync(0);
         await Assertions.Expect(page.Locator(".azure-glance-grid > article")).ToHaveCountAsync(3);
         await CaptureAsync(page, $"02-azure-status-{label}.png");
 
         await page.GetByRole(AriaRole.Button, new() { Name = "Advanced diagnostics" }).ClickAsync();
-        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "All resources" })).ToBeVisibleAsync();
+        await Assertions.Expect(page.GetByRole(AriaRole.Heading, new() { Name = "Resources", Exact = true })).ToBeVisibleAsync();
         await CaptureAsync(page, $"03-azure-advanced-{label}.png");
     }
 
@@ -393,6 +393,8 @@ public class PortfolioUiTests : IAsyncLifetime
         var page = await NewPageAsync(width, height, isMobile);
         await page.GotoAsync($"{BaseUrl}/azure", new() { WaitUntil = WaitUntilState.NetworkIdle });
         await page.GetByRole(AriaRole.Button, new() { Name = "Advanced diagnostics" }).ClickAsync();
+        // The explorer opens on flagged rows only, which a healthy estate may not have.
+        await page.GetByRole(AriaRole.Button, new() { Name = "All", Exact = true }).ClickAsync(new() { Timeout = 40_000 });
         await page.WaitForSelectorAsync(".azure-resource-table", new() { Timeout = 40_000 });
 
         (await page.Locator(".azure-resource-table").CountAsync())

@@ -45,27 +45,18 @@ public class AiTriageServiceTests
 
     // ── ComputeAttentionHash — pure, no I/O ─────────────────────────────────────
 
+    // One contract, one test (was three Facts, 2026-11-07): stable for equal input, different
+    // for different input, and the lowercase SHA-256 hex the stored report carries.
     [Fact]
-    public void ComputeAttentionHash_SameItems_ProduceSameHash()
+    public void ComputeAttentionHash_IsAStableLowercaseSha256OfTheItems()
     {
-        var a = new List<string> { "x is unavailable", "3 security configuration finding(s)" };
-        var b = new List<string> { "x is unavailable", "3 security configuration finding(s)" };
+        var same1 = new List<string> { "x is unavailable", "3 security configuration finding(s)" };
+        var same2 = new List<string> { "x is unavailable", "3 security configuration finding(s)" };
+        AiTriageService.ComputeAttentionHash(same1).Should().Be(AiTriageService.ComputeAttentionHash(same2));
 
-        AiTriageService.ComputeAttentionHash(a).Should().Be(AiTriageService.ComputeAttentionHash(b));
-    }
+        AiTriageService.ComputeAttentionHash(new List<string> { "x is unavailable" })
+            .Should().NotBe(AiTriageService.ComputeAttentionHash(new List<string> { "y is unavailable" }));
 
-    [Fact]
-    public void ComputeAttentionHash_DifferentItems_ProduceDifferentHash()
-    {
-        var a = new List<string> { "x is unavailable" };
-        var b = new List<string> { "y is unavailable" };
-
-        AiTriageService.ComputeAttentionHash(a).Should().NotBe(AiTriageService.ComputeAttentionHash(b));
-    }
-
-    [Fact]
-    public void ComputeAttentionHash_IsLowercaseSha256Hex()
-    {
         AiTriageService.ComputeAttentionHash(new List<string> { "a" })
             .Should().MatchRegex("^[0-9a-f]{64}$");
     }
@@ -213,36 +204,25 @@ public class AiTriageServiceTests
     }
 
     [Fact]
-    public void NarrativeFallback_AllHealthy_SaysSo()
+    public void NarrativeFallback_SaysAllClear_OrToRunARefreshWhenThereIsNoScan()
     {
-        var facts = new StatusFacts { TotalServices = 8, ActiveServices = 8, HealthPercent = 100 };
+        var healthy = new StatusFacts { TotalServices = 8, ActiveServices = 8, HealthPercent = 100 };
+        AiTriageService.BuildNarrativeFallback(healthy).Should().Contain("All 8 apps are responding normally.");
 
-        AiTriageService.BuildNarrativeFallback(facts)
-            .Should().Contain("All 8 apps are responding normally.");
+        AiTriageService.BuildNarrativeFallback(new StatusFacts()).Should().Contain("Run a refresh");
     }
 
+    // Both sides of the cache key's one rule: it moves on a fact that matters, and only then.
     [Fact]
-    public void NarrativeFallback_NoScanData_SaysToRunARefresh()
-    {
-        AiTriageService.BuildNarrativeFallback(new StatusFacts())
-            .Should().Contain("Run a refresh");
-    }
-
-    [Fact]
-    public void FactHash_IgnoresSubDollarCostDrift_SoTheCacheCanActuallyHit()
+    public void FactHash_IgnoresSubDollarCostDrift_ButChangesWhenAServiceGoesDown()
     {
         // Hashing raw cents would make every scan look "changed" and the model would be
         // re-called on every single refresh — the cache would never hit.
         var a = new StatusFacts { Cost30Days = 12.08 };
         var b = new StatusFacts { Cost30Days = 12.41 };
-
         AiTriageService.ComputeAttentionHash(a.ToHashInputs())
             .Should().Be(AiTriageService.ComputeAttentionHash(b.ToHashInputs()));
-    }
 
-    [Fact]
-    public void FactHash_ChangesWhenAServiceGoesDown()
-    {
         var before = new StatusFacts { TotalServices = 4, ActiveServices = 4, HealthPercent = 100 };
         var after = new StatusFacts
         {

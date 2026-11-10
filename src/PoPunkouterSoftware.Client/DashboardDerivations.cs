@@ -302,6 +302,22 @@ public static partial class DashboardDerivations
             .Where(n => !string.IsNullOrWhiteSpace(n))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
+        // The concrete finding per resource name, printed under the concern. Downtime first: its
+        // cause and fix is the one a reader acts on.
+        var details = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
+        void Note(string? name, string? text)
+        {
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(text)) return;
+            if (!details.TryGetValue(name, out var list)) details[name] = list = [];
+            if (!list.Contains(text)) list.Add(text);
+        }
+        foreach (var d in r.DowntimeDiagnoses ?? [])
+            Note(d.Name, string.IsNullOrWhiteSpace(d.SuggestedFix) ? d.LikelyCause : $"{d.LikelyCause} Fix: {d.SuggestedFix}");
+        foreach (var s in (r.StorageInventory ?? []).Where(s => s.IssueCount > 0))
+            foreach (var i in s.Issues ?? []) Note(s.Name, i.Issue);
+        foreach (var d in (r.ConfigDrift ?? []).Where(d => d.IssueCount > 0))
+            foreach (var i in d.Issues ?? []) Note(d.Name, i.Issue);
+
         var resources = r.AllResourceSummary?.ResourcesByType.Values.SelectMany(items => items).ToList() ?? [];
         if (resources.Count == 0)
         {
@@ -345,7 +361,8 @@ public static partial class DashboardDerivations
                 Risk: risks.Count == 0 ? "None" : string.Join(", ", risks.Distinct()),
                 Requests7d: portfolio?.Requests7d ?? service?.Metrics7Days?.Requests ?? 0,
                 Errors7d: portfolio?.Http5xx7d ?? service?.Metrics7Days?.Http5xx ?? 0,
-                ResponseTimeMs: portfolio?.ResponseTimeMs ?? service?.Connectivity?.ResponseTime
+                ResponseTimeMs: portfolio?.ResponseTimeMs ?? service?.Connectivity?.ResponseTime,
+                Detail: details.TryGetValue(resource.Name, out var found) ? string.Join("; ", found) : null
             ));
         }
 

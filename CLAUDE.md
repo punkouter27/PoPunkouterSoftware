@@ -25,7 +25,7 @@ A first `/settings` (2026-10-04 to 2026-10-19) was deleted: reachable only from 
 its four controls saved and read by nothing, two duplicating palette commands, and its heading
 icon rendering as the word "PALETTE". The owner then asked for a settings page that puts
 optional features behind toggles defaulting to the simplest set, and the rebuild keeps the
-rules the first one broke: it is the **only** home of theme, density, sound and effects (the
+rules the first one broke: it is the **only** home of theme, density, sound and details (the
 palette's toggles were removed, it has one "Go to Settings" row), it is reachable from Ctrl+K (its header link is hidden since 2026-10-20 — see "The header
 is just the brand" below), every
 control is read by something, and every default is the simplest choice. All four go through
@@ -54,7 +54,7 @@ Standing instructions from the owner. They outrank default habits and apply to e
   One line, casual — "fixed the busted app cards", "cleaned up the dead scan code". No formal
   subject/body essays, no bullet lists, no changelog voice.
 - **Restart the app after any code change and confirm it came back up.** `./SCRIPTS/run-dev.ps1`,
-  then check it actually serves (`/healthz` returns 200) before claiming the change works. A build
+  then check it actually serves (`/health/live` returns 200) before claiming the change works. A build
   that compiles is not a running app — and this project's stale-process footgun means a "successful"
   build can leave the old binary serving on :8000.
 - **No `dotnet user-secrets`.** Local config goes in `appsettings*.json`; real secrets go in the
@@ -249,7 +249,7 @@ Unreal NNE) went 2026-11-03 (owner's call); NNE now sits in PoSlapUnreal's Uniqu
 Outward links come from a scan step (`.PublicLinks`): an ANONYMOUS GET, through
 `public-api` and never the GitHub PAT, of github.com/<githubRepo> and of the Play Store page
 for each catalog `androidPackage`, stored as `AzureReport.PublicLinks`. `PortfolioApp.SourceUrl`
-is hidden only when that check saw a 404 (private — PoMemeVideo); `PlayStoreUrl` appears only
+is hidden only when that check saw a 404 (a private repo); `PlayStoreUrl` appears only
 once the listing answers, so a game shows "Google Play" the night after it is published. On
 2026-11-03 every game's package id 404'd (unpublished), so none is linked yet. The RL training
 cell links to the repo folder in `AppStack.TrainingPath`. A Hosting column was removed 2026-11-03 (owner's call). Real-time
@@ -281,7 +281,7 @@ The data is `PortfolioApp.Stack` (`AppStack`), built by `AppStackBuilder`: Data 
 the shared PoShared group and the inventory cannot say which app uses which. Those blocks
 were filled 2026-11-03 from each repo's `Directory.Packages.props` and CLAUDE.md — when an
 app changes its database, AI or sign-in, its `stack` block is the line to change.
-PoMemeVideo's repo is private, so its row was filled 2026-11-03 from what is public or ours: its compiled WASM client (AI director, AI Vision frame labels, optional transcription), its `/api/config` (`useMockAI: false`, `transcriptionEnabled: false`) and its `kv-poshared2` secret names. Its configured `gpt-4o` deployment does NOT exist on `po-aiservices-shared2`.
+PoMemeVideo was deleted from Azure and the catalog on 2026-11-07; its history rows age out of the uptime grid within 30 days.
 
 **The report cache is server-side and must stay off the web root.** `ReportFileCache` keeps two
 paths apart on purpose: `GetCatalogDir` is `wwwroot/data` and holds **only** `apps.json`, which is
@@ -292,7 +292,7 @@ every resource id, cost figures and SSL state, and it was committed to the repo 
 never had a browser consumer. Do not put it back under any served directory, and do not "fix" a
 future leak with a static-file exclusion when the file simply does not belong there.
 `App_Data/` is gitignored; the Integration fixture seeds its own copy (see below).
-Local screenshot captures live there too (`App_Data/screenshots`, `GetScreenshotsDir`): they sat
+Local screenshot captures lived there too (`App_Data/screenshots`, removed 2026-11-07 with in-process capture): they sat
 in the Client's `wwwroot/screenshots`, were committed, churned the tree on every local capture,
 and were served statically beside `/api/portfolio/screenshots/{host}`. Production reads blobs.
 
@@ -328,7 +328,9 @@ it used to be two lists, plus count badges that repeated two of the sentences. T
 evidence" disclosure is gone (every row was already a "Remove Candidate" in the queue, with a
 second snooze button), and so is the 30-day history disclosure with its `/api/diag/history`
 endpoint (both charts were the hero sparklines' series). The resource explorer is a table, not
-a card per resource. Methodology and owner-facing config text (uptime method, budget key,
+a card per resource, and opens on "Needs a look" (rows with a concern; "All" is the other
+chip) — 2026-11-07, when "All" was 58 rows around 8 worth reading. Each row prints its finding under the concern (`ResourceExplorerItem.Detail`: downtime cause and fix, storage and config issues), which replaced the drawer's "Evidence" disclosures; scan step timings left the UI (log + Report JSON). The scan no longer flags
+Always-On on F1/D1 plans, which cannot enable it: it marked every Po app "Drift". Methodology and owner-facing config text (uptime method, budget key,
 management flag, cold starts) lives in an icon-only `AppHint`, not a paragraph.
 
 **One design system, two dials.** Everything visual resolves from the token block at the top of
@@ -348,8 +350,10 @@ management flag, cold starts) lives in an icon-only `AppHint`, not a paragraph.
   kicker.
   **A literal below that floor is now the app's smallest text**, which is why `AzureDashboard.razor.css`
   no longer carries a parallel scale in raw rems: eleven declarations between .68 and .75rem are now
-  `var(--app-step--2)`. The same sweep has NOT been done everywhere — Index/PortfolioStackTable/SignIns
-  still hold literals in the 0.78–0.85rem band, which sit *above* the floor and are left alone.
+  `var(--app-step--2)`. The sweep was finished 2026-11-07 (the command palette held two 0.72rem
+  labels and chart axis text was 10px, both below the floor). Every text size is now a step; the
+  only literals left are icon glyph sizes, which are not type, and the palette input's 1rem,
+  which must stay 16px or iOS zooms the page when it is focused.
 
 (A third, `--app-viewport-fit`, sized the phone pager's panes and went with it.)
 
@@ -406,7 +410,7 @@ no scroller at all.
   Steps live in `.Discovery`, `.Metrics`, `.Cost`, `.Security`, `.Inventory`, `.Cleanup`,
   `.GitHubCorrelation`, `.Helpers`.
 - `AzureDashboard.razor.cs` — state, lifecycle, loading, refresh, SignalR. Display mapping in
-  `.Presentation`, sonification in `.Audio`. The pure projections are NOT a partial-class aspect any
+  `.Presentation`, refresh sound cues in `.Audio`. The pure projections are NOT a partial-class aspect any
   more: they live in `DashboardDerivations.cs`, a plain `public static` class, because as private
   members of the component ~460 lines of impact scoring, actionability tiering and cleanup
   reasoning were unreachable from a test even though both test projects reference this assembly.
@@ -415,7 +419,7 @@ no scroller at all.
   `DashboardDerivationsTests`. Markup blocks are
   sibling components in the client root (`AzureStatusNarrative`, `AzureWhatChanged`,
   `AzureCostForecast`, `AzureUptimeHeatmap`, `Sparkline`, `AzurePriorityQueue`,
-  `AzureResourceExplorer`, `AzureEvidenceDisclosures`, `AzureAppDetail`),
+  `AzureResourceExplorer`, `AzureAppDetail`),
   plus the shared `AppDrawer`.
 
 ## Graphics and audio
@@ -426,12 +430,12 @@ comment in each before changing it; they document the reasoning, this is the map
 | File | Role |
 |---|---|
 | `motion-kit.js` | **The frame governor.** ONE `requestAnimationFrame` loop for the whole app, one gate (reduced-motion / hidden / blur / no runnable subscriber), and an adaptive quality controller. Must load first. |
-| `audio-kit.js` | Programmatic Web Audio — synthesis only, **zero audio assets**. UI SFX, the refresh drone (plus a sub "boom" and a three-note outcome motif at its end), the `/azure` sonification, and the analyser tap the shaders read. Everything runs through one synthesised-impulse convolution reverb send. |
-| `gpu-backdrop.js` | Orchestrator for `#app-gpu-backdrop`: tier selection, colour tokens, glass rects, audio energy, and the DOM reads that feed the simulations (pointer stir, `[data-fx-flock]` homes, uptime-scar seeds, palette lens/jump, the hero orb canvas). Owns no pixels. |
-| `gfx-webgl.js` | WebGL2 renderer (curl-noise field, stable-fluids sim, transform-feedback particles with per-service flocks, dual-Kawase blur + bloom, Gray-Scott scars, glass composite with prism edges) with a WebGL1 field-only fallback. **The top of the ladder.** Also `createOrb()`, the hero's metaball health orb on its own small canvas. |
+| `audio-kit.js` | Programmatic Web Audio — synthesis only, **zero audio assets**. UI SFX, the refresh drone (plus a sub "boom" and a three-note outcome motif at its end), and the analyser tap the shaders read. Everything runs through one synthesised-impulse convolution reverb send. |
+| `gpu-backdrop.js` | Orchestrator for `#app-gpu-backdrop`: tier selection, colour tokens, glass rects, audio energy, and the DOM reads that feed the event effects (attractors, origins, the palette lens). Owns no pixels. |
+| `gfx-webgl.js` | WebGL2 renderer (curl-noise field, transform-feedback particles, dual-Kawase blur + bloom, glass composite with prism edges) with a WebGL1 field-only fallback. **The top of the ladder.** |
 | `ui-physics.js` | Physics on the DOM, not a canvas: KPI values count up on a spring. (The catalogue-card tilt went with the cards, 2026-11-03.) Per-frame work is motionKit subscribers that unsubscribe when settled. |
 | `helpers.js` | Topbar, clipboard, download, `appRevealFocus` (the `/azure?focus=` scroll), `appShowDialog` (opens an `AppDrawer`) — plus the Radzen accessibility repairs (`appRepairRadzenA11y`). Unrelated to the animation layers. (The `appMedia` matchMedia bridge went with the resource explorer's data-grid branch — it had exactly one caller.) |
-| `theme-kit.js` | The visitor's light/dark choice and the compact-density flag, plus `window.appSettings` — the one facade `/settings` reads (`read()` → `theme|density|sound|fx`) and writes all four preferences through. Applies `data-app-theme` to `<html>` and rewrites the two Radzen theme sheets' `media` attributes. Must load before Blazor. |
+| `theme-kit.js` | The visitor's light/dark choice and the compact-density flag, plus `window.appSettings` — the one facade `/settings` reads (`read()` → `theme|density|sound|details`) and writes all four preferences through. Applies `data-app-theme` to `<html>` and rewrites the two Radzen theme sheets' `media` attributes. Must load before Blazor. |
 | `app-boot.js` | Host-page boot: dismisses the loading splash, drives the nav progress bar, filters hot-reload console noise. Not an animation layer — no rAF. Was inline in `App.razor` until the CSP banned inline script. |
 | `blazor-hooks.js` | Registers the enhanced-navigation callbacks. Must load **after** `blazor.web.js`, which defines `Blazor`. Also ex-inline. |
 | `command-palette.js` | Ctrl+K / Cmd+K overlay: navigation (Settings included — it holds no setting toggles of its own), and a launcher — open / copy link / show uptime / repo / GitHub Actions for every app (from `/api/portfolio`, fetched on first open; repo rows come from the catalog's `githubRepo`. There is deliberately no Azure portal row: a portal deep link carries the subscription id every anonymous endpoint here masks) plus "Rescan Azure" when management actions are on. Fuzzy matching is hand-written: the CSP's `script-src 'self'` rules out a CDN library. |
@@ -439,9 +443,8 @@ comment in each before changing it; they document the reasoning, this is the map
 **There is no service worker and no offline mode** (owner's call, 2026-10-19). One served every
 page and script cache-first under a hand-bumped cache name, so a returning visitor saw the
 PREVIOUS deploy until someone remembered to bump it — observed live: a header with no Settings
-link. `wwwroot/service-worker.js` survives only as a self-removing stub (deletes its caches,
-unregisters, has no fetch handler) because a browser that installed the old one keeps it until
-that URL serves a replacement. Nothing registers it. Delete the file once old installs have aged out.
+link. A self-removing stub served at that URL for three weeks so old installs could unregister;
+it and the PWA `manifest.json` were deleted 2026-11-07.
 
 **One rAF loop, and reduced motion stops it.** Every animated layer is a named `motionKit`
 subscriber. Nothing else may call `requestAnimationFrame` for animation. The governor's gate
@@ -460,14 +463,12 @@ backdrop as every other page.
 **Silence is the default and it is an accessibility floor.** `audioKit.enabled` starts false;
 the `AudioContext` is not even *constructed* until a user gesture, because one built during
 page load is a suspended context that silently swallows sound plus an unrequested hardware
-claim. Sound is switched on from `/settings` or `/azure`'s Listen
-button; the header toggle and its `[data-sound-toggle]` wiring went on 2026-10-05.
+claim. Sound is switched on from `/settings` only (`/azure`'s Listen button went 2026-11-07); the header toggle and its `[data-sound-toggle]` wiring went on 2026-10-05.
 `[data-sfx]` / `[data-sfx-hover]` are wired by **delegation on `document`** (enhanced
-navigation re-inserts the header, so a direct listener would be lost or double-bound). Sound carries information in two places — the
+navigation re-inserts the header, so a direct listener would be lost or double-bound). Sound carries information in one place — the
 refresh lifecycle (a ~30s scan is exactly how long it takes someone to switch tabs; its end
-is a boom plus a motif that differs for success, recovery, failure and timeout) and the
-`/azure` sonification. Each is a second *modality* on facts already on the page, not a
-second copy of them. Only primitives cross the interop boundary.
+is a boom plus a motif that differs for success, recovery, failure and timeout): a second
+*modality* on a fact already on the page, not a second copy of it. Only primitives cross the interop boundary.
 
 **The backdrop is a capability ladder**: WebGL2 → WebGL1 → the CSS grid in
 `modern-ui.css`. Every rung degrades silently to the next and records the outcome in
@@ -495,35 +496,20 @@ gate, so the dashboard's existing `audioKit.refresh*` calls drive both layers an
 references the other. Deferred effects run on a frame-advanced clock, not wall time, so a
 scan that ends in a background tab plays its shockwave on return.
 
-Added 2026-10-19, each documented in its shader's comment. **Fluid (and the scars that need
-it), flocks, the orb and the palette jump are opt-in** — `/settings` → Effects → Full
-(`localStorage` `pops:fx`, `appFx.setFull`). The default "Simple" set is the field,
-particles, glass, bloom and the scan effects, so it is the one that has to look finished:
-- **Fluid.** A ~128-cell stable-fluids step (splat → advect → divergence → 12 Jacobi →
-  gradient) displaces the field and carries the particles. The pointer stirs it; the
-  shockwave, bursts and the palette jump splat into it; glass rects add drag so flow bends
-  around cards. Needs `EXT_color_buffer_float`; without it the sims are simply off.
-- **Flocks.** `[data-fx-flock="up|warn|down"]` (uptime row labels, ≤8) gives each service a
-  slice of 35% of the particles, coloured by health, circling a point beside its row (or
-  a slow Lissajous path when the row is off screen). Separation comes from a splatted
-  density field — its gradient is CAPPED, because uncapped it smeared every flock into a band.
-- **Scars.** Gray-Scott coral grows out of the uptime card's edges beside each row with bad
-  days, radius scaled by them. It runs on **RGBA32F**: on half float the per-step increments
-  near 1.0 round away and the pattern silently stays a dot. It is stamped once, noisily — a
-  constant point source grows concentric target rings, not coral.
+**There is one effects set (2026-11-07).** /settings used to offer Effects → Full, adding a
+stable-fluids sim, per-service particle flocks, Gray-Scott "scars" around the uptime card, a
+metaball health orb in the hero and a hyperspace jump on palette navigation. Few visitors
+ever chose it, it was about half of `gfx-webgl.js` and needed float render targets, and it
+more than doubled the measured dispatch cost (~6.4ms against ~1.6ms). All of it went, with
+the Effects row, `appFx.setFull`, `pops:fx` (cleared on load), `[data-fx-flock]`,
+`canvas[data-fx-orb]` and the `is-palette-jump` screen blend. What stays is what everyone saw:
 - **Bloom and prism edges** in the composite: bloom reuses the Kawase pyramid plus one
   quarter-res step; glass edges split R/B along the edge normal, strongest near the pointer.
-- **Hero orb** (`canvas[data-fx-orb]`, its own context: the hero is 88% opaque glass, so the
-  backdrop would show through at 12%). Wyvill-kernel metaballs, one bead per service; the
-  1/d² kernel's singularities cratered the shading. Hidden by CSS until it is drawing.
 - **Palette** (`app:palette` events from `command-palette.js`): a lens toward the open
-  palette; navigating plays a hyperspace jump (particles + fluid rush out, radial streaks),
-  the target header link morphs into the new h1 through a View Transition, and in **dark
-  theme only** the canvas is screened over the page for ~0.9s (on a light page it whited out).
+  palette, and the header brand morphs into the new h1 through a View Transition.
 
 **Sound and touch follow the visitor's one opt-in.** `[data-sfx]` clicks are panned to the
-element's screen position; the sonification's stereo width *is* fleet health and its ticks
-walk left→right. `navigator.vibrate` mirrors the outcome sounds and sits behind the same
+element's screen position. `navigator.vibrate` mirrors the outcome sounds and sits behind the same
 `enabled` flag — no buzz for a visitor who never turned feedback on.
 
 **Four pieces of polish are plain CSS/platform.** MetricBars spring in on `--app-ease-bounce`
@@ -621,12 +607,9 @@ proves a context and program were created, not that anything reached the screen.
   of the deleted Session/Logout slot, had no caller left, and were removed under the
   "every endpoint needs a consumer" rule — `/api/config` is now the only route in the Config slice.
   Do not add a real identity provider unless the owner reverses this.
-- **The header is just the brand, at every width.** The four links stay in `MainLayout`'s markup
-  but are `display: none` everywhere (owner's call, 2026-10-20: "the links exist but hidden from
-  UI"; phones only since 2026-10-19, when a hamburger drawer that dropped over the page went).
-  The other pages are reached from the brand link home, the 404 page's list, Ctrl+K, or a typed
-  URL. The palette's View Transition still looks the link up and simply finds it unrendered.
-  The empty `.app-topbar-session` div is a leftover spacer from the centred nav.
+- **The header is just the brand, at every width.** The four page links were hidden on
+  2026-10-20 and removed from `MainLayout` on 2026-10-30. The other pages are reached from the
+  brand link home, the 404 page's list, Ctrl+K, or a typed URL.
 - **No login UI in the header, deliberately.** `MainLayout.razor` is statically server-rendered
   (`<Routes />` carries no render mode), so `@onclick` never fires and its injected `HttpClient` has
   no `BaseAddress`. A Session/Logout slot and "MOCK DATA" banner were built, could never render, and
@@ -734,7 +717,7 @@ proves a context and program were created, not that anything reached the screen.
   needs Website Contributor, which infra deliberately does not grant — it 403s cleanly there.
   Note a local Development run restarts the REAL site with your `az login`.
 - **Routing.** `/api/diag/*` and `/api/portfolio/*` use `MapGroup`. `/health` (deep probe, one
-  `IHealthCheck` per external dependency) and `/healthz` (static liveness) sit off the `/api` group.
+  `IHealthCheck` per external dependency) and `/health/live` (static liveness) sit off the `/api` group.
   **`/openapi/v1.json` and `/scalar/v1` are mapped only outside Production** — they were
   unconditional, so the live site published its full route table, parameter shapes and response
   schemas (management routes included) to anonymous callers, for an API whose only client is
@@ -1011,7 +994,7 @@ served until the facts happen to change. It produces the
   Material Symbols variable font (~3,600 glyphs, 1,068,920 bytes) and self-hosts it as family
   `"Material Symbols"`. This app draws about thirty of those glyphs, so
   [SCRIPTS/Build-IconFontSubset.py](SCRIPTS/Build-IconFontSubset.py) builds
-  `wwwroot/fonts/material-symbols-subset.woff2` (17,344 bytes, from the Radzen version pinned in
+  `wwwroot/fonts/material-symbols-subset.woff2` (16,744 bytes, from the Radzen version pinned in
   `Directory.Packages.props` — the script used to take the "newest" cache folder by string
   sort, which picked 8.7.3) and `modern-ui.css` declares the
   family against that. **Material Symbols renders through LIGATURES** — the element's text is the
@@ -1074,23 +1057,20 @@ served until the facts happen to change. It produces the
 - **UI tests must cover both viewports.** `PortfolioUiTests` drives every test at mobile-portrait
   (390×844) and desktop-landscape (1440×1000) through the shared `Viewports` theory data. Visual
   parity is a hard rule, not a preference.
-- **Screenshots pin `PLAYWRIGHT_BROWSERS_PATH`** to the persistent `%HOME%` share and install only
-  the Chromium headless shell — the worker's ephemeral disk previously filled with a full Chromium
-  download and broke every deployment (2026-07-10). Kill switch:
-  `FeatureFlags:EnableScreenshots=false`. Since 2026-10-05, a cache miss on
-  `GET /api/portfolio/screenshots/{host}` launches a headless browser and captures that host on
-  demand (`AppScreenshotService.CaptureOneAsync`). While the flag is on, every card gets a
-  `screenshotUrl` even if no image exists yet. On-demand capture never waits behind a batch run,
-  and it backs off for 30 minutes after a failure. That endpoint is anonymous, so leave the flag
-  off anywhere a crawler can reach. In-process capture is off in Production for that reason,
-  and `appsettings.json` said the capture happened in `screenshots.yml` instead — **a workflow that
-  did not exist**, so every production card rendered `screenshotUrl: null` for months. It exists now
-  (see CI/CD below) and writes the same container, blob names and viewport as `AppScreenshotService`,
-  so the two paths are interchangeable. Serving those blobs also needs `AzureBlobStorage:Endpoint`,
-  without which `GetContainerAsync` returns null and stored images never appear —
-  indistinguishable from never having captured any.
+- **Screenshots are captured ONLY by `screenshots.yml`; the app only reads them**
+  (`AppScreenshotStore`). Until 2026-11-07 the app also captured in-process with Playwright —
+  after each scan, on a stale home page, and on a cache miss at the anonymous
+  `GET /api/portfolio/screenshots/{host}` — behind `FeatureFlags:EnableScreenshots`. It could
+  never run in Production (the F1 sandbox has no Chromium; an install once filled the worker
+  disk and broke every deploy, 2026-07-10), it was a second copy of the workflow's capture (a
+  WebGL launch fix had to land in both), and it put a headless browser behind an anonymous URL.
+  The flag, the Playwright reference in Infrastructure and `App_Data/screenshots` all went with
+  it. A card gets `screenshotUrl` only when a blob exists; locally that is whatever Azurite
+  holds, so a new app shows its placeholder until a capture lands. Serving the blobs needs
+  `AzureBlobStorage:Endpoint` in Azure, without which `GetContainerAsync` returns null and stored
+  images never appear — indistinguishable from never having captured any.
 
-## Tests — four projects, one per tier (budget 100/50/25/25, currently 100/45/21/24)
+## Tests — four projects, one per tier (budget 100/50/25/25, currently 91/42/21/24)
 
 **The budget is a ceiling, not a target.** All four tiers are at or under it. Adding a test means
 finding one to remove, so prefer widening an existing test's assertions to adding a new method — the
@@ -1145,7 +1125,7 @@ three tiers still run locally before a push.
 
 - [deploy.yml](.github/workflows/deploy.yml) — build, **unit tests**, back up, deploy, **smoke
   test**, roll back. The live site is downloaded through Kudu's zip API (same OIDC identity)
-  before the deploy; afterwards `/healthz`, `/health` and `/api/diag/summary` (200, or 404
+  before the deploy; afterwards `/health/live`, `/health` and `/api/diag/summary` (200, or 404
   before any scan) must answer within ~3 minutes of retries, or the backup is redeployed, the
   job goes red and ntfy is told. No backup (first deploy, SCM down) means no rollback, with a
   warning. Target is App
@@ -1188,7 +1168,7 @@ three tiers still run locally before a push.
   `app-screenshots` blob container under the host name
   the card looks up. A second pass calls PageSpeed Insights (mobile; `PAGESPEED_API_KEY`
   optional) and MERGES the scores into `lighthouse.json` in the same container, which
-  `AppScreenshotService.LoadScoresAsync` reads into `PortfolioApp.Scores` — the card's chips.
+  `AppScreenshotStore.LoadScoresAsync` reads into `PortfolioApp.Scores` — the card's chips.
   The merge also appends each scored host's performance to `performanceHistory` (30 nights),
   the sparkline on the card's foot line. **Anonymous PageSpeed calls answer 429**: the run on
   2026-10-30 scored 0/19 and production `lighthouse.json` holds no scores, so neither the

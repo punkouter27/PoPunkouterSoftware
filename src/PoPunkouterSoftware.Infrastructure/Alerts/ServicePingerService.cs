@@ -219,7 +219,9 @@ public sealed partial class ServicePingerService : BackgroundService
         {
             using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             cts.CancelAfter(TimeSpan.FromSeconds(14));
-            var resp = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token);
+            // Disposed: with ResponseHeadersRead the body is never read, so an undisposed response
+            // held its pooled connection until a GC — about eleven probes every ten minutes.
+            using var resp = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cts.Token);
             sw.Stop();
             var status = (int)resp.StatusCode < 500 ? "reachable" : "degraded";
             return new PingResult(name, friendlyName, url, status, sw.ElapsedMilliseconds, null, DateTime.UtcNow);

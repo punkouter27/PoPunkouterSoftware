@@ -100,7 +100,9 @@ public partial class AzureReportService
                 if (cfg.MinTlsVersion is not null &&
                     string.Compare(cfg.MinTlsVersion.ToString(), "1.2", StringComparison.Ordinal) < 0)
                     issues.Add(new ConfigIssue { Severity = "high", Issue = $"Min TLS {cfg.MinTlsVersion} — must be ≥1.2" });
-                if (cfg.IsAlwaysOn == false)
+                // Free (F1) and Shared (D1) plans cannot turn Always-On on, so flagging it there
+                // marked every Po app "Drift" and buried the findings that can be acted on.
+                if (cfg.IsAlwaysOn == false && svc.AppServicePlanSku is not ("F1" or "D1"))
                     issues.Add(new ConfigIssue { Severity = "low", Issue = "Always-On disabled (cold starts)" });
                 if (cfg.Cors?.AllowedOrigins?.Contains("*") == true)
                     issues.Add(new ConfigIssue { Severity = "medium", Issue = "CORS * — all origins allowed" });

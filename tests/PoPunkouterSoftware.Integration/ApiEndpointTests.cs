@@ -41,7 +41,7 @@ public class HealthEndpointTests
     [Fact]
     public async Task GetLiveness_Returns200()
     {
-        var response = await _client.GetAsync("/healthz");
+        var response = await _client.GetAsync("/health/live");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 }

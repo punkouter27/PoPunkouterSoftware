@@ -273,7 +273,11 @@ public class DashboardDerivationsTests
             },
             StorageInventory =
             [
-                new StorageItem { Name = "leakystorage", ResourceGroup = "rg", IssueCount = 1, PublicBlobAccess = true },
+                new StorageItem
+                {
+                    Name = "leakystorage", ResourceGroup = "rg", IssueCount = 1, PublicBlobAccess = true,
+                    Issues = [new StorageIssue { Severity = "high", Issue = "Public blob access" }],
+                },
             ],
             AllResourceSummary = new AllResourceSummaryInfo
             {
@@ -304,6 +308,8 @@ public class DashboardDerivationsTests
         var leaky = rows.Single(r => r.Name == "leakystorage");
         leaky.Risk.Should().Contain("Security");
         leaky.Type.Should().Be("Storage Accounts");
+        leaky.Detail.Should().Be("Public blob access", "the finding prints under the concern");
+        rows.Single(r => r.Name == "PoWell").Detail.Should().BeNull();
 
         DashboardDerivations.BuildResourceExplorerItems(null, [], []).Should().BeEmpty();
     }

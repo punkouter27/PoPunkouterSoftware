@@ -7,8 +7,8 @@ name: Capture app screenshots
 # GitHub Action captures nightly into the same blob container".
 #
 # That workflow did not exist. Every production card rendered with screenshotUrl: null.
-# This is it: same container, same blob names, same viewport as AppScreenshotService, so the
-# two paths are interchangeable and /api/portfolio/screenshots/{host} serves either.
+# This is it, and since 2026-11-07 it is the ONLY capture: the app's in-process Playwright path
+# was removed, and AppScreenshotStore just reads what this writes.
 #
 # AUTH: uploads with the storage account key, fetched at run time through ARM by the same
 # OIDC identity deploy.yml already uses. That identity has Contributor on the resource group
@@ -43,7 +43,7 @@ env:
   STORAGE_ACCOUNT: 'stpopunkoutersoftware2'
   STORAGE_RG: 'PoPunkouterSoftware'
   CONTAINER: 'app-screenshots'
-  # Must match AppScreenshotService's ViewportWidth/ViewportHeight: the cards display the
+  # The cards display the
   # PNG at a fixed aspect ratio, so a different capture size letterboxes every thumbnail.
   VIEWPORT_WIDTH: '390'
   VIEWPORT_HEIGHT: '844'
@@ -73,7 +73,7 @@ jobs:
       # cannot drift from the render set. Waking the site first: F1 has no Always-On, and a
       # cold start answers the first request slowly rather than not at all.
       - name: Wake the site
-        run: curl -fsS --max-time 180 --retry 3 --retry-all-errors "$SITE_URL/healthz" > /dev/null
+        run: curl -fsS --max-time 180 --retry 3 --retry-all-errors "$SITE_URL/health/live" > /dev/null
 
       - name: Capture screenshots
         run: |
@@ -90,7 +90,7 @@ jobs:
           if (!res.ok) throw new Error(`portfolio fetch failed: ${res.status}`);
           const { apps } = await res.json();
 
-          // One blob per HOST, lowercased — AppScreenshotService.HostOf's contract, and what
+          // One blob per HOST, lowercased — AppScreenshotStore.HostOf's contract, and what
           // /api/portfolio/screenshots/{host} looks up.
           const targets = [];
           for (const app of apps ?? []) {
@@ -101,7 +101,8 @@ jobs:
           console.log(`${targets.length} targets`);
           writeFileSync('targets.json', JSON.stringify(targets));
 
-          const browser = await chromium.launch();
+          // No GPU on the runner: SwiftShader gives the Unity games WebGL.
+          const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
           let captured = 0;
           for (const { host, url } of targets) {
             const page = await browser.newPage({
@@ -223,7 +224,7 @@ jobs:
 
           # Scores MERGE into last night's file rather than replacing it: an app PageSpeed
           # could not reach tonight keeps yesterday's numbers instead of losing its chips.
-          # Same container, so AppScreenshotService reads it with the credential it already has.
+          # Same container, so AppScreenshotStore reads it with the credential it already has.
           # Each scored host also appends tonight's performance to its performanceHistory
           # (last 30 nights): the trend line on the card. A host scored before the history
           # existed seeds it with its stored score, so the line starts with two points.

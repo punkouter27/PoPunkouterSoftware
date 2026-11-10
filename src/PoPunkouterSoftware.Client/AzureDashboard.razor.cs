@@ -54,8 +54,12 @@ public partial class AzureDashboard
     private List<ResourceExplorerItem> ResourceExplorerItems => _resourceExplorerItems;
     private List<ResourceExplorerItem> FilteredResourceExplorerItems => _filteredResourceExplorerItems;
 
-    private static readonly string[] ResourceViews = ["All", "Unhealthy", "Waste", "Security", "Drift"];
-    private string _resourceView = "All";
+    // Opens on the flagged rows only: "All" was 58 rows of storage accounts, plans and
+    // healthy sites around a handful worth reading. Per-concern chips went with it — the
+    // Concern column already names each row's reason, and the flagged list is short.
+    private const string FlaggedView = "Needs a look";
+    private static readonly string[] ResourceViews = [FlaggedView, "All"];
+    private string _resourceView = FlaggedView;
 
     private void RebuildDerivedState()
     {
@@ -73,14 +77,7 @@ public partial class AzureDashboard
 
     private void ApplyResourceFilter() =>
         _filteredResourceExplorerItems = _resourceExplorerItems
-            .Where(item => _resourceView switch
-            {
-                "Unhealthy" => item.Risk.Contains("Unhealthy", StringComparison.OrdinalIgnoreCase),
-                "Waste" => item.Risk.Contains("Waste", StringComparison.OrdinalIgnoreCase),
-                "Security" => item.Risk.Contains("Security", StringComparison.OrdinalIgnoreCase),
-                "Drift" => item.Risk.Contains("Drift", StringComparison.OrdinalIgnoreCase),
-                _ => true,
-            })
+            .Where(item => _resourceView != FlaggedView || item.Risk != "None")
             .ToList();
 
     private bool _refreshing;
@@ -138,7 +135,7 @@ public partial class AzureDashboard
     {
         try
         {
-            var resp = await Http.PostAsync($"/api/diag/restart/{Uri.EscapeDataString(item.Item)}", null);
+            using var resp = await Http.PostAsync($"/api/diag/restart/{Uri.EscapeDataString(item.Item)}", null);
             if (resp.IsSuccessStatusCode)
                 NotificationService.Notify(NotificationSeverity.Success, "Restart sent",
                     $"{item.Item} is restarting. Rescan in a minute to see whether it came back.");
@@ -385,7 +382,7 @@ public partial class AzureDashboard
             // Client-side timeout. The server scan would otherwise keep running (and keep the
             // refresh lock) for up to 10 minutes — tell it to stop instead of walking away.
             try
-            { await Http.PostAsync("/api/diag/cancel-refresh", null); }
+            { (await Http.PostAsync("/api/diag/cancel-refresh", null)).Dispose(); }
             catch { }
             NotificationService.Notify(NotificationSeverity.Warning, "Timeout",
                 "Refresh took too long (120s limit); the server scan was cancelled.");
@@ -433,7 +430,7 @@ public partial class AzureDashboard
         }
         // Signal the server to stop the in-progress scan (best-effort — swallow errors).
         try
-        { await Http.PostAsync("/api/diag/cancel-refresh", null); }
+        { (await Http.PostAsync("/api/diag/cancel-refresh", null)).Dispose(); }
         catch { }
         _refreshing = false;
         StateHasChanged();
@@ -469,10 +466,15 @@ public partial class AzureDashboard
 
     private async Task EnsureHubConnectedAsync()
     {
-        if (_hub is not null && _hub.State == HubConnectionState.Connected)
+        if (_disposed || (_hub is not null && _hub.State == HubConnectionState.Connected))
             return;
         if (_hub is not null)
         { await _hub.DisposeAsync(); }
+        // Navigating away during a Rescan disposes the page while RunRefreshAsync is still
+        // awaiting; without this check it built a fresh connection after DisposeAsync had
+        // already run, and nothing would ever dispose that one.
+        if (_disposed)
+            return;
 
         _hub = new HubConnectionBuilder()
             .WithUrl(NavManager.ToAbsoluteUri("/hubs/refresh"))
@@ -540,8 +542,11 @@ public partial class AzureDashboard
         }
     }
 
+    private bool _disposed;
+
     public async ValueTask DisposeAsync()
     {
+        _disposed = true;
         _refreshCts?.Cancel();
         _refreshCts?.Dispose();
         _refreshCts = null;

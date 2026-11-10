@@ -31,7 +31,6 @@ public class AnonymousSurfaceTests(ProductionApp app) : IClassFixture<Production
         "/favicon.ico",
         "/health",
         "/health/live",
-        "/healthz",
         "/hubs/refresh",
         "/hubs/refresh/negotiate",
         "/robots.txt",

@@ -9,14 +9,9 @@ namespace PoPunkouterSoftware.Unit;
 public class RelativeTimeFormatTests
 {
     [Fact]
-    public void NullTimestamp_ReturnsUnknownAge()
+    public void MissingOrUnboundedAge_ReturnsUnknownAge()
     {
         RelativeTime.Format((DateTime?)null).Should().Be("Unknown age");
-    }
-
-    [Fact]
-    public void MaxValueTimeSpan_ReturnsUnknownAge()
-    {
         RelativeTime.Format(TimeSpan.MaxValue).Should().Be("Unknown age");
     }
 

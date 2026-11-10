@@ -1,0 +1,342 @@
+<!doctype html><html lang="en" data-tier="1"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="claude:viewport-fit-sides" content="cover"><title>PoPunkouter User Journeys</title><meta name="description" content="User journeys for PoPunkouterSoftware, commit d5ce203"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Bricolage+Grotesque:opsz,wght@12..96,500..700&family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Geist:wght@400;600&family=Geist+Mono:wght@400;500&display=swap"><style>
+/* Layout: one reading column (prose ~68ch) inside a 74rem frame; sticky control bar on top. */
+:root{
+  --bg:#f3f6f7; --surface:#ffffff; --surface-2:#e8eef0; --fg:#13212a; --muted:#4c5d68; --soft:#6b7b85;
+  --rule:#d2dce0; --accent:#0d6676; --accent-tint:#d7ecef; --signal:#a24f06; --signal-tint:#f8e9d8;
+  --ok:#1d6b3a; --warn:#8a5a00; --bad:#a3262a; --code-bg:#edf2f3;
+  --font-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --step--1:.84rem; --step-0:1rem; --step-1:1.2rem; --step-2:1.5rem; --step-3:clamp(1.8rem,1.4rem + 1.6vw,2.6rem);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d1417; --surface:#141d22; --surface-2:#1b272d; --fg:#e3ecef; --muted:#a1b2bb; --soft:#82949e;
+  --rule:#2a3a42; --accent:#62c4d4; --accent-tint:#173840; --signal:#f2a650; --signal-tint:#3a2a17;
+  --ok:#6fcf8f; --warn:#e7bd55; --bad:#f08a8a; --code-bg:#10191d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1417; --surface:#141d22; --surface-2:#1b272d; --fg:#e3ecef; --muted:#a1b2bb; --soft:#82949e;
+  --rule:#2a3a42; --accent:#62c4d4; --accent-tint:#173840; --signal:#f2a650; --signal-tint:#3a2a17;
+  --ok:#6fcf8f; --warn:#e7bd55; --bad:#f08a8a; --code-bg:#10191d; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:var(--step-0)/1.6 var(--font-body);margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--surface);border-bottom:1px solid var(--rule)}
+.bar__in{max-width:74rem;margin:0 auto;padding-block:.6rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-wrap:wrap;gap:.6rem 1.2rem;align-items:center}
+.brand{font:700 var(--step-0)/1.2 var(--font-display);color:var(--fg);text-decoration:none;letter-spacing:-.01em;margin-right:auto}
+.brand small{display:block;font:500 .72rem/1.3 var(--font-mono);color:var(--soft);letter-spacing:.04em;text-transform:uppercase}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:var(--surface-2)}
+.seg button{font:600 .8rem/1 var(--font-body);color:var(--muted);background:transparent;border:0;padding:.5rem .7rem;cursor:pointer;min-height:36px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--surface)}
+.seg__label{font:500 .7rem/1 var(--font-mono);color:var(--soft);text-transform:uppercase;letter-spacing:.06em;margin-right:.35rem}
+.ctl{display:flex;align-items:center}
+.nav{max-width:74rem;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:.25rem;overflow-x:auto;scrollbar-width:thin}
+.nav a,.nav button{flex:none;font:600 .85rem/1 var(--font-body);color:var(--muted);text-decoration:none;padding:.65rem .75rem;border:0;border-bottom:2px solid transparent;background:none;cursor:pointer}
+.nav [aria-current="page"],.nav [aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+main{max-width:74rem;margin:0 auto;padding-block:2rem 3rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1fr);gap:2.5rem}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;letter-spacing:-.015em;margin:0}
+h1{font-size:var(--step-3);line-height:1.08;font-weight:700}
+h2{font-size:var(--step-2);line-height:1.2;font-weight:650}
+h3{font-size:var(--step-1);line-height:1.3;font-weight:600}
+p{margin:0;max-width:68ch}
+section{display:grid;gap:1rem;min-width:0}
+.kicker{font:500 .74rem/1.2 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.lede{font-size:var(--step-1);line-height:1.5;color:var(--fg);max-width:60ch}
+.muted{color:var(--muted)}
+.eli5{border-left:3px solid var(--accent);padding:.2rem 0 .2rem 1rem;max-width:68ch}
+.eli5::before{content:"In plain English";display:block;font:600 .7rem/1.4 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:.15rem}
+.analogy{display:inline-flex;gap:.4rem;align-items:baseline;flex-wrap:wrap;background:var(--signal-tint);color:var(--fg);border-radius:6px;padding:.35rem .6rem;font-size:.92rem;max-width:100%}
+.analogy b{font:600 .7rem/1.4 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--signal)}
+.tier-tag{justify-self:start;font:600 .66rem/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--rule);border-radius:4px;padding:.25rem .4rem}
+:is(section,div).t2,:is(section,div).t3{display:grid;gap:1rem;min-width:0}
+:root[data-tier="1"] .t2,:root[data-tier="1"] .t3,:root[data-tier="2"] .t3{display:none !important}
+:root:not([data-tier="1"]) .t1only{display:none !important}
+.grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,16rem),1fr))}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:1rem 1.1rem;display:grid;gap:.45rem;align-content:start;min-width:0}
+.card h3{font-size:1.05rem}
+.steps{list-style:none;margin:0;padding:0;display:grid;gap:.75rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));counter-reset:s}
+.steps li{counter-increment:s;background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:.9rem 1rem;display:grid;gap:.3rem;align-content:start;min-width:0}
+.steps li::before{content:"Step " counter(s);font:600 .7rem/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.steps li b{font-family:var(--font-display);font-size:1.02rem}
+.diagram{background:var(--surface);border:1px solid var(--rule);border-radius:8px;padding:1rem;overflow-x:auto;min-width:0}
+.diagram svg{max-width:100%;height:auto;display:block;margin:0 auto}
+.diagram figcaption{font-size:.85rem;color:var(--muted);margin-top:.6rem}
+.mmd-src{display:none}
+.mmd[data-state="pending"]::after{content:"Drawing diagram…";color:var(--soft);font-size:.85rem}
+.mmd[data-state="error"]{white-space:pre-wrap;font:var(--step--1)/1.5 var(--font-mono);color:var(--muted)}
+.table-scroll{overflow-x:auto;border:1px solid var(--rule);border-radius:8px;background:var(--surface);min-width:0}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;vertical-align:top;padding:.55rem .75rem;border-bottom:1px solid var(--rule)}
+th{font:600 .72rem/1.3 var(--font-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td{font-variant-numeric:tabular-nums}
+code,.mono{font-family:var(--font-mono);font-size:.86em}
+:not(pre)>code{background:var(--code-bg);padding:.08rem .3rem;border-radius:4px;overflow-wrap:anywhere}
+pre{margin:0;background:var(--code-bg);border:1px solid var(--rule);border-radius:8px;padding:.85rem 1rem;overflow-x:auto;font:.82rem/1.55 var(--font-mono);color:var(--fg)}
+.cite{font:500 .78rem/1.3 var(--font-mono);color:var(--accent);text-decoration:none;border-bottom:1px dotted currentColor;overflow-wrap:anywhere}
+.cite:hover{border-bottom-style:solid}
+.evidence{display:grid;gap:.5rem;background:var(--surface);border:1px dashed var(--rule);border-radius:8px;padding:.85rem 1rem;min-width:0}
+.evidence::before{content:"Evidence";font:600 .66rem/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+.pill{display:inline-block;font:600 .68rem/1.2 var(--font-mono);letter-spacing:.04em;text-transform:uppercase;padding:.2rem .45rem;border-radius:4px;border:1px solid currentColor;white-space:nowrap}
+.pill--ok{color:var(--ok)} .pill--warn{color:var(--warn)} .pill--bad{color:var(--bad)} .pill--nyi{color:var(--signal)} .pill--nd{color:var(--muted)}
+.stats{display:grid;gap:.75rem;grid-template-columns:repeat(auto-fit,minmax(min(100%,10rem),1fr))}
+.stat{border-top:2px solid var(--accent);padding-top:.5rem;display:grid;gap:.1rem}
+.stat b{font:700 var(--step-2)/1.1 var(--font-display);font-variant-numeric:tabular-nums}
+.stat span{font-size:.85rem;color:var(--muted)}
+/* charts: single-series bars, one hue; budget shown as a track */
+.bars{display:grid;gap:.55rem}
+.bar-row{display:grid;grid-template-columns:minmax(6rem,11rem) minmax(2.5rem,1fr) auto;gap:.75rem;align-items:center;position:relative}
+.bar-row__label{font-size:.88rem;min-width:0;overflow-wrap:anywhere}
+.bar-row__track{height:14px;background:var(--surface-2);border-radius:0 4px 4px 0;position:relative}
+.bar-row__fill{position:absolute;inset:0 auto 0 0;background:var(--accent);border-radius:0 4px 4px 0}
+.bar-row__fill--soft{background:var(--accent-tint);box-shadow:inset 0 0 0 1px var(--accent)}
+.bar-row__val{font:500 .82rem/1 var(--font-mono);color:var(--fg);font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar-row:hover .bar-row__fill,.bar-row:focus-within .bar-row__fill{filter:brightness(1.12)}
+.bar-row .tip{position:absolute;left:min(12rem,30%);top:-2.1rem;background:var(--fg);color:var(--bg);font-size:.78rem;padding:.3rem .5rem;border-radius:4px;opacity:0;pointer-events:none;transition:opacity .12s;white-space:nowrap;z-index:2}
+.bar-row:hover .tip,.bar-row:focus .tip{opacity:1}
+.legend{display:flex;flex-wrap:wrap;gap:1rem;font-size:.82rem;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:.35rem;vertical-align:-1px;background:var(--accent)}
+.legend i.soft{background:var(--accent-tint);box-shadow:inset 0 0 0 1px var(--accent)}
+details.table-view summary{cursor:pointer;font-size:.85rem;color:var(--accent)}
+footer{border-top:1px solid var(--rule);color:var(--soft);font:.78rem/1.6 var(--font-mono)}
+footer div{max-width:74rem;margin:0 auto;padding-block:1rem 2rem;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-wrap:wrap;gap:.3rem 1.5rem}
+[role="tabpanel"]{display:grid;gap:2.5rem;min-width:0}
+[hidden],[role="tabpanel"][hidden]{display:none !important}
+@media (prefers-reduced-motion: reduce){*{transition:none !important}}
+/* ── Diagram-design plates: a deliberate single "paper" look, every colour explicit ── */
+.dd{--dd-paper:#f5f5f5;--dd-paper2:#ececea;--dd-ink:#2d3142;--dd-muted:#6b6f7e;--dd-soft:#9a9dab;--dd-rule:#d6d6d2;--dd-accent:#bf4520;--dd-accent-tint:#f4e1d9;--dd-link:#2a5d8f;
+  background:var(--dd-paper);color:var(--dd-ink);border:1px solid var(--dd-rule);border-radius:6px;padding:1.4rem clamp(1rem,3vw,2rem);display:grid;gap:1rem;min-width:0}
+.dd h2{font:400 clamp(1.6rem,1.2rem + 1.5vw,2.3rem)/1.1 "Instrument Serif",Georgia,serif;letter-spacing:0;color:var(--dd-ink)}
+.dd .dd-eyebrow{font:500 .7rem/1.3 "Geist Mono",ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--dd-muted)}
+.dd p{color:var(--dd-ink);font-family:"Geist",system-ui,sans-serif;font-size:.95rem}
+.dd .dd-callout{font:italic 400 1.15rem/1.4 "Instrument Serif",Georgia,serif;color:var(--dd-ink)}
+.dd .dd-svg{overflow-x:auto}
+.dd svg{display:block;min-width:640px;width:100%;height:auto}
+.dd-cards{display:grid;gap:.8rem;grid-template-columns:1.1fr 1fr .9fr}
+@media (max-width:760px){.dd-cards{grid-template-columns:1fr}}
+.dd-card{background:#fff;border:1px solid var(--dd-rule);border-radius:6px;padding:.8rem .9rem;display:grid;gap:.25rem;font-family:"Geist",system-ui,sans-serif;font-size:.88rem;color:var(--dd-ink)}
+.dd-card b{font-weight:600}
+.dd-card .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--dd-accent);margin-right:.4rem}
+.dd-card .dot--ink{background:var(--dd-ink)} .dd-card .dot--link{background:var(--dd-link)}
+</style></head><body><header class="bar"><div class="bar__in"><a class="brand" href="index.html">PoPunkouterSoftware docs<small>Azure portfolio &amp; ops dashboard · 2026-11-07</small></a><div class="ctl"><span class="seg__label" id="tier-l">Detail</span><div class="seg" role="group" aria-labelledby="tier-l"><button type="button" data-set-tier="1" aria-pressed="false" title="Plain-English summaries and analogies">Simple</button><button type="button" data-set-tier="2" aria-pressed="false" title="Adds architecture diagrams and flows">Standard</button><button type="button" data-set-tier="3" aria-pressed="false" title="Adds file:line citations, schemas and config">Deep-dive</button></div></div><div class="ctl"><span class="seg__label" id="theme-l">Theme</span><div class="seg" role="group" aria-labelledby="theme-l"><button type="button" data-set-theme="system" aria-pressed="false">Auto</button><button type="button" data-set-theme="light" aria-pressed="false">Light</button><button type="button" data-set-theme="dark" aria-pressed="false">Dark</button></div></div></div><nav class="nav" aria-label="Reports"><a href="index.html">Overview</a><a href="USER_WORKFLOW.html" aria-current="page">User journeys</a><a href="VISUAL_ARCHITECTURE_DASHBOARD.html">Architecture</a><a href="AI_SERVICES_REPORT.html">AI & services</a><a href="AUTH_SECURITY_REPORT.html">Security</a><a href="OVERVIEW_DIAGRAMS.html">Diagram plates</a><a href="artifact.html">All in one</a></nav></header><main><section>
+  <span class="kicker">User journeys · what people do here</span>
+  <h1>Six journeys, from browsing to a 3 a.m. phone alert</h1>
+  <p class="lede">Each journey starts with what a person wants, then shows the steps the app takes for them. Switch to Standard for the flowcharts, or Deep-dive for the exact code.</p>
+</section>
+
+<section>
+  <h2>1 · A visitor browses the app catalog</h2>
+  <p class="eli5">A visitor opens the home page and sees every app in one table. If the saved report is more than 12 hours old, the site quietly starts a fresh scan in the background while showing what it already has.</p>
+  <ol class="steps">
+    <li><b>Open <code>/</code></b><span>The page asks the website for the portfolio list.</span></li>
+    <li><b>The list comes from a file</b><span>The catalog file <code>apps.json</code> decides which apps exist. Live Azure data only adds decoration, so a failed check never hides an app.</span></li>
+    <li><b>Old report? Refresh it</b><span>If the last scan is older than 12 hours, a background rescan starts, at most once every 30 minutes.</span></li>
+    <li><b>Read the table</b><span>Each row shows the picture, description, sign-in method, tech stack and AI services. Hover or tap any value for an explanation.</span></li>
+  </ol>
+  <figure class="diagram t2">
+    <pre class="mmd-src">flowchart TD
+  A["Visitor opens the home page"] --> B["Page asks for the app list"]
+  B --> C["Website reads the catalog file<br/>and the latest saved report"]
+  C --> D{"Is the report older<br/>than 12 hours?"}
+  D -->|"yes"| E["Start a background scan<br/>(not more than every 30 min)"]
+  D -->|"no"| F["Send the list"]
+  E --> F
+  F --> G["Visitor reads the stack table"]</pre>
+    <div class="mmd" role="img" aria-label="Flowchart of the catalog visit, including the 12-hour staleness check."></div>
+  </figure>
+  <div class="t3 evidence">
+    <p>Staleness threshold: <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.Shared/PortfolioResponse.cs#L30" title="src/PoPunkouterSoftware.Shared/PortfolioResponse.cs:30">PortfolioResponse.cs:30</a> <code>StaleAfter = TimeSpan.FromHours(12)</code>. Check and auto-start: <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.API/Features/Portfolio/PortfolioEndpoints.cs#L47-L54" title="src/PoPunkouterSoftware.API/Features/Portfolio/PortfolioEndpoints.cs:47-54">PortfolioEndpoints.cs:47-54</a>. Cooldown: <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.API/Host/ReportRefreshRunner.cs#L31" title="src/PoPunkouterSoftware.API/Host/ReportRefreshRunner.cs:31">ReportRefreshRunner.cs:31</a> <code>AutoAttemptCooldown = TimeSpan.FromMinutes(30)</code>. Flag: <code>FeatureFlags:EnableAutoInventoryRefresh</code>, <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.API/appsettings.json#L44" title="src/PoPunkouterSoftware.API/appsettings.json:44">appsettings.json:44</a>.</p>
+  </div>
+</section>
+
+<section>
+  <h2>2 · The owner checks fleet health</h2>
+  <p class="eli5">The owner opens <code>/azure</code> and reads, top to bottom: how things are, what to do, what it costs, and the uptime evidence. The first screen loads one small summary so it is fast; the full report loads only if they open Advanced diagnostics.</p>
+  <ol class="steps">
+    <li><b>Open <code>/azure</code></b><span>The page loads settings and a compact summary.</span></li>
+    <li><b>Read the status</b><span>Two AI-written sentences, three tiles (health, cost, projection) and what changed since the last scan.</span></li>
+    <li><b>Act on "Needs attention"</b><span>Plain sentences such as "an app is down" or "a certificate expires soon".</span></li>
+    <li><b>Dig deeper, if needed</b><span>Advanced diagnostics opens a drawer and fetches the full report, which replaces the list with a ranked queue.</span></li>
+  </ol>
+  <figure class="diagram t2">
+    <pre class="mmd-src">sequenceDiagram
+  actor O as Owner
+  participant P as /azure page
+  participant W as Website
+  participant T as Filing cabinet
+  O->>P: Open the dashboard
+  P->>W: Ask for settings
+  P->>W: Ask for the compact summary
+  W->>T: Read the latest report
+  T-->>W: Saved report
+  W-->>P: Summary only (no full inventory)
+  O->>P: Open Advanced diagnostics
+  P->>W: Ask for the full report
+  W-->>P: Full report with subscription id hidden</pre>
+    <div class="mmd" role="img" aria-label="Sequence: the dashboard loads a compact summary first and the full report only on request."></div>
+  </figure>
+  <div class="t3 evidence">
+    <p>Client calls: config <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.Client/AzureDashboard.razor.cs#L190" title="src/PoPunkouterSoftware.Client/AzureDashboard.razor.cs:190">AzureDashboard.razor.cs:190</a>, summary <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.Client/AzureDashboard.razor.cs#L206" title="src/PoPunkouterSoftware.Client/AzureDashboard.razor.cs:206">AzureDashboard.razor.cs:206</a>, full report (lazy) <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.Client/AzureDashboard.razor.cs#L272" title="src/PoPunkouterSoftware.Client/AzureDashboard.razor.cs:272">AzureDashboard.razor.cs:272</a>. Server: summary <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.API/Features/Diag/DiagEndpoints.cs#L62" title="src/PoPunkouterSoftware.API/Features/Diag/DiagEndpoints.cs:62">DiagEndpoints.cs:62</a>, report <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.API/Features/Diag/DiagEndpoints.cs#L31" title="src/PoPunkouterSoftware.API/Features/Diag/DiagEndpoints.cs:31">DiagEndpoints.cs:31</a>, subscription masking <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.Infrastructure/SecretMasking.cs#L82-L83" title="src/PoPunkouterSoftware.Infrastructure/SecretMasking.cs:82-83">SecretMasking.cs:82-83</a>.</p>
+  </div>
+</section>
+
+<section>
+  <h2>3 · The owner starts a rescan</h2>
+  <p class="eli5">Pressing Rescan is like asking the building manager to do the night walk right now. The website says "on it" immediately, then sends live progress while the walk takes about 30 seconds.</p>
+  <ol class="steps">
+    <li><b>Press Rescan</b><span>The button exists only where management actions are allowed; production visitors never see it.</span></li>
+    <li><b>"Accepted" right away</b><span>The website answers at once and starts the scan in the background. A scan already running is joined, not refused.</span></li>
+    <li><b>Live progress</b><span>Progress messages stream over a live connection. If that connection is down, the page polls and shows an indeterminate bar.</span></li>
+    <li><b>Save and compare</b><span>The new report is saved; crossings (certificate, budget, broken page, domain) send phone alerts.</span></li>
+    <li><b>Page updates</b><span>When the summary says the scan is finished, the page redraws once with the new facts.</span></li>
+  </ol>
+  <figure class="diagram t2">
+    <pre class="mmd-src">sequenceDiagram
+  actor O as Owner
+  participant P as /azure page
+  participant W as Website
+  participant R as Background scanner
+  participant Z as Azure
+  participant T as Filing cabinet
+  O->>P: Press Rescan
+  P->>W: Start a scan
+  alt no scan running
+    W->>R: Start in background
+    W-->>P: Accepted (202)
+  else scan already running
+    W-->>P: Already running (409), follow it
+  end
+  loop about 14 steps, ~30 s
+    R->>Z: Inventory, health, cost, certificates
+    R--)P: Progress % over the live channel
+  end
+  R->>T: Save the new report
+  R--)O: Phone alert, only if a line was crossed
+  P->>W: Is it finished yet?
+  W-->>P: Yes, here is the new summary</pre>
+    <div class="mmd" role="img" aria-label="Sequence of a rescan: accepted immediately, progress streamed, report saved, alerts on crossings."></div>
+  </figure>
+  <div class="t3 evidence">
+    <p>Endpoint and guard: <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.API/Features/Diag/DiagEndpoints.cs#L83-L87" title="src/PoPunkouterSoftware.API/Features/Diag/DiagEndpoints.cs:83-87">DiagEndpoints.cs:83-87</a>. Background task: <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.API/Host/ReportRefreshRunner.cs#L68-L81" title="src/PoPunkouterSoftware.API/Host/ReportRefreshRunner.cs:68-81">ReportRefreshRunner.cs:68-81</a>; 10-minute hard timeout <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.API/Host/ReportRefreshRunner.cs#L101" title="src/PoPunkouterSoftware.API/Host/ReportRefreshRunner.cs:101">ReportRefreshRunner.cs:101</a>; progress broadcast <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.API/Host/ReportRefreshRunner.cs#L109" title="src/PoPunkouterSoftware.API/Host/ReportRefreshRunner.cs:109">ReportRefreshRunner.cs:109</a>; save <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.API/Host/ReportRefreshRunner.cs#L154" title="src/PoPunkouterSoftware.API/Host/ReportRefreshRunner.cs:154">ReportRefreshRunner.cs:154</a>; crossing alerts <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.API/Host/ReportRefreshRunner.cs#L232-L259" title="src/PoPunkouterSoftware.API/Host/ReportRefreshRunner.cs:232-259">ReportRefreshRunner.cs:232-259</a>. Client: POST <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.Client/AzureDashboard.razor.cs#L323" title="src/PoPunkouterSoftware.Client/AzureDashboard.razor.cs:323">AzureDashboard.razor.cs:323</a>, hub <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.Client/AzureDashboard.razor.cs#L477-L478" title="src/PoPunkouterSoftware.Client/AzureDashboard.razor.cs:477-478">AzureDashboard.razor.cs:477-478</a>, poll <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.Client/AzureDashboard.razor.cs#L455" title="src/PoPunkouterSoftware.Client/AzureDashboard.razor.cs:455">AzureDashboard.razor.cs:455</a>.</p>
+    <pre><code>// DiagEndpoints.cs:83-87 (verbatim, condensed whitespace)
+diag.MapPost("/refresh", (ReportRefreshRunner runner) =>
+        runner.TryStart("manual")
+            ? Results.Accepted()
+            : Results.Problem(detail: "Refresh already in progress.", statusCode: 409))
+    .RequireManagementActions();</code></pre>
+  </div>
+</section>
+
+<section>
+  <h2>4 · Someone asks "who is using my apps?"</h2>
+  <p class="eli5">The <code>/users</code> page asks the shared app logs, live, who signed in across every Po app. Email addresses arrive already partly hidden, so the page can say "someone at a company tried it" without showing who.</p>
+  <ol class="steps">
+    <li><b>Pick a window</b><span>Up to 90 days, because that is how long the logs are kept. The last choice is remembered.</span></li>
+    <li><b>One live query</b><span>This is the only page load that asks Azure something live, with a 20-second budget.</span></li>
+    <li><b>Group by email</b><span>The same person signing in to two apps counts once.</span></li>
+    <li><b>Mask before sending</b><span><code>alexandra@example.com</code> becomes <code>al******a@example.com</code> on the server, before anything leaves it.</span></li>
+  </ol>
+  <figure class="diagram t2">
+    <pre class="mmd-src">flowchart LR
+  A["Open /users"] --> B{"Under 30 asks<br/>this minute?"}
+  B -->|"no"| X["Busy: try again shortly (429)"]
+  B -->|"yes"| C["Query shared app logs<br/>(20 s budget)"]
+  C --> D["Group sign-ins by email"]
+  D --> E["Hide most of each email"]
+  E --> F["Roster, trend chart, raw feed"]</pre>
+    <div class="mmd" role="img" aria-label="Flowchart of the sign-in roster request, including the rate limit and masking."></div>
+  </figure>
+  <div class="t3 evidence">
+    <p>Endpoint <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.API/Features/SignIns/SignInEndpoints.cs#L27-L48" title="src/PoPunkouterSoftware.API/Features/SignIns/SignInEndpoints.cs:27-48">SignInEndpoints.cs:27-48</a>; window clamp <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.Infrastructure/SignIns/SignInQueryService.cs#L39" title="src/PoPunkouterSoftware.Infrastructure/SignIns/SignInQueryService.cs:39">SignInQueryService.cs:39</a> <code>MaxWindowDays = 90</code>; budget <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.Infrastructure/SignIns/SignInQueryService.cs#L56" title="src/PoPunkouterSoftware.Infrastructure/SignIns/SignInQueryService.cs:56">SignInQueryService.cs:56</a>; unconfigured fallback <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.Infrastructure/SignIns/SignInQueryService.cs#L89-L93" title="src/PoPunkouterSoftware.Infrastructure/SignIns/SignInQueryService.cs:89-93">SignInQueryService.cs:89-93</a>; masking <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.Infrastructure/SecretMasking.cs#L38-L49" title="src/PoPunkouterSoftware.Infrastructure/SecretMasking.cs:38-49">SecretMasking.cs:38-49</a>; limiter <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.API/Host/RateLimits.cs#L39-L42" title="src/PoPunkouterSoftware.API/Host/RateLimits.cs:39-42">RateLimits.cs:39-42</a>.</p>
+  </div>
+</section>
+
+<section>
+  <h2>5 · The owner's phone buzzes</h2>
+  <p class="eli5">A small checker knocks on every app's door every 10 minutes. Two missed knocks in a row means "down", and the owner gets a push notification that opens the dashboard on that app's row.</p>
+  <ol class="steps">
+    <li><b>Knock every 10 minutes</b><span>A plain request to each app. A slow answer (a sleeping free-tier app) counts as nothing, not as down.</span></li>
+    <li><b>Two misses in a row</b><span>Only a change of state sends an alert, never the same state twice.</span></li>
+    <li><b>Push through ntfy</b><span>One message to the owner's ntfy topic, which acts as the password.</span></li>
+    <li><b>Tap to see it</b><span>The link opens <code>/azure?focus=&lt;app&gt;</code>, which scrolls to and highlights the row.</span></li>
+  </ol>
+  <figure class="diagram t2">
+    <pre class="mmd-src">stateDiagram-v2
+  [*] --> Up
+  Up --> Suspect: 1 failed knock
+  Suspect --> Up: next knock answers
+  Suspect --> Down: 2nd failed knock / send "down" alert
+  Down --> Up: knock answers / send "recovered" alert</pre>
+    <div class="mmd" role="img" aria-label="State machine: up, suspect after one failure, down after two, alerts only on transitions."></div>
+  </figure>
+  <div class="t3 evidence">
+    <p>Interval <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.Infrastructure/Alerts/ServicePingerService.cs#L52" title="src/PoPunkouterSoftware.Infrastructure/Alerts/ServicePingerService.cs:52">ServicePingerService.cs:52</a> (default 10, <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.API/appsettings.json#L86" title="src/PoPunkouterSoftware.API/appsettings.json:86">appsettings.json:86</a>); debounce <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.Infrastructure/Alerts/OutageTracker.cs#L18" title="src/PoPunkouterSoftware.Infrastructure/Alerts/OutageTracker.cs:18">OutageTracker.cs:18</a> <code>failuresBeforeAlert = 2</code>; sender <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.Infrastructure/Alerts/AlertNotifier.cs#L24-L39" title="src/PoPunkouterSoftware.Infrastructure/Alerts/AlertNotifier.cs:24-39">AlertNotifier.cs:24-39</a>. Tracker state is in memory: a restart re-alerts an app that is still down.</p>
+  </div>
+</section>
+
+<section>
+  <h2>6 · A visitor sets their preferences</h2>
+  <p class="eli5">Settings are four switches stored in the visitor's own browser. Each one starts at the simplest, quietest choice.</p>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Setting</th><th>Default</th><th>What changes</th></tr></thead>
+    <tbody>
+      <tr><td>Theme</td><td>System</td><td>Light or dark, overriding the device</td></tr>
+      <tr><td>Density</td><td>Comfortable</td><td>Tighter spacing everywhere</td></tr>
+      <tr><td>Sound</td><td>Off</td><td>Click sounds, scan drone, health sonification. Audio is not even prepared until a click.</td></tr>
+      <tr><td>Effects</td><td>Simple</td><td>Full adds fluid motion, flocks and the health orb</td></tr>
+    </tbody>
+  </table></div>
+  <div class="t3 evidence"><p>Keys <code>pops:theme</code> / <code>pops:density</code> / <code>pops:details</code>: <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.Client/wwwroot/js/theme-kit.js#L39-L41" title="src/PoPunkouterSoftware.Client/wwwroot/js/theme-kit.js:39-41">theme-kit.js:39-41</a>. Page: <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/blob/d5ce203/src/PoPunkouterSoftware.Client/Settings.razor#L1" title="src/PoPunkouterSoftware.Client/Settings.razor:1">Settings.razor:1</a>.</p></div>
+</section>
+</main><footer><div><span>Generated 2026-11-07</span><span>Target commit <a class="cite" href="https://github.com/punkouter27/PoPunkouterSoftware/commit/d5ce203b4750e41c5d0f9cd51b6d02a84669b130">d5ce203</a> (master)</span><span>Evidence order: source code → config → code comments → README/CLAUDE.md</span><span>No secret values are reproduced in this suite</span></div></footer><script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script><script>
+(function(){
+  var root=document.documentElement, K_T='pops-docs:tier', K_H='pops-docs:theme';
+  function get(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function put(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  function setTier(t){root.setAttribute('data-tier',t);put(K_T,t);
+    document.querySelectorAll('[data-set-tier]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.setTier===t))});}
+  function setTheme(t){if(t==='system')root.removeAttribute('data-theme');else root.setAttribute('data-theme',t);put(K_H,t);
+    document.querySelectorAll('[data-set-theme]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.setTheme===t))});
+    drawAll();}
+  document.addEventListener('click',function(e){var b=e.target.closest('[data-set-tier],[data-set-theme]');if(!b)return;
+    if(b.dataset.setTier)setTier(b.dataset.setTier);else setTheme(b.dataset.setTheme);});
+  var t=get(K_T);setTier(t==='1'||t==='2'||t==='3'?t:'1');
+  var h=get(K_H);
+  // tabs (artifact shell only)
+  var tabs=[].slice.call(document.querySelectorAll('[role="tab"]'));
+  function show(id){var hit=false;tabs.forEach(function(tb){var on=tb.getAttribute('aria-controls')===id;if(on)hit=true;
+      tb.setAttribute('aria-selected',String(on));tb.tabIndex=on?0:-1;document.getElementById(tb.getAttribute('aria-controls')).hidden=!on;});
+    if(!hit&&tabs.length)show(tabs[0].getAttribute('aria-controls'));}
+  if(tabs.length){
+    tabs.forEach(function(tb,i){tb.addEventListener('click',function(){show(tb.getAttribute('aria-controls'));try{history.replaceState(null,'','#'+tb.getAttribute('aria-controls'))}catch(e){location.hash=tb.getAttribute('aria-controls')}window.scrollTo(0,0);});
+      tb.addEventListener('keydown',function(e){var d=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;if(!d)return;var n=tabs[(i+d+tabs.length)%tabs.length];n.focus();n.click();});});
+    show((location.hash||'').slice(1));
+    window.addEventListener('hashchange',function(){show(location.hash.slice(1))});
+  }
+  // Mermaid: rendered to string off-DOM so hidden tiers/tabs still get correct sizes; redrawn on theme change.
+  var seq=0;
+  function tok(n){return getComputedStyle(root).getPropertyValue(n).trim()}
+  function drawAll(){
+    if(!window.mermaid)return;
+    var dark=root.getAttribute('data-theme')==='dark'||(!root.getAttribute('data-theme')&&matchMedia('(prefers-color-scheme: dark)').matches);
+    mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'base',fontFamily:'Atkinson Hyperlegible, Segoe UI, sans-serif',
+      themeVariables:{darkMode:dark,background:tok('--surface'),primaryColor:tok('--surface-2'),primaryTextColor:tok('--fg'),primaryBorderColor:tok('--accent'),
+        secondaryColor:tok('--accent-tint'),tertiaryColor:tok('--surface'),lineColor:tok('--muted'),textColor:tok('--fg'),mainBkg:tok('--surface-2'),
+        nodeBorder:tok('--accent'),clusterBkg:tok('--surface'),clusterBorder:tok('--rule'),titleColor:tok('--fg'),edgeLabelBackground:tok('--surface'),
+        actorBkg:tok('--surface-2'),actorBorder:tok('--accent'),actorTextColor:tok('--fg'),actorLineColor:tok('--soft'),signalColor:tok('--fg'),signalTextColor:tok('--fg'),
+        labelBoxBkgColor:tok('--surface-2'),labelBoxBorderColor:tok('--rule'),labelTextColor:tok('--fg'),loopTextColor:tok('--fg'),noteBkgColor:tok('--signal-tint'),noteTextColor:tok('--fg'),noteBorderColor:tok('--signal'),
+        activationBkgColor:tok('--accent-tint'),activationBorderColor:tok('--accent'),sequenceNumberColor:tok('--surface'),attributeBackgroundColorOdd:tok('--surface'),attributeBackgroundColorEven:tok('--surface-2'),fontSize:'15px'},
+      flowchart:{htmlLabels:false,curve:'basis',useMaxWidth:true},sequence:{useMaxWidth:true,showSequenceNumbers:true},er:{useMaxWidth:true}});
+    document.querySelectorAll('.mmd').forEach(function(el){
+      var src=el.previousElementSibling&&el.previousElementSibling.textContent;if(!src)return;el.dataset.state='pending';
+      var id='mmd-'+(++seq);
+      mermaid.render(id,src).then(function(r){el.innerHTML=r.svg;el.dataset.state='done';})
+        .catch(function(err){el.dataset.state='error';el.textContent='Diagram could not be drawn. Source:\n'+src;var s=document.getElementById('d'+id);if(s)s.remove();});
+    });
+  }
+  window.__drawAll=drawAll;
+  setTheme(h==='light'||h==='dark'?h:'system');
+})();
+</script></body></html>

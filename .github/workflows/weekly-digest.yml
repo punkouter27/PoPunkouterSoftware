@@ -30,7 +30,7 @@ jobs:
     environment: production
     steps:
       - name: Wake the site
-        run: curl -fsS --max-time 180 --retry 3 --retry-all-errors "$APP_URL/healthz" > /dev/null
+        run: curl -fsS --max-time 180 --retry 3 --retry-all-errors "$APP_URL/health/live" > /dev/null
 
       - name: Read the week
         run: |

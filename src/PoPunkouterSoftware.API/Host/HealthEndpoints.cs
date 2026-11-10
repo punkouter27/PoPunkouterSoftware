@@ -38,14 +38,8 @@ internal static class HealthEndpoints
         .WithName("GetHealth")
         .WithTags("Health");
 
-        // Lightweight platform probe — does not call external dependencies.
-        app.MapGet("/healthz", () => Results.Ok(new
-        {
-            status = "ok",
-            timestamp = DateTime.UtcNow,
-        }))
-        .WithName("GetLiveness")
-        .WithTags("Health");
+        // Liveness is /health/live (PoPlatform.MapPoLiveness), the estate-wide probe. A second
+        // copy here, /healthz, was removed 2026-11-07: two endpoints answering one question.
 
         return app;
     }

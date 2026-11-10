@@ -26,7 +26,7 @@ public partial class AzureReportService
         var http = _httpClientFactory.CreateClient(PublicApiClientName);
         var checkedServices = await BoundedParallelAsync(services, maxConcurrency: 6, async svc =>
         {
-            if (AppScreenshotService.HostOf(svc.Url ?? "") is not { } host
+            if (AppScreenshotStore.HostOf(svc.Url ?? "") is not { } host
                 || !expectations.TryGetValue(host, out var expect))
                 return svc;
             return svc with { ContentCheck = await CheckPageAsync(http, svc.Url!, expect, ct) };
@@ -77,7 +77,7 @@ public partial class AzureReportService
                 new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             foreach (var app in file?.Apps ?? [])
             {
-                if (!string.IsNullOrWhiteSpace(app.Expect) && AppScreenshotService.HostOf(app.Url ?? "") is { } host)
+                if (!string.IsNullOrWhiteSpace(app.Expect) && AppScreenshotStore.HostOf(app.Url ?? "") is { } host)
                     result[host] = app.Expect;
             }
         }

@@ -50,13 +50,13 @@ APP_ICONS = [
     "home", "menu", "close", "monitor_heart", "group",
     # RadzenIcon / RadzenButton Icon="..." across the client.
     "auto_awesome", "check_circle", "cloud_sync", "content_copy",
-    "data_object", "delete_sweep", "download", "graphic_eq", "open_in_new",
-    "history", "refresh", "security", "speed", "sync",
-    "timeline", "troubleshoot",
+    "data_object", "delete_sweep", "download", "open_in_new",
+    "history", "refresh", "speed", "sync",
+    "timeline",
     # PortfolioAppCard's "Preview pending" placeholder.
     "image",
-    # Dynamic: AzureDashboard's advanced-diagnostics toggle.
-    "expand_less", "tune",
+    # The Advanced diagnostics button.
+    "tune",
     # Dynamic: AzureWhatChanged.IconFor.
     "cloud_off", "cloud_done", "trending_up", "trending_down", "shield", "sync_alt",
     # js/command-palette.js (set as textContent at runtime): its search glyph, the settings
@@ -64,7 +64,7 @@ APP_ICONS = [
     "search", "settings", "my_location", "link",
     # AzurePriorityQueue restart/start, AzureUptimeHeatmap error and alert chips,
     # PortfolioAppCard streak chip.
-    "restart_alt", "play_arrow", "bug_report", "local_fire_department",
+    "restart_alt", "bug_report", "local_fire_department",
 ]
 
 # Emitted by Radzen.Blazor's own components. Not greppable from this repo — they live in the

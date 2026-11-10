@@ -90,7 +90,7 @@
 }
 
 /* /settings → Details. `data-detail` marks an optional control or mark (uptime chips and
-   their legend keys, the card performance trend, Listen); it shows only when theme-kit.js
+   their legend keys, the card performance trend); it shows only when theme-kit.js
    has set data-app-details="full". !important because this one switch must beat whatever
    display a component's scoped CSS gives the element — a specificity contest per call site
    is exactly what a single attribute is here to avoid. */
@@ -451,7 +451,7 @@ a {
     flex: 1 1 0;
     min-width: 0;
     font-family: var(--app-headline-font);
-    font-size: 1rem;
+    font-size: var(--app-step-0);
     font-weight: 600;
     color: var(--app-accent);
     text-decoration: none;
@@ -1047,7 +1047,7 @@ html .rz-tooltip .rz-tooltip-content { max-width: min(24rem, calc(100vw - 2rem))
     }
 
     .app-card .rz-chart svg text {
-        font-size: 10px;
+        font-size: var(--app-step--2);   /* was 10px, below the 0.76rem floor */
     }
 }
 
@@ -1437,24 +1437,7 @@ html[data-gpu-backdrop] .app-palette-backdrop {
     -webkit-backdrop-filter: blur(2px);
 }
 
-/* Hyperspace jump (js/command-palette.js): for ~0.9s the backdrop canvas is lifted over
-   the page and screened onto it, so the streaks cross the content, not only the gutters.
-   Dark theme only: screen only ever brightens, which on a dark page is light streaking
-   across it, and on a light page was a white-out flash. Both theme selectors, for the same
-   reason the light palette is written twice (system choice vs explicit toggle). */
-@media (prefers-color-scheme: dark) {
-    html:not([data-app-theme="light"]).is-palette-jump #app-gpu-backdrop {
-        z-index: 2;
-        mix-blend-mode: screen;
-    }
-}
-
-html[data-app-theme="dark"].is-palette-jump #app-gpu-backdrop {
-    z-index: 2;
-    mix-blend-mode: screen;
-}
-
-/* The header link the palette navigated to morphs into the new page's h1. */
+/* The header brand morphs into the new page's h1 when the palette navigates. */
 ::view-transition-group(app-jump) {
     animation-duration: 560ms;
     animation-timing-function: var(--app-ease-bounce, ease-out);
@@ -1492,12 +1475,12 @@ html[data-app-theme="dark"].is-palette-jump #app-gpu-backdrop {
     background: transparent;
     border: 0;
     outline: none;
-    font-size: 1rem;
+    font-size: 1rem;   /* literal on purpose: iOS zooms into any input under 16px */
     color: var(--app-text);
 }
 
 .app-palette-kbd {
-    font-size: 0.72rem;
+    font-size: var(--app-step--2);
     padding: 2px 6px;
     border-radius: 4px;
     border: 1px solid var(--app-border);
@@ -1533,12 +1516,12 @@ html[data-app-theme="dark"].is-palette-jump #app-gpu-backdrop {
 
 .app-palette-item-title {
     flex: 1 1 auto;
-    font-size: 0.92rem;
+    font-size: var(--app-step-0);
     color: var(--app-text);
 }
 
 .app-palette-item-category {
-    font-size: 0.72rem;
+    font-size: var(--app-step--2);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--app-text-soft);
@@ -1548,7 +1531,7 @@ html[data-app-theme="dark"].is-palette-jump #app-gpu-backdrop {
     padding: var(--app-space-lg);
     text-align: center;
     color: var(--app-text-muted);
-    font-size: 0.88rem;
+    font-size: var(--app-step--1);
 }
 
 /* ── Mobile safe area & touch compliance (Audit #22) ───────────────────────── */

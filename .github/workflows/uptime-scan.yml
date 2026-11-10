@@ -46,12 +46,12 @@ jobs:
       - name: Wake the site
         run: |
           for attempt in $(seq 1 10); do
-            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 60 "$APP_URL/healthz" || echo 000)
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 60 "$APP_URL/health/live" || echo 000)
             echo "attempt $attempt -> HTTP $code"
             [ "$code" = "200" ] && exit 0
             sleep 15
           done
-          echo "::error::Site never became reachable at $APP_URL/healthz"
+          echo "::error::Site never became reachable at $APP_URL/health/live"
           exit 1
 
       - name: Trigger the Azure rescan
