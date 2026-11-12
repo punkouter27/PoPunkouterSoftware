@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
-using PoPunkouterSoftware.API;
+using PoPunkouterSoftware.Api;
 using System.Net;
 using System.Text.Json;
 

@@ -26,7 +26,7 @@ namespace PoPunkouterSoftware.Infrastructure;
 /// </summary>
 public partial class AzureReportService
 {
-    private async Task<List<RawService>> DiscoverWebServicesAsync(SubscriptionResource sub, CancellationToken ct)
+    private static async Task<List<RawService>> DiscoverWebServicesAsync(SubscriptionResource sub, CancellationToken ct)
     {
         var list = new List<RawService>();
 

@@ -146,6 +146,8 @@ public class PortfolioExclusionRegressionTests
     /// page, not the card: it picks the section (web apps or RL training). GithubRepo is read by
     /// the Ctrl+K palette (repo and Actions rows).
     /// </summary>
+    private static readonly string[] AllowedAppFields = ["id", "name", "category", "description", "url", "status", "screenshotUrl", "scores", "cleanDays", "githubRepo", "stack", "sourceUrl", "playStoreUrl"];
+
     [Fact]
     public async Task Portfolio_Cards_CarryOnlyWhatTheCardBinds()
     {
@@ -154,8 +156,7 @@ public class PortfolioExclusionRegressionTests
 
         foreach (var app in doc.RootElement.GetProperty("apps").EnumerateArray())
         {
-            app.EnumerateObject().Select(p => p.Name).Should().BeSubsetOf(
-                new[] { "id", "name", "category", "description", "url", "status", "screenshotUrl", "scores", "cleanDays", "githubRepo", "stack", "sourceUrl", "playStoreUrl" });
+            app.EnumerateObject().Select(p => p.Name).Should().BeSubsetOf(AllowedAppFields);
         }
     }
 }

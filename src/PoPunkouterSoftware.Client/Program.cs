@@ -1,5 +1,7 @@
+using FluentValidation;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using PoPunkouterSoftware.Client;
+using PoPunkouterSoftware.Shared;
 using Radzen;
 
 // SOLID: Single Responsibility — this file only wires WASM DI and starts the host.
@@ -7,21 +9,26 @@ using Radzen;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-// ─── HttpClient — base URL is the server that hosts this WASM app ─────────────
-// Timeout raised to 5 min: the Azure report JSON can be large, and the server may
-// be briefly busy after a full subscription scan (thread-pool catch-up).
-// A TransientRetryHandler wraps the browser handler to retry idempotent GETs through
-// brief transient failures (see TransientRetryHandler).
+// ─── HttpClient + Dev persona & retry pipeline ──────────────────────────────
+builder.Services.AddSingleton<DevPersonaState>();
 builder.Services.AddScoped(sp =>
-    new HttpClient(new TransientRetryHandler { InnerHandler = new HttpClientHandler() })
+{
+    var persona = sp.GetRequiredService<DevPersonaState>();
+    var retryHandler = new TransientRetryHandler { InnerHandler = new HttpClientHandler() };
+    var fakeUserHandler = new DevFakeUserHandler(persona) { InnerHandler = retryHandler };
+    return new HttpClient(fakeUserHandler)
     {
         BaseAddress = new Uri(builder.HostEnvironment.BaseAddress),
         Timeout = TimeSpan.FromMinutes(5),
-    });
+    };
+});
+builder.Services.AddScoped<PortfolioApiClient>();
+builder.Services.AddValidatorsFromAssemblyContaining<SignInSearchFilterValidator>();
 
 // ─── Radzen UI services ───────────────────────────────────────────────────────
 builder.Services.AddRadzenComponents();
 builder.Services.AddScoped<DialogService>();
 builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<DialogNotificationHelper>();
 
 await builder.Build().RunAsync();

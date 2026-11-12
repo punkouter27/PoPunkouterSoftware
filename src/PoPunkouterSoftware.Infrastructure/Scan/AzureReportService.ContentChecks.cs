@@ -74,7 +74,7 @@ public partial class AzureReportService
         try
         {
             var file = System.Text.Json.JsonSerializer.Deserialize<AppsFile>(await File.ReadAllTextAsync(path, ct),
-                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                SharedCaseInsensitiveJsonOptions);
             foreach (var app in file?.Apps ?? [])
             {
                 if (!string.IsNullOrWhiteSpace(app.Expect) && AppScreenshotStore.HostOf(app.Url ?? "") is { } host)

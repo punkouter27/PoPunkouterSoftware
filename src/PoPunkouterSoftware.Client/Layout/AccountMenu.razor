@@ -1,0 +1,84 @@
+@namespace PoPunkouterSoftware.Client
+@implements IDisposable
+@inject PortfolioApiClient Api
+@inject DevPersonaState PersonaState
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<div class="app-account-menu">
+    @if (_devSwitchingEnabled)
+    {
+        <select class="app-account-select"
+                aria-label="Developer persona"
+                value="@PersonaState.Persona"
+                @onchange="OnPersonaChangedAsync">
+            <option value="guest">Guest (anonymous)</option>
+            <option value="admin">Admin (management)</option>
+        </select>
+    }
+    else
+    {
+        <span class="app-account-pill">Guest</span>
+    }
+
+    <button type="button"
+            class="app-account-btn"
+            aria-label="Open settings"
+            title="Settings"
+            @onclick="OpenSettings">
+        <span class="material-symbols-outlined" aria-hidden="true">settings</span>
+    </button>
+</div>
+
+@code {
+    private bool _devSwitchingEnabled;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PersonaState.Changed += OnPersonaStateChanged;
+
+        try
+        {
+            var saved = await JS.InvokeAsync<string?>("localStorage.getItem", DevPersonaState.StorageKey);
+            if (!string.IsNullOrWhiteSpace(saved))
+            {
+                PersonaState.SetPersona(saved);
+            }
+        }
+        catch
+        {
+            // localStorage unavailable in strict privacy contexts
+        }
+
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            var cfg = await Api.GetConfigAsync(cts.Token);
+            _devSwitchingEnabled = cfg?.ManagementActionsEnabled ?? false;
+        }
+        catch
+        {
+            _devSwitchingEnabled = false;
+        }
+    }
+
+    private void OnPersonaStateChanged() => InvokeAsync(StateHasChanged);
+
+    private async Task OnPersonaChangedAsync(ChangeEventArgs e)
+    {
+        var next = e.Value?.ToString() ?? "guest";
+        PersonaState.SetPersona(next);
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", DevPersonaState.StorageKey, PersonaState.Persona);
+        }
+        catch
+        {
+            // safe fallback
+        }
+    }
+
+    private void OpenSettings() => Nav.NavigateTo("/settings");
+
+    public void Dispose() => PersonaState.Changed -= OnPersonaStateChanged;
+}

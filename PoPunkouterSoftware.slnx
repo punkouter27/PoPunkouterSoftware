@@ -1,0 +1,19 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/src/">
+    <Project Path="src/PoPunkouterSoftware.Api/PoPunkouterSoftware.Api.csproj" />
+    <Project Path="src/PoPunkouterSoftware.Client/PoPunkouterSoftware.Client.csproj" />
+    <Project Path="src/PoPunkouterSoftware.Infrastructure/PoPunkouterSoftware.Infrastructure.csproj" />
+    <Project Path="src/PoPunkouterSoftware.Shared/PoPunkouterSoftware.Shared.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PoPunkouterSoftware.E2EAPI/PoPunkouterSoftware.E2EAPI.csproj" />
+    <Project Path="tests/PoPunkouterSoftware.E2EUI/PoPunkouterSoftware.E2EUI.csproj" />
+    <Project Path="tests/PoPunkouterSoftware.Integration/PoPunkouterSoftware.Integration.csproj" />
+    <Project Path="tests/PoPunkouterSoftware.Unit/PoPunkouterSoftware.Unit.csproj" />
+  </Folder>
+</Solution>

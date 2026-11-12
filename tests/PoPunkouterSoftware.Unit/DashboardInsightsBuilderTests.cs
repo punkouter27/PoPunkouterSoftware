@@ -199,7 +199,7 @@ public class CostAnomalyTests
     {
         Name = name,
         Daily = Enumerable.Range(1, days)
-            .Select(i => new DailyCostEntry { Date = new DateTime(2026, 9, 25).AddDays(-i).ToString("yyyy-MM-dd"), Cost = usual })
+            .Select(i => new DailyCostEntry { Date = new DateTime(2026, 9, 25).AddDays(-i).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), Cost = usual })
             .Append(new DailyCostEntry { Date = "2026-09-25", Cost = latest })
             .Where(d => d.Cost > 0)   // Cost Management omits $0 days
             .ToList(),

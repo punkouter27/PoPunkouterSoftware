@@ -1,0 +1,65 @@
+@namespace PoPunkouterSoftware.Client
+@* The live scan progress strip, isolated into its own component so a progress tick costs one
+   component's render instead of the whole dashboard's.
+
+   The hub delivers ~20 RefreshProgress messages during a 30-second scan, and every one of
+   them used to call StateHasChanged on AzureDashboard — re-rendering the hero, four
+   sparklines, both metric panels, the 30-day uptime grid and, whenever Advanced diagnostics
+   was open, the virtualized resource explorer and the whole priority queue. All of that to
+   move one bar. The page now calls Update() on this component directly (see the hub wiring in
+   AzureDashboard.razor.cs) and re-renders itself only on the transition that ends the scan.
+
+   Update() is a method rather than a [Parameter] on purpose: setting a parameter requires the
+   PARENT to render, which is the cost being removed. *@
+@using Radzen
+@using Radzen.Blazor
+
+<section class="azure-refresh-progress" aria-live="polite">
+    @if (_determinate)
+    {
+        <RadzenProgressBar Value="@_percent" Max="100" ShowValue="true" />
+    }
+    else
+    {
+        @* Percent values only ever arrive over the hub. On the HTTP-polling fallback a
+           determinate bar would sit at a lying 0% for the entire scan. *@
+        <RadzenProgressBar Mode="ProgressBarMode.Indeterminate" />
+    }
+    <span><RadzenIcon Icon="sync" class="app-progress-icon" /> @_step — you can leave this page while the scan continues.</span>
+</section>
+
+@code {
+    /// <summary>Initial values, so the first render is correct before any hub tick lands.</summary>
+    [Parameter] public int Percent { get; set; }
+
+    [Parameter] public string Step { get; set; } = "";
+
+    /// <summary>True once the hub is connected and real percentages are arriving.</summary>
+    [Parameter] public bool Determinate { get; set; }
+
+    private int _percent;
+    private string _step = "";
+    private bool _determinate;
+
+    protected override void OnParametersSet()
+    {
+        _percent = Percent;
+        _step = Step;
+        _determinate = Determinate;
+    }
+
+    /// <summary>
+    /// Push a progress tick straight into this component. Must be called on the renderer's
+    /// synchronization context — the hub callback wraps it in <c>InvokeAsync</c>.
+    /// </summary>
+    public void Update(int percent, string step, bool determinate)
+    {
+        if (_percent == percent && _step == step && _determinate == determinate)
+            return;
+
+        _percent = percent;
+        _step = step;
+        _determinate = determinate;
+        StateHasChanged();
+    }
+}

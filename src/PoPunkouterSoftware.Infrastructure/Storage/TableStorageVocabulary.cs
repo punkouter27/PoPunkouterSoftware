@@ -35,5 +35,5 @@ public static class TableRowKeys
 public readonly record struct ReverseChronoRowKey(DateTimeOffset At)
 {
     public override string ToString() =>
-        (DateTimeOffset.MaxValue.UtcTicks - At.UtcTicks).ToString("D20");
+        (DateTimeOffset.MaxValue.UtcTicks - At.UtcTicks).ToString("D20", System.Globalization.CultureInfo.InvariantCulture);
 }

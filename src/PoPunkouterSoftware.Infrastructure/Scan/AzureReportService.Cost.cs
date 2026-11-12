@@ -44,7 +44,7 @@ public partial class AzureReportService
             {
                 type = "Usage",
                 timeframe = "Custom",
-                timePeriod = new { from = start.ToString("yyyy-MM-dd"), to = today.ToString("yyyy-MM-dd") },
+                timePeriod = new { from = start.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), to = today.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) },
                 dataset = new
                 {
                     granularity = "None",
@@ -121,7 +121,7 @@ public partial class AzureReportService
             {
                 type = "Usage",
                 timeframe = "Custom",
-                timePeriod = new { from = today.AddDays(-30).ToString("yyyy-MM-dd"), to = today.ToString("yyyy-MM-dd") },
+                timePeriod = new { from = today.AddDays(-30).ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), to = today.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) },
                 dataset = new
                 {
                     granularity = "Daily",
@@ -172,7 +172,7 @@ public partial class AzureReportService
     /// <summary>Cost Management returns a day as the number 20260926 or as a string; always yyyy-MM-dd out.</summary>
     private static string CostDate(JsonElement value)
     {
-        var raw = value.ValueKind == JsonValueKind.Number ? value.GetInt32().ToString() : value.GetString() ?? "";
+        var raw = value.ValueKind == JsonValueKind.Number ? value.GetInt32().ToString(System.Globalization.CultureInfo.InvariantCulture) : value.GetString() ?? "";
         return raw.Length == 8 && raw.All(char.IsDigit) ? $"{raw[..4]}-{raw[4..6]}-{raw[6..8]}"
             : raw.Length >= 10 ? raw[..10]
             : raw;
@@ -194,7 +194,7 @@ public partial class AzureReportService
             {
                 type = "Usage",
                 timeframe = "Custom",
-                timePeriod = new { from = startOfMonth.ToString("yyyy-MM-dd"), to = today.ToString("yyyy-MM-dd") },
+                timePeriod = new { from = startOfMonth.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), to = today.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture) },
                 dataset = new
                 {
                     granularity = "Daily",
@@ -214,7 +214,7 @@ public partial class AzureReportService
                     var cost = costIdx >= 0 ? arr[costIdx].GetDouble() : 0;
                     var raw = dateIdx >= 0
                         ? arr[dateIdx].ValueKind == JsonValueKind.Number
-                            ? arr[dateIdx].GetInt32().ToString()
+                            ? arr[dateIdx].GetInt32().ToString(System.Globalization.CultureInfo.InvariantCulture)
                             : arr[dateIdx].GetString() ?? ""
                         : "";
                     var dateStr = raw.Length == 8 && raw.All(char.IsDigit)
@@ -356,7 +356,7 @@ public partial class AzureReportService
         };
     }
 
-    private record FreeTierEntry(string Label, string? FreeSku, string FreeSkuLabel, string[] PaidSkus, string Note);
+    private sealed record FreeTierEntry(string Label, string? FreeSku, string FreeSkuLabel, string[] PaidSkus, string Note);
 
     private static readonly Dictionary<string, FreeTierEntry> FreeTierMap = new(StringComparer.OrdinalIgnoreCase)
     {

@@ -23,8 +23,9 @@ namespace PoPunkouterSoftware.Infrastructure;
 /// moves on. The pinger's real job is warming cold-start instances, and it must not stop doing
 /// that because Table Storage is briefly unavailable.</para>
 /// </summary>
-public sealed class UptimeSampleStore
+public sealed class UptimeSampleStore : IDisposable
 {
+    public void Dispose() => _tables.Dispose();
     /// <summary>
     /// Retries for a lost optimistic-concurrency race. Only the pinger writes this partition
     /// and its sweeps are sequential, so contention is theoretical — but an unguarded

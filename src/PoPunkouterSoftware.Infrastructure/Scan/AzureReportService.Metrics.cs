@@ -64,9 +64,9 @@ public partial class AzureReportService
                 {
                     var total = metric.TimeSeries.SelectMany(ts => ts.Values)
                         .Sum(p => p.Total ?? p.Average ?? 0);
-                    if (metric.Name.Contains("Request", StringComparison.OrdinalIgnoreCase) && !metric.Name.Contains("5"))
+                    if (metric.Name.Contains("Request", StringComparison.OrdinalIgnoreCase) && !metric.Name.Contains('5'))
                         requests = (int)total;
-                    else if (metric.Name.Contains("5", StringComparison.OrdinalIgnoreCase))
+                    else if (metric.Name.Contains('5', StringComparison.OrdinalIgnoreCase))
                         http5xx = (int)total;
                     else if (metric.Name.Contains("Response", StringComparison.OrdinalIgnoreCase))
                         avgRt = Math.Round(total, 1);

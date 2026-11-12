@@ -7,7 +7,7 @@ namespace PoPunkouterSoftware.Infrastructure;
 /// metrics, and free-tier check results before being projected to the immutable
 /// <see cref="WebService"/> record returned in the report.
 /// </summary>
-internal record RawService
+internal sealed record RawService
 {
     public string Name { get; init; } = "";
     public string FriendlyName { get; init; } = "";

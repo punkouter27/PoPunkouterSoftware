@@ -1,0 +1,24 @@
+@using System.Reflection
+@namespace PoPunkouterSoftware.Client
+
+<footer class="app-build-version" aria-label="Application build version">
+    <span>PoPunkouterSoftware · v@(VersionLabel)</span>
+</footer>
+
+@code {
+    private static readonly string VersionLabel = ResolveVersion();
+
+    private static string ResolveVersion()
+    {
+        var raw = typeof(BuildVersion).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion;
+        if (!string.IsNullOrWhiteSpace(raw))
+        {
+            var plus = raw.IndexOf('+', StringComparison.Ordinal);
+            return plus > 0 ? raw[..Math.Min(plus + 8, raw.Length)] : raw;
+        }
+
+        return typeof(BuildVersion).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
+    }
+}

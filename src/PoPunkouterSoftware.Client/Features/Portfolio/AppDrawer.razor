@@ -1,0 +1,38 @@
+@namespace PoPunkouterSoftware.Client
+@* A side drawer: a native <dialog> opened with showModal() (js/helpers.js appShowDialog).
+
+   Not Radzen's DialogService.OpenSide, deliberately. A side dialog renders in the
+   <RadzenComponents> outlet in MainLayout — outside the page — so it loses the page's state
+   (a filter click inside it would not re-render it without DialogService.Refresh plumbing)
+   and, worse, every `.azure-ops-page ::deep …` rule: the content would arrive unstyled.
+   A <dialog> rendered INSIDE the page stays in the page's render tree and under its
+   selectors; showModal() lifts it into the top layer without moving it in the DOM.
+
+   The platform supplies the rest: focus trap, Escape, the inert page behind, focus returned
+   to the trigger, and `closedby="any"` light dismiss on the backdrop where supported. A
+   closed dialog is display:none, so it costs the page's layout nothing. *@
+@inject IJSRuntime JS
+
+<dialog class="app-drawer" @ref="_dialog" aria-labelledby="@_titleId" closedby="any">
+    <header class="app-drawer__header">
+        <h2 id="@_titleId" class="app-drawer__title">@Title</h2>
+        <form method="dialog">
+            <button type="submit" class="app-drawer__close" aria-label="Close">
+                <span class="material-symbols-outlined" aria-hidden="true">close</span>
+            </button>
+        </form>
+    </header>
+    <div class="app-drawer__body">
+        @ChildContent
+    </div>
+</dialog>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private ElementReference _dialog;
+    private readonly string _titleId = $"drawer-{Guid.NewGuid():N}";
+
+    public ValueTask OpenAsync() => JS.InvokeVoidAsync("appShowDialog", _dialog);
+}

@@ -1,0 +1,15 @@
+.app-build-version {
+    width: min(100%, var(--app-content-width));
+    margin: 0 auto;
+    padding: var(--app-space-sm) var(--app-space-md) var(--app-space-lg);
+    text-align: right;
+    font-size: var(--app-step--2);
+    color: var(--app-text-soft);
+}
+
+@media (max-width: 768px) {
+    .app-build-version {
+        padding-top: 0.25rem;
+        padding-bottom: calc(4.75rem + env(safe-area-inset-bottom));
+    }
+}

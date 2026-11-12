@@ -43,27 +43,36 @@ public class AlertTriggersTests
         var now = new DateTime(2026, 10, 30, 12, 0, 0, DateTimeKind.Utc);
         WebService Svc(string name, ContentCheckInfo? check, string? conclusion = null, int vulnerable = 0) => new()
         {
-            Name = name, FriendlyName = name, HttpStatus = ServiceHealth.Active, ContentCheck = check,
+            Name = name,
+            FriendlyName = name,
+            HttpStatus = ServiceHealth.Active,
+            ContentCheck = check,
             LastDeploy = conclusion is null ? null : new DeployInfo { Conclusion = conclusion },
             Packages = vulnerable == 0 ? null : new PackageHealthInfo { Checked = 9, Vulnerable = [.. Enumerable.Repeat("X 1.0.0 (GHSA-1)", vulnerable)] },
         };
         var before = new AzureReport
         {
-            WebServices = new WebServicesInfo { Services =
+            WebServices = new WebServicesInfo
+            {
+                Services =
             [
                 Svc("A", new ContentCheckInfo { Expect = "<title>A</title>", Found = true }),
                 Svc("B", new ContentCheckInfo { Expect = "<title>B</title>", Found = false }),
-            ] },
+            ]
+            },
             DomainExpiries = [new DomainExpiry { Domain = "old.com", ExpiresAt = now.AddDays(20) }],
         };
         var after = before with
         {
-            WebServices = new WebServicesInfo { Services =
+            WebServices = new WebServicesInfo
+            {
+                Services =
             [
                 Svc("A", new ContentCheckInfo { Expect = "<title>A</title>", Found = false }, conclusion: "failure", vulnerable: 2),
                 Svc("B", new ContentCheckInfo { Expect = "<title>B</title>", Found = false }),
                 Svc("C", new ContentCheckInfo { Expect = "<title>C</title>", Error = "timeout" }),
-            ] },
+            ]
+            },
             DomainExpiries =
             [
                 new DomainExpiry { Domain = "old.com", ExpiresAt = now.AddDays(19) },

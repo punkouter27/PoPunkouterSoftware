@@ -1,29 +1,14 @@
 <Project>
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <!-- C# 14: NET_RULES §1 mandates C# 15, but the installed .NET 10 SDK
-         (10.0.302 as of 2026-08-03) does not yet expose a C# 15 compiler.
-         Pin to C# 14 now and bump to C# 15 the first time the SDK accepts it. -->
-    <LangVersion>14</LangVersion>
+    <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <!-- Runs the IDE analyzers the .editorconfig raises to error (dead private members). -->
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-    <!-- Fail the build on a NuGet advisory, direct or transitive, rather than emitting a warning
-         nobody reads. Fix one by pinning a patched version in Directory.Packages.props. -->
     <NuGetAudit>true</NuGetAudit>
     <NuGetAuditMode>all</NuGetAuditMode>
     <NuGetAuditLevel>low</NuGetAuditLevel>
-    <RootNamespace>$(MSBuildProjectName.Replace('-', '_'))</RootNamespace>
-    <!-- Git-driven semantic versioning from tags (for example: v1.2.3) -->
-    <MinVerTagPrefix>v</MinVerTagPrefix>
-    <MinVerAutoIncrement>patch</MinVerAutoIncrement>
-    <MinVerDefaultPreReleaseIdentifiers>preview.0</MinVerDefaultPreReleaseIdentifiers>
-    <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
-
-  <ItemGroup Condition="'$(IsTestProject)' != 'true'">
-    <PackageReference Include="MinVer" PrivateAssets="All" />
-  </ItemGroup>
 </Project>

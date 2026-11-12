@@ -21,13 +21,19 @@ namespace PoPunkouterSoftware.Infrastructure;
 ///
 /// Register as a singleton: it caches the container client.
 /// </summary>
-public class AppScreenshotStore(ILogger<AppScreenshotStore> logger, IConfiguration config)
+public class AppScreenshotStore(ILogger<AppScreenshotStore> logger, IConfiguration config) : IDisposable
 {
     private const string ContainerName = "app-screenshots";
     private const string ScoresBlobName = "lighthouse.json";
 
     private BlobContainerClient? _cachedContainer;
     private readonly SemaphoreSlim _containerLock = new(1, 1);
+
+    public void Dispose()
+    {
+        _containerLock.Dispose();
+        GC.SuppressFinalize(this);
+    }
 
     // Same failure cooldown the table stores carry. Without it, /api/portfolio's two blob
     // reads (versions + scores) queued on the lock and each paid the full retry walk in turn.

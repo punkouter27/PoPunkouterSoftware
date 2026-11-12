@@ -20,7 +20,7 @@
          The advisory also lists an 11.0.0-rc.2 fix, but that package ships only lib/net11.0
          and this solution targets net10.0 — do not bump past the 10.0.x line without a TFM upgrade. -->
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Common" Version="10.0.14" />
-    <PackageVersion Include="Radzen.Blazor" Version="10.4.5" />
+    <PackageVersion Include="Radzen.Blazor" Version="12.1.12" />
     <!-- Structured Logging (Serilog) — AppInsights sink removed; OTel Azure Monitor is the sole telemetry pipeline -->
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Serilog.Enrichers.CorrelationId" Version="3.0.1" />
@@ -60,5 +60,7 @@
     <PackageVersion Include="Microsoft.Playwright" Version="1.49.0" />
     <!-- axe-core accessibility rules inside the E2EUI Playwright tier (Deque, MPL-2.0). -->
     <PackageVersion Include="Deque.AxeCore.Playwright" Version="4.14.0" />
+    <PackageVersion Include="FluentValidation" Version="11.12.0" />
+    <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="11.12.0" />
   </ItemGroup>
 </Project>

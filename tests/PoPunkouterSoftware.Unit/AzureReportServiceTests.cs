@@ -28,8 +28,13 @@ public class AzureReportServiceTests
         recs[1].ImpactedName.Should().Be("subscription", "a bare subscription GUID would reach an anonymous endpoint");
         recs[0].Should().BeEquivalentTo(new
         {
-            Category = "Cost", Impact = "High", Problem = "Right-size underused plans", Solution = "Scale down",
-            ImpactedName = "plan-a", ImpactedType = "Microsoft.Web/serverFarms", MonthlySavings = 12.5,
+            Category = "Cost",
+            Impact = "High",
+            Problem = "Right-size underused plans",
+            Solution = "Scale down",
+            ImpactedName = "plan-a",
+            ImpactedType = "Microsoft.Web/serverFarms",
+            MonthlySavings = 12.5,
         });
     }
 

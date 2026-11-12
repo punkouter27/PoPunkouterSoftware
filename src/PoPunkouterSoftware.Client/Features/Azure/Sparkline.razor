@@ -1,0 +1,75 @@
+@namespace PoPunkouterSoftware.Client
+@* Inline-SVG trend line for the hero KPI tiles. Deliberately NOT a RadzenChart: at
+   ~120×28px a full chart component brings axes, legends, tooltips and a layout pass for
+   something that is one polyline, and eight of them would render on first paint.
+
+   The viewBox is a fixed 100×30 with preserveAspectRatio="none", so the parent's CSS width
+   is the only thing that decides the drawn size and the shape stretches to fill it. Stroke
+   width is therefore given in viewBox units and set with vector-effect="non-scaling-stroke"
+   so the line stays hairline-thin however wide the tile gets. *@
+@using System.Globalization
+@using PoPunkouterSoftware.Shared
+
+@if (Points is { Count: > 1 })
+{
+    <svg class="app-sparkline @($"tone-{Tone}")" viewBox="0 0 100 30" preserveAspectRatio="none"
+         role="img" aria-label="@AriaLabel" focusable="false">
+        <path class="app-sparkline__area" d="@AreaPath" />
+        <path class="app-sparkline__line" d="@LinePath" vector-effect="non-scaling-stroke" />
+        <circle class="app-sparkline__dot" cx="@Fmt(LastX)" cy="@Fmt(LastY)" r="1.8" vector-effect="non-scaling-stroke" />
+    </svg>
+}
+
+@code {
+    /// <summary>Oldest-first series. Fewer than two points is not a trend; nothing renders.</summary>
+    [Parameter] public IReadOnlyList<OpsMetricPoint>? Points { get; set; }
+
+    /// <summary>"accent" (default), "good", "warn" or "bad" — maps to a CSS colour token.</summary>
+    [Parameter] public string Tone { get; set; } = "accent";
+
+    /// <summary>Screen-reader description. The line itself is decorative without it.</summary>
+    [Parameter] public string AriaLabel { get; set; } = "Trend";
+
+    private double LastX { get; set; }
+    private double LastY { get; set; }
+    private string LinePath { get; set; } = "";
+    private string AreaPath { get; set; } = "";
+
+    protected override void OnParametersSet()
+    {
+        if (Points is not { Count: > 1 })
+            return;
+
+        var values = Points.Select(p => p.Value).ToList();
+        var min = values.Min();
+        var max = values.Max();
+
+        // A flat series has zero range; dividing by it would produce NaN coordinates and an
+        // empty render. Draw it as a centred straight line instead — "steady" is real signal.
+        var range = max - min;
+        var flat = range <= double.Epsilon;
+
+        const double top = 3;      // leave room for the end dot's radius at both extremes
+        const double bottom = 27;
+
+        var step = 100d / (values.Count - 1);
+        var pts = values.Select((v, i) =>
+        {
+            var x = i * step;
+            var y = flat ? (top + bottom) / 2 : bottom - (v - min) / range * (bottom - top);
+            return (x, y);
+        }).ToList();
+
+        LinePath = "M " + string.Join(" L ", pts.Select(p => $"{Fmt(p.x)} {Fmt(p.y)}"));
+        // Close the area down to the baseline so the fill reads as volume under the line.
+        AreaPath = $"{LinePath} L {Fmt(pts[^1].x)} 30 L {Fmt(pts[0].x)} 30 Z";
+        LastX = pts[^1].x;
+        LastY = pts[^1].y;
+    }
+
+    /// <summary>
+    /// SVG path data is culture-invariant: a decimal comma from a European culture would be
+    /// parsed as a coordinate separator and silently corrupt the shape.
+    /// </summary>
+    private static string Fmt(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);
+}

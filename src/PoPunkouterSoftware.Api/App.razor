@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    <base href="/" />
+    @* Fallback only — every routable page sets its own <PageTitle>. Kept in the same
+       "PoPunkouterSoftware — <section>" form as those so the brand never varies. *@
+    <title>PoPunkouterSoftware</title>
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
+    @* No Google Fonts link here, deliberately. Radzen.Blazor already ships the Material
+       Symbols variable font and self-hosts it under the family name "Material Symbols";
+       every <RadzenIcon> in the app has always used that copy. The remote stylesheet was
+       serving only the four bare <span class="material-symbols-outlined"> glyphs in
+       MainLayout, and charging first paint for them: a render-blocking cross-origin
+       stylesheet, two preconnects, and — because the URL carried no `display=swap` — a
+       font whose default `display:auto` left those header icons blank until a third-party
+       round trip completed. modern-ui.css now declares the same family against the local
+       file, so the header icons and the Radzen ones resolve from one same-origin request
+       that was already being made. Re-adding this link would reintroduce the block. *@
+    <link rel="stylesheet" href="css/boot.css" />
+    @* Radzen ships one stylesheet per theme and its component colours are baked in — they
+       do not follow prefers-color-scheme. Loading only software-dark.css meant that in
+       light mode every Radzen surface (data grid, paginator, badges, base text) kept
+       dark-theme values while the page around them flipped. Each sheet is now scoped to
+       the scheme it was built for. *@
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/software.css" media="(prefers-color-scheme: light)" />
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/software-dark.css" media="(prefers-color-scheme: dark)" />
+    <link rel="stylesheet" href="css/po-tokens.css" />
+    <link rel="stylesheet" href="css/po-motion.css" />
+    <link rel="stylesheet" href="css/modern-ui.css" />
+    <link rel="stylesheet" href="PoPunkouterSoftware.Client.styles.css" />
+    <HeadOutlet />
+</head>
+@* No `rz-background-color-base rz-color-base` here: both resolve to `var(--rz-base)`
+   (#505f65) with `!important`, so every heading that did not set its own colour
+   inherited a mid-slate grey — washed out in light mode and dim in dark. The page's
+   background and text come from --app-bg-deep / --app-text in modern-ui.css. *@
+<body>
+    @* Single GPU compositing layer for the whole app — see js/gpu-backdrop.js.
+       Stays invisible (and the CSS grid fallback stays visible) unless WebGL
+       initialises successfully. *@
+    <canvas id="app-gpu-backdrop" aria-hidden="true"></canvas>
+    <div id="app-nav-progress"></div>
+    <div id="app-boot-splash" aria-label="Loading">
+        <div class="app-boot-spinner"></div>
+        <div class="app-boot-label">Loading PoPunkouterSoftware…</div>
+    </div>
+    <Routes />
+    @* Boot behaviour (splash + nav progress bar) lives in js/app-boot.js, not in an
+       inline <script>. The app sends `script-src 'self' 'wasm-unsafe-eval'` with no
+       'unsafe-inline' (Host/SecurityHeaders.cs), so an inline block here would be blocked
+       by the browser and the loading splash would never be dismissed. Any new host-page
+       script goes in a file under wwwroot/js for the same reason. *@
+    <script src="js/app-boot.js"></script>
+    @* Theme first, and before Blazor. It applies a stored light/dark choice to <html> and
+       to the two Radzen sheets scoped in <head> above, so the header the runtime eventually
+       renders already sits on the right theme. Loading it later would let the OS-following
+       default paint first and then flip — a visible flash on every navigation, because
+       enhanced navigation re-inserts the header. Kept out of <head> deliberately: a
+       render-blocking script there would cost a round trip on the critical path for a
+       control most visitors never touch. *@
+    <script src="js/theme-kit.js"></script>
+    @* Load order is load-bearing. motion-kit.js defines window.motionKit, the single rAF
+       governor every animated layer subscribes to, so it must come first. audio-kit.js is
+       next because gpu-backdrop.js PULLS window.audioKit.energy()
+       inside its frame callback (it null-checks it, so the order is defensive rather
+       than strictly required — but a first frame without audio coupling is a visible pop). *@
+    <script src="js/motion-kit.js"></script>
+    <script src="js/audio-kit.js"></script>
+    <script src="js/ui-physics.js"></script>
+    <script src="js/helpers.js"></script>
+    <script src="js/command-palette.js"></script>
+    @* The WebGL2/WebGL1 renderer — now the top of the backdrop ladder. A lazily-fetched
+       WebGPU renderer sat above it until 2026-09-05; see the header of js/gpu-backdrop.js
+       for why a second full renderer of the same decoration was not worth keeping. *@
+    <script src="js/gfx-webgl.js"></script>
+    <script src="js/gpu-backdrop.js"></script>
+    <script src="_framework/blazor.web.js"></script>
+    @* Enhanced-navigation hooks. Must come after blazor.web.js, which defines `Blazor`.
+       External for the CSP reason above — see js/blazor-hooks.js for the full rationale. *@
+    <script src="js/blazor-hooks.js"></script>
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
+</body>
+</html>
+

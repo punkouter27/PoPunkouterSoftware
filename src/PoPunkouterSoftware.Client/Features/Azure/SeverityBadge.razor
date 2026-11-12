@@ -1,0 +1,18 @@
+@namespace PoPunkouterSoftware.Client
+@using Radzen
+
+@* Shared markup for the Azure dashboard's two severity/status indicators: priority-queue
+   actionability (AzurePriorityQueue) and resource-explorer status (AzureResourceExplorer).
+   The domain-to-colour mapping stays in AzureDashboard.Presentation (ActionabilityBadge /
+   ExplorerStatusBadge), so this component only owns the shared markup and sizing (IsPill, no
+   custom classes); callers keep their own domain meaning behind the BadgeStyle they pass in. *@
+<RadzenBadge Text="@Text" BadgeStyle="@Style" IsPill="true" />
+
+@code {
+    /// <summary>The label to render — an actionability tier, a resource status, or a
+    /// confidence level.</summary>
+    [Parameter, EditorRequired] public string Text { get; set; } = "";
+
+    /// <summary>Badge colour, already resolved by the caller.</summary>
+    [Parameter] public BadgeStyle Style { get; set; } = BadgeStyle.Info;
+}

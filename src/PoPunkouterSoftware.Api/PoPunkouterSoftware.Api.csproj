@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <!-- TargetFramework, Nullable, ImplicitUsings, TreatWarningsAsErrors inherited from Directory.Build.props -->
+    <RootNamespace>PoPunkouterSoftware.Api</RootNamespace>
+    <AssemblyName>PoPunkouterSoftware.Api</AssemblyName>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerAutoIncrement>patch</MinVerAutoIncrement>
+    <MinVerDefaultPreReleaseIdentifiers>preview.0</MinVerDefaultPreReleaseIdentifiers>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <!--
+      <UserSecretsId> intentionally absent. CLAUDE.md standing rule: "No `dotnet user-secrets`.
+      Local config goes in appsettings*.json; real secrets go in the kv-poshared2 Key Vault."
+      Declaring the id would make ASP.NET auto-load %APPDATA%\Microsoft\UserSecrets\<id>\secrets.json
+      in Development, reintroducing the per-machine config drift the rule exists to prevent.
+      Re-add only with the owner's explicit go-ahead.
+    -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Blazor WASM hosting -->
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
+    <PackageReference Include="MinVer" PrivateAssets="All" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+
+    <!-- UI -->
+    <PackageReference Include="Radzen.Blazor" />
+
+    <!-- Resilience pipelines for typed HttpClients -->
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
+
+    <!-- Structured logging -->
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Enrichers.CorrelationId" />
+    <PackageReference Include="Serilog.Enrichers.Environment" />
+
+    <!-- OpenTelemetry + Azure Monitor (sole App Insights pipeline — Serilog sink removed to prevent duplicate telemetry) -->
+    <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
+
+    <!-- OpenAPI / Scalar -->
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
+
+    <!-- Azure Key Vault & Identity -->
+    <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" />
+    <PackageReference Include="Azure.Identity" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PoPunkouterSoftware.Shared\PoPunkouterSoftware.Shared.csproj" />
+    <ProjectReference Include="..\PoPunkouterSoftware.Client\PoPunkouterSoftware.Client.csproj" />
+    <ProjectReference Include="..\PoPunkouterSoftware.Infrastructure\PoPunkouterSoftware.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

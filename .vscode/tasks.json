@@ -32,7 +32,7 @@
 			"type": "process",
 			"args": [
 				"clean",
-				"${workspaceFolder}/src/PoPunkouterSoftware.API",
+				"${workspaceFolder}/src/PoPunkouterSoftware.Api",
 				"/property:GenerateFullPaths=true",
 				"/consoleloggerparameters:NoSummary"
 			],
@@ -64,7 +64,7 @@
 			"type": "process",
 			"args": [
 				"publish",
-				"${workspaceFolder}/src/PoPunkouterSoftware.API",
+				"${workspaceFolder}/src/PoPunkouterSoftware.Api",
 				"--configuration",
 				"Release",
 				"/property:GenerateFullPaths=true",
@@ -82,7 +82,7 @@
 			"type": "process",
 			"args": [
 				"build",
-				"${workspaceFolder}/src/PoPunkouterSoftware.API/PoPunkouterSoftware.API.csproj",
+				"${workspaceFolder}/src/PoPunkouterSoftware.Api/PoPunkouterSoftware.Api.csproj",
 				"/property:GenerateFullPaths=true",
 				"/consoleloggerparameters:NoSummary"
 			],
@@ -110,9 +110,9 @@
 		{
 			"label": "start-api-server",
 			"type": "shell",
-			"command": "dotnet watch run --project ${workspaceFolder}/src/PoPunkouterSoftware.API/PoPunkouterSoftware.API.csproj",
+			"command": "dotnet watch run --project ${workspaceFolder}/src/PoPunkouterSoftware.Api/PoPunkouterSoftware.Api.csproj",
 			"windows": {
-				"command": "\"${env:ProgramFiles}\\dotnet\\x64\\dotnet.exe\" watch run --project ${workspaceFolder}/src/PoPunkouterSoftware.API/PoPunkouterSoftware.API.csproj"
+				"command": "\"${env:ProgramFiles}\\dotnet\\x64\\dotnet.exe\" watch run --project ${workspaceFolder}/src/PoPunkouterSoftware.Api/PoPunkouterSoftware.Api.csproj"
 			},
 			"group": "build",
 			"isBackground": true,

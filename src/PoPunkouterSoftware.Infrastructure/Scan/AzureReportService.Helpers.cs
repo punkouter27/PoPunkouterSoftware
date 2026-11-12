@@ -79,8 +79,13 @@ public partial class AzureReportService
         if (string.IsNullOrEmpty(clean))
             return rawName;
         return "Po" + string.Concat(clean.Split('-', StringSplitOptions.RemoveEmptyEntries)
-            .Select(p => char.ToUpper(p[0]) + p[1..]));
+            .Select(p => char.ToUpperInvariant(p[0]) + p[1..]));
     }
+
+    private static readonly System.Text.Json.JsonSerializerOptions SharedCaseInsensitiveJsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
 
     private static string ShortType(string? t)
         => t?.Split('/').LastOrDefault() ?? t ?? "Unknown";

@@ -1,0 +1,75 @@
+@namespace PoPunkouterSoftware.Client
+@* "What changed since the last scan", inside the hero under the lead paragraph.
+
+   It was a pane of its own until 2026-10-19, and on desktop the half-width card beside the
+   uptime grid: usually one to three lines in a 129px card next to a 342px one, a ~210px hole
+   on every visit. The answer to "what moved?" belongs with the answer to "what is going on?",
+   so it is part of the status pane now — one fewer pane to page through on a phone.
+
+   The first scan on record renders nothing: "there is nothing to compare against yet" is not
+   status worth a line in the hero.
+
+   The delta is computed server-side (DashboardInsightsBuilder.BuildDelta) and arrives on
+   OpsSummary.Changes, so this component never diffs anything itself. It also never infers
+   meaning from the text: the icon and colour come from Kind and Direction, so a wording
+   change upstream cannot silently turn an outage green. *@
+@using PoPunkouterSoftware.Shared
+
+@if (Delta.HasBaseline)
+{
+    <section class="azure-changed" aria-label="Changes since the previous scan">
+        <h2 class="azure-changed__title">
+            Since the last scan
+            @if (Delta.PreviousScanAt is DateTime prev)
+            {
+                <AppHint Text="@($"Compared with the scan at {prev:u}.")"><span class="azure-changed__when">· @RelativeTime.Format(prev)</span></AppHint>
+            }
+        </h2>
+        @if (Delta.Changes.Count == 0)
+        {
+            <p class="azure-changed__none">Nothing changed.</p>
+        }
+        else
+        {
+            <ul class="azure-change-list">
+                @foreach (var change in Delta.Changes)
+                {
+                    <li class="azure-change @($"dir-{change.Direction}")">
+                        <RadzenIcon Icon="@IconFor(change)" />
+                        <span class="azure-change__text">@change.Text</span>
+                        @if (!string.IsNullOrWhiteSpace(change.Detail))
+                        {
+                            <span class="azure-change__detail">@change.Detail</span>
+                        }
+                    </li>
+                }
+            </ul>
+        }
+    </section>
+}
+
+@code {
+    [Parameter, EditorRequired] public ScanDelta Delta { get; set; } = new();
+
+    private ScanDelta? _rendered;
+
+    /// <summary>Pure projection of <see cref="Delta"/>; no state of its own.</summary>
+    protected override bool ShouldRender()
+    {
+        if (ReferenceEquals(_rendered, Delta)) return false;
+        _rendered = Delta;
+        return true;
+    }
+
+    private static string IconFor(ScanChange change) => change.Kind switch
+    {
+        ScanChangeKinds.ServiceDown => "cloud_off",
+        ScanChangeKinds.ServiceRecovered => "cloud_done",
+        ScanChangeKinds.Cost => change.Direction == ScanChangeDirection.Worse ? "trending_up" : "trending_down",
+        ScanChangeKinds.Security => "shield",
+        ScanChangeKinds.Cleanup => "delete_sweep",
+        ScanChangeKinds.Performance => "speed",
+        ScanChangeKinds.Deploy => "cloud_sync",
+        _ => "sync_alt",
+    };
+}

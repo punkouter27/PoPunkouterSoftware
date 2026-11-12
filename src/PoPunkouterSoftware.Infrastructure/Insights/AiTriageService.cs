@@ -473,35 +473,40 @@ public sealed record StatusFacts
     public string ToPrompt()
     {
         var sb = new StringBuilder();
-        sb.AppendLine($"Subscription: {SubscriptionName}");
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        sb.AppendLine(inv, $"Subscription: {SubscriptionName}");
         if (GeneratedAt is { } at)
-            sb.AppendLine($"Scan time (UTC): {at:yyyy-MM-dd HH:mm}");
-        sb.AppendLine($"Data is stale: {(IsStale ? "yes" : "no")}");
+            sb.AppendLine(inv, $"Scan time (UTC): {at:yyyy-MM-dd HH:mm}");
+        sb.AppendLine(inv, $"Data is stale: {(IsStale ? "yes" : "no")}");
 
         if (TotalServices > 0)
         {
-            sb.AppendLine($"Apps: {TotalServices} total, {ActiveServices} healthy, {BrokenServices} unavailable ({HealthPercent}% healthy)");
+            sb.AppendLine(inv, $"Apps: {TotalServices} total, {ActiveServices} healthy, {BrokenServices} unavailable ({HealthPercent}% healthy)");
             if (BrokenServiceNames.Count > 0)
-                sb.AppendLine($"Unavailable apps: {string.Join(", ", BrokenServiceNames)}");
+                sb.AppendLine(inv, $"Unavailable apps: {string.Join(", ", BrokenServiceNames)}");
         }
 
-        sb.AppendLine($"Azure resources: {TotalResources}");
+        sb.AppendLine(inv, $"Azure resources: {TotalResources}");
         if (Cost30Days > 0)
-            sb.AppendLine($"Cost: ${Cost30Days:F2} over 30 days, projected ${ProjectedMonthCost:F2} for the month" +
-                          (BudgetUsd is > 0 ? $", budget ${BudgetUsd:F2}" : ""));
+        {
+            sb.Append(inv, $"Cost: ${Cost30Days:F2} over 30 days, projected ${ProjectedMonthCost:F2} for the month");
+            if (BudgetUsd is > 0)
+                sb.Append(inv, $", budget ${BudgetUsd:F2}");
+            sb.AppendLine();
+        }
         if (TopCostDrivers.Count > 0)
-            sb.AppendLine($"Top cost drivers: {string.Join("; ", TopCostDrivers)}");
+            sb.AppendLine(inv, $"Top cost drivers: {string.Join("; ", TopCostDrivers)}");
 
-        sb.AppendLine($"Security findings: {SecurityFindings}");
-        sb.AppendLine($"Cleanup candidates: {CleanupCandidates}");
+        sb.AppendLine(inv, $"Security findings: {SecurityFindings}");
+        sb.AppendLine(inv, $"Cleanup candidates: {CleanupCandidates}");
         if (AvgResponseTimeMs > 0)
-            sb.AppendLine($"Average response time: {AvgResponseTimeMs:F0} ms");
+            sb.AppendLine(inv, $"Average response time: {AvgResponseTimeMs:F0} ms");
         if (SlowestEndpoints.Count > 0)
-            sb.AppendLine($"Slowest endpoints: {string.Join("; ", SlowestEndpoints)}");
+            sb.AppendLine(inv, $"Slowest endpoints: {string.Join("; ", SlowestEndpoints)}");
         if (RecentChanges.Count > 0)
-            sb.AppendLine($"Changed since the previous scan: {string.Join("; ", RecentChanges)}");
+            sb.AppendLine(inv, $"Changed since the previous scan: {string.Join("; ", RecentChanges)}");
         if (AttentionItems.Count > 0)
-            sb.AppendLine($"Attention items: {string.Join("; ", AttentionItems)}");
+            sb.AppendLine(inv, $"Attention items: {string.Join("; ", AttentionItems)}");
 
         return sb.ToString();
     }

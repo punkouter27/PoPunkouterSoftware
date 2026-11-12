@@ -25,6 +25,7 @@ public class PortfolioUiTests : IAsyncLifetime
 
     private IPlaywright _pw = null!;
     private IBrowser _browser = null!;
+    private readonly List<PlaywrightErrorGuard> _guards = [];
 
     public async Task InitializeAsync()
     {
@@ -40,6 +41,10 @@ public class PortfolioUiTests : IAsyncLifetime
 
     public async Task DisposeAsync()
     {
+        foreach (var guard in _guards)
+        {
+            await guard.DisposeAsync();
+        }
         await _browser.DisposeAsync();
         _pw.Dispose();
     }
@@ -48,13 +53,17 @@ public class PortfolioUiTests : IAsyncLifetime
     // `(hover: none)`, which Chromium only reports under touch emulation. Without it the
     // "mobile" page here would quietly get the desktop layout and every mobile assertion
     // below would be testing something the real device never sees.
-    private async Task<IPage> NewPageAsync(int width, int height, bool isMobile) =>
-        await _browser.NewPageAsync(new()
+    private async Task<IPage> NewPageAsync(int width, int height, bool isMobile)
+    {
+        var page = await _browser.NewPageAsync(new()
         {
             ViewportSize = new() { Width = width, Height = height },
             IsMobile = isMobile,
             HasTouch = isMobile,
         });
+        _guards.Add(PlaywrightErrorGuard.Watch(page));
+        return page;
+    }
 
     [Theory]
     [MemberData(nameof(Viewports))]
@@ -207,6 +216,7 @@ public class PortfolioUiTests : IAsyncLifetime
             ReducedMotion = ReducedMotion.Reduce,
         });
         var page = await ctx.NewPageAsync();
+        await using var guard = PlaywrightErrorGuard.Watch(page);
         await page.GotoAsync(BaseUrl, new() { WaitUntil = WaitUntilState.NetworkIdle });
         await page.WaitForSelectorAsync(".portfolio-stack__row", new() { Timeout = 30_000 });
 
@@ -452,7 +462,7 @@ public class PortfolioUiTests : IAsyncLifetime
             var parts = System.Text.RegularExpressions.Regex.Matches(css, @"\d+(\.\d+)?");
             double Channel(int i)
             {
-                var c = double.Parse(parts[i].Value) / 255.0;
+                var c = double.Parse(parts[i].Value, System.Globalization.CultureInfo.InvariantCulture) / 255.0;
                 return c <= 0.03928 ? c / 12.92 : Math.Pow((c + 0.055) / 1.055, 2.4);
             }
             return 0.2126 * Channel(0) + 0.7152 * Channel(1) + 0.0722 * Channel(2);

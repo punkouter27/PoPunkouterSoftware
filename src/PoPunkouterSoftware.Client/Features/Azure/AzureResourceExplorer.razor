@@ -1,0 +1,152 @@
+@namespace PoPunkouterSoftware.Client
+@using PoPunkouterSoftware.Client
+@using Radzen
+@using Radzen.Blazor
+
+@* The resource explorer: a segmented filter over every inventoried resource, rendered as a
+   table at every viewport.
+
+   It used to render a RadzenDataGrid on wide viewports and a card list on narrow ones. The
+   grid carried sorting, per-column filter menus, column resize and row virtualization over a
+   list that measures 48 rows on the live subscription — machinery sized for a dataset this app
+   does not have. It cost more than it looked: a virtualized grid torn down and rebuilt on
+   every page render (which is why this component needed the largest ShouldRender guard in the
+   codebase), a second full render tree to keep in step with the first, a matchMedia bridge
+   through JS interop with a DotNetObjectReference and a dispose path purely to choose between
+   them, and — the part that actually reached a visitor — a filter menu per column that put
+   buttons named "*A*Contains" and "A**Starts with" into the accessibility tree above the
+   segmented control that already filters this list.
+
+   One tree, one breakpoint story. It then spent three years as a CARD per resource — six
+   labelled tiles each, ~190px tall, so the 48-resource estate was a quarter-mile scroll of
+   repeated "TYPE / GROUP / CONCERN" labels. A table prints each label once, in the header.
+   Below 640px the two metric columns fold into the name cell (the same trick the /users
+   roster uses for its dates), with exactly one copy of each in the accessibility tree. *@
+<section class="azure-anchor-section">
+    <div class="azure-section-heading azure-resource-heading">
+        <h2>Resources</h2>
+        <div class="azure-resource-heading__tools">
+            <span class="azure-result-count">@Items.Count of @TotalCount</span>
+            @HeadingActions
+        </div>
+    </div>
+
+    @* Segmented control as a plain `role="group"` of buttons. RadzenSelectBar does not
+       expose a way to set `aria-pressed` on each item, so the currently selected view was
+       indistinguishable to a screen reader — five buttons, no signal of which one is on.
+       Building the same shape from `<button aria-pressed>` keeps the visual treatment
+       identical (the .rz-button classes below match Radzen's small size) and gives AT the
+       fact it needed. `aria-pressed` is the right ARIA here, not `aria-selected`: every
+       button stays focusable independently and the group is a filter rather than a tab
+       list (the rows below are the content, not a tabpanel). *@
+    <div class="azure-filter-bar" role="group" aria-label="Filter resources">
+        @foreach (var view in Views)
+        {
+            var isSelected = string.Equals(view, SelectedView, StringComparison.OrdinalIgnoreCase);
+            <button type="button"
+                    class="rz-button rz-button-sm rz-button-text @(isSelected ? "rz-state-active" : null)"
+                    aria-pressed="@(isSelected ? "true" : "false")"
+                    @onclick="@(() => SelectedViewChanged.InvokeAsync(view))">
+                @view
+            </button>
+        }
+    </div>
+
+    @if (Items.Count == 0)
+    {
+        <div class="azure-compact-state">No resources match the @SelectedView view.</div>
+    }
+    else
+    {
+        <div class="app-table-scroll" tabindex="0" role="group"
+             aria-label="Resource table. Scrolls sideways when it is wider than this window.">
+            <table class="app-table azure-resource-table">
+                <caption class="app-sr-only">Inventoried resources in the @SelectedView view</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Resource</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Concern</th>
+                        <th scope="col" class="is-numeric is-metric-col">Requests / 5xx (7d)</th>
+                        <th scope="col" class="is-numeric is-metric-col">Response</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Items)
+                    {
+                        var response = item.ResponseTimeMs is int ms ? $"{ms:N0} ms" : "—";
+                        @* @key on the composite identity, not the name: two resources in different
+                           resource groups can share a name, and a duplicate key makes Blazor's diff
+                           reuse the wrong element. *@
+                        <tr class="azure-resource-row" @key="@($"{item.Type}|{item.ResourceGroup}|{item.Name}")">
+                            <th scope="row">
+                                <span class="azure-resource-row__name">@item.Name</span>
+                                <span class="azure-resource-row__meta">@item.Type · @item.ResourceGroup · @item.Location</span>
+                                <span class="azure-resource-row__metrics">
+                                    @item.Requests7d.ToString("N0") req / @item.Errors7d.ToString("N0") 5xx · @response
+                                </span>
+                            </th>
+                            <td><SeverityBadge Text="@item.Status" Style="@StatusBadgeFor(item.Status)" /></td>
+                            <td class="azure-risk-label @RiskClassFor(item.Risk)">
+                                @item.Risk
+                                @if (item.Detail is { } detail)
+                                {
+                                    <span class="azure-risk-detail">@detail</span>
+                                }
+                            </td>
+                            <td class="is-numeric is-metric-col">@item.Requests7d.ToString("N0") / @item.Errors7d.ToString("N0")</td>
+                            <td class="is-numeric is-metric-col">@response</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
+
+@code {
+    /// <summary>The filtered rows to render.</summary>
+    [Parameter, EditorRequired] public IReadOnlyList<ResourceExplorerItem> Items { get; set; } = [];
+
+    /// <summary>Unfiltered row count, for the "N of M" result counter.</summary>
+    [Parameter] public int TotalCount { get; set; }
+
+    [Parameter, EditorRequired] public IReadOnlyList<string> Views { get; set; } = [];
+    [Parameter] public string SelectedView { get; set; } = "";
+    [Parameter] public EventCallback<string> SelectedViewChanged { get; set; }
+
+    [Parameter, EditorRequired] public Func<string, BadgeStyle> StatusBadgeFor { get; set; } = default!;
+    [Parameter, EditorRequired] public Func<string, string> RiskClassFor { get; set; } = default!;
+
+    /// <summary>Controls for the heading row (the page's download button). Not part of the
+    /// ShouldRender comparison: a RenderFragment is a fresh delegate every parent render.</summary>
+    [Parameter] public RenderFragment? HeadingActions { get; set; }
+
+    private IReadOnlyList<ResourceExplorerItem>? _renderedItems;
+    private int _renderedTotal;
+    private string? _renderedView;
+
+    /// <summary>
+    /// Guarded on every parameter that actually changes what is drawn — the rows, the counter
+    /// and the selected view chip. The two <c>Func</c> parameters are excluded deliberately:
+    /// they are fresh delegates on every parent render, so including them would make the guard
+    /// a no-op, and they only ever affect output through the rows above.
+    ///
+    /// <para>The <c>IsNarrow</c> comparison that used to sit here went with the data grid: with
+    /// one render tree there is no viewport-dependent branch left to invalidate on.</para>
+    /// </summary>
+    protected override bool ShouldRender()
+    {
+        if (ReferenceEquals(_renderedItems, Items)
+            && _renderedTotal == TotalCount
+            && _renderedView == SelectedView)
+        {
+            return false;
+        }
+
+        _renderedItems = Items;
+        _renderedTotal = TotalCount;
+        _renderedView = SelectedView;
+        return true;
+    }
+}

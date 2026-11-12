@@ -17,7 +17,7 @@ permissions:
   id-token: write
   contents: read
 
-# Repository variables, set by SCRIPTS/ensure-azure-access.ps1 (none of them is a secret):
+# Repository variables, set by scripts/ensure-azure-access.ps1 (none of them is a secret):
 #   AZURE_CLIENT_ID            — the gh-popunkoutersoftware-deploy OIDC app
 #   AZURE_TENANT_ID
 #   AZURE_SUBSCRIPTION_ID
@@ -100,7 +100,7 @@ jobs:
         run: dotnet test tests/PoPunkouterSoftware.Unit -c Release --no-build --nologo
 
       - name: Publish
-        run: dotnet publish src/PoPunkouterSoftware.API/PoPunkouterSoftware.API.csproj -c Release --no-restore -o ./publish --nologo
+        run: dotnet publish src/PoPunkouterSoftware.Api/PoPunkouterSoftware.Api.csproj -c Release --no-restore -o ./publish --nologo
 
       # NOTE: 'secrets' is intentionally NOT referenced in any 'if:' expression —
       # GitHub Actions blocks it there to avoid leaking secret existence.

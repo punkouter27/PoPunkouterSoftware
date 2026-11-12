@@ -121,7 +121,7 @@
 
     // A visitor who picked Effects → Full before it was removed still has the key; clear it
     // so nothing stale lingers in their storage.
-    try { localStorage.removeItem('pops:fx'); } catch (e) { }
+    try { localStorage.removeItem('popunkoutersoftware:fx'); } catch (e) { }
 
     /** Viewport-uv centre of the first element matching `selector`, or null. */
     function centreOf(selector) {

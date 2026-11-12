@@ -36,9 +36,9 @@
 (function () {
     'use strict';
 
-    var KEY = 'pops:theme';
-    var DENSITY_KEY = 'pops:density';
-    var DETAILS_KEY = 'pops:details';
+    var KEY = 'popunkoutersoftware:theme';
+    var DENSITY_KEY = 'popunkoutersoftware:density';
+    var DETAILS_KEY = 'popunkoutersoftware:details';
     var root = document.documentElement;
     var darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
 

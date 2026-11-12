@@ -4,7 +4,6 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
     <!-- Suppress TreatWarningsAsErrors for test output attributes -->
-    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\PoPunkouterSoftware.API\PoPunkouterSoftware.API.csproj" />
+    <ProjectReference Include="..\..\src\PoPunkouterSoftware.Api\PoPunkouterSoftware.Api.csproj" />
     <ProjectReference Include="..\..\src\PoPunkouterSoftware.Client\PoPunkouterSoftware.Client.csproj" />
     <ProjectReference Include="..\..\src\PoPunkouterSoftware.Shared\PoPunkouterSoftware.Shared.csproj" />
   </ItemGroup>

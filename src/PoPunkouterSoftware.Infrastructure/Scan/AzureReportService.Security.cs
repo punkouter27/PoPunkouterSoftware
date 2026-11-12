@@ -26,7 +26,8 @@ namespace PoPunkouterSoftware.Infrastructure;
 /// </summary>
 public partial class AzureReportService
 {
-    private async Task<List<SslEntry>> CheckSslAsync(List<RawService> services, CancellationToken ct)
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA5359:Do Not Disable Certificate Validation", Justification = "Intentional TLS certificate probe to inspect expiry even on invalid/expired certs.")]
+    private static async Task<List<SslEntry>> CheckSslAsync(List<RawService> services, CancellationToken ct)
     {
         using var gate = new SemaphoreSlim(8);
         var tasks = services.Select(async svc =>
@@ -56,9 +57,9 @@ public partial class AzureReportService
                     if (cert is null)
                         return new SslEntry { Name = svc.Name, Url = url, Error = "No cert" };
 
-                    var expiry = DateTime.Parse(cert.GetExpirationDateString());
+                    var expiry = DateTime.Parse(cert.GetExpirationDateString(), System.Globalization.CultureInfo.InvariantCulture);
                     var daysLeft = (int)(expiry - DateTime.UtcNow).TotalDays;
-                    return new SslEntry { Name = svc.Name, Url = url, Expiry = expiry.ToString("yyyy-MM-dd"), DaysLeft = daysLeft, Subject = cert.Subject };
+                    return new SslEntry { Name = svc.Name, Url = url, Expiry = expiry.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture), DaysLeft = daysLeft, Subject = cert.Subject };
                 }
                 catch (Exception ex)
                 {

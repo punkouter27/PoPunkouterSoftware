@@ -51,7 +51,7 @@
 (function () {
     'use strict';
 
-    var STORAGE_KEY = 'pops:sound';
+    var STORAGE_KEY = 'popunkoutersoftware:sound';
     var MASTER_LEVEL = 0.5;
 
     var ctx = null;

@@ -199,8 +199,7 @@ public partial class AzureReportService
         AppsFile? wrapper;
         try
         {
-            wrapper = System.Text.Json.JsonSerializer.Deserialize<AppsFile>(rawJson,
-                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            wrapper = System.Text.Json.JsonSerializer.Deserialize<AppsFile>(rawJson, SharedCaseInsensitiveJsonOptions);
         }
         catch (System.Text.Json.JsonException ex)
         {
@@ -259,7 +258,7 @@ public partial class AzureReportService
                     Name = meta.Name ?? "",
                     Url = meta.Url,
                     Kind = "url-not-loadable",
-                    Reason = reason ?? $"Probe to {meta.Url} failed (status {(statusCode.HasValue ? statusCode.Value.ToString() : "—")}).",
+                    Reason = reason ?? $"Probe to {meta.Url} failed (status {(statusCode.HasValue ? statusCode.Value.ToString(System.Globalization.CultureInfo.InvariantCulture) : "—")}).",
                     Confidence = "medium",
                     RemovalSnippet = BuildRemovalSnippet(meta, rawJson),
                 };
@@ -363,7 +362,7 @@ public partial class AzureReportService
             if (startIdx >= 0 && i > startIdx && lines[i].TrimStart() == "}" + (lines[i].Contains('}') ? "" : ""))
             {
                 // Closing brace at the same or greater indent than the opening.
-                if (lines[i].IndexOf('}') >= 0)
+                if (lines[i].Contains('}'))
                 {
                     endIdx = i;
                     break;

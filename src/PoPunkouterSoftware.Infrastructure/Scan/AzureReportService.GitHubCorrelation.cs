@@ -55,7 +55,7 @@ public partial class AzureReportService
         }
     }
 
-    private async Task<List<InfraReview>> FetchInfraReviewsAsync(HttpClient http, CancellationToken ct)
+    private static async Task<List<InfraReview>> FetchInfraReviewsAsync(HttpClient http, CancellationToken ct)
     {
         var reviews = new List<InfraReview>();
         var page = 1;
@@ -117,7 +117,7 @@ public partial class AzureReportService
     /// push to its default branch, and without the filter a nightly scheduled workflow (this
     /// repo has two) would be reported as a deploy every single day.
     /// </summary>
-    private async Task<(string? status, string? conclusion, DateTime? completedAt, string? runUrl, string? runName, string? headSha)>
+    private static async Task<(string? status, string? conclusion, DateTime? completedAt, string? runUrl, string? runName, string? headSha)>
         FetchLatestWorkflowRunAsync(HttpClient http, string fullName, string defaultBranch, CancellationToken ct)
     {
         try

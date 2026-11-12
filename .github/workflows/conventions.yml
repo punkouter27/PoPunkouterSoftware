@@ -1,6 +1,6 @@
 name: Po conventions
 
-# Weekly: every Po repo still follows the shared "CI/CD and Azure" conventions (SCRIPTS/check-conventions.sh).
+# Weekly: every Po repo still follows the shared "CI/CD and Azure" conventions (scripts/check-conventions.sh).
 # A gap turns this run red, and the CI watcher pushes that to ntfy like any other red run.
 on:
   schedule:
@@ -18,4 +18,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check every Po repo
-        run: bash SCRIPTS/check-conventions.sh
+        run: bash scripts/check-conventions.sh

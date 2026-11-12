@@ -1,0 +1,48 @@
+@namespace PoPunkouterSoftware.Client
+@implements IDisposable
+@inject NavigationManager Nav
+
+<nav class="app-bottom-nav" aria-label="Mobile navigation">
+    @foreach (var item in Items)
+    {
+        var active = IsActive(item.Href);
+        <a href="@item.Href"
+           class="app-bottom-nav__item @(active ? "is-active" : null)"
+           aria-current="@(active ? "page" : null)">
+            <span class="material-symbols-outlined app-bottom-nav__icon" aria-hidden="true">@item.Icon</span>
+            <span class="app-bottom-nav__label">@item.Label</span>
+        </a>
+    }
+</nav>
+
+@code {
+    private sealed record NavItem(string Href, string Icon, string Label);
+
+    private static readonly NavItem[] Items =
+    [
+        new("/", "home", "Apps"),
+        new("/azure", "monitor_heart", "Azure"),
+        new("/users", "group", "Users"),
+        new("/settings", "settings", "Settings"),
+    ];
+
+    protected override void OnInitialized() =>
+        Nav.LocationChanged += OnLocationChanged;
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e) =>
+        InvokeAsync(StateHasChanged);
+
+    private bool IsActive(string href)
+    {
+        var current = new Uri(Nav.Uri).AbsolutePath.TrimEnd('/');
+        if (string.IsNullOrEmpty(current))
+        {
+            current = "/";
+        }
+
+        return string.Equals(current, href, StringComparison.OrdinalIgnoreCase);
+    }
+
+    public void Dispose() =>
+        Nav.LocationChanged -= OnLocationChanged;
+}

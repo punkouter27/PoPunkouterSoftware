@@ -101,11 +101,14 @@ public class SignInReportBuilderTests
         // Management omits zero rows); an app matching no scanned service stays unknown.
         var inventory = new PoPunkouterSoftware.Shared.AzureReport
         {
-            WebServices = new() { Services =
+            WebServices = new()
+            {
+                Services =
             [
                 new() { Name = "app-potraffic", FriendlyName = "PoTraffic", ResourceGroup = "rg-traffic" },
                 new() { Name = "app-powatch", FriendlyName = "", ResourceGroup = "rg-watch" },
-            ] },
+            ]
+            },
             Cost = new() { ResourceGroups = [new() { Name = "RG-TRAFFIC", Total = 6.0 }] },
         };
         var costed = SignInReportBuilder.AttachCosts(report, inventory).Apps.ToDictionary(a => a.App);

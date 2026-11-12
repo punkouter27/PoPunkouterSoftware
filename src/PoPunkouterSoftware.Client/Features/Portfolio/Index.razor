@@ -1,0 +1,259 @@
+@namespace PoPunkouterSoftware.Client
+@page "/"
+@rendermode WasmRenderModes.Interactive
+@using PoPunkouterSoftware.Shared
+@implements IAsyncDisposable
+@inject PortfolioApiClient Api
+@inject IJSRuntime JS
+@inject DialogNotificationHelper Notify
+
+<PageTitle>Web apps · PoPunkouterSoftware</PageTitle>
+
+<main id="main-content" class="app-page portfolio-page" tabindex="-1">
+    <header class="portfolio-header">
+        @* No "PoPunkouterSoftware" eyebrow: the topbar wordmark directly above says it. *@
+        <div>
+            <h1>Web apps</h1>
+            <p>Small tools and experiments built with .NET and Azure. Read across a row to see how one app is made, or down a column to compare them.</p>
+        </div>
+        @* The count, freshness and Sync sit on the title row. They had a bordered bar of their
+           own beside a search box; the search went (owner's call, 2026-10-19 — eleven cards,
+           and Ctrl+K already finds any app by name) and the bar would have been a grey strip
+           around three words. *@
+        @if (data is not null && data.Apps.Count > 0)
+        {
+            <div class="portfolio-summary" aria-live="polite">
+                <strong>@data.Apps.Count apps</strong>
+                @if (data.GeneratedAt is DateTime updated)
+                {
+                    @* Focusable because the exact read time exists nowhere else on the page: the
+                       visible text is relative, and `title` — which is what this used to be —
+                       never appears on a touch device and is not announced on focus. *@
+                    <AppHint Class="@(data.Stale ? "is-stale" : "")" Focusable="true"
+                             Text="@($"Last read {updated:u}.{(data.Stale ? " This page treats that as stale; the server rescans a stale inventory on its own." : "")} The list is re-read on every visit, and weekly in a tab left open.")">
+                        Updated @RelativeTime.Format(updated)@(data.Stale ? " · stale" : "")
+                    </AppHint>
+                }
+                @if (_canSync)
+                {
+                    <RadzenButton Icon="sync" Text="@(_syncing ? "Syncing…" : "Sync")" Size="ButtonSize.Small"
+                                  ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined"
+                                  Disabled="_syncing" Click="SyncAsync" class="portfolio-sync"
+                                  aria-label="@($"{(_syncing ? "Syncing…" : "Sync")}: rescan Azure and refresh app statuses")" />
+                    @* The name STARTS with the visible word (WCAG 2.5.3, label in name): a voice
+                       user says "click Sync", and a name that never contains "Sync" ignores them.
+                       axe caught it — CoreRoutes_HaveNoSeriousAxeViolations. *@
+                }
+            </div>
+        }
+    </header>
+
+    @* Cache-mismatch banner: server BuildId has changed since the WASM bundle loaded,
+       meaning what is on screen was rendered against outdated server state — offer a
+       gentle "reload" that doesn't punish the visitor with a hard refresh. *@
+    @if (data is not null
+         && _buildIdAtLoad is not null
+         && data.BuildId != _buildIdAtLoad
+         && !_buildMismatchDismissed)
+    {
+        <div class="portfolio-build-banner" role="status">
+            <RadzenIcon Icon="cloud_sync" />
+            <div class="portfolio-build-banner__copy">
+                <strong>The dashboard has been updated since this page loaded.</strong>
+                <span>A newer build is live; click "Reload" to pick up the freshest inventory and live status.</span>
+            </div>
+            <button type="button" class="portfolio-build-banner__action" @onclick="HardReloadAsync">Reload</button>
+            <button type="button" class="portfolio-build-banner__dismiss" aria-label="Dismiss update banner" @onclick="@(() => _buildMismatchDismissed = true)">×</button>
+        </div>
+    }
+
+
+    @* The error banner sits ALONGSIDE the catalog, never instead of it. This used to be an
+       `else if` ahead of the render branch while `data` was left populated, so one failed
+       background auto-refresh — which fires unattended — replaced every
+       rendered card with a banner and threw away catalog data still held in memory. A
+       refresh that fails is a stale list, not an empty one. *@
+    @if (!string.IsNullOrWhiteSpace(_loadError))
+    {
+        <ErrorRetryBanner Title="@(data is null ? "The app list could not be loaded." : "The app list could not be updated — showing the last known catalog.")"
+                          Message="@_loadError" OnRetry="LoadAppsAsync" />
+    }
+
+    @if (_loading && data is null)
+    {
+        <LoadingSkeleton Variant="cards" TileCount="6" AriaLabel="Loading portfolio" />
+    }
+    else if (data?.Apps.Count == 0)
+    {
+        <div class="app-empty-state">No apps are configured yet.</div>
+    }
+    else if (data is not null)
+    {
+        <PortfolioStackTable Apps="_webApps" Label="Web applications: how each one is built" FirstIsLcp="true" />
+        @if (_rlApps.Count > 0)
+        {
+            @* The Unity games: agents trained with reinforcement learning, playable in the
+               browser as WebGL builds on Azure Static Web Apps. *@
+            <header class="portfolio-section-header">
+                <h2 id="rl-training">RL training</h2>
+                <p>Games whose players are trained with reinforcement learning, running in the browser.</p>
+            </header>
+            <PortfolioStackTable Apps="_rlApps" Label="RL training games: how each one is built" />
+        }
+    }
+</main>
+
+@code {
+    private PortfolioResponse? data;
+    // Built once per response, not per render: PortfolioStackTable guards on list identity.
+    private IReadOnlyList<PortfolioApp> _webApps = [];
+    private IReadOnlyList<PortfolioApp> _rlApps = [];
+    private long? _buildIdAtLoad;
+    private bool _buildMismatchDismissed;
+    private bool _loading;
+    private string? _loadError;
+
+    // Auto-refresh: every visit reads the catalog fresh, and a tab left open re-reads it
+    // weekly. There is no "Reload catalog" button (owner's call, 2026-09-26): re-reading
+    // the same stored list answers a question nobody asks. Sync below is a different
+    // thing (owner's ask, 2026-10-19): it rescans Azure, so the list has something new to show.
+    private static readonly TimeSpan AutoRefreshEvery = TimeSpan.FromDays(7);
+    private Timer? _autoRefreshTimer;
+
+    // Sync = the same subscription rescan as /azure's "Rescan Azure". Shown only when the
+    // server will accept it (/api/config): in Production the endpoint needs a management
+    // key the browser does not have, and a button that can only fail is a lie.
+    private bool _canSync;
+    private bool _syncing;
+    private static readonly TimeSpan SyncTimeout = TimeSpan.FromMinutes(2);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(LoadAppsAsync(), LoadSyncAvailabilityAsync());
+        // A visitor who leaves before the first load finishes has already disposed this page;
+        // a timer created after that would never be disposed and would keep the page alive.
+        if (_disposed) return;
+        _autoRefreshTimer = new Timer(
+            _ => _ = InvokeAsync(LoadAppsAsync), null, AutoRefreshEvery, AutoRefreshEvery);
+    }
+
+    private bool _disposed;
+
+    public ValueTask DisposeAsync()
+    {
+        _disposed = true;
+        _autoRefreshTimer?.Dispose();
+        return ValueTask.CompletedTask;
+    }
+
+    private async Task LoadAppsAsync()
+    {
+        if (_loading) return;
+
+        _loading = true;
+        _loadError = null;
+        try
+        {
+            // Per-call budget: the shared HttpClient's 5-minute timeout is sized for the
+            // huge report endpoint; a hung portfolio call should fail in seconds, not minutes.
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            data = await Api.GetPortfolioAsync(cts.Token);
+            _webApps = data?.Apps.Where(a => a.Category != PortfolioApp.RlTraining).ToList() ?? [];
+            _rlApps = data?.Apps.Where(a => a.Category == PortfolioApp.RlTraining).ToList() ?? [];
+            if (_buildIdAtLoad is null && data?.BuildId > 0)
+                _buildIdAtLoad = data.BuildId;
+        }
+        catch (Exception ex)
+        {
+            _loadError = FriendlyError.Describe(ex);
+            Console.Error.WriteLine($"Portfolio load error: {ex}");
+        }
+        finally
+        {
+            _loading = false;
+            // Load paths reached from a UI event get a render for free — ComponentBase renders
+            // once when the handler's task yields and again when it completes. The
+            // auto-refresh timer is NOT a UI event: InvokeAsync only marshals onto the
+            // renderer's sync context, it does not schedule a render. So the timer (then
+            // every five minutes) fetched a fresh catalog, replaced `data` with it, and nothing on screen
+            // ever changed — the "auto-updates every 5 min" label was a promise the page did
+            // not keep, and a card whose app went down kept rendering as healthy until someone
+            // pressed the button. Rendering here covers every caller; the redundant render on
+            // the event paths is one diff of a page whose children are all ShouldRender-guarded.
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadSyncAvailabilityAsync()
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var cfg = await Api.GetConfigAsync(cts.Token);
+            _canSync = cfg?.ManagementActionsEnabled ?? false;
+        }
+        catch
+        {
+            _canSync = false; // No answer, no button.
+        }
+    }
+
+    private async Task SyncAsync()
+    {
+        _syncing = true;
+        var baseline = data?.GeneratedAt;
+        try
+        {
+            // 409 means a scan is already running: wait for that one instead of failing.
+            using var resp = await Api.StartRefreshAsync();
+            if (!resp.IsSuccessStatusCode && resp.StatusCode != System.Net.HttpStatusCode.Conflict)
+            {
+                var detail = await ProblemDetailsParser.TryReadDetailAsync(resp);
+                Notify.Error("Sync rejected",
+                    detail ?? $"The server refused the rescan ({(int)resp.StatusCode}).");
+                return;
+            }
+
+            // The runner takes its lock before answering 202, so RefreshInProgress is
+            // already true on the first poll; poll the portfolio until it clears.
+            var deadline = DateTime.UtcNow + SyncTimeout;
+            do
+            {
+                await Task.Delay(3000);
+                await LoadAppsAsync();
+            }
+            while (data?.RefreshInProgress == true && DateTime.UtcNow < deadline);
+
+            if (data?.GeneratedAt is { } updated && updated != baseline)
+                Notify.Success("Synced", $"{data.Apps.Count} apps, statuses from Azure just now.");
+            else
+                Notify.Error("Sync failed",
+                    "The scan finished without a new report. The server log has the reason.");
+        }
+        catch (Exception ex)
+        {
+            Notify.Error("Sync failed", FriendlyError.Describe(ex));
+        }
+        finally
+        {
+            _syncing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HardReloadAsync()
+    {
+        // Refresh inventory view first; if user dismisses without reloading, at least the
+        // data is fresh. If the build id is genuinely different, force a hard reload so
+        // the WASM bundle matches the server.
+        await LoadAppsAsync();
+        try
+        {
+            await JS.InvokeVoidAsync("appHardReload");
+        }
+        catch
+        {
+            // swallow — we re-rendered the latest data above already
+        }
+    }
+}

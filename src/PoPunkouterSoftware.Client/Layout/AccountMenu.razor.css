@@ -1,0 +1,43 @@
+.app-account-menu {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--app-space-xs);
+    flex-shrink: 0;
+}
+
+.app-account-pill {
+    font-size: var(--app-step--2);
+    color: var(--app-text-muted);
+    background: var(--app-surface-soft);
+    border: 1px solid var(--app-border);
+    border-radius: var(--app-radius-pill);
+    padding: 0.25rem 0.65rem;
+}
+
+.app-account-select {
+    font-size: var(--app-step--2);
+    color: var(--app-text);
+    background: var(--app-surface-strong);
+    border: 1px solid var(--app-border-strong);
+    border-radius: var(--app-radius-pill);
+    padding: 0.3rem 0.6rem;
+    min-height: 36px;
+}
+
+.app-account-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--app-border);
+    background: var(--app-surface-soft);
+    color: var(--app-text);
+    cursor: pointer;
+}
+
+.app-account-btn:hover {
+    border-color: var(--app-border-strong);
+    background: var(--app-hover-wash);
+}

@@ -22,6 +22,8 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
     <!-- UI components -->
     <PackageReference Include="Radzen.Blazor" />
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
   </ItemGroup>
 
   <ItemGroup>

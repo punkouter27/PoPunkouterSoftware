@@ -1,0 +1,198 @@
+@namespace PoPunkouterSoftware.Client
+@* 30-day uptime grid, one row per app, one cell per day — built entirely from the
+   per-service snapshots already written into every HistorySummary row. No new storage and no
+   new Azure calls: the data has been collected on every scan since history existed and had
+   nowhere to be shown.
+
+   Honesty rules baked into the server-side builder (DashboardInsightsBuilder.BuildUptime),
+   restated here because they are what stop the grid from flattering the fleet:
+     · a day with several scans takes the WORST state observed, not the last one;
+     · a day with no scan is "no data", drawn as an empty cell, and is excluded from the
+       uptime percentage rather than counted as healthy;
+     · rows sort worst-uptime-first, because the grid exists to surface problems.
+
+   The grid scrolls inside its own container: 30 columns cannot fit a 390px viewport, and the
+   page body must never scroll horizontally. *@
+@using PoPunkouterSoftware.Shared
+
+<article class="app-card azure-uptime">
+    <div class="azure-section-heading">
+        <h2 class="azure-glance-title">Uptime</h2>
+        @* The methodology used to be a six-line paragraph under the legend, read once and then
+           scrolled past on every visit, plus a `title` no touch visitor could see. It is the
+           same text, one tap away. *@
+        <span class="app-note">
+            Last @Map.Days.Count days · @EvidenceLabel
+            <AppHint Focusable="true" Text="@Methodology" />
+        </span>
+    </div>
+
+    @if (Map.Rows.Count == 0)
+    {
+        <div class="azure-compact-state">
+            No history yet. The background pinger fills this in as it runs, and each rescan adds a day.
+        </div>
+    }
+    else
+    {
+        @* tabindex="0": this is a horizontally scrolling region, and without it a keyboard-only
+           visitor cannot reach the days that are off-screen at all. The cells and percentages
+           are aria-hidden and the sentences below carry the same facts in a form worth
+           listening to (DashboardDerivations.DescribeUptimeRow). The row names are NOT hidden:
+           they are the buttons that open each app's drawer, and a focusable control inside
+           aria-hidden is the one thing axe flags as serious here. *@
+        <div class="azure-uptime__scroll" tabindex="0" role="group"
+             aria-label="Daily uptime grid, scrolls sideways. A written summary of every row follows it.">
+            <div class="azure-uptime__grid" style="@GridStyle">
+                @foreach (var row in Map.Rows)
+                {
+                    var focused = IsFocused(row);
+                    @* data-fx-attract: the GPU backdrop's particles orbit a row whose latest day
+                       is down (or, more gently, degraded). Absent — not "0" — on a healthy row. *@
+                    var latest = row.Cells.Count > 0 ? row.Cells[^1] : null;
+                    var attract = latest == UptimeState.Broken ? "1" : latest == UptimeState.Degraded ? "0.5" : null;
+                    @* The row name opens the app's drawer (AzureAppDetail), which now carries what
+                       the `title` tooltips on the name, the chips, every cell and the percentage
+                       used to — mouse-only text no phone or keyboard visitor could reach. *@
+                    <button type="button" class="azure-uptime__label @(focused ? "is-focused" : "")" data-fx-attract="@attract"
+                            @onclick="() => OnSelect.InvokeAsync(row)">
+                        <span class="azure-uptime__name">@row.Name</span>
+                        @if (row.Errors24h is > 0)
+                        {
+                            @* Up is not the same as working: an app answering its home page while
+                               throwing on every real request shows green cells and this chip. *@
+                            <span class="azure-uptime__chip is-error" data-detail><RadzenIcon Icon="bug_report" />@row.Errors24h</span>
+                        }
+                        @if (DashboardDerivations.VulnerabilityCount(row) is > 0 and var vulns)
+                        {
+                            <span class="azure-uptime__chip is-alert" data-detail><RadzenIcon Icon="shield" />@vulns</span>
+                        }
+                        @if (row.LastRun?.Conclusion == "failure")
+                        {
+                            @* A red build on a green row: the next deploy is the next outage. *@
+                            <span class="azure-uptime__chip is-error" data-detail><RadzenIcon Icon="error" />CI</span>
+                        }
+                        @if (row.ContentCheck is { Found: false, Error: null })
+                        {
+                            @* Answers 200 without the page it should serve. *@
+                            <span class="azure-uptime__chip is-error" data-detail><RadzenIcon Icon="visibility_off" />page</span>
+                        }
+                    </button>
+                    @for (var i = 0; i < row.Cells.Count; i++)
+                    {
+                        <div class="azure-uptime__cell @($"is-{row.Cells[i]}") @(row.DeployDays.Contains(i) ? "has-deploy" : "") @(focused ? "is-focused" : "")" aria-hidden="true"></div>
+                    }
+                    <div class="azure-uptime__pct @(row.UptimePercent < 100 ? "is-degraded" : "")" aria-hidden="true">
+                        @row.UptimePercent%
+                    </div>
+                }
+            </div>
+        </div>
+
+        @* The screen-reader rendering of the grid. This is not a duplicate of a fact already
+           announced: the grid above announces NOTHING, by design. It used to carry role="table"
+           with role="cell" children and no role="row" between them, which is an invalid ARIA
+           table — no assistive technology exposed it as a table at all — and even if the roles
+           had been right, 11 rows x 30 unlabelled colour swatches is 330 cells to listen to for
+           facts that fit in a sentence each. The state of the grid reaches a screen reader here
+           instead, as prose, with the bad days named. *@
+        <ul class="app-sr-only">
+            @foreach (var row in Map.Rows)
+            {
+                <li>@DashboardDerivations.DescribeUptimeRow(row, Map.Days)</li>
+            }
+        </ul>
+
+        <div class="azure-uptime__legend" aria-hidden="true">
+            <span><i class="azure-uptime__cell is-healthy"></i> up</span>
+            <span><i class="azure-uptime__cell is-degraded"></i> degraded</span>
+            <span><i class="azure-uptime__cell is-broken"></i> down</span>
+            <span><i class="azure-uptime__cell is-no-data"></i> no scan</span>
+            <span><i class="azure-uptime__cell is-healthy has-deploy"></i> deploy landed</span>
+            @* Keyed only when a row actually carries the chip: a legend for marks that are not
+               on screen is one more line to read for nothing. The chips and their keys are
+               `data-detail` — shown only under /settings → Details → Full. Simple loses no facts:
+               every chip's fact is in the row's drawer and its screen-reader sentence, and the
+               CI, page and package ones are "Needs attention" lines too. *@
+            @if (Map.Rows.Any(r => r.Errors24h > 0))
+            {
+                <span data-detail><span class="azure-uptime__chip is-error">n</span> exceptions, 24h</span>
+            }
+            @if (Map.Rows.Any(r => DashboardDerivations.VulnerabilityCount(r) > 0))
+            {
+                <span data-detail><span class="azure-uptime__chip is-alert">n</span> vulnerable packages</span>
+            }
+            @if (Map.Rows.Any(r => r.LastRun?.Conclusion == "failure"))
+            {
+                <span data-detail><span class="azure-uptime__chip is-error">CI</span> latest build failed</span>
+            }
+            @if (Map.Rows.Any(r => r.ContentCheck is { Found: false, Error: null }))
+            {
+                <span data-detail><span class="azure-uptime__chip is-error">page</span> expected content missing</span>
+            }
+        </div>
+    }
+</article>
+
+@code {
+    [Parameter, EditorRequired] public UptimeHeatmap Map { get; set; } = new();
+
+    /// <summary>A service name from <c>/azure?focus=</c>; its row is highlighted.</summary>
+    [Parameter] public string? Focus { get; set; }
+
+    /// <summary>A row name was clicked: the page opens that app's drawer. Not part of the
+    /// ShouldRender comparison — a callback is a fresh object every parent render.</summary>
+    [Parameter] public EventCallback<UptimeRow> OnSelect { get; set; }
+
+    private UptimeHeatmap? _rendered;
+    private string? _renderedFocus;
+
+    /// <summary>
+    /// A 30-day grid is the single largest DOM subtree on the page — rows x 30 cells, rebuilt
+    /// from scratch on every parent render because Blazor treats a reference-typed parameter
+    /// as "may have changed". It is a pure projection of <see cref="Map"/>, and the page
+    /// replaces the whole <c>OpsSummary</c> on load rather than mutating it, so reference
+    /// identity is a sound staleness test. This component holds no state of its own; adding
+    /// any would make the guard wrong.
+    /// </summary>
+    protected override bool ShouldRender()
+    {
+        if (ReferenceEquals(_rendered, Map) && _renderedFocus == Focus) return false;
+        _rendered = Map;
+        _renderedFocus = Focus;
+        return true;
+    }
+
+    /// <summary>?focus=pomemevideo, ?focus=PoMemeVideo and the alert's own link all land on the same row.</summary>
+    private bool IsFocused(UptimeRow row) =>
+        !string.IsNullOrWhiteSpace(Focus) && DashboardDerivations.AppMatchKey(row.Name) == DashboardDerivations.AppMatchKey(Focus);
+
+    /// <summary>
+    /// One label column, one column per day, one percentage column. Set inline rather than in
+    /// CSS because the day count is data-driven; everything else about the grid is styled in
+    /// AzureDashboard.razor.css.
+    ///
+    /// <para>Day columns are <c>minmax(cell, 1fr)</c>: at least a cell wide — so a phone still
+    /// scrolls the grid inside its container — and stretched to the card's width beyond that.
+    /// The grid now has a full-width row of its own on desktop, and fixed 10px cells left
+    /// two thirds of it empty.</para>
+    /// </summary>
+    private string GridStyle =>
+        $"grid-template-columns: max-content repeat({Map.Days.Count}, minmax(var(--uptime-cell), 1fr)) max-content;";
+
+    /// <summary>
+    /// Names both evidence sources. Reporting scans alone would say "3 scans on record" for a
+    /// grid actually resting on thousands of probes.
+    /// </summary>
+    private const string Methodology =
+        "Built from full Azure scans and from the background pinger, which probes every few minutes "
+        + "while an app is awake. A cell shows the worst state seen that day, so one bad check marks the "
+        + "day; the percentage counts individual checks rather than days, so one bad check among many "
+        + "does not read as a whole day of downtime. Unobserved days stay blank and count for nothing "
+        + "either way, and a ping that times out is recorded as neither — free-tier apps sleep, and a "
+        + "missed cold start is not an outage.";
+
+    private string EvidenceLabel => Map.PingCount > 0
+        ? $"{DashboardDerivations.Plural(Map.ScanCount, "scan")} · {DashboardDerivations.Plural(Map.PingCount, "ping")}"
+        : $"{DashboardDerivations.Plural(Map.ScanCount, "scan")} on record";
+}

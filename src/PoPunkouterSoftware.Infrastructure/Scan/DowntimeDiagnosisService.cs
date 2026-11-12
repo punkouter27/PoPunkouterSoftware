@@ -147,7 +147,7 @@ public class DowntimeDiagnosisService(
                                     2 => "Deploying",
                                     1 => "Building",
                                     0 => "Pending",
-                                    _ => statusCode?.ToString()
+                                    _ => statusCode?.ToString(System.Globalization.CultureInfo.InvariantCulture)
                                 };
                                 deployments.Add(new DeploymentEntry
                                 {
@@ -171,7 +171,7 @@ public class DowntimeDiagnosisService(
                 var activityLog = new List<ActivityLogEntry>();
                 try
                 {
-                    var since = DateTime.UtcNow.AddHours(-48).ToString("yyyy-MM-ddTHH:mm:ssZ");
+                    var since = DateTime.UtcNow.AddHours(-48).ToString("yyyy-MM-ddTHH:mm:ssZ", System.Globalization.CultureInfo.InvariantCulture);
                     var filter = Uri.EscapeDataString(
                         $"eventTimestamp ge '{since}' and resourceId eq '{svc.ResourceId}'");
                     using var req = new HttpRequestMessage(HttpMethod.Get,

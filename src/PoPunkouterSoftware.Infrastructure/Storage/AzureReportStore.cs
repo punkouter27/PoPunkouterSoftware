@@ -14,9 +14,11 @@ namespace PoPunkouterSoftware.Infrastructure;
 /// Persists the latest Azure report as a single entity in Azure Table Storage.
 /// Uses the app-specific storage account (not the shared PoShared one).
 /// </summary>
-public class AzureReportStore
+public class AzureReportStore : IDisposable
 {
     private const string DefaultTableName = "PoPunkouterSoftwareReport";
+
+    private static readonly string[] PartitionKeyRowKeyColumns = ["PartitionKey", "RowKey"];
 
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
@@ -30,6 +32,12 @@ public class AzureReportStore
     // Cached after first successful init so CreateIfNotExistsAsync is not called on every request.
     private TableClient? _cachedClient;
     private readonly SemaphoreSlim _clientLock = new(1, 1);
+
+    public void Dispose()
+    {
+        _clientLock.Dispose();
+        GC.SuppressFinalize(this);
+    }
 
     // When client creation fails (storage outage), short-circuit for a cooldown window instead
     // of serializing every request behind the semaphore while each pays a full connect timeout.
@@ -185,7 +193,7 @@ public class AzureReportStore
             await foreach (var entity in tableClient.QueryAsync<TableEntity>(
                 filter: $"PartitionKey eq '{partition}' and RowKey gt '{cutoffKey}'",
                 maxPerPage: 100,
-                select: new[] { "PartitionKey", "RowKey" },
+                select: PartitionKeyRowKeyColumns,
                 cancellationToken: ct))
             {
                 await tableClient.DeleteEntityAsync(entity.PartitionKey, entity.RowKey, cancellationToken: ct);

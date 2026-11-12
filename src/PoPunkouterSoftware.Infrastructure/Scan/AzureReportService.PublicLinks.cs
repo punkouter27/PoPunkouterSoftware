@@ -62,7 +62,7 @@ public partial class AzureReportService
         try
         {
             var file = System.Text.Json.JsonSerializer.Deserialize<AppsFile>(await File.ReadAllTextAsync(path, ct),
-                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                SharedCaseInsensitiveJsonOptions);
             return file?.Apps ?? [];
         }
         catch (Exception ex) when (ex is IOException or System.Text.Json.JsonException)

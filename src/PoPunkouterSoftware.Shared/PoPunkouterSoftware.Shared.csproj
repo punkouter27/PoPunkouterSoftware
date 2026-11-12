@@ -20,4 +20,8 @@
        and it ships in the WASM bundle. FluentValidation was dropped along with the sole rule
        that used it (RepoQueryValidator, which guarded the deleted /api/github-activity query). -->
 
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+  </ItemGroup>
+
 </Project>

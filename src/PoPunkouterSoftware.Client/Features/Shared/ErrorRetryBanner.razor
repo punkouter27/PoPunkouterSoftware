@@ -1,0 +1,16 @@
+@namespace PoPunkouterSoftware.Client
+@* Shared load-failure banner: RadzenAlert + Retry button (deduplicated from
+   Index.razor and AzureDashboard.razor). *@
+
+<RadzenAlert AlertStyle="@AlertStyle" Variant="Variant.Outlined" ShowIcon="true">
+    <strong>@Title</strong>
+    <span>@Message</span>
+    <RadzenButton Text="Retry" Icon="refresh" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small" Click="@(_ => OnRetry.InvokeAsync())" />
+</RadzenAlert>
+
+@code {
+    [Parameter] public string? Message { get; set; }
+    [Parameter] public string Title { get; set; } = "Something went wrong";
+    [Parameter] public EventCallback OnRetry { get; set; }
+    [Parameter] public AlertStyle AlertStyle { get; set; } = AlertStyle.Warning;
+}

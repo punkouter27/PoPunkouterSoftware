@@ -1,0 +1,12 @@
+@namespace PoPunkouterSoftware.Client
+@inherits LayoutComponentBase
+
+<RadzenComponents @rendermode="WasmRenderModes.Interactive" />
+
+<div class="app-bare-layout">
+    <main id="main-content" class="app-bare-main" tabindex="-1">
+        <DevErrorBoundary>
+            @Body
+        </DevErrorBoundary>
+    </main>
+</div>

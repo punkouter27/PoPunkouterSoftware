@@ -20,7 +20,7 @@ namespace PoPunkouterSoftware.Infrastructure;
 /// <para>Register as a singleton per logical owner — the cooldown and cached client are
 /// per-instance state.</para>
 /// </summary>
-public sealed class TableClientProvider
+public sealed class TableClientProvider : IDisposable
 {
     private const string DefaultTableName = "PoPunkouterSoftwareReport";
 
@@ -30,6 +30,8 @@ public sealed class TableClientProvider
 
     private TableClient? _cachedClient;
     private readonly SemaphoreSlim _clientLock = new(1, 1);
+
+    public void Dispose() => _clientLock.Dispose();
 
     // When client creation fails (storage outage), short-circuit for a cooldown window instead
     // of serializing every request behind the semaphore while each pays a full connect timeout.

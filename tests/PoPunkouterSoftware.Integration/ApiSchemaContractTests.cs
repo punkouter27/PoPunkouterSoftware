@@ -21,13 +21,17 @@ public class ApiSchemaContractTests
 
     public ApiSchemaContractTests(TestWebApp factory) => _client = factory.CreateClient();
 
+    private static readonly string[] HealthProperties = ["status", "application", "timestamp", "checks", "environment", "config"];
+    private static readonly string[] SummaryProperties = ["generatedAt", "isStale", "healthPercent", "attentionCount"];
+    private static readonly string[] SignInProperties = ["generatedAt", "windowDays", "available", "totalPeople", "totalSignIns", "people", "apps", "trend", "recent"];
+    private static readonly string[] ReportProperties = ["generatedAt", "webServices", "subscription"];
+
     [Fact]
     public async Task Health_ExposesItsContractInCamelCase()
     {
         using var doc = JsonDocument.Parse(await _client.GetStringAsync("/health"));
 
-        doc.RootElement.EnumerateObject().Select(p => p.Name).Should().Contain(
-            new[] { "status", "application", "timestamp", "checks", "environment", "config" });
+        doc.RootElement.EnumerateObject().Select(p => p.Name).Should().Contain(HealthProperties);
     }
 
     [Fact]
@@ -44,8 +48,7 @@ public class ApiSchemaContractTests
     {
         using var doc = JsonDocument.Parse(await _client.GetStringAsync("/api/diag/summary"));
 
-        doc.RootElement.EnumerateObject().Select(p => p.Name).Should().Contain(
-            new[] { "generatedAt", "isStale", "healthPercent", "attentionCount" });
+        doc.RootElement.EnumerateObject().Select(p => p.Name).Should().Contain(SummaryProperties);
     }
 
     /// <summary>
@@ -67,8 +70,7 @@ public class ApiSchemaContractTests
         using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
         var root = doc.RootElement;
 
-        root.EnumerateObject().Select(p => p.Name).Should().Contain(
-            new[] { "generatedAt", "windowDays", "available", "totalPeople", "totalSignIns", "people", "apps", "trend", "recent" });
+        root.EnumerateObject().Select(p => p.Name).Should().Contain(SignInProperties);
 
         root.GetProperty("available").GetBoolean().Should().BeFalse();
         root.GetProperty("unavailable").GetString().Should().NotBeNullOrWhiteSpace(
@@ -94,8 +96,7 @@ public class ApiSchemaContractTests
 
         using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
 
-        doc.RootElement.EnumerateObject().Select(p => p.Name).Should().Contain(
-            new[] { "generatedAt", "webServices", "subscription" });
+        doc.RootElement.EnumerateObject().Select(p => p.Name).Should().Contain(ReportProperties);
 
         if (doc.RootElement.TryGetProperty("webServices", out var ws))
             ws.TryGetProperty("total", out _)
