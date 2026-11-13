@@ -241,7 +241,7 @@ response. Only an IDENTICAL column moves up: an "all but one, naming the excepti
 2026-11-03 — sign-in differs between apps (PoRepoLineTracker is GitHub-only on purpose, see
 its SPEC.md §9) and some apps will drop login, so Sign-in is a column; an app with a backend and no
 `signIn` in the catalog reads "None" (`AppStackBuilder`), never a dash. The RL table has its own columns, empty
-for web apps: Physics (MuJoCo vs Unity physics), RL training (Unity ML-Agents vs MuJoCo Warp /
+for web apps: Physics (MuJoCo vs Unity 2D physics — the three ML-Agents games are all Box2D, none uses PhysX), RL training (Unity ML-Agents vs MuJoCo Warp /
 Playground + Brax) and the shared rightmost Unique tech (Cinemachine, glTFast, VContainer,
 Unreal Robotics Lab…), read from each game repo's ProjectVersion.txt, Packages/manifest.json,
 .uproject and training/pyproject.toml. A Policy runtime column (Unity Inference Engine vs
@@ -281,6 +281,16 @@ The data is `PortfolioApp.Stack` (`AppStack`), built by `AppStackBuilder`: Data 
 the shared PoShared group and the inventory cannot say which app uses which. Those blocks
 were filled 2026-11-03 from each repo's `Directory.Packages.props` and CLAUDE.md — when an
 app changes its database, AI or sign-in, its `stack` block is the line to change.
+**2026-11-13 re-audit against every repo** (owner's ask): every `details` note and AI `use` now
+says how THAT app uses the tech — the glossary already says what it is, so a note that only
+restates the glossary ("Unity 6000.6, built for WebGL…", "trained by trial and error") is the
+failure mode. It found real errors, not just vague wording: PhysX claimed for three Box2D games,
+glTFast "at runtime" (editor import only), Tone.js and LibGit2Sharp not used at all, Burst and AI
+Navigation unused, PoSlapUnreal's site is a three.js + MuJoCo-WASM build (not Unreal), PoRace's
+repo is gone (its Unity source and trainer now live in `PoRaceUnreal`). PoRumble was removed
+entirely (repo, Azure resource and URL all gone). The shared delivery note says tests run
+"except PoTraffic" because its deploy workflow runs none. `optional` was re-checked against
+`kv-poshared2` secret names and App Service settings the same day.
 PoMemeVideo was deleted from Azure and the catalog on 2026-11-07; its history rows age out of the uptime grid within 30 days.
 
 **The report cache is server-side and must stay off the web root.** `ReportFileCache` keeps two

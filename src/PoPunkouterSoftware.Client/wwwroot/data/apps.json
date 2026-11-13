@@ -3,7 +3,7 @@
     {
       "id": "polocalcompare",
       "name": "PoLocalCompare",
-      "description": "A live arena where two AI models race to build the same web page from one prompt, one running in your browser on WebGPU and one in Azure, and the better page wins.",
+      "description": "A live arena where two AI models race to build the same web page from one prompt, small open models in your browser on WebGPU against cloud-hosted ones, and the better page wins.",
       "category": "productivity",
       "status": "active",
       "technologies": [
@@ -24,39 +24,34 @@
         "realtime": "SignalR",
         "extras": "WebLLM + WebGPU",
         "details": {
-          "frontend": "Blazor WebAssembly: the C# app runs in the browser",
-          "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage holds duels, ratings and tournaments; Azure Blob Storage holds generated pages too large for a table row",
-          "signIn": "Sign in with a Microsoft account",
-          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "realtime": "A SignalR hub streams each duel's progress and results to the people watching it",
-          "extras": "WebLLM runs open models entirely in your browser on the GPU (WebGPU), racing the Azure models"
+          "frontend": "The C# arena, built with Radzen components, shows both generated pages side by side in sandboxed frames and runs the browser contestant's model in a web worker",
+          "backend": "Minimal API groups run duels, tournaments, the model catalog and the leaderboard; background services execute queued duels, resume interrupted tournaments and call the AI judge",
+          "data": "Tables hold duels, results, models, Elo history, tournaments and a daily spend ledger; Azure Blob Storage holds generated pages too large for a table row",
+          "signIn": "Any Microsoft account, work or personal, through a server-side cookie session, so the browser never holds tokens",
+          "delivery": "GitHub Actions builds and deploys every push to Azure; every app except PoTraffic runs its tests there first",
+          "realtime": "One SignalR hub tells your browser when to start its model and streams each side's progress and the final verdict to everyone watching the duel",
+          "extras": "WebLLM runs small open models entirely in your browser on the GPU (WebGPU), downloaded once and cached, racing the cloud models"
         },
         "aiServices": [
           {
             "cloud": "Azure",
             "name": "GPT-5.4 mini",
-            "use": "Judges which side of each duel did better"
+            "use": "Judges every duel unless a person votes within 10 seconds, reading the pages in both orders, and gets the first re-ask when the two orderings disagree"
           },
           {
             "cloud": "Azure",
-            "name": "GPT-5.4",
-            "use": "Breaks ties when the two judge orderings disagree"
+            "name": "GPT-5 mini",
+            "use": "Final tie-break when a split survives the re-ask"
           },
           {
             "cloud": "Azure",
-            "name": "GPT-4.1 nano",
-            "use": "Cheaper text-only judge when vision is off"
-          },
-          {
-            "cloud": "Azure",
-            "name": "GPT-5.5, GPT-5 mini/nano, GPT-4.1 mini",
-            "use": "Contestant models you can pit against each other, via Azure AI Foundry"
+            "name": "AI Foundry contestants",
+            "use": "Sixteen cloud models to pit against each other or the browser models: GPT-5.5, GPT-5.4, the GPT-5 family, GPT-4.1 mini, GPT-OSS, Phi-4, Llama 3.3, DeepSeek, Grok, Codestral and Kimi"
           },
           {
             "cloud": "Google",
             "name": "Gemini 3.5 Flash-Lite",
-            "use": "Cross-checks every verdict with a second model family"
+            "use": "Reads the second ordering so a verdict must survive a different model family, and also competes"
           },
           {
             "cloud": "Google",
@@ -66,7 +61,7 @@
           {
             "cloud": "In-app",
             "name": "WebLLM browser models",
-            "use": "Small open models from Hugging Face that run in your browser on WebGPU"
+            "use": "Nine small open models (Qwen, Llama, Gemma, SmolLM) that run in your browser on WebGPU"
           }
         ]
       }
@@ -91,16 +86,16 @@
         "data": "Azure Table Storage + Azure Blob Storage",
         "signIn": "Microsoft",
         "delivery": "GitHub Actions",
-        "realtime": "SignalR",
-        "extras": "three.js + Tone.js + SharpGLTF + QRCoder",
+        "realtime": "SignalR + Web Push",
+        "extras": "three.js + cannon-es + SharpGLTF + QRCoder",
         "details": {
-          "frontend": "Blazor WebAssembly: the C# app runs in the browser",
-          "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage holds the game records; Azure Blob Storage holds saved PoEcosystem worlds and the sign-in encryption keys",
-          "signIn": "Sign in with a Microsoft account",
-          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "realtime": "13 SignalR hubs: multiplayer lobbies, 30 Hz race ticks, lockstep matches and live quizzes",
-          "extras": "three.js draws the 3D games, Tone.js plays the music, SharpGLTF reads glTF 3D models and QRCoder makes QR codes"
+          "frontend": "The C# shell hosts about 20 games; most game loops and 3D scenes run in JavaScript modules it loads on demand",
+          "backend": "Minimal APIs serve scores, leaderboards, match history and invites, while server-side game loops run the multiplayer lobbies, races and matches",
+          "data": "Azure Table Storage holds high scores, ladders, Elo ratings, match history and verified results; Azure Blob Storage holds saved PoEcosystem worlds and the keys that sign anti-cheat score tokens",
+          "signIn": "Sign in with a Microsoft account to put your name on leaderboards and play online",
+          "delivery": "GitHub Actions builds and deploys every push to Azure; every app except PoTraffic runs its tests there first",
+          "realtime": "13 SignalR hubs run lobbies, server-ticked races (up to 50 Hz), lockstep and rollback matches, live quizzes and board games; Web Push delivers game invites",
+          "extras": "three.js draws the 3D games, cannon-es gives them physics, SharpGLTF turns 3D models into destructible voxels on the server and QRCoder makes invite QR codes"
         }
       }
     },
@@ -129,30 +124,36 @@
         "realtime": "SignalR + Server-sent events + Web Push",
         "extras": "ONNX Runtime + Whisper.net + AcoustID + DryWetMidi + tus uploads",
         "details": {
-          "frontend": "Blazor WebAssembly: the C# app runs in the browser",
-          "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Blob Storage holds each analysis job's files: the upload and its results. No tables",
-          "signIn": "Microsoft account, to open OneDrive files",
-          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "realtime": "SignalR pushes live analysis updates, server-sent events stream the song statistics text as it is written, and Web Push says when a job finishes",
-          "extras": "ONNX Runtime runs the audio models, Whisper.net transcribes lyrics, AcoustID fingerprints the song, DryWetMidi writes MIDI and tus makes big uploads resumable"
+          "frontend": "The C# client, built with Radzen components, plays the stems, draws pitch, chords and beats over the song, records your humming for practice, and can split stems or run a language model in your browser when your device can",
+          "backend": "Minimal APIs take uploads and serve results, while a background worker queue runs each song through separation, pitch, beat, chord, mode and lyrics stages",
+          "data": "Azure Blob Storage mirrors each analysis job's folder, the upload and every result, so jobs survive a restart. No tables",
+          "signIn": "Optional: you start as a guest, and signing in with a Microsoft account keeps your library and lets you open songs from OneDrive",
+          "delivery": "GitHub Actions builds and deploys every push to Azure; every app except PoTraffic runs its tests there first",
+          "realtime": "One SignalR hub pushes each job's progress, server-sent events stream the written interpretation of the song and answers to your questions, and Web Push says when a job finishes",
+          "extras": "ONNX Runtime runs the audio models, Whisper.net transcribes the separated vocals, AcoustID can name the song from its fingerprint, DryWetMidi writes the MIDI export and tus makes big uploads resumable"
         },
         "aiServices": [
           {
             "cloud": "Azure",
-            "name": "Azure OpenAI",
-            "use": "Writes the plain-English interpretation of a song. The one paid piece, off unless configured",
+            "name": "GPT-4.1 nano",
+            "use": "Writes the plain-English interpretation of a song and reads free-text Mode Lab requests. The one paid piece, off unless configured",
             "optional": true
           },
           {
             "cloud": "In-app",
             "name": "Whisper.net",
-            "use": "Transcribes the lyrics on the server"
+            "use": "Transcribes the lyrics from the separated vocal on the server"
           },
           {
             "cloud": "In-app",
             "name": "ONNX audio models",
-            "use": "Split stems and track pitch, beats and chords on the server"
+            "use": "Split stems (HTDemucs), track notes, vocal pitch, beats and chords, and power sound search (CLAP) on the server"
+          },
+          {
+            "cloud": "In-app",
+            "name": "Browser models",
+            "use": "Chrome's built-in Gemini Nano or a WebLLM model on WebGPU can write the interpretation for free, and a WebGPU vocal model can split stems in the page",
+            "optional": true
           }
         ]
       }
@@ -179,15 +180,15 @@
         "signIn": "GitHub",
         "delivery": "GitHub Actions",
         "realtime": "SignalR",
-        "extras": "LibGit2Sharp + Roslyn + GitHub API",
+        "extras": "Git + Roslyn + GitHub API",
         "details": {
-          "frontend": "Blazor WebAssembly: the C# app runs in the browser",
-          "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage holds the repositories and line-count history. No blobs",
-          "signIn": "Sign in with GitHub",
-          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "realtime": "A SignalR hub shows analysis progress for your own repositories",
-          "extras": "LibGit2Sharp clones each repository and walks its commit history, Roslyn reads C# source, and the GitHub API lists your repositories"
+          "frontend": "The browser app draws the line-count history, code-health and contributor charts and the repository grids with Radzen components, and installs as a PWA",
+          "backend": "A minimal API queues each repository for analysis in a background worker, serves the history, hotspot, punchcard and year-in-review views, and renders public SVG badges",
+          "data": "Azure Table Storage holds your repositories, the line count for every commit, code-health snapshots and your preferences. No blobs",
+          "signIn": "Sign in with GitHub; the same token lets the app list and clone your repositories",
+          "realtime": "A SignalR hub streams analysis progress only to the repository's owner",
+          "extras": "The git command line clones each repository and walks its history; Roslyn parses C# files for Visual Studio-style code metrics; the GitHub API lists your repositories and registers push webhooks, so new commits are analysed automatically",
+          "delivery": "GitHub Actions builds and deploys every push to Azure; every app except PoTraffic runs its tests there first"
         }
       }
     },
@@ -212,15 +213,15 @@
         "signIn": "Microsoft",
         "delivery": "GitHub Actions",
         "realtime": "Web Push",
-        "extras": "Google Maps API + Leaflet maps",
+        "extras": "Google Maps API + Leaflet maps + Open-Meteo weather",
         "details": {
-          "frontend": "Blazor WebAssembly: the C# app runs in the browser",
-          "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage holds routes, baselines and the scheduled job rows. No blobs",
+          "frontend": "The browser app shows each route on a map, draws travel-time trend charts on a canvas with Radzen controls around them, and installs as a PWA that can receive notifications",
+          "backend": "An API with a Table Storage-backed scheduler that polls each route during your monitoring windows, compares every sample with that route's usual time for the slot, and raises alerts",
+          "data": "Azure Table Storage holds your routes, monitoring windows, every travel-time sample, alerts, push subscriptions and the scheduled jobs. No blobs",
           "signIn": "Sign in with a Microsoft account",
-          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "realtime": "Web Push notifications when a saved route is congested; a background job checks every 15 minutes",
-          "extras": "The Google Maps API supplies live travel times; Leaflet draws the route maps"
+          "realtime": "Web Push sends heavier-than-usual, route-changed and time-to-leave alerts plus a Monday digest; routes are polled every 5 minutes, easing to 15 when traffic is steady",
+          "extras": "The Google Maps API supplies live travel times, road shapes, geocoding and address suggestions; Leaflet draws the route on free OpenStreetMap tiles; Open-Meteo adds the weather to each sample, so you can see what rain costs your commute",
+          "delivery": "GitHub Actions builds and deploys every push to Azure; every app except PoTraffic runs its tests there first"
         }
       }
     },
@@ -247,28 +248,38 @@
         "signIn": "Microsoft",
         "delivery": "GitHub Actions",
         "realtime": "SignalR",
-        "extras": "transformers.js + QuestPDF + Azure email",
+        "extras": "transformers.js + QuestPDF",
         "details": {
-          "frontend": "Blazor WebAssembly: the C# app runs in the browser",
-          "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage holds the stats; Azure Blob Storage holds snapshots, user data and the sign-in encryption keys",
+          "frontend": "The browser app does the watching: it reads the webcam and microphone, runs the detection, captioning and listening models in web workers, and uploads only counts, captions and chosen snapshots",
+          "backend": "An API ingests each session's batches, rolls them into stats, serves recaps and share cards, and runs background jobs for six-hourly data retention and the weekly digest",
+          "data": "Azure Table Storage holds sessions, events, stats rollups, regular visitors, stories and settings; Azure Blob Storage holds the snapshot images and the sign-in encryption keys",
           "signIn": "Sign in with a Microsoft account",
-          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "realtime": "A SignalR hub tells every open tab when your stats change, so nothing polls",
-          "extras": "transformers.js runs vision and audio models in the browser on the webcam feed, QuestPDF builds PDF reports, and Azure Communication Services sends the email"
+          "realtime": "A SignalR hub tells every open tab when new data lands, so the stats pages refresh without polling",
+          "extras": "transformers.js runs object detection, Florence-2 captions, Whisper speech and sound recognition in your browser; QuestPDF renders the session and day recap PDFs",
+          "delivery": "GitHub Actions builds and deploys every push to Azure; every app except PoTraffic runs its tests there first"
         },
         "aiServices": [
           {
             "cloud": "Azure",
             "name": "GPT-5.4 nano",
-            "use": "Rewrites the weekly recap in plain words; production uses a template unless switched on",
+            "use": "Writes session stories and recaps and answers Ask PoWatch questions from your own stats; production uses a built-in template unless switched on",
             "optional": true
           },
           {
             "cloud": "Google",
             "name": "Gemini Flash-Lite",
-            "use": "The alternative recap writer",
+            "use": "The alternative writer for the same recaps and answers",
             "optional": true
+          },
+          {
+            "cloud": "In-app",
+            "name": "RF-DETR and Florence-2",
+            "use": "Spot objects and caption what the camera sees, on your device"
+          },
+          {
+            "cloud": "In-app",
+            "name": "Whisper and AudioSet",
+            "use": "Turn speech into words and name sounds like a knock or a dog barking, on your device"
           }
         ]
       }
@@ -276,7 +287,7 @@
     {
       "id": "poseereview",
       "name": "PoSeeReview",
-      "description": "Turns the strangest Google Maps restaurant reviews into AI-drawn four-panel comic strips and ranks them on a Hall of Fame leaderboard.",
+      "description": "Turns the strangest Google Maps restaurant reviews into AI-drawn comic strips, reads them aloud, and ranks them on a Hall of Fame leaderboard.",
       "category": "productivity",
       "status": "disabled",
       "technologies": [
@@ -294,21 +305,21 @@
         "signIn": "Microsoft",
         "delivery": "GitHub Actions",
         "realtime": "Server-sent events",
-        "extras": "SkiaSharp + Google Places API",
+        "extras": "SkiaSharp + Google Places API + MapLibre maps",
         "details": {
-          "frontend": "Blazor WebAssembly: the C# app runs in the browser",
-          "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage holds restaurants, scores and moderation; Azure Blob Storage holds the comic images",
+          "frontend": "The browser app finds restaurants near you, pins them on a map, plays each comic with its audio, and shows the generation stream as it arrives",
+          "backend": "An API runs the comic pipeline (score, screen, draw, caption) under daily budgets, plus background jobs that pre-draw popular places, redraw top comics and spot-check image quality",
+          "data": "Azure Table Storage holds restaurants, review analyses, comics, scores, budgets and moderation reports; Azure Blob Storage holds the comic images and their audio",
           "signIn": "Sign in with a Microsoft account",
-          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
           "realtime": "Comic generation streams its real stages to the page as server-sent events",
-          "extras": "SkiaSharp processes the comic images; the Google Places API supplies the restaurant reviews"
+          "extras": "SkiaSharp letters the captions onto the art and builds share cards; the Google Places API finds restaurants and their reviews; MapLibre shows them on free OpenFreeMap tiles",
+          "delivery": "GitHub Actions builds and deploys every push to Azure; every app except PoTraffic runs its tests there first"
         },
         "aiServices": [
           {
             "cloud": "Azure",
             "name": "GPT-5.4 nano",
-            "use": "Reads the restaurant reviews, scores them and writes the comic"
+            "use": "Reads the restaurant reviews, scores how strange they are and writes the comic's story, captions and scenes; also spot-checks a fifth of the drawn comics"
           },
           {
             "cloud": "Azure",
@@ -318,23 +329,22 @@
           {
             "cloud": "Azure",
             "name": "FLUX.1 Kontext pro",
-            "use": "Draws the comic strip, through Azure AI Foundry (gpt-image-1 mini is the code default)"
+            "use": "Draws the comic strip, through Azure AI Foundry"
           },
           {
             "cloud": "Azure",
             "name": "GPT-4o mini TTS",
-            "use": "Reads the comic aloud with acting directions per line"
+            "use": "Reads the comic aloud with acting directions per line, bleeping the swearing"
           },
           {
             "cloud": "Azure",
             "name": "AI Content Safety",
-            "use": "Screens the text before a paid image is drawn"
+            "use": "Screens the story, captions and scenes before a paid image is drawn"
           },
           {
             "cloud": "Google",
             "name": "Gemini 2.5 Flash Image",
-            "use": "Re-draws the top comics; off by default",
-            "optional": true
+            "use": "Redraws the comics that reach the top of the board with sharper art, a few at a time every six hours"
           }
         ]
       }
@@ -362,16 +372,16 @@
         "trainingPath": "training",
         "extras": "Cinemachine + glTFast",
         "details": {
-          "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
-          "physics": "The official MuJoCo Unity plugin 3.5 runs the fight's physics; there is no PhysX in the arena",
-          "training": "Trained offline in Python: MuJoCo Warp simulates thousands of boxers at once on the GPU, and an rsl_rl-style PPO in PyTorch learns each boxer's brain",
-          "extras": "Cinemachine directs the cameras, cutting and following the action automatically; glTFast loads the glTF 3D character models at runtime"
+          "frontend": "Built on Unity 6000.6 for the browser in a portrait broadcast layout, with URP renderers tuned separately for phone and PC",
+          "physics": "MuJoCo 3.5, compiled to WebAssembly for the browser, simulates both boxers' bodies at 200 steps a second; the ring has no Unity physics objects at all",
+          "training": "Each boxer learns in stages (footwork, sparring, getting up off the canvas) with the repo's own PPO trainer in PyTorch while MuJoCo Warp runs 4,096 copies of the fight at once on the GPU; every brain is then re-checked in the same MuJoCo 3.5 the game uses",
+          "extras": "Eleven Cinemachine cameras are cut like a TV broadcast, jumping to a close-up just before a heavy punch lands and going overhead for a knockdown count; glTFast imports the eight boxers' 3D models in the editor"
         },
         "aiServices": [
           {
             "cloud": "In-app",
             "name": "Reinforcement-learning agents",
-            "use": "The players were trained by trial and error, then ship inside the game"
+            "use": "Each of the eight boxers carries three small neural networks (footwork, fighting and getting up), run by Unity's Inference Engine 50 times a second: each reads 103 numbers about its body and opponent and sets targets for 21 joints"
           }
         ]
       }
@@ -394,21 +404,21 @@
       "stack": {
         "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
-        "physics": "Unity physics",
+        "physics": "Unity 2D physics",
         "training": "Unity ML-Agents 4.1",
         "trainingPath": "Config",
         "extras": "VContainer + MessagePipe + UniTask + Burst",
         "details": {
-          "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
-          "physics": "Unity's built-in physics engine (PhysX) moves the players",
-          "training": "Unity ML-Agents 4.1 in the game and mlagents 1.1 (PyTorch) in Python train separate offense and defense brains",
-          "extras": "VContainer wires the game together with dependency injection; MessagePipe carries game events between systems; UniTask runs async game logic without allocating; Burst compiles the hot loops to fast native code"
+          "frontend": "A top-down 2D game drawn with URP's 2D Renderer and built for WebGL, so all 22 players play out in the browser",
+          "physics": "Each player is a 2D rigidbody with a circular collider, pushed by forces and capped at a top speed, so blocks and tackles come from real collisions; the ball is moved by game logic, not physics",
+          "training": "Offense and defense are team brains trained with MA-POCA against each other on zero-sum rewards; the quarterback and the defensive play-caller are separate PPO brains, all trained with mlagents 1.1 in Python",
+          "extras": "VContainer wires the game systems together; MessagePipe broadcasts snaps, passes, tackles and scores to the HUD, audio and replays; UniTask runs scene loads and the live-weather lookup; Burst compiles the job that draws the space-control map"
         },
         "aiServices": [
           {
             "cloud": "In-app",
             "name": "Reinforcement-learning agents",
-            "use": "The players were trained by trial and error, then ship inside the game"
+            "use": "Four trained brains (offense, defense, quarterback and the defensive play-caller) run in the browser through Unity's Inference Engine; each player sees through 2D ray sensors plus a summary of the ball and field, and the call sheet samples the play-caller brain to show its odds"
           }
         ]
       }
@@ -416,7 +426,7 @@
     {
       "id": "pohillking",
       "name": "PoHillKing",
-      "description": "Physics-simulated human bodies play king of the hill, each one driven by its own trained policy.",
+      "description": "Six physics-simulated human bodies fight to stay on a mountain top as the sea rises, each body type driven by its own trained brain.",
       "category": "rl-training",
       "status": "active",
       "technologies": [
@@ -431,21 +441,21 @@
       "stack": {
         "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
-        "physics": "MuJoCo",
+        "physics": "MuJoCo 3.15",
         "training": "MuJoCo Warp + rsl_rl PPO (PyTorch)",
         "trainingPath": "training",
         "extras": "Cinemachine + glTFast",
         "details": {
-          "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
-          "physics": "MuJoCo simulates every body in the browser through its WebGL plugin; Unity only draws them",
-          "training": "Trained offline: MuJoCo 3.15 and MuJoCo Warp on the GPU, with rsl_rl PPO on PyTorch 2.9, one policy per fighter role",
-          "extras": "Cinemachine directs the cameras, cutting and following the action automatically; glTFast loads the glTF 3D character models at runtime"
+          "frontend": "Built on Unity 6000.6 for the browser; URP draws the mountain map and the rising sea, and a custom shockwave effect plays on big hits",
+          "physics": "MuJoCo 3.15, compiled to WebAssembly, simulates all six bodies, the hill and the sea's buoyancy at 500 steps a second; Unity's own physics is switched off",
+          "training": "Trained with rsl_rl PPO on PyTorch 2.9 while MuJoCo Warp runs 4,096 hilltop fights at once on the GPU; each body's fighter learned against the other two bodies' frozen fighters",
+          "extras": "Cinemachine is the only camera: a crane shot up the mountain on a spline for the intro, then orbits and group shots of whoever is still on top, with shake on big impacts; glTFast imports Trump's model and the mountain map in the editor"
         },
         "aiServices": [
           {
             "cloud": "In-app",
             "name": "Reinforcement-learning agents",
-            "use": "The players were trained by trial and error, then ship inside the game"
+            "use": "Kim, Trump and Grandpa each have a fighter brain and a get-up brain that Unity's Inference Engine runs 50 times a second, reading 112 numbers about the body and its nearest opponent and driving 29 joints; the training critics also power the live win-odds bar"
           }
         ]
       }
@@ -453,7 +463,7 @@
     {
       "id": "poolympic",
       "name": "PoOlympic",
-      "description": "Athletes simulated in MuJoCo physics and trained with reinforcement learning contest Olympic events.",
+      "description": "Up to eight physics-simulated athletes, driven by trained brains, compete in made-up Olympic-style events such as Sumo Ring, Narrow Bridge and Hilltop Scramble.",
       "category": "rl-training",
       "status": "active",
       "technologies": [
@@ -468,21 +478,21 @@
       "stack": {
         "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
-        "physics": "MuJoCo",
-        "training": "MuJoCo Warp + PyTorch",
+        "physics": "MuJoCo 3.11",
+        "training": "MuJoCo Warp + rsl_rl PPO (PyTorch)",
         "trainingPath": "training",
         "extras": "Cinemachine + glTFast + VFX Graph + PrimeTween",
         "details": {
-          "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
-          "physics": "MuJoCo simulates every body in the browser through its WebGL plugin; Unity only draws them",
-          "training": "Trained offline: MuJoCo 3.11 and MuJoCo Warp on the GPU with PyTorch, one brain per athlete and event",
-          "extras": "Cinemachine directs the cameras, cutting and following the action automatically; glTFast loads the glTF 3D character models at runtime; VFX Graph draws the GPU particle effects; PrimeTween is the tweening library"
+          "frontend": "Built on Unity 6000.6 for the browser as a portrait sports broadcast, with URP drawing the stadium and 13 event arenas",
+          "physics": "MuJoCo 3.11, compiled to WebAssembly, simulates up to eight athletes plus the event props and obstacles at 200 steps a second",
+          "training": "Trained with mjlab on MuJoCo Warp and rsl_rl PPO in PyTorch, one skill at a time (standing, running, crawling, slopes, getting up) for each of the four bodies, then checked against the game's MuJoCo before shipping",
+          "extras": "Cinemachine cuts follow the race's tension, closing in on the leader or on an athlete about to fall; glTFast imports the athletes and stadium in the editor; VFX Graph makes the impact sparks on Android, while the web build swaps in ordinary particles; PrimeTween animates the scoreboard captions"
         },
         "aiServices": [
           {
             "cloud": "In-app",
             "name": "Reinforcement-learning agents",
-            "use": "The players were trained by trial and error, then ship inside the game"
+            "use": "About 27 small skill brains (stand, run, crawl, climb slopes, get up) for four athletes run in Unity's Inference Engine 50 times a second; each reads 84 numbers about its body and a speed command, and sets targets for 23 joints"
           }
         ]
       }
@@ -490,7 +500,7 @@
     {
       "id": "porace",
       "name": "PoRace",
-      "description": "Robots race on MuJoCo physics, with every stride coming from a trained locomotion policy.",
+      "description": "A Unitree Go2 robot dog and humanoid racers run on MuJoCo physics, with every stride coming from a trained locomotion policy.",
       "category": "rl-training",
       "status": "active",
       "technologies": [
@@ -499,7 +509,7 @@
         "Reinforcement learning"
       ],
       "url": "https://proud-sea-0d583fb0f.2.azurestaticapps.net",
-      "githubRepo": "punkouter27/PoRace",
+      "githubRepo": "punkouter27/PoRaceUnreal",
       "expect": "<title>PoRace</title>",
       "androidPackage": "com.punkoutersoftware.poracer",
       "stack": {
@@ -508,55 +518,18 @@
         "physics": "MuJoCo",
         "training": "MuJoCo Playground + Brax PPO (JAX)",
         "trainingPath": "training",
-        "extras": "Unitree Go2 and G1 models + AI Navigation",
+        "extras": "Unitree Go2 and G1 models + Open-Meteo weather",
         "details": {
-          "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
-          "physics": "MuJoCo simulates every body in the browser through its WebGL plugin; Unity only draws them",
-          "training": "Trained offline with MuJoCo Playground and Brax PPO (JAX) on MuJoCo Warp; the robots are Unitree Go2 and G1 models",
-          "extras": "The racers are MuJoCo models of the Unitree Go2 and G1 robots; the Unity AI Navigation package (NavMesh pathfinding) is included"
+          "frontend": "Unity 6000.6 built for WebGL and drawn with URP; Unity's own physics is never used, it only runs the cameras, the broadcast HUD and the replays. The Unity source now lives in the PoRaceUnreal repo, which is rebuilding the game in Unreal",
+          "physics": "Every racer and the track run in one MuJoCo model inside the browser, stepping every 4 ms (250 times a second) through MuJoCo's Unity plugin",
+          "training": "Trained on a GPU in a Docker trainer with MuJoCo Playground and Brax PPO in JAX: the Go2 learned to run, take banked and steeplechase tracks and get up, and the humanoids use Playground's G1 walking setup",
+          "extras": "Blue is a model of the Unitree Go2 robot dog and the humanoid racers use the Unitree G1's 29-joint layout; a race can pull a real city's current weather from Open-Meteo to change grip and wind"
         },
         "aiServices": [
           {
             "cloud": "In-app",
             "name": "Reinforcement-learning agents",
-            "use": "The players were trained by trial and error, then ship inside the game"
-          }
-        ]
-      }
-    },
-    {
-      "id": "porumble",
-      "name": "PoRumble",
-      "description": "A top-down boxing battle royale where sixteen fighters face ML-Agents-trained opponents until one is left standing.",
-      "category": "rl-training",
-      "status": "active",
-      "technologies": [
-        "Azure Static Web Apps",
-        "Unity WebGL",
-        "Reinforcement learning"
-      ],
-      "url": "https://purple-sand-0067c2e0f.2.azurestaticapps.net",
-      "githubRepo": "punkouter27/PoRumble",
-      "expect": "<title>PoRumble</title>",
-      "androidPackage": "com.punkoutersoftware.porumble",
-      "stack": {
-        "frontend": "Unity 6.6 (WebGL)",
-        "ai": "RL agents",
-        "physics": "Unity physics",
-        "training": "Unity ML-Agents 4.1",
-        "trainingPath": "Assets/Config/Training",
-        "extras": "Cinemachine + VContainer + MessagePipe + UniTask + Recorder",
-        "details": {
-          "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
-          "physics": "Unity's built-in physics engine (PhysX) moves the players",
-          "training": "Unity ML-Agents 4.1 with self-play configs for 1v1 bouts and a 10-way free-for-all",
-          "extras": "Cinemachine directs the cameras, cutting and following the action automatically; VContainer wires the game together with dependency injection; MessagePipe carries game events between systems; UniTask runs async game logic without allocating; Unity Recorder captures match footage"
-        },
-        "aiServices": [
-          {
-            "cloud": "In-app",
-            "name": "Reinforcement-learning agents",
-            "use": "The players were trained by trial and error, then ship inside the game"
+            "use": "Every stride is a trained ONNX policy that Unity's Inference Engine runs 50 times a second in the browser; it reads the racer's joints, body motion and steering command (48 numbers for the Go2) and sets its motor targets"
           }
         ]
       }
@@ -564,7 +537,7 @@
     {
       "id": "posoccer",
       "name": "PoSoccer",
-      "description": "Pocket soccer played between players trained with Unity ML-Agents.",
+      "description": "Top-down pocket soccer played between players trained with Unity ML-Agents.",
       "category": "rl-training",
       "status": "active",
       "technologies": [
@@ -579,21 +552,21 @@
       "stack": {
         "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
-        "physics": "Unity physics",
-        "training": "Unity ML-Agents",
+        "physics": "Unity 2D physics",
+        "training": "Unity ML-Agents 4.1",
         "trainingPath": "config",
-        "extras": "UniTask + 2D Tilemap + Burst",
+        "extras": "UniTask + 2D Tilemap",
         "details": {
-          "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
-          "physics": "Unity's built-in physics engine (PhysX) moves the players",
-          "training": "Unity ML-Agents (an embedded copy of the package), one training config per player",
-          "extras": "UniTask runs async game logic without allocating; 2D Tilemap builds the pitch; Burst compiles the hot loops to fast native code"
+          "frontend": "A top-down 2D pitch drawn with URP's 2D Renderer and built for WebGL for portrait play in the browser",
+          "physics": "Each player and the ball are 2D rigidbodies and all ball control is physical contact: heavier players win collisions, and a hard hit briefly costs a player control",
+          "training": "Each character has its own PPO brain and reward table, trained in stages against a rule-based bot, with a curriculum that narrows the goal and toughens the bot; trained with an embedded copy of ML-Agents 4.1",
+          "extras": "UniTask times the kickoff countdown, halftime and hit effects; 2D Tilemap builds the crowd stands around the pitch at runtime"
         },
         "aiServices": [
           {
             "cloud": "In-app",
             "name": "Reinforcement-learning agents",
-            "use": "The players were trained by trial and error, then ship inside the game"
+            "use": "Ten trained character brains run in the browser through Unity's Inference Engine; each sees the ball, opponents and walls through separate 2D ray sensors plus a short history of its own state, and outputs drive, strafe, turn and boost"
           }
         ]
       }
@@ -601,7 +574,7 @@
     {
       "id": "posumo",
       "name": "PoSumo",
-      "description": "Trained agents wrestle sumo bouts under real sumo rules.",
+      "description": "Trained ragdoll wrestlers try to push each other out of a shrinking sumo ring.",
       "category": "rl-training",
       "status": "active",
       "technologies": [
@@ -616,21 +589,21 @@
       "stack": {
         "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
-        "physics": "Unity physics",
-        "training": "Unity ML-Agents",
+        "physics": "Unity 2D physics",
+        "training": "Unity ML-Agents 4.1",
         "trainingPath": "Training",
-        "extras": "ML-Agents built from source + Unity MCP",
+        "extras": "ML-Agents built from source + Timeline",
         "details": {
-          "frontend": "Unity 6000.6, built for WebGL so it plays in the browser, rendered with URP",
-          "physics": "Unity's built-in physics engine (PhysX) moves the players",
-          "training": "Unity ML-Agents, built from a vendored copy of its source, one brain per wrestler",
-          "extras": "Unity ML-Agents is built from a vendored copy of its source; Unity MCP lets an AI agent drive the editor"
+          "frontend": "A side-on 2D arena drawn with URP's 2D Renderer and built for WebGL, so bouts play in the browser",
+          "physics": "Each wrestler is a 14-part 2D ragdoll held together by motorised hinge joints whose strength drops with speed like real muscle, so every shove, grip and stumble is simulated",
+          "training": "Each wrestler has its own PPO brain trained by self-play against past versions of itself, with the ring width, starting gap and shrinking ring randomised between rounds",
+          "extras": "ML-Agents is built from a patched copy of its source kept in the repo; Timeline sequences the opening and promotion ceremonies"
         },
         "aiServices": [
           {
             "cloud": "In-app",
             "name": "Reinforcement-learning agents",
-            "use": "The players were trained by trial and error, then ship inside the game"
+            "use": "Sixteen trained wrestler brains run in the browser through Unity's Inference Engine; each reads 51 body and contact measurements, mirrored so one brain works facing either way, and drives the ragdoll's joint motors"
           }
         ]
       }
@@ -638,7 +611,7 @@
     {
       "id": "poslapunreal",
       "name": "PoSlapUnreal",
-      "description": "A slap-fight arena built in Unreal Engine whose fighters are trained with reinforcement learning, playable in the browser.",
+      "description": "A slap-fight arena built in Unreal Engine whose fighters are trained with reinforcement learning; watch them fight in the browser.",
       "category": "rl-training",
       "status": "active",
       "technologies": [
@@ -656,18 +629,18 @@
         "physics": "MuJoCo 3.10",
         "training": "MuJoCo Warp + PyTorch",
         "trainingPath": "training",
-        "extras": "Unreal Robotics Lab + NNE (ONNX Runtime) + Pixel Streaming 2",
+        "extras": "Unreal Robotics Lab + NNE (ONNX Runtime) + three.js + Pixel Streaming 2",
         "details": {
-          "frontend": "Unreal Engine 5.8; Unreal only draws the athletes, its Chaos physics is switched off",
-          "physics": "MuJoCo 3.10 at 200 Hz through the Unreal Robotics Lab plugin moves every athlete",
-          "training": "Trained offline in Python with MuJoCo Warp and PyTorch, in curriculum levels",
-          "extras": "Unreal Robotics Lab embeds MuJoCo in Unreal; NNE runs the ONNX policies on the CPU at 50 Hz; Pixel Streaming 2 can stream the game to a browser"
+          "frontend": "The full game is Unreal Engine 5.8, which only draws the slappers while its Chaos physics is switched off on everything; the website is a separate three.js version of the same match that runs MuJoCo's WebAssembly build in the browser",
+          "physics": "MuJoCo 3.10 steps both fighters' bodies, the arena and every slap contact 200 times a second, with the same physics in the trainer, the Unreal game and the browser",
+          "training": "Each character climbs a ladder of levels on the GPU (walk in, stand, hold guard, land a slap, absorb one, then a self-play duel and a full-match exam) while PyTorch PPO learns a policy that reads about 140 numbers and moves 30 joints",
+          "extras": "Unreal Robotics Lab runs MuJoCo inside Unreal and NNE runs each fighter's ONNX brain on the CPU 50 times a second; the browser runs the same brains with ONNX Runtime Web and draws them with three.js; Pixel Streaming 2 is only a local script that streams an Unreal match to phones on the same network"
         },
         "aiServices": [
           {
             "cloud": "In-app",
             "name": "Reinforcement-learning agents",
-            "use": "The players were trained by trial and error, then ship inside the game"
+            "use": "Each fighter is a trained ONNX brain that picks joint targets 50 times a second: Unreal's NNE runs it in the game, and ONNX Runtime Web runs it on the website, where you predict who lands the next slap"
           }
         ]
       }
@@ -675,7 +648,7 @@
     {
       "id": "pofightjudge",
       "name": "PoFightJudge",
-      "description": "Pick two personas and a topic, then watch them argue it out in synthesised voices while an AI judge scores the rounds.",
+      "description": "Pick two personas and a topic and watch them argue it out in synthesised voices, or argue it yourselves live with an AI host, while an AI judge scores and fact-checks the fight.",
       "category": "creative",
       "status": "active",
       "technologies": [
@@ -695,24 +668,24 @@
         "realtime": "SignalR + WebSockets",
         "extras": "Opus audio (Concentus) + transformers.js + MessagePack",
         "details": {
-          "frontend": "Blazor WebAssembly: the C# app runs in the browser",
-          "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage holds the records; Azure Blob Storage holds recorded fight audio and profile images",
-          "signIn": "Sign in with a Microsoft account",
-          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "realtime": "SignalR (MessagePack) carries microphone frames up and the host's voice, captions and snapshots down; the server talks to GPT-Realtime over a WebSocket",
-          "extras": "Concentus encodes microphone audio as Opus; transformers.js runs Whisper in the browser; MessagePack keeps the SignalR traffic compact"
+          "frontend": "The C# client, built with Radzen components, runs the debate stage, plays the voices with animated effects and captures your microphone for spoken turns",
+          "backend": "Minimal API modules (Carter) start and end fights and serve profiles, history and the leaderboard, while background workers transcribe, judge and fact-check finished fights",
+          "data": "Nine tables hold profiles, matches, turns, analyses, results and share links; Azure Blob Storage holds the recorded fight audio, profile faces and cached speech",
+          "signIn": "Sign in with a Microsoft account; your fights, history and profile are tied to it",
+          "delivery": "GitHub Actions builds and deploys every push to Azure; every app except PoTraffic runs its tests there first",
+          "realtime": "One SignalR hub, using MessagePack, carries raw microphone audio up and the host's voice, captions and snapshots down; the server talks to the GPT-Realtime host over its own WebSocket",
+          "extras": "Concentus compresses each recorded fight to Opus before it is stored; transformers.js can transcribe a spoken turn in your browser; MessagePack keeps the audio-heavy SignalR traffic compact"
         },
         "aiServices": [
           {
             "cloud": "Azure",
             "name": "GPT-4.1 mini",
-            "use": "Writes each argument round in the personas' voices"
+            "use": "Writes each argument round in the personas' voices and the sample lines on profile cards"
           },
           {
             "cloud": "Azure",
             "name": "GPT-5 mini",
-            "use": "Judges the fight, rewrites personas and fact-checks claims with web search"
+            "use": "Judges the fight, rewrites each persona from its debates and fact-checks claims with web search"
           },
           {
             "cloud": "Azure",
@@ -722,23 +695,29 @@
           {
             "cloud": "Azure",
             "name": "GPT-Realtime mini",
-            "use": "The live host who interrupts and cross-examines in FIGHT mode"
+            "use": "The live host who introduces, interrupts and cross-examines in FIGHT mode"
           },
           {
             "cloud": "Azure",
             "name": "GPT-4o Transcribe",
-            "use": "Transcribes the fight with speaker labels (who said what)"
+            "use": "Transcribes the recorded fight with speaker labels, and each live turn as it is spoken"
+          },
+          {
+            "cloud": "Fish Audio",
+            "name": "Fish Audio voices",
+            "use": "Cloned voices for personas that have one"
           },
           {
             "cloud": "Google",
             "name": "Gemini Live, TTS and Search",
-            "use": "The original provider: live host, voices and Search-grounded fact checks. Kept as a fallback when the Azure endpoint is empty",
+            "use": "The original provider: live host, voices and Search-grounded fact checks. Used only when no Azure endpoint is set",
             "optional": true
           },
           {
             "cloud": "In-app",
             "name": "Whisper tiny",
-            "use": "Transcribes a spoken turn in the browser (WebGPU or WASM) before falling back to the server"
+            "use": "A Settings switch, off by default: transcribes a spoken turn in your browser (WebGPU or WASM) before falling back to the server",
+            "optional": true
           }
         ]
       }
@@ -746,7 +725,7 @@
     {
       "id": "poredomedia",
       "name": "PoRedoMedia",
-      "description": "Remix your pictures and clips with AI into memes, roasts, restyled images, music clips and photo-to-video.",
+      "description": "Remix your pictures and clips with AI into memes, roasts, restyled images, rap clips and photo-to-video, or cut them into a narrated movie.",
       "category": "creative",
       "status": "active",
       "technologies": [
@@ -764,46 +743,51 @@
         "signIn": "Microsoft",
         "delivery": "GitHub Actions",
         "realtime": "SignalR",
-        "extras": "SkiaSharp + transformers.js",
+        "extras": "SkiaSharp + FFmpeg + transformers.js",
         "details": {
-          "frontend": "Blazor WebAssembly: the C# app runs in the browser",
-          "backend": "ASP.NET Core on .NET 10",
-          "data": "Azure Table Storage holds runs and items; Azure Blob Storage holds every picture, clip and the sound library",
+          "frontend": "The browser app, built with Radzen components, uploads your media, lets you tick the AI functions to run with a cost estimate, edits movies, and can describe pictures on your own device",
+          "backend": "An API queues each run's steps in a background dispatcher, calls the image, video, music and speech models, renders video, and deletes media after 30 days",
+          "data": "Azure Table Storage holds your media list, runs, share links, preferences and daily render allowance; Azure Blob Storage holds every picture, clip and render, and the sound-effect library",
           "signIn": "Sign in with a Microsoft account",
-          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
           "realtime": "A SignalR hub shows each run's progress live, to its owner only",
-          "extras": "SkiaSharp renders captions and memes onto images; transformers.js runs Whisper and Florence-2 on your device"
+          "extras": "SkiaSharp letters memes and captions onto images; FFmpeg renders the edited videos, movies, GIFs and social exports; transformers.js can run Florence-2 and Whisper in your browser",
+          "delivery": "GitHub Actions builds and deploys every push to Azure; every app except PoTraffic runs its tests there first"
         },
         "aiServices": [
           {
             "cloud": "Azure",
             "name": "GPT-5.4 nano",
-            "use": "Chat, captions and roasts"
+            "use": "Writes captions, roast lyrics, titles and movie scripts, picks the sound effects, and looks at pictures when Gemini cannot"
           },
           {
             "cloud": "Azure",
             "name": "GPT-5.4 mini",
-            "use": "Looks at pictures when Gemini cannot"
+            "use": "Labels video frames when Gemini cannot watch a clip, and retries the sound-effect script"
           },
           {
             "cloud": "Azure",
             "name": "Whisper",
-            "use": "Transcribes the audio in clips"
+            "use": "Transcribes the speech in clips and times movie narration"
           },
           {
             "cloud": "Azure",
             "name": "GPT-4o mini TTS",
-            "use": "Speaks roasts and captions aloud"
+            "use": "Voices the comic roast, narrates movies, and speaks the roast when Lyria cannot"
+          },
+          {
+            "cloud": "Azure",
+            "name": "AI Speech",
+            "use": "Performs the excited neural-voice roast"
           },
           {
             "cloud": "Azure",
             "name": "FLUX.1 Kontext pro",
-            "use": "Edits and restyles images, through Azure AI Foundry"
+            "use": "Redraws the picture through Azure AI Foundry when Gemini cannot"
           },
           {
             "cloud": "Google",
             "name": "Gemini Flash-Lite",
-            "use": "Looks at pictures and clips first, with Azure as the fallback"
+            "use": "Looks at pictures and watches whole clips with their sound first, with Azure as the fallback"
           },
           {
             "cloud": "Google",
@@ -813,17 +797,18 @@
           {
             "cloud": "Google",
             "name": "Gemini Omni",
-            "use": "Turns a photo into a short video"
+            "use": "Turns a photo into a 3 to 10 second clip with its own sound"
           },
           {
             "cloud": "Google",
             "name": "Lyria 3",
-            "use": "Writes short music clips"
+            "use": "Performs a short rap roast of your picture"
           },
           {
             "cloud": "In-app",
             "name": "Whisper and Florence-2",
-            "use": "Transcribe and describe on your device before any paid call"
+            "use": "Florence-2 describes pictures for free when On-device AI is switched on; Whisper hears clips in the browser when the server has no speech model",
+            "optional": true
           }
         ]
       }
