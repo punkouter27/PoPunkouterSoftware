@@ -196,7 +196,7 @@ public static partial class DashboardDerivations
             .ToList();
     }
 
-/// <summary>
+    /// <summary>
     /// Canonical dedup key for a <see cref="SafeToRemoveItem"/>: the humanized type label
     /// (so "Microsoft.Web/sites" and a future "App Service" label collide on purpose), then
     /// the resource group, then the resource name. The connectivity loop runs every Type

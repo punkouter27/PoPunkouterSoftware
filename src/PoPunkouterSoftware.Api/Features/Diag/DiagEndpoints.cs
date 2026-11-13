@@ -59,7 +59,7 @@ internal static class DiagEndpoints
             return Results.Problem(detail: "No report found. Refresh from Azure to generate one.", statusCode: 404);
         });
 
-        diag.MapGet("/summary",async (
+        diag.MapGet("/summary", async (
             IWebHostEnvironment env, AzureReportStore store, UptimeSampleStore uptimeSamples,
             ReportRefreshRunner runner, IConfiguration config, TimeProvider clock,
             ILogger<Program> logger, CancellationToken ct) =>
@@ -76,7 +76,8 @@ internal static class DiagEndpoints
             var samples = await uptimeSamples.LoadRecentAsync(DashboardInsightsBuilder.UptimeWindowDays, now, ct);
             return Results.Json(BuildOpsSummary(
                 report, history, config.GetValue<double?>("Budget:MonthlyUsd"), now.UtcDateTime, samples)
-                with { RefreshInProgress = runner.IsRunning });
+                with
+            { RefreshInProgress = runner.IsRunning });
         })
         .WithName("GetOpsSummary");
 

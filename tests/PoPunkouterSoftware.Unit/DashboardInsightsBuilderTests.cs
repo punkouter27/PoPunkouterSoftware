@@ -17,26 +17,26 @@ public class ScanDeltaTests
 
     private static AzureReport ReportWith(
         DateTime at, params (string Name, string Status, int ResponseMs)[] services) => new()
-    {
-        GeneratedAt = at,
-        WebServices = new WebServicesInfo
         {
-            Services = services.Select(s => new WebService
+            GeneratedAt = at,
+            WebServices = new WebServicesInfo
             {
-                Name = s.Name,
-                FriendlyName = s.Name,
-                HttpStatus = s.Status,
-                Connectivity = new ConnectivityInfo { Success = s.Status == ServiceHealth.Active, ResponseTime = s.ResponseMs },
-            }).ToList(),
-        },
-    };
+                Services = services.Select(s => new WebService
+                {
+                    Name = s.Name,
+                    FriendlyName = s.Name,
+                    HttpStatus = s.Status,
+                    Connectivity = new ConnectivityInfo { Success = s.Status == ServiceHealth.Active, ResponseTime = s.ResponseMs },
+                }).ToList(),
+            },
+        };
 
     private static HistorySummary HistoryWith(
         DateTime at, params (string Name, string Status)[] services) => new()
-    {
-        GeneratedAt = at,
-        Services = services.Select(s => new ServiceHistoryPoint { Name = s.Name, HttpStatus = s.Status }).ToList(),
-    };
+        {
+            GeneratedAt = at,
+            Services = services.Select(s => new ServiceHistoryPoint { Name = s.Name, HttpStatus = s.Status }).ToList(),
+        };
 
     [Fact]
     public void NoPriorScan_ReportsBaselineRatherThanNoChanges()
@@ -249,13 +249,16 @@ public class UptimeHeatmapTests
         // name, so "App-A" must still find "app-a".
         var latest = new AzureReport
         {
-            WebServices = new WebServicesInfo { Services = [new WebService
+            WebServices = new WebServicesInfo
+            {
+                Services = [new WebService
             {
                 Name = "app-a", OpenSecurityAlerts = 3, ResourceType = "Microsoft.Web/sites", Kind = "app,linux",
                 Region = "westus2", AppServicePlanSku = "F1",
                 LastDeploy = new DeployInfo { Conclusion = "failure" },
                 ContentCheck = new ContentCheckInfo { Expect = "<title>A</title>", Found = true },
-            }] },
+            }]
+            },
             AppErrors = [new AppErrorSummary { App = "App-A", Count24h = 12, TopType = "System.TimeoutException",
                 Types = [new AppErrorType { Type = "System.TimeoutException", Count = 12 }] }],
             // Only the app's own region and OS are its options.

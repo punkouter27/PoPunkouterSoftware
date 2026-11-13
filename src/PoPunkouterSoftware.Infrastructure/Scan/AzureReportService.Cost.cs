@@ -30,7 +30,7 @@ public partial class AzureReportService
 {
     // ── Step 5: 30-day cost via Cost Management REST ───────────────────────────
 
-/// <summary>Fetches 30-day usage and cost from the Cost Management API; calculates monthly burn rate.</summary>
+    /// <summary>Fetches 30-day usage and cost from the Cost Management API; calculates monthly burn rate.</summary>
 
     private async Task<CostInfo> GetCostAsync(string subscriptionId, string? armToken, CancellationToken ct)
     {
