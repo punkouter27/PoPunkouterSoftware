@@ -28,7 +28,7 @@
           "backend": "Minimal API groups run duels, tournaments, the model catalog and the leaderboard; background services execute queued duels, resume interrupted tournaments and call the AI judge",
           "data": "Tables hold duels, results, models, Elo history, tournaments and a daily spend ledger; Azure Blob Storage holds generated pages too large for a table row",
           "signIn": "Any Microsoft account, work or personal, through a server-side cookie session, so the browser never holds tokens",
-          "delivery": "GitHub Actions builds and deploys every push to Azure; every app except PoTraffic runs its tests there first",
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
           "realtime": "One SignalR hub tells your browser when to start its model and streams each side's progress and the final verdict to everyone watching the duel",
           "extras": "WebLLM runs small open models entirely in your browser on the GPU (WebGPU), downloaded once and cached, racing the cloud models"
         },
@@ -93,7 +93,7 @@
           "backend": "Minimal APIs serve scores, leaderboards, match history and invites, while server-side game loops run the multiplayer lobbies, races and matches",
           "data": "Azure Table Storage holds high scores, ladders, Elo ratings, match history and verified results; Azure Blob Storage holds saved PoEcosystem worlds and the keys that sign anti-cheat score tokens",
           "signIn": "Sign in with a Microsoft account to put your name on leaderboards and play online",
-          "delivery": "GitHub Actions builds and deploys every push to Azure; every app except PoTraffic runs its tests there first",
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
           "realtime": "13 SignalR hubs run lobbies, server-ticked races (up to 50 Hz), lockstep and rollback matches, live quizzes and board games; Web Push delivers game invites",
           "extras": "three.js draws the 3D games, cannon-es gives them physics, SharpGLTF turns 3D models into destructible voxels on the server and QRCoder makes invite QR codes"
         }
@@ -128,7 +128,7 @@
           "backend": "Minimal APIs take uploads and serve results, while a background worker queue runs each song through separation, pitch, beat, chord, mode and lyrics stages",
           "data": "Azure Blob Storage mirrors each analysis job's folder, the upload and every result, so jobs survive a restart. No tables",
           "signIn": "Optional: you start as a guest, and signing in with a Microsoft account keeps your library and lets you open songs from OneDrive",
-          "delivery": "GitHub Actions builds and deploys every push to Azure; every app except PoTraffic runs its tests there first",
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
           "realtime": "One SignalR hub pushes each job's progress, server-sent events stream the written interpretation of the song and answers to your questions, and Web Push says when a job finishes",
           "extras": "ONNX Runtime runs the audio models, Whisper.net transcribes the separated vocals, AcoustID can name the song from its fingerprint, DryWetMidi writes the MIDI export and tus makes big uploads resumable"
         },
@@ -188,7 +188,7 @@
           "signIn": "Sign in with GitHub; the same token lets the app list and clone your repositories",
           "realtime": "A SignalR hub streams analysis progress only to the repository's owner",
           "extras": "The git command line clones each repository and walks its history; Roslyn parses C# files for Visual Studio-style code metrics; the GitHub API lists your repositories and registers push webhooks, so new commits are analysed automatically",
-          "delivery": "GitHub Actions builds and deploys every push to Azure; every app except PoTraffic runs its tests there first"
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
         }
       }
     },
@@ -221,7 +221,7 @@
           "signIn": "Sign in with a Microsoft account",
           "realtime": "Web Push sends heavier-than-usual, route-changed and time-to-leave alerts plus a Monday digest; routes are polled every 5 minutes, easing to 15 when traffic is steady",
           "extras": "The Google Maps API supplies live travel times, road shapes, geocoding and address suggestions; Leaflet draws the route on free OpenStreetMap tiles; Open-Meteo adds the weather to each sample, so you can see what rain costs your commute",
-          "delivery": "GitHub Actions builds and deploys every push to Azure; every app except PoTraffic runs its tests there first"
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
         }
       }
     },
@@ -256,7 +256,7 @@
           "signIn": "Sign in with a Microsoft account",
           "realtime": "A SignalR hub tells every open tab when new data lands, so the stats pages refresh without polling",
           "extras": "transformers.js runs object detection, Florence-2 captions, Whisper speech and sound recognition in your browser; QuestPDF renders the session and day recap PDFs",
-          "delivery": "GitHub Actions builds and deploys every push to Azure; every app except PoTraffic runs its tests there first"
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
         },
         "aiServices": [
           {
@@ -313,7 +313,7 @@
           "signIn": "Sign in with a Microsoft account",
           "realtime": "Comic generation streams its real stages to the page as server-sent events",
           "extras": "SkiaSharp letters the captions onto the art and builds share cards; the Google Places API finds restaurants and their reviews; MapLibre shows them on free OpenFreeMap tiles",
-          "delivery": "GitHub Actions builds and deploys every push to Azure; every app except PoTraffic runs its tests there first"
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
         },
         "aiServices": [
           {
@@ -498,43 +498,6 @@
       }
     },
     {
-      "id": "porace",
-      "name": "PoRace",
-      "description": "A Unitree Go2 robot dog and humanoid racers run on MuJoCo physics, with every stride coming from a trained locomotion policy.",
-      "category": "rl-training",
-      "status": "active",
-      "technologies": [
-        "Azure Static Web Apps",
-        "Unity WebGL",
-        "Reinforcement learning"
-      ],
-      "url": "https://proud-sea-0d583fb0f.2.azurestaticapps.net",
-      "githubRepo": "punkouter27/PoRaceUnreal",
-      "expect": "<title>PoRace</title>",
-      "androidPackage": "com.punkoutersoftware.poracer",
-      "stack": {
-        "frontend": "Unity 6.6 (WebGL)",
-        "ai": "RL agents",
-        "physics": "MuJoCo",
-        "training": "MuJoCo Playground + Brax PPO (JAX)",
-        "trainingPath": "training",
-        "extras": "Unitree Go2 and G1 models + Open-Meteo weather",
-        "details": {
-          "frontend": "Unity 6000.6 built for WebGL and drawn with URP; Unity's own physics is never used, it only runs the cameras, the broadcast HUD and the replays. The Unity source now lives in the PoRaceUnreal repo, which is rebuilding the game in Unreal",
-          "physics": "Every racer and the track run in one MuJoCo model inside the browser, stepping every 4 ms (250 times a second) through MuJoCo's Unity plugin",
-          "training": "Trained on a GPU in a Docker trainer with MuJoCo Playground and Brax PPO in JAX: the Go2 learned to run, take banked and steeplechase tracks and get up, and the humanoids use Playground's G1 walking setup",
-          "extras": "Blue is a model of the Unitree Go2 robot dog and the humanoid racers use the Unitree G1's 29-joint layout; a race can pull a real city's current weather from Open-Meteo to change grip and wind"
-        },
-        "aiServices": [
-          {
-            "cloud": "In-app",
-            "name": "Reinforcement-learning agents",
-            "use": "Every stride is a trained ONNX policy that Unity's Inference Engine runs 50 times a second in the browser; it reads the racer's joints, body motion and steering command (48 numbers for the Go2) and sets its motor targets"
-          }
-        ]
-      }
-    },
-    {
       "id": "posoccer",
       "name": "PoSoccer",
       "description": "Top-down pocket soccer played between players trained with Unity ML-Agents.",
@@ -672,7 +635,7 @@
           "backend": "Minimal API modules (Carter) start and end fights and serve profiles, history and the leaderboard, while background workers transcribe, judge and fact-check finished fights",
           "data": "Nine tables hold profiles, matches, turns, analyses, results and share links; Azure Blob Storage holds the recorded fight audio, profile faces and cached speech",
           "signIn": "Sign in with a Microsoft account; your fights, history and profile are tied to it",
-          "delivery": "GitHub Actions builds and deploys every push to Azure; every app except PoTraffic runs its tests there first",
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
           "realtime": "One SignalR hub, using MessagePack, carries raw microphone audio up and the host's voice, captions and snapshots down; the server talks to the GPT-Realtime host over its own WebSocket",
           "extras": "Concentus compresses each recorded fight to Opus before it is stored; transformers.js can transcribe a spoken turn in your browser; MessagePack keeps the audio-heavy SignalR traffic compact"
         },
@@ -751,7 +714,7 @@
           "signIn": "Sign in with a Microsoft account",
           "realtime": "A SignalR hub shows each run's progress live, to its owner only",
           "extras": "SkiaSharp letters memes and captions onto images; FFmpeg renders the edited videos, movies, GIFs and social exports; transformers.js can run Florence-2 and Whisper in your browser",
-          "delivery": "GitHub Actions builds and deploys every push to Azure; every app except PoTraffic runs its tests there first"
+          "delivery": "GitHub Actions builds, tests and deploys every push to Azure"
         },
         "aiServices": [
           {

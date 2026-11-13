@@ -55,7 +55,7 @@ public static class TechGlossary
         ["Microsoft"] = "Sign in with a Microsoft account (personal or work), through Microsoft Entra ID.",
         ["GitHub"] = "Sign in with a GitHub account.",
         ["None"] = "No login: anyone can use it straight away.",
-        ["GitHub Actions"] = "GitHub's automation: every push builds the app and deploys it to Azure.",
+        ["GitHub Actions"] = "GitHub's automation: every push builds the app, runs its tests and deploys it to Azure.",
 
         // AI, where the app runs it
         ["Azure"] = "Models hosted in Microsoft Azure (Azure OpenAI / AI Foundry), called from the app's server.",
@@ -140,7 +140,6 @@ public static class TechGlossary
         ["SkiaSharp"] = "Google's Skia 2D graphics engine for .NET: drawing, images and text.",
         ["Timeline"] = "Unity's Timeline, for sequencing cutscenes: cameras, animation and sound on one track.",
         ["UniTask"] = "Fast, allocation-free async/await for Unity.",
-        ["Unitree Go2 and G1 models"] = "3D models of Unitree's real robots: the Go2 robot dog and the G1 humanoid.",
         ["Unreal Robotics Lab"] = "An Unreal Engine plugin that runs MuJoCo robot physics inside Unreal.",
         ["VContainer"] = "A dependency-injection library for Unity: it wires the game's parts together.",
         ["VFX Graph"] = "Unity's GPU particle system for effects like sparks, smoke and dust.",

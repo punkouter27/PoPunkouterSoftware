@@ -1,0 +1,27 @@
+{
+  "_comment": "Which Po repos share which CI/CD files. Each type has a reference repo; every other repo of that type must hold byte-identical copies of the listed files. sync-ci.ps1 copies them, check-conventions.sh fails on any difference. Files marked optional are only required when the repo has the 'when' path.",
+  "types": {
+    "dotnet-web": {
+      "reference": "PoTraffic",
+      "repos": [
+        "PoFightJudge", "PoLocalCompare", "PoMiniGames", "PoMode", "PoPunkouterSoftware",
+        "PoRedoMedia", "PoRepoLineTracker", "PoSeeReview", "PoTraffic", "PoWatch"
+      ],
+      "files": [
+        { "path": ".github/workflows/deploy.yml" },
+        { "path": ".github/workflows/infra.yml", "when": "infra/main.bicep" },
+        { "path": ".github/dependabot.yml" }
+      ]
+    },
+    "unity-webgl": {
+      "reference": "PoBox",
+      "repos": ["PoBox", "PoFootball", "PoHillKing", "PoOlympic", "PoSoccer", "PoSumo"],
+      "files": [
+        { "path": ".github/workflows/webgl.yml" },
+        { "path": "Tools/ci_webgl.ps1" },
+        { "path": "Tools/deploy_webgl.ps1" },
+        { "path": ".github/dependabot.yml" }
+      ]
+    }
+  }
+}

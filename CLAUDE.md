@@ -100,7 +100,7 @@ Standing instructions from the owner. They outrank default habits and apply to e
 
 ```powershell
 # Build. TreatWarningsAsErrors is ON solution-wide — a warning fails the build.
-dotnet build PoPunkouterSoftware.sln
+dotnet build PoPunkouterSoftware.slnx
 
 # Fast tier: unit then integration. ONE project per invocation — `dotnet test` rejects two
 # project paths in one command (MSB1008). Integration needs Docker (Testcontainers Azurite).
@@ -286,10 +286,11 @@ says how THAT app uses the tech — the glossary already says what it is, so a n
 restates the glossary ("Unity 6000.6, built for WebGL…", "trained by trial and error") is the
 failure mode. It found real errors, not just vague wording: PhysX claimed for three Box2D games,
 glTFast "at runtime" (editor import only), Tone.js and LibGit2Sharp not used at all, Burst and AI
-Navigation unused, PoSlapUnreal's site is a three.js + MuJoCo-WASM build (not Unreal), PoRace's
-repo is gone (its Unity source and trainer now live in `PoRaceUnreal`). PoRumble was removed
-entirely (repo, Azure resource and URL all gone). The shared delivery note says tests run
-"except PoTraffic" because its deploy workflow runs none. `optional` was re-checked against
+Navigation unused, PoSlapUnreal's site is a three.js + MuJoCo-WASM build (not Unreal). PoRumble was removed
+entirely (repo, Azure resource and URL all gone) and PoRace was delisted (owner's call: the
+Unity version is being retired; its Unreal rewrite `PoRaceUnreal` is not deployed). PoTraffic's
+deploy had no test step, so it gained the Unit tier the same day and the shared delivery note
+("builds, tests and deploys") is true on every row. `optional` was re-checked against
 `kv-poshared2` secret names and App Service settings the same day.
 PoMemeVideo was deleted from Azure and the catalog on 2026-11-07; its history rows age out of the uptime grid within 30 days.
 
@@ -1133,13 +1134,17 @@ push. Everywhere else, run only the tests covering what changed.
 **CI/CD:** the workflows below, plus the estate-wide `ci-watch.yml` and `conventions.yml`. Only `deploy.yml` runs tests, and only the Unit tier — the other
 three tiers still run locally before a push.
 
-- [deploy.yml](.github/workflows/deploy.yml) — build, **unit tests**, back up, deploy, **smoke
-  test**, roll back. The live site is downloaded through Kudu's zip API (same OIDC identity)
-  before the deploy; afterwards `/health/live`, `/health` and `/api/diag/summary` (200, or 404
-  before any scan) must answer within ~3 minutes of retries, or the backup is redeployed, the
-  job goes red and ntfy is told. No backup (first deploy, SCM down) means no rollback, with a
-  warning. Target is App
-  Service `app-popunkoutersoftware2` via OIDC, no required secrets in the workflow. Unit is the only tier
+- [deploy.yml](.github/workflows/deploy.yml) — **the shared Po web workflow, byte-identical in all
+  ten .NET web repos** (reference copy: PoTraffic's; never edit it here — change PoTraffic's and run
+  `scripts/sync-ci.ps1`; `scripts/ci-repos.json` lists the repos and files, and the weekly
+  `conventions.yml` fails on any copy that differs). Build, **unit tests**, back up, deploy, health
+  gate (this commit on `/health/live`, then `/health`), then this repo's hook
+  `scripts/post-deploy-smoke.ps1` (`/api/diag/summary`: 200, or 404 before any scan); any failure
+  OR cancel redeploys the backup. Target comes from repo variables `AZURE_WEBAPP_NAME` /
+  `AZURE_RESOURCE_GROUP`. (Until 2026-11-13 this repo had its own workflow, which built
+  `PoPunkouterSoftware.sln` after the solution became `.slnx` — every deploy from 2026-11-12 failed
+  at restore.) [infra.yml](.github/workflows/infra.yml) is the shared manual Bicep what-if/apply;
+  no deploy applies Bicep. Unity games share `webgl.yml` the same way (reference: PoBox). Unit is the only tier
   that belongs in a deploy pipeline: no Docker, no network, no live host, ~0.5s for 100 tests
   against an assembly the job already built. Integration needs Testcontainers Azurite; both E2E
   tiers need a running app and a `BASE_URL`. Adding any of them would trade a fast gate for a

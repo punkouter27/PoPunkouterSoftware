@@ -25,7 +25,7 @@ Prerequisites:
 Common commands:
 
 ```powershell
-dotnet build .\PoPunkouterSoftware.sln
+dotnet build .\PoPunkouterSoftware.slnx
 dotnet test .\tests\PoPunkouterSoftware.Unit
 dotnet test .\tests\PoPunkouterSoftware.Integration
 ```
