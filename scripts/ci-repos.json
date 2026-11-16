@@ -9,7 +9,6 @@
       ],
       "files": [
         { "path": ".github/workflows/deploy.yml" },
-        { "path": ".github/workflows/infra.yml", "when": "infra/main.bicep" },
         { "path": ".github/dependabot.yml" }
       ]
     },

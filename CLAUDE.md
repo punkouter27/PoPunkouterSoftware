@@ -1143,7 +1143,7 @@ three tiers still run locally before a push.
   OR cancel redeploys the backup. Target comes from repo variables `AZURE_WEBAPP_NAME` /
   `AZURE_RESOURCE_GROUP`. (Until 2026-11-13 this repo had its own workflow, which built
   `PoPunkouterSoftware.sln` after the solution became `.slnx` — every deploy from 2026-11-12 failed
-  at restore.) [infra.yml](.github/workflows/infra.yml) is the shared manual Bicep what-if/apply;
+  at restore.) The same deploy.yml, run by hand with `infra` = what-if or apply, is the Bicep path;
   no deploy applies Bicep. Unity games share `webgl.yml` the same way (reference: PoBox). Unit is the only tier
   that belongs in a deploy pipeline: no Docker, no network, no live host, ~0.5s for 100 tests
   against an assembly the job already built. Integration needs Testcontainers Azurite; both E2E
