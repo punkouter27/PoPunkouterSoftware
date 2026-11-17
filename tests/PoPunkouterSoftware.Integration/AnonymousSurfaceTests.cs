@@ -22,6 +22,7 @@ public class AnonymousSurfaceTests(ProductionApp app) : IClassFixture<Production
         "/api/diag/refresh",
         "/api/diag/report",
         "/api/diag/restart/{name}",
+        "/api/diag/status",
         "/api/diag/summary",
         "/api/portfolio/",
         "/api/portfolio/badge/{id}.svg",

@@ -1,0 +1,35 @@
+@namespace PoPunkouterSoftware.Client
+@* One dependency on /diag: name + status badge, what it is for, the plain-English verdict,
+   and how long the check took. *@
+
+<div class="diag-row">
+    <div class="diag-row__head">
+        <h3 class="diag-row__name">@Name</h3>
+        <RadzenBadge Text="@Status" IsPill="true" BadgeStyle="@StyleFor(Status)" />
+    </div>
+    <p class="diag-row__purpose">@Purpose</p>
+    <p class="diag-row__summary">
+        @Summary
+        <span class="diag-row__meta">@Meta</span>
+    </p>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Name { get; set; } = "";
+    [Parameter, EditorRequired] public string Status { get; set; } = "";
+    [Parameter] public string Summary { get; set; } = "";
+    [Parameter] public string Purpose { get; set; } = "";
+    [Parameter] public double? LatencyMs { get; set; }
+    [Parameter] public DateTimeOffset? CheckedAt { get; set; }
+
+    private string Meta =>
+        (LatencyMs is { } ms ? $"{ms:0} ms" : "not probed")
+        + (CheckedAt is { } at ? $" · checked {RelativeTime.FormatDetailed(DateTimeOffset.UtcNow - at)}" : "");
+
+    private static BadgeStyle StyleFor(string status) => status switch
+    {
+        "Healthy" => BadgeStyle.Success,
+        "Degraded" => BadgeStyle.Warning,
+        _ => BadgeStyle.Danger,
+    };
+}

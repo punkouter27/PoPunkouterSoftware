@@ -1,0 +1,172 @@
+@namespace PoPunkouterSoftware.Client
+@page "/diag"
+@rendermode WasmRenderModes.Interactive
+@using System.Diagnostics
+@using PoPunkouterSoftware.Shared
+@inject PortfolioApiClient Api
+
+<PageTitle>Diagnostics · PoPunkouterSoftware</PageTitle>
+
+@* The fifth page — owner's call, 2026-11-17, reversing the 2026-09-04 removal of a
+   server-rendered /diag (see CLAUDE.md). It answers one question in plain English: "is this
+   app and everything it leans on working right now?" Anonymous in Production, so its only
+   source is GET /api/diag/status — health-check verdict words, latencies and fixed text built
+   server-side by DiagStatusBuilder. Nothing here reads /health's data or config blocks. *@
+<main id="main-content" class="app-page diag-page" tabindex="-1">
+    <header class="diag-header">
+        <div>
+            <h1>Diagnostics</h1>
+            <p class="app-note">Is the app, and everything it relies on, working right now?</p>
+        </div>
+        <RadzenButton Text="@(_loading ? "Checking…" : "Refresh")" Icon="refresh"
+                      ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Small"
+                      Disabled="@_loading" Click="LoadAsync" />
+    </header>
+
+    @if (_status is null && _loading)
+    {
+        <LoadingSkeleton Variant="summary" TileCount="3" AriaLabel="Checking the app's dependencies" />
+    }
+    else if (_status is null)
+    {
+        <ErrorRetryBanner Title="The app's server did not answer."
+                          Message="@(_error ?? "No response.")" OnRetry="LoadAsync" AlertStyle="AlertStyle.Danger" />
+        <section class="app-card diag-section" aria-labelledby="diag-api">
+            <h2 id="diag-api" class="app-card-title">API</h2>
+            <DiagRow Name="App server" Status="Unhealthy" Summary="Not reachable from this browser."
+                     Purpose="Serves every page and all the data on them." LatencyMs="@_apiMs" />
+        </section>
+    }
+    else
+    {
+        <RadzenAlert AlertStyle="@OverallStyle" Variant="Variant.Flat" ShowIcon="true" AllowClose="false"
+                     class="diag-banner" role="status">
+            <strong>@OverallHeadline</strong>
+            <span>@OverallDetail</span>
+        </RadzenAlert>
+
+        @if (_error is not null)
+        {
+            <p class="app-note" role="alert">Refresh failed — showing the previous result. @_error</p>
+        }
+
+        <section class="app-card diag-section" aria-labelledby="diag-api">
+            <h2 id="diag-api" class="app-card-title">API</h2>
+            <DiagRow Name="App server" Status="Healthy" Summary="Reachable from this browser."
+                     Purpose="Serves every page and all the data on them." LatencyMs="@_apiMs"
+                     CheckedAt="@_status.CheckedAtUtc" />
+        </section>
+
+        <section class="app-card diag-section" aria-labelledby="diag-storage">
+            <h2 id="diag-storage" class="app-card-title">Database / storage</h2>
+            @foreach (var c in Storage)
+            {
+                <DiagRow Name="@Friendly(c.Name)" Status="@c.Status" Summary="@c.Summary" Purpose="@c.Purpose"
+                         LatencyMs="@c.LatencyMs" CheckedAt="@_status.CheckedAtUtc" />
+            }
+        </section>
+
+        <section class="app-card diag-section" aria-labelledby="diag-services">
+            <h2 id="diag-services" class="app-card-title">Services</h2>
+            @if (Services.Count == 0)
+            {
+                <p class="app-note">This app reports no external services.</p>
+            }
+            @foreach (var c in Services)
+            {
+                <DiagRow Name="@Friendly(c.Name)" Status="@c.Status" Summary="@c.Summary" Purpose="@c.Purpose"
+                         LatencyMs="@c.LatencyMs" CheckedAt="@_status.CheckedAtUtc" />
+            }
+        </section>
+
+        <section class="app-card diag-section diag-about" aria-labelledby="diag-about">
+            <h2 id="diag-about" class="app-card-title">This build</h2>
+            <dl>
+                <dt>Version</dt><dd>@BuildStamp.Value</dd>
+                <dt>Environment</dt><dd>@_status.Environment</dd>
+                <dt>Checked</dt><dd>@RelativeTime.FormatDetailed(DateTimeOffset.UtcNow - _status.CheckedAtUtc)</dd>
+            </dl>
+        </section>
+    }
+</main>
+
+@code {
+    private DiagStatus? _status;
+    private bool _loading = true;
+    private string? _error;
+    private double? _apiMs;
+    private bool _inFlight;
+
+    private IReadOnlyList<DiagCheck> Storage =>
+        _status?.Checks.Where(c => c.Category == "storage").ToList() ?? [];
+
+    private IReadOnlyList<DiagCheck> Services =>
+        _status?.Checks.Where(c => c.Category != "storage").ToList() ?? [];
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    // The Refresh button is disabled while _loading; the early return is the second guard
+    // (a double-click can land before the disabled state renders).
+    private async Task LoadAsync()
+    {
+        if (_inFlight)
+            return;
+        _inFlight = true;
+        _loading = true;
+        _error = null;
+        StateHasChanged();
+
+        var watch = Stopwatch.StartNew();
+        try
+        {
+            var next = await Api.GetDiagStatusAsync();
+            _apiMs = Math.Round(watch.Elapsed.TotalMilliseconds);
+            if (next is null)
+                _error = "The server sent an empty answer.";
+            else
+                _status = next;
+        }
+        catch (Exception ex)
+        {
+            _apiMs = Math.Round(watch.Elapsed.TotalMilliseconds);
+            _error = FriendlyError.Describe(ex);
+        }
+        finally
+        {
+            _loading = false;
+            _inFlight = false;
+        }
+    }
+
+    private int ProblemCount => _status?.Checks.Count(c => c.Status != "Healthy") ?? 0;
+
+    private AlertStyle OverallStyle => _status?.Status switch
+    {
+        "Healthy" => AlertStyle.Success,
+        "Degraded" => AlertStyle.Warning,
+        _ => AlertStyle.Danger,
+    };
+
+    private string OverallHeadline => _status?.Status switch
+    {
+        "Healthy" => "Everything is working.",
+        "Degraded" => "The app is up, with a problem in the background.",
+        _ => "Something is not working.",
+    };
+
+    private string OverallDetail => ProblemCount switch
+    {
+        0 => $"All {_status?.Checks.Count} dependencies answered normally.",
+        1 => "One dependency needs attention — see below. The pages still load.",
+        var n => $"{n} dependencies need attention — see below. The pages still load.",
+    };
+
+    private static string Friendly(string name) => name switch
+    {
+        "TableStorage" => "Table Storage",
+        "AzureInventory" => "Azure scan data",
+        "KeyVault" => "Key Vault",
+        "ApplicationInsights" => "Application Insights",
+        _ => name,
+    };
+}

@@ -40,6 +40,7 @@
                 <li><a href="/azure">Azure</a> — service health, cost and uptime</li>
                 <li><a href="/users">Users</a> — who has signed in</li>
                 <li><a href="/settings">Settings</a> — theme, density, sound, effects</li>
+                <li><a href="/diag">Diagnostics</a> — is the app and what it relies on working</li>
             </ul>
         }
         @if (ShowPath)
@@ -80,7 +81,7 @@
     };
 
     private string Message => IsMissingPage
-        ? "The dashboard has exactly four pages, and none of them is this address."
+        ? "The dashboard has exactly five pages, and none of them is this address."
         : $"This deployment refused the request. The status was {StatusCode}.";
 
     private bool ShowPath => !Path.Contains("not-found", StringComparison.OrdinalIgnoreCase);

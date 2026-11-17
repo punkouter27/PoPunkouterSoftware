@@ -18,6 +18,7 @@
         // Theme, density, sound and effects live on /settings and nowhere else: a control that
         // exists twice is two places to keep in step, and the deleted 2026-10 page proved it.
         { id: 'nav-settings', title: 'Go to Settings (theme, density, sound, effects)', icon: 'settings', category: 'Navigation', action: function () { navigate('/settings'); } },
+        { id: 'nav-diag', title: 'Go to Diagnostics (is everything working?)', icon: 'monitor_heart', category: 'Navigation', action: function () { navigate('/diag'); } },
         { id: 'act-reload', title: 'Hard Reload Application', icon: 'refresh', category: 'System', action: function () { window.location.reload(); } }
     ];
 

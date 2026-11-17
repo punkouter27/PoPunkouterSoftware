@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using PoPunkouterSoftware.Shared;
+using System.Net.Http.Json;
 using PoPunkouterSoftware.Api;
 using System.Net;
 using System.Text.Json;
@@ -54,8 +57,13 @@ public sealed class ProductionApp : WebApplicationFactory<Program>
 public class ProductionBootTests : IClassFixture<ProductionApp>
 {
     private readonly HttpClient _client;
+    private readonly ProductionApp _factory;
 
-    public ProductionBootTests(ProductionApp app) => _client = app.CreateClient();
+    public ProductionBootTests(ProductionApp app)
+    {
+        _factory = app;
+        _client = app.CreateClient();
+    }
 
     [Theory]
     [InlineData("/health")]
@@ -138,6 +146,46 @@ public class ProductionBootTests : IClassFixture<ProductionApp>
         var csp = page.Headers.GetValues("Content-Security-Policy").Single();
         csp.Should().Contain("frame-ancestors 'none'");
         csp.Should().Contain("script-src 'self' 'wasm-unsafe-eval'");
+    }
+
+    /// <summary>
+    /// <c>/api/diag/status</c> feeds the anonymous <c>/diag</c> page, so in Production it must
+    /// carry verdicts and nothing else: none of what got the first /diag deleted on 2026-09-04
+    /// (ContentRoot path, config block, suffixed connection strings) and none of what the diag
+    /// standard forbids (URIs, keys, ids, emails, exception messages, stack traces). Asserted
+    /// over the whole serialized body so a field added later cannot slip past.
+    /// </summary>
+    [Fact]
+    public async Task DiagStatus_IsFriendlyAndLeaksNothing_InProduction()
+    {
+        var response = await _client.GetAsync("/api/diag/status");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var body = await response.Content.ReadAsStringAsync();
+
+        using var doc = JsonDocument.Parse(body);
+        var root = doc.RootElement;
+        root.GetProperty("environment").GetString().Should().Be("Production");
+        root.TryGetProperty("config", out _).Should().BeFalse();
+        var checks = root.GetProperty("checks").EnumerateArray().ToList();
+        checks.Select(c => c.GetProperty("name").GetString()).Should()
+            .Contain(["KeyVault", "TableStorage", "AzureInventory", "ApplicationInsights", "AI summaries"]);
+        checks.Should().OnlyContain(c => c.GetProperty("summary").GetString()!.Length > 0
+                                         && c.GetProperty("purpose").GetString()!.Length > 0);
+
+        var contentRoot = _factory.Services.GetRequiredService<IWebHostEnvironment>().ContentRootPath;
+        body.Should().NotContain(contentRoot.Replace("\\", "\\\\"))
+            .And.NotContain(contentRoot)
+            .And.NotContainAny("://", "AccountKey", "SharedAccessSignature", "InstrumentationKey",
+                "Endpoint=", "vault.azure", "core.windows", "/subscriptions/", "@", "Exception:", "   at ");
+        body.Should().NotMatchRegex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
+        body.Should().NotMatchRegex(@"[A-Za-z]:\\\\");
+
+        // The Rewrite button's FluentValidation rules also guard the endpoint: an oversized
+        // list is a 400 validation problem, never a paid completion.
+        var tooMany = Enumerable.Repeat("x", AiTriageAdHocRequestValidator.MaxItems + 1).ToArray();
+        var rewrite = await _client.PostAsJsonAsync("/api/diag/ai", new { attentionItems = tooMany });
+        rewrite.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await rewrite.Content.ReadAsStringAsync()).Should().Contain("\"errors\"").And.Contain("AttentionItems");
     }
 
     /// <summary>

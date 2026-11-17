@@ -473,7 +473,7 @@ public class PortfolioUiTests : IAsyncLifetime
     }
 
     /// <summary>
-    /// axe-core's WCAG 2.1 A/AA rules over all four pages, failing on serious or critical
+    /// axe-core's WCAG 2.1 A/AA rules over all five pages (/diag since 2026-11-17), failing on serious or critical
     /// violations only.
     ///
     /// <para>Every accessibility defect this repo has fixed was found by hand — Radzen icon
@@ -496,7 +496,7 @@ public class PortfolioUiTests : IAsyncLifetime
         var page = await NewPageAsync(width, height, isMobile);
         var found = new List<string>();
 
-        foreach (var (route, ready) in new[] { ("/", ".portfolio-stack__row"), ("/azure", ".azure-uptime"), ("/users", "main h1"), ("/settings", ".settings-row button:not([disabled])") })
+        foreach (var (route, ready) in new[] { ("/", ".portfolio-stack__row"), ("/azure", ".azure-uptime"), ("/users", "main h1"), ("/settings", ".settings-row button:not([disabled])"), ("/diag", ".diag-about") })
         {
             await page.GotoAsync($"{BaseUrl}{route}", new() { WaitUntil = WaitUntilState.NetworkIdle });
             await page.WaitForSelectorAsync(ready, new() { Timeout = 40_000 });
@@ -516,6 +516,14 @@ public class PortfolioUiTests : IAsyncLifetime
                 const link = document.querySelector('.app-skip-link');
                 return !!(link && document.querySelector(link.getAttribute('href')));
             }")).Should().BeTrue($"the skip link must resolve on {route} at {label}");
+
+            // The YYMMDD build stamp sits in the lower-right corner of the VIEWPORT on every
+            // page (it was an in-flow footer, below the fold on any long page, with no date).
+            var stamp = page.Locator(".app-build-version span");
+            (await stamp.InnerTextAsync()).Should().MatchRegex(@"^v\d{6}$", $"the build stamp on {route} at {label}");
+            var box = (await stamp.BoundingBoxAsync())!;
+            (box.X + box.Width).Should().BeGreaterThan(width * 0.85f, $"the build stamp sits at the right on {route} at {label}");
+            (box.Y + box.Height).Should().BeInRange(height * 0.8f, height, $"the build stamp sits at the bottom on {route} at {label}");
 
             var result = await page.RunAxe(new Deque.AxeCore.Commons.AxeRunOptions
             {

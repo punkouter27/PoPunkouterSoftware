@@ -3,6 +3,8 @@ using Azure;
 using Azure.Core;
 using Azure.ResourceManager;
 using Azure.ResourceManager.AppService;
+using FluentValidation;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using PoPunkouterSoftware.Infrastructure;
 using PoPunkouterSoftware.Shared;
 
@@ -14,16 +16,25 @@ internal static class DiagEndpoints
     {
         // All machine endpoints share the /api/diag prefix and the "Diag" OpenAPI tag.
         //
-        // There is deliberately no bare `/diag` route. One existed: an unauthenticated page
-        // that rendered ~130 lines of hand-built HTML (its own dark-only palette, its own
-        // breakpoint — a second design system) plus a ?format=json twin. Its only caller was
-        // its own smoke test, which is exactly what the "every endpoint needs a consumer" rule
-        // in CLAUDE.md exists to catch, and the comments describing it as "the /diag Blazor
-        // page" referred to a page this app has never had. It also answered anonymously in
-        // Production with the server's absolute ContentRoot path, the environment name, and
-        // masked-but-suffixed connection strings. /health (deep probe) and /health/live (liveness)
-        // cover everything it was actually used for.
+        // The server maps nothing at a bare `/diag`: that path is the WASM page
+        // (Client/Features/Diag/Diag.razor, owner's call 2026-11-17), fed by GET /api/diag/status
+        // below. A server-rendered /diag existed until 2026-09-04 and was removed because it
+        // answered anonymously in Production with the absolute ContentRoot path, the masked
+        // config block and masked-but-suffixed connection strings. /api/diag/status is built
+        // as an allow-list (DiagStatusBuilder) so none of that can come back.
         var diag = app.MapGroup("/api/diag").WithTags("Diag");
+
+        // The /diag page's only fetch. Runs the same health checks as /health (which is already
+        // anonymous, so this exposes no new probe) and projects them through DiagStatusBuilder.
+        diag.MapGet("/status", async (
+            HealthCheckService health, IWebHostEnvironment env, AiTriageService ai, TimeProvider clock,
+            CancellationToken ct) =>
+        {
+            var report = await health.CheckHealthAsync(ct);
+            return Results.Json(DiagStatusBuilder.Build(report, env.EnvironmentName, ai, clock.GetUtcNow()));
+        })
+        .WithName("GetDiagStatus")
+        .Produces<DiagStatus>(StatusCodes.Status200OK);
 
         // Anonymous by necessity — the Advanced diagnostics panel is WASM with no credential —
         // so the subscription id is masked out of every resource id on the way out. See
@@ -150,14 +161,22 @@ internal static class DiagEndpoints
         // is precomputed by ReportRefreshRunner via AiTriageService.GenerateSummaryAsync (which
         // calls AiTriageService.SummarizeAsync in-process, not this HTTP route) and flows
         // through AzureReport.AiSummary / OpsSummary.AiSummary — see AGENT.MD.
-        diag.MapPost("/ai", async (AiTriageRequest req, AiTriageService ai, CancellationToken ct) =>
+        diag.MapPost("/ai", async (
+            AiTriageAdHocRequest req, IValidator<AiTriageAdHocRequest> validator, AiTriageService ai,
+            CancellationToken ct) =>
         {
-            var result = await ai.SummarizeAsync(req, ct);
+            // Same rules the Rewrite button applies before sending (Shared, so they cannot drift).
+            var validation = await validator.ValidateAsync(req, ct);
+            if (!validation.IsValid)
+                return Results.ValidationProblem(validation.ToDictionary());
+
+            var result = await ai.SummarizeAsync(new AiTriageRequest(req.AttentionItems), ct);
             return Results.Json(result);
         })
         .RequireRateLimiting(RateLimits.AiRewrite)
         .WithName("AiTriage")
         .Produces<AiTriageResult>(StatusCodes.Status200OK)
+        .ProducesValidationProblem()
         .Produces(StatusCodes.Status429TooManyRequests);
 
 

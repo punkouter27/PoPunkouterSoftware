@@ -25,6 +25,9 @@ public sealed class PortfolioApiClient
     public Task<OpsSummary?> GetOpsSummaryAsync(CancellationToken ct = default) =>
         _http.GetFromJsonAsync("/api/diag/summary", AppJsonContext.Default.OpsSummary, ct);
 
+    public Task<DiagStatus?> GetDiagStatusAsync(CancellationToken ct = default) =>
+        _http.GetFromJsonAsync("/api/diag/status", AppJsonContext.Default.DiagStatus, ct);
+
     public Task<AzureReport?> GetAzureReportAsync(CancellationToken ct = default) =>
         _http.GetFromJsonAsync("/api/diag/report", AppJsonContext.Default.AzureReport, ct);
 

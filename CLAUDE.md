@@ -11,9 +11,9 @@ App Service health, cost, SSL expiry, zombie-app detection and downtime diagnosi
 minimal-API **BFF** that reads an Azure inventory report out of Azure Table Storage (with a local
 JSON fallback).
 
-There are exactly **four pages**: `/` (the app catalog), `/azure` (the ops dashboard),
-`/users` (who has signed in, across every Po app) and `/settings` (visitor preferences).
-Everything else is an endpoint.
+There are exactly **five pages**: `/` (the app catalog), `/azure` (the ops dashboard),
+`/users` (who has signed in, across every Po app), `/settings` (visitor preferences) and
+`/diag` (is the app and everything it relies on working). Everything else is an endpoint.
 
 For years this said *two* pages, and that was load-bearing — the count is a budget, not a
 tally. `/users` was added 2026-09-12 because the answer it gives lives nowhere else in the
@@ -31,7 +31,19 @@ is just the brand" below), every
 control is read by something, and every default is the simplest choice. All four go through
 `window.appSettings` in `theme-kit.js`; each value stays owned by the kit that applies it. The
 default sign-in window is still `/users` remembering the last window picked (`pops:signin-days`).
-Do not cite either page as a precedent for a fifth — that still needs the standard above.
+Do not cite either page as a precedent for a sixth — that still needs the standard above.
+
+**`/diag` is the fifth page by the owner's explicit call (2026-11-17), reversing the
+2026-09-04 removal** (see "Routing" under Cross-cutting decisions for what the old one leaked).
+Every Po app now carries a friendly `/diag` (estate standard). This one is an Interactive WASM
+page (`Client/Features/Diag/Diag.razor`) whose only fetch is `GET /api/diag/status`, built by
+`DiagStatusBuilder` as an **allow-list**: each health check's name, status, one-word verdict
+(anything that is not a plain verdict word — a check that threw carries its exception message —
+becomes the exception TYPE name) and latency, plus fixed plain-English text written in that
+builder. It never reads a check's `Data` dictionary or `/health`'s config block, so it is safe for
+anonymous Production visitors; `ProductionBootTests.DiagStatus_IsFriendlyAndLeaksNothing_InProduction`
+asserts that over the whole body. It is reached from Ctrl+K and the 404 page's list, not the
+bottom nav. Not a precedent for a sixth page either.
 
 `AGENT.MD` used to hold this context and no longer exists — this file is the single context map.
 [AGENTS.md](AGENTS.md) exists only to point non-Claude agents here; never put rules in it.
@@ -727,23 +739,41 @@ proves a context and program were created, not that anything reached the screen.
   a site the scan found; it starts a stopped site and restarts a running one. In Azure it also
   needs Website Contributor, which infra deliberately does not grant — it 403s cleanly there.
   Note a local Development run restarts the REAL site with your `az login`.
+- **The one submitting control is "Rewrite", and it validates with FluentValidation (2026-11-17).**
+  The app has no data-entry form; the only control that POSTs a body is the Rewrite button on
+  `/azure` (`AzureStatusNarrative` → `POST /api/diag/ai`). Its rules live in Shared
+  (`AiTriageAdHocRequestValidator`: a list, at most 50 items, none blank or over 500 chars — a
+  cost guard on an anonymous paid completion). The button validates before sending and shows the
+  first error inline beside itself (`role="alert"`, no browser dialogs); the endpoint runs the same
+  validator and answers `Results.ValidationProblem`. The button is disabled while the request is
+  in flight and the handler returns early on re-entry. The `/users` filter box also uses a Shared
+  validator, but it is a filter, not a form. Any future form follows the estate pattern
+  (PoTraffic's `FluentValidationValidator` bridge on a `RadzenTemplateForm`).
+- **Build stamp.** Every page shows the build date as `vYYMMDD`, `position: fixed` in the lower-right
+  corner (above the bottom nav at ≤768px), from `[AssemblyMetadata("BuildVersion")]` written by the
+  client csproj and read through `Services/Ui/BuildStamp.cs` (also shown on `/diag`). It was an
+  in-flow footer showing `v1.0.0+<sha>`, below the fold on any long page, until 2026-11-17.
 - **Routing.** `/api/diag/*` and `/api/portfolio/*` use `MapGroup`. `/health` (deep probe, one
   `IHealthCheck` per external dependency) and `/health/live` (static liveness) sit off the `/api` group.
   **`/openapi/v1.json` and `/scalar/v1` are mapped only outside Production** — they were
   unconditional, so the live site published its full route table, parameter shapes and response
   schemas (management routes included) to anonymous callers, for an API whose only client is
   compiled from this same solution.
-  There is deliberately **no** `/api/health` alias, and deliberately **no** bare `/diag`: it was an
-  unauthenticated page rendering ~130 lines of hand-built HTML with its own dark-only palette — a
-  second design system — whose only caller was its own smoke test, and whose `?format=json` twin
-  returned the server's absolute ContentRoot path, the environment name and masked-but-suffixed
-  connection strings to anonymous callers in Production. Removed 2026-09-04.
+  There is deliberately **no** `/api/health` alias. The **server** maps nothing at a bare `/diag`:
+  the first one was an unauthenticated server page rendering ~130 lines of hand-built HTML with
+  its own dark-only palette — a second design system — whose only caller was its own smoke test,
+  and whose `?format=json` twin returned the server's absolute ContentRoot path, the environment
+  name and masked-but-suffixed connection strings to anonymous callers in Production. Removed
+  2026-09-04. **Since 2026-11-17 (owner's decision) `/diag` is a WASM page again** — Radzen,
+  the app's own design system, fed only by the allow-listed `GET /api/diag/status` (see the page
+  budget at the top). Do not add a server route at `/diag`, and do not widen `/api/diag/status`
+  with check data, config, paths or ids.
 - **An unmatched path gets the app, not JSON.** A browser that mistypes a URL, or follows a link
   to an app that was renamed, must land on the app's own chrome: shell, header, skip link, a way
   back, and a **real 404 status**. That is `NotFoundPage.razor`, rendered by
   `UseStatusCodePagesWithReExecute("/not-found", "?statusCode={0}")`. It is not a page in the
   page budget — nobody navigates to it — but it is a route, so the count of routes is now
-  five.
+  six (five pages since `/diag`, 2026-11-17).
   **Two ways to get this wrong, both tried here, both caught by tests and not by looking:**
   a plain `MapFallback` returns the right status with no page (it swallowed every unmatched path,
   so `<NotFound>` in `Routes.razor` was dead code for a browser navigation); a **catch-all route**
@@ -1081,7 +1111,7 @@ served until the facts happen to change. It produces the
   `AzureBlobStorage:Endpoint` in Azure, without which `GetContainerAsync` returns null and stored
   images never appear — indistinguishable from never having captured any.
 
-## Tests — four projects, one per tier (budget 100/50/25/25, currently 91/42/21/24)
+## Tests — four projects, one per tier (budget 100/50/25/25, currently 91/43/21/24)
 
 **The budget is a ceiling, not a target.** All four tiers are at or under it. Adding a test means
 finding one to remove, so prefer widening an existing test's assertions to adding a new method — the
@@ -1105,7 +1135,8 @@ rule's worth of coverage.
   that environment's hosting pipeline.
 - **`PoPunkouterSoftware.E2EAPI`** / **`.E2EUI`** — pure HTTP and Playwright against a live instance
   via `BASE_URL`. On demand, not in CI. E2EUI runs **axe-core** (`Deque.AxeCore.Playwright`,
-  WCAG 2.1 A/AA) over all four pages at both viewports and fails on serious/critical only. Its
+  WCAG 2.1 A/AA) over all five pages at both viewports and fails on serious/critical only (the
+  same pass asserts the YYMMDD build stamp sits in the viewport's lower-right corner). Its
   first run found three real defects: the active nav link at 4.37:1, the Sync button's
   aria-label not containing "Sync" (WCAG 2.5.3), and `aria-label` on the role-less loading
   skeleton. It waits for `appRepairRadzenA11y` first, or it reports icon ligatures in names.

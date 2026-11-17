@@ -1,0 +1,84 @@
+/* Scoped to Diag.razor. DiagRow's markup is its own component, so it is reached with ::deep. */
+.diag-page {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--app-space-md);
+    align-content: start;
+    max-width: 48rem;
+}
+
+.diag-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--app-space-sm);
+}
+
+.diag-header h1,
+.diag-header p {
+    margin: 0;
+}
+
+.diag-section {
+    display: grid;
+    gap: var(--app-space-xs);
+}
+
+.diag-section h2 {
+    margin: 0;
+}
+
+.diag-section ::deep .diag-row {
+    padding: var(--app-space-sm) 0;
+    min-width: 0;
+}
+
+.diag-section ::deep .diag-row + .diag-row {
+    border-top: 1px solid var(--app-border);
+}
+
+.diag-section ::deep .diag-row__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--app-space-xs) var(--app-space-sm);
+}
+
+.diag-section ::deep .diag-row__name {
+    margin: 0;
+    font-size: var(--app-step-0);
+}
+
+.diag-section ::deep .diag-row__purpose,
+.diag-section ::deep .diag-row__summary {
+    margin: 0.25rem 0 0;
+    overflow-wrap: anywhere;
+}
+
+.diag-section ::deep .diag-row__purpose,
+.diag-section ::deep .diag-row__meta {
+    color: var(--app-text-muted);
+    font-size: var(--app-step--1);
+}
+
+.diag-section ::deep .diag-row__meta {
+    white-space: nowrap;
+    margin-left: 0.25rem;
+}
+
+.diag-about dl {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.25rem var(--app-space-md);
+    margin: 0;
+}
+
+.diag-about dt {
+    color: var(--app-text-muted);
+}
+
+.diag-about dd {
+    margin: 0;
+    font-variant-numeric: tabular-nums;
+}

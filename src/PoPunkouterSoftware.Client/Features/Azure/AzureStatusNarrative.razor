@@ -16,7 +16,9 @@
    output is thinner than the scan-time narrative — the badge says so. *@
 @using System.Text.Json
 @using PoPunkouterSoftware.Shared
+@using FluentValidation
 @inject PortfolioApiClient Api
+@inject IValidator<AiTriageAdHocRequest> RewriteValidator
 
 <div class="azure-narrative @($"is-{Tone}")">
     @if (_adHocText is not null)
@@ -53,7 +55,7 @@
                       title="Ask the model for a fresh paragraph from the attention items, without running a full Azure rescan." />
         @if (_adHocError is not null)
         {
-            <span class="app-note azure-narrative__error">@_adHocError</span>
+            <span class="app-note azure-narrative__error" role="alert">@_adHocError</span>
         }
     </div>
 </div>
@@ -111,13 +113,26 @@
         if (AttentionItems is null || _regenerating)
             return;
 
+        // The app's one submitting control. Validated with the same FluentValidation rules the
+        // endpoint enforces (Shared, AiTriageAdHocRequestValidator), so a bad payload is an
+        // inline message beside the button rather than a paid round trip that comes back 400.
+        var request = new AiTriageAdHocRequest(AttentionItems);
+        var validation = RewriteValidator.Validate(request);
+        if (!validation.IsValid)
+        {
+            _adHocError = validation.Errors[0].ErrorMessage;
+            return;
+        }
+
+        // Duplicate-submit guard: the button is Disabled while _regenerating, and the early
+        // return above catches a second click that lands before that state renders.
         _regenerating = true;
         _adHocError = null;
         StateHasChanged();
 
         try
         {
-            var result = await Api.RewriteAiSummaryAsync(AttentionItems);
+            var result = await Api.RewriteAiSummaryAsync(request.AttentionItems);
             if (result.Available && !string.IsNullOrWhiteSpace(result.Summary))
             {
                 _adHocText = result.Summary;
