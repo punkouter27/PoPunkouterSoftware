@@ -1,15 +1,23 @@
+/* Fixed to the lower-right corner. Small, muted and click-through: it is read out on a
+   support call, never clicked. */
 .app-build-version {
-    width: min(100%, var(--app-content-width));
-    margin: 0 auto;
-    padding: var(--app-space-sm) var(--app-space-md) var(--app-space-lg);
-    text-align: right;
-    font-size: var(--app-step--2);
-    color: var(--app-text-soft);
+    position: fixed;
+    right: calc(env(safe-area-inset-right, 0px) + 0.5rem);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 0.25rem);
+    z-index: var(--app-z-header);
+    font-size: 0.6875rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--app-text-muted);
+    pointer-events: none;
+    user-select: none;
+    white-space: nowrap;
 }
 
+/* On a phone the bottom nav (3.5rem + inset, BottomNav.razor.css, same 768px breakpoint)
+   owns the bottom edge; the stamp rides just above it instead of over its last button. */
 @media (max-width: 768px) {
     .app-build-version {
-        padding-top: 0.25rem;
-        padding-bottom: calc(4.75rem + env(safe-area-inset-bottom));
+        bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px) + 0.25rem);
     }
 }

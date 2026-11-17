@@ -1,24 +1,11 @@
-@using System.Reflection
 @namespace PoPunkouterSoftware.Client
 
+@* The build stamp, YYMMDD, pinned to the lower-right corner of every page (estate standard,
+   2026-11-17). It used to be an in-flow footer under the page body reading
+   "PoPunkouterSoftware · v1.0.0+<sha>", so on any page taller than the window it was
+   off-screen, and it never carried a date at all. The value comes from the BuildVersion
+   assembly metadata (see the client csproj and Services/Ui/BuildStamp.cs). Decoration with
+   pointer-events: none so it can never sit on top of a tap target. *@
 <footer class="app-build-version" aria-label="Application build version">
-    <span>PoPunkouterSoftware · v@(VersionLabel)</span>
+    <span title="Build @BuildStamp.Value">v@(BuildStamp.Value)</span>
 </footer>
-
-@code {
-    private static readonly string VersionLabel = ResolveVersion();
-
-    private static string ResolveVersion()
-    {
-        var raw = typeof(BuildVersion).Assembly
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
-            ?.InformationalVersion;
-        if (!string.IsNullOrWhiteSpace(raw))
-        {
-            var plus = raw.IndexOf('+', StringComparison.Ordinal);
-            return plus > 0 ? raw[..Math.Min(plus + 8, raw.Length)] : raw;
-        }
-
-        return typeof(BuildVersion).Assembly.GetName().Version?.ToString(3) ?? "1.0.0";
-    }
-}

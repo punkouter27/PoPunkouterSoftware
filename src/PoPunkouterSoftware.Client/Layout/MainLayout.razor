@@ -49,8 +49,11 @@
                 @Body
             </DevErrorBoundary>
         </div>
-        <BuildVersion />
     </RadzenBody>
 </RadzenLayout>
 <BottomNav @rendermode="WasmRenderModes.Interactive" />
+@* Outside RadzenLayout on purpose: the stamp is position:fixed, and an ancestor inside the
+   layout establishes a containing block, which pinned it to the bottom of the PAGE (y≈4100 on
+   the home page) instead of the viewport. *@
+<BuildVersion />
 
