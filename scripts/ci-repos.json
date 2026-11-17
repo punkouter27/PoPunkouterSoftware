@@ -17,7 +17,6 @@
       "repos": ["PoBox", "PoFootball", "PoHillKing", "PoOlympic", "PoSoccer", "PoSumo"],
       "files": [
         { "path": ".github/workflows/webgl.yml" },
-        { "path": "Tools/ci_webgl.ps1" },
         { "path": "Tools/deploy_webgl.ps1" },
         { "path": ".github/dependabot.yml" }
       ]

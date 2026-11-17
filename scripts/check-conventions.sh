@@ -52,8 +52,8 @@ done
 
 # The reference copies themselves keep the rules that make them safe.
 webgl=$(raw PoBox .github/workflows/webgl.yml)
-grep -q 'self-hosted, unity' <<< "$webgl" || gap "PoBox webgl.yml does not run on the self-hosted unity runner"
-grep -qE '^[[:space:]]+pull_request:' <<< "$webgl" && gap "PoBox webgl.yml has a pull_request trigger (public repo + self-hosted runner)"
+grep -q 'self-hosted' <<< "$webgl" && gap "PoBox webgl.yml uses a self-hosted runner (CI must be GitHub-hosted)"
+grep -qE '^[[:space:]]+pull_request:' <<< "$webgl" && gap "PoBox webgl.yml has a pull_request trigger (deploys only from master)"
 grep -qE 'secrets\.AZURE_(CLIENT|TENANT|SUBSCRIPTION)_ID' <<< "$(raw PoTraffic .github/workflows/deploy.yml)" \
   && gap "PoTraffic deploy.yml reads Azure IDs from secrets, not vars"
 
