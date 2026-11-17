@@ -15,11 +15,11 @@
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.15" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.15" />
     <!-- SECURITY PIN, transitive via Microsoft.AspNetCore.SignalR.Client. 10.0.8 carries a
-         high-severity advisory; patched in the 10.0.13 servicing release (10.0.14 since 2026-11-07, when GHSA-g27p-qf6j-c96c hit WebAssembly.Server 10.0.13), forced across the
+         high-severity advisory; patched in the 10.0.13 servicing release (10.0.14 since 2026-11-07, when GHSA-g27p-qf6j-c96c hit WebAssembly.Server 10.0.13; 10.0.15 since 2026-11-17 to match SignalR.Client 10.0.15 — NU1109), forced across the
          graph by CentralPackageTransitivePinningEnabled (same pattern as Microsoft.OpenApi).
          The advisory also lists an 11.0.0-rc.2 fix, but that package ships only lib/net11.0
          and this solution targets net10.0 — do not bump past the 10.0.x line without a TFM upgrade. -->
-    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Common" Version="10.0.14" />
+    <PackageVersion Include="Microsoft.AspNetCore.SignalR.Common" Version="10.0.15" />
     <PackageVersion Include="Radzen.Blazor" Version="12.2.0" />
     <!-- Structured Logging (Serilog) — AppInsights sink removed; OTel Azure Monitor is the sole telemetry pipeline -->
     <PackageVersion Include="Serilog.AspNetCore" Version="10.0.0" />
@@ -32,9 +32,9 @@
     <!-- SECURITY PIN, not a direct dependency. Microsoft.OpenApi arrives transitively via
          Microsoft.AspNetCore.OpenApi, which resolves it to 2.0.0 — a version with a known
          high-severity advisory (GHSA-v5pm-xwqc-g5wc). CentralPackageTransitivePinningEnabled
-         lets this entry force the patched 2.7.5 across the graph. Do not remove it because
+         lets this entry force the patched 2.13.0 across the graph (2.7.5 until 2026-11-17, when the 2026-11-16 package bumps made 2.7.5 a NU1109 downgrade). Do not remove it because
          "nothing references it": removing it reintroduces the vulnerable transitive version. -->
-    <PackageVersion Include="Microsoft.OpenApi" Version="2.7.5" />
+    <PackageVersion Include="Microsoft.OpenApi" Version="2.13.0" />
     <PackageVersion Include="Scalar.AspNetCore" Version="2.21.0" />
     <!-- Resilience — native .NET typed-HttpClient resilience pipeline (retry + circuit breaker + timeout) -->
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="10.11.0" />
