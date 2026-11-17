@@ -543,11 +543,8 @@
 
    Keyed on the visitor's theme rather than on the media query alone, which matters more
    here than anywhere else in the app: these are DATA-VIZ strokes, and they are graded
-   against a 3:1 non-text floor. Under the old plain `@media (prefers-color-scheme: light)`
-   a visitor who chose dark on a light OS kept `--tone-good: #4ea87b` — the light green —
-   on a dark card, and one who chose light on a dark OS kept the dark green on white at
-   2.91:1, under the floor. The three blocks below are the same condition the global
-   palette uses.
+   against a 3:1 non-text floor. The theme follows the OS for everyone (2026-11-17), so the
+   one media query below is the same condition the global palette uses.
 
    `#217a52` for the light green where `#2f7d55` used to be: it measures 5.29:1 on white
    AND 3.17:1 on the dark card, so it is legible on either ground even if a future theme
@@ -562,20 +559,10 @@
 }
 
 @media (prefers-color-scheme: light) {
-    html:not([data-app-theme="dark"]) .azure-ops-page {
+    .azure-ops-page {
         --tone-good: #217a52;
         --tone-bad: var(--app-danger-strong);
     }
-}
-
-html[data-app-theme="light"] .azure-ops-page {
-    --tone-good: #217a52;
-    --tone-bad: var(--app-danger-strong);
-}
-
-html[data-app-theme="dark"] .azure-ops-page {
-    --tone-good: #4ea87b;
-    --tone-bad: var(--app-danger-soft);
 }
 
 /* ── Lead status paragraph ─────────────────────────────────────────────────── */

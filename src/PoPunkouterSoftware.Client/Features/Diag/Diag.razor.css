@@ -15,9 +15,12 @@
     gap: var(--app-space-sm);
 }
 
-.diag-header h1,
-.diag-header p {
+.diag-header h1 {
     margin: 0;
+}
+
+.diag-header p {
+    margin: var(--app-space-xs) 0 0;
 }
 
 .diag-section {

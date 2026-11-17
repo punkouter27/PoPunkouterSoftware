@@ -79,24 +79,13 @@
    stand alone — see the header), so its two colours are the only hardcoded hex left in the
    app. They are the `--app-bg-deep` / `--app-text-muted` pair.
 
-   Both the media query and the attribute are needed, and the media query is guarded with
-   `:not([data-app-theme])`: a visitor who has chosen a theme must get that theme on the
-   splash too, or the first thing they see contradicts what they asked for. */
+   The theme follows the device for everyone (2026-11-17), so the media query alone
+   decides. */
 @media (prefers-color-scheme: light) {
-    html:not([data-app-theme="dark"]) #app-boot-splash {
+    #app-boot-splash {
         background: #f6f8fa;
         color: #475569;
     }
-}
-
-html[data-app-theme="light"] #app-boot-splash {
-    background: #f6f8fa;
-    color: #475569;
-}
-
-html[data-app-theme="dark"] #app-boot-splash {
-    background: #060a14;
-    color: #94a3b8;
 }
 
 @media (prefers-reduced-motion: reduce) {

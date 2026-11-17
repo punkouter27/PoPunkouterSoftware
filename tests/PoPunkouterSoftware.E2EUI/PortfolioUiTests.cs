@@ -153,14 +153,10 @@ public class PortfolioUiTests : IAsyncLifetime
     }
 
     /// <summary>
-    /// The app must be silent until a visitor asks for sound, and the backdrop ladder must
-    /// resolve to a state it knows about rather than throwing.
-    ///
-    /// <para>Silence-by-default is an accessibility floor, not a preference: an AudioContext
-    /// constructed during page load is both an unrequested hardware claim and — under every
-    /// current autoplay policy — a suspended context that silently swallows whatever is
-    /// played through it. So the assertion is specifically that no context has been
-    /// CONSTRUCTED, which is stronger and more observable than "nothing was audible".</para>
+    /// The backdrop ladder must resolve to a state it knows about rather than throwing, and the
+    /// four former /settings preferences are fixed for everyone (owner's call, 2026-11-17):
+    /// theme follows the device, density is compact, there is no sound code at all, and every
+    /// Details control shows. A returning visitor's stored choices must be deleted, not obeyed.
     ///
     /// <para>The tier is deliberately not asserted. Headless Chromium usually resolves to
     /// SwiftShader, which <c>failIfMajorPerformanceCaveat</c> correctly refuses, so
@@ -169,11 +165,11 @@ public class PortfolioUiTests : IAsyncLifetime
     /// </summary>
     [Theory]
     [MemberData(nameof(Viewports))]
-    public async Task Backdrop_ResolvesATier_AndStaysSilentUntilAsked(string label, int width, int height, bool isMobile)
+    public async Task Backdrop_ResolvesATier_AndPreferencesAreFixedForEveryone(string label, int width, int height, bool isMobile)
     {
         var page = await NewPageAsync(width, height, isMobile);
         await page.GotoAsync(BaseUrl, new() { WaitUntil = WaitUntilState.NetworkIdle });
-        await page.WaitForSelectorAsync(".portfolio-stack__row", new() { Timeout = 30_000 });
+        await page.WaitForSelectorAsync(".portfolio-stack__row", new() { Timeout = 40_000 });
 
         // "webgpu" is deliberately absent: that rung was removed on 2026-09-05, so a browser
         // reporting it would mean the tier vocabulary and the ladder had drifted apart.
@@ -182,22 +178,28 @@ public class PortfolioUiTests : IAsyncLifetime
             "() => document.getElementById('app-gpu-backdrop')?.dataset.gpu ?? null");
         tier.Should().BeOneOf(known, $"the backdrop ladder must land on a defined state at {label}");
 
-        var audio = await page.EvaluateAsync<bool[]>(
-            "() => [window.audioKit.enabled, window.audioKit.stats().contextCreated]");
-        audio[0].Should().BeFalse("sound must default to off");
-        audio[1].Should().BeFalse("no AudioContext may be constructed before the visitor asks for one");
-
-        // /settings is the only home of the sound preference (the palette's toggle went on
-        // 2026-10-19). The click is itself the user gesture the autoplay policy requires, so
-        // one click must both flip the preference and bring a live context into existence.
-        // Turned back off afterwards: the choice persists in localStorage.
+        // A visitor who chose light / comfortable / sound on / simple before the toggles went.
+        await page.EvaluateAsync(@"() => {
+            localStorage.setItem('popunkoutersoftware:theme', 'light');
+            localStorage.setItem('popunkoutersoftware:density', 'false');
+            localStorage.setItem('popunkoutersoftware:sound', 'true');
+            localStorage.setItem('popunkoutersoftware:details', 'simple');
+            localStorage.setItem('pops:theme', 'dark');
+        }");
         await page.GotoAsync($"{BaseUrl}/settings", new() { WaitUntil = WaitUntilState.NetworkIdle });
-        var soundOn = page.GetByRole(AriaRole.Group, new() { Name = "Sound" }).GetByRole(AriaRole.Button, new() { Name = "On" });
-        await Assertions.Expect(soundOn).ToBeEnabledAsync();
-        await soundOn.ClickAsync();
-        (await page.EvaluateAsync<bool[]>("() => [window.audioKit.enabled, window.audioKit.stats().contextCreated]"))
-            .Should().Equal([true, true], $"turning sound on must enable it and construct the context at {label}");
-        await page.GetByRole(AriaRole.Group, new() { Name = "Sound" }).GetByRole(AriaRole.Button, new() { Name = "Off" }).ClickAsync();
+        await page.WaitForSelectorAsync(".settings-fixed", new() { Timeout = 40_000 });
+
+        var state = await page.EvaluateAsync<string>(@"() => [
+            ['popunkoutersoftware:theme', 'popunkoutersoftware:density', 'popunkoutersoftware:sound',
+             'popunkoutersoftware:details', 'pops:theme'].filter(k => localStorage.getItem(k) !== null).join(','),
+            document.documentElement.hasAttribute('data-app-theme'),
+            typeof window.audioKit,
+            typeof window.appSettings,
+            parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--app-density')) <= 0.82,
+            document.querySelectorAll('main button, main input, main select').length
+        ].join('|')");
+        state.Should().Be("|false|undefined|undefined|true|0",
+            $"stored choices are cleared, no theme override or sound code exists, density is compact and /settings has no controls at {label}");
     }
 
     /// <summary>
@@ -497,7 +499,7 @@ public class PortfolioUiTests : IAsyncLifetime
         var page = await NewPageAsync(width, height, isMobile);
         var found = new List<string>();
 
-        foreach (var (route, ready) in new[] { ("/", ".portfolio-stack__row"), ("/azure", ".azure-uptime"), ("/users", "main h1"), ("/settings", ".settings-row button:not([disabled])"), ("/diag", ".diag-about") })
+        foreach (var (route, ready) in new[] { ("/", ".portfolio-stack__row"), ("/azure", ".azure-uptime"), ("/users", "main h1"), ("/settings", ".settings-fixed"), ("/diag", ".diag-about") })
         {
             await page.GotoAsync($"{BaseUrl}{route}", new() { WaitUntil = WaitUntilState.NetworkIdle });
             await page.WaitForSelectorAsync(ready, new() { Timeout = 40_000 });
@@ -505,8 +507,8 @@ public class PortfolioUiTests : IAsyncLifetime
             // a MutationObserver; auditing before it has run reports "syncSync"-style names
             // (label-content-name-mismatch) that no visitor ever meets.
             await page.WaitForFunctionAsync("() => !document.querySelector('.rzi:not([aria-hidden])')");
-            // `.app-page` fades in from opacity 0. /settings is "ready" the instant its buttons
-            // enable, so under load axe measured its subtitle mid-fade and reported a contrast
+            // `.app-page` fades in from opacity 0. A page is "ready" the instant its marker
+            // renders, so under load axe measured a subtitle mid-fade and reported a contrast
             // failure no visitor sees. Let every finite time-based animation land first.
             await page.EvaluateAsync(@"() => Promise.all(document.getAnimations()
                 .filter(a => a.timeline === document.timeline && a.effect?.getTiming().iterations !== Infinity)

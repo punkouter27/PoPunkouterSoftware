@@ -68,7 +68,7 @@
             {
                 var app = Apps[i];
                 var first = i == 0 && FirstIsLcp;
-                <tr @key="app.Id" role="row" class="portfolio-stack__row" data-sfx-hover="hover">
+                <tr @key="app.Id" role="row" class="portfolio-stack__row">
                     <th scope="row" role="rowheader" class="portfolio-stack__app">
                         @* The grid is on this wrapper, not the <th>: a display:grid cell stops
                            being a table cell, so it no longer stretches to the row's height and
@@ -95,7 +95,7 @@
                                 {
                                     @* The hint wraps the stretched link, so hovering anywhere on
                                        the app cell (picture included) shows the app summary. *@
-                                    <AppHint Text="@AppSummary(app)"><a class="portfolio-stack__link" href="@app.Url" target="_blank" rel="noopener noreferrer" data-sfx="tap">@app.Name</a></AppHint>
+                                    <AppHint Text="@AppSummary(app)"><a class="portfolio-stack__link" href="@app.Url" target="_blank" rel="noopener noreferrer">@app.Name</a></AppHint>
                                 }
                             </h2>
                             <div class="portfolio-stack__meta">
@@ -112,11 +112,11 @@
                                         <span class="app-sr-only">@(days >= 30 ? "No outage in 30 days" : $"{days} days without an outage")</span>
                                     </span>
                                 }
-                                @* Nightly PageSpeed Insights, mobile. A Details control: hidden
-                                   unless /settings → Details → Full. *@
+                                @* Nightly PageSpeed Insights, mobile, and the performance trend —
+                                   always shown (Details is fixed at Full since 2026-11-17). *@
                                 @if (app.Scores is { } scores)
                                 {
-                                    <ul class="portfolio-stack__scores" aria-label="PageSpeed Insights, mobile" data-detail>
+                                    <ul class="portfolio-stack__scores" aria-label="PageSpeed Insights, mobile">
                                         <li class="@ScoreClass(scores.Performance)"><span aria-hidden="true">Perf</span><span class="app-sr-only">Performance</span> @scores.Performance</li>
                                         <li class="@ScoreClass(scores.Accessibility)"><span aria-hidden="true">A11y</span><span class="app-sr-only">Accessibility</span> @scores.Accessibility</li>
                                         <li class="@ScoreClass(scores.BestPractices)"><span aria-hidden="true">BP</span><span class="app-sr-only">Best practices</span> @scores.BestPractices</li>
@@ -125,7 +125,7 @@
                                     @if (scores.PerformanceHistory.Count > 1)
                                     {
                                         var history = scores.PerformanceHistory;
-                                        <span class="portfolio-stack__trend" data-detail>
+                                        <span class="portfolio-stack__trend">
                                             <Sparkline Points="@history.Select((p, n) => new OpsMetricPoint(n.ToString(), p)).ToList()"
                                                        Tone="@(history[^1] >= history[0] ? "good" : "warn")"
                                                        AriaLabel="@($"Performance over {history.Count} nights, from {history[0]} to {history[^1]}")" />

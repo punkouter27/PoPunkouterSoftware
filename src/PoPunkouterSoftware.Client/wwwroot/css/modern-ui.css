@@ -843,14 +843,11 @@ html .rz-tooltip .rz-tooltip-content { max-width: min(24rem, calc(100vw - 2rem))
    block). Type is NOT scaled here — the fluid ladder already shrinks with the viewport,
    and multiplying the two would compound into unreadable text.
 
-   Two steps, not five: 820px covers tablets and split-screen, 640px covers phones.
-   These replace the per-component `padding: .5rem` / `gap: .35rem` overrides that used
-   to be repeated in every breakpoint of every stylesheet. */
-@media (max-width: 820px) {
-    :root {
-        --app-density: 0.9;
-    }
-}
+   One step: 640px covers phones (0.78). Every wider screen keeps the compact base 0.82
+   (po-tokens.css) — an 820px step to 0.9 went 2026-11-17, because with Density fixed at
+   Compact it would have made tablets LESS compact than the setting promises. These replace
+   the per-component `padding: .5rem` / `gap: .35rem` overrides that used to be repeated in
+   every breakpoint of every stylesheet. */
 
 @media (max-width: 640px) {
     :root {

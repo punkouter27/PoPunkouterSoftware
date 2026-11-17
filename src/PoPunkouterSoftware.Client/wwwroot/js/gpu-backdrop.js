@@ -33,9 +33,9 @@
  *     backdrop beneath them. Collected at most once per two frames and skipped entirely
  *     when the signature has not changed — `getBoundingClientRect` is a forced layout, and
  *     doing it per element per frame is exactly the cost this layer exists to avoid.
- *   • The audio coupling (#4): one float per frame, PULLED from js/audio-kit.js. Pull, not
- *     push, so nothing is computed on frames the governor never serves, and the graphics
- *     have no reference to the audio graph.
+ *   • The audio coupling (#4) — one float per frame pulled from js/audio-kit.js — was removed
+ *     with the audio kit on 2026-11-17 (sound is fixed Off). The renderer's energy input is
+ *     passed 0, which is what it always received with sound off.
  *   • The event effects — which moment triggers which renderer effect, and where on screen:
  *       scan start/progress  → radar sweep       (`app:refresh` DOM event, see below)
  *       scan end             → shockwave from [data-fx-origin="refresh"]; red + tear on failure
@@ -51,10 +51,8 @@
  * that grew on it, per-service flocks, a hero health orb and the palette's hyperspace jump.
  * Few visitors ever turned it on, and it was most of the renderer. What is left is what
  * everyone saw: the field, particles, glass, bloom and the scan effects.
- *     The scan lifecycle arrives as an `app:refresh` event that js/audio-kit.js dispatches
- *     from the calls the dashboard already makes, BEFORE its own sound-enabled gate: the
- *     visuals must follow a scan whether or not the visitor turned sound on, and neither
- *     layer holds a reference to the other.
+ *     The scan lifecycle arrives as an `app:refresh` event that `appScan` in js/helpers.js
+ *     dispatches from the calls the dashboard already makes.
  *     Deferred effects run off `fxClock`, which only advances on drawn frames — a scan that
  *     ends in a background tab plays its shockwave when the visitor returns.
  *
@@ -293,7 +291,6 @@
         function comet(delay) {
             var u = 0.08 + Math.random() * 0.55, v = 0.02 + Math.random() * 0.15;
             var du = 0.07 + Math.random() * 0.04, dv = 0.05 + Math.random() * 0.03;
-            later(delay, function () { if (window.audioKit) window.audioKit.play('arrive'); });
             for (var k = 0; k < 5; k++) {
                 (function (k) {
                     later(delay + k * 0.07, function () { renderer.burst(u + du * k, v + dv * k, 0.55); });
@@ -361,10 +358,9 @@
             status(renderer.tier);
 
             subscription = window.motionKit.subscribe('app-gpu-backdrop', function (dt, elapsed) {
-                var energy = window.audioKit ? window.audioKit.energy() : 0;
                 collectGlass(performance.now());
                 tickFx(dt);
-                renderer.frame(dt, elapsed, energy);
+                renderer.frame(dt, elapsed, 0);
             }, { fps: 30 });
 
             canvas.addEventListener('webglcontextlost', onContextLost);
@@ -423,9 +419,6 @@
         if (scheme.addEventListener) {
             scheme.addEventListener('change', function () { if (renderer) applyColors(); });
         }
-        // An explicit header toggle changes the tokens without any media query changing, so
-        // it needs its own signal — before this the backdrop kept the old theme's accents.
-        document.addEventListener('app:theme', function () { if (renderer) applyColors(); });
 
         // Registered whether or not the query matches at load — the previous version
         // returned early before reaching this line, so a visitor who arrived with
@@ -448,10 +441,8 @@
         };
     }
 
-    /** No GPU layer (reduced motion, minimal device, no WebGL): the arrivals are still heard. */
-    function fallbackComets(n) {
-        if (n > 0 && window.audioKit) window.audioKit.play('arrive');
-    }
+    /** No GPU layer (reduced motion, minimal device, no WebGL): comets are decoration only. */
+    function fallbackComets() { }
 
     // Defined before start() so a page can call it whatever the layer ends up doing;
     // start() swaps in the real one once a renderer exists.

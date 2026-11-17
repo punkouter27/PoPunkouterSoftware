@@ -54,21 +54,13 @@
        by the browser and the loading splash would never be dismissed. Any new host-page
        script goes in a file under wwwroot/js for the same reason. *@
     <script src="js/app-boot.js"></script>
-    @* Theme first, and before Blazor. It applies a stored light/dark choice to <html> and
-       to the two Radzen sheets scoped in <head> above, so the header the runtime eventually
-       renders already sits on the right theme. Loading it later would let the OS-following
-       default paint first and then flip — a visible flash on every navigation, because
-       enhanced navigation re-inserts the header. Kept out of <head> deliberately: a
-       render-blocking script there would cost a round trip on the critical path for a
-       control most visitors never touch. *@
+    @* Clears the visitor-preference keys the removed /settings toggles used to store (theme,
+       density, sound and details are fixed for everyone since 2026-11-17 — see the file). *@
     <script src="js/theme-kit.js"></script>
     @* Load order is load-bearing. motion-kit.js defines window.motionKit, the single rAF
-       governor every animated layer subscribes to, so it must come first. audio-kit.js is
-       next because gpu-backdrop.js PULLS window.audioKit.energy()
-       inside its frame callback (it null-checks it, so the order is defensive rather
-       than strictly required — but a first frame without audio coupling is a visible pop). *@
+       governor every animated layer subscribes to, so it must come first. (audio-kit.js sat
+       next until 2026-11-17, when sound was fixed Off and the kit deleted.) *@
     <script src="js/motion-kit.js"></script>
-    <script src="js/audio-kit.js"></script>
     <script src="js/ui-physics.js"></script>
     <script src="js/helpers.js"></script>
     <script src="js/command-palette.js"></script>

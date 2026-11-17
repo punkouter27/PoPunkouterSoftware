@@ -3,21 +3,21 @@ using Microsoft.JSInterop;
 namespace PoPunkouterSoftware.Client;
 
 /// <summary>
-/// The refresh lifecycle's sound cues (drone, boom, outcome motif), played through
-/// js/audio-kit.js behind the visitor's one sound opt-in.
+/// Reports the refresh lifecycle to the page (js/helpers.js <c>appScan</c>, which dispatches the
+/// <c>app:refresh</c> event the GPU backdrop draws its sweep and shockwave from).
 ///
-/// <para>The "Listen" button that played the whole ops summary as a four-second chord
-/// (<c>audioKit.sonifyOps</c>) was removed 2026-11-07: a second switch for sound beside
-/// /settings, hidden behind Details → Full, restating numbers the hero already prints.</para>
+/// <para>Until 2026-11-17 these calls went through js/audio-kit.js, which also played a drone
+/// and an outcome chord for visitors who turned sound on. Sound is now permanently off
+/// (owner's call), so the audio kit was deleted and only the event remains.</para>
 /// </summary>
 public partial class AzureDashboard
 {
     /// <summary>
-    /// Fire-and-forget SFX. Every call site is inside the refresh lifecycle, where an audio
+    /// Fire-and-forget. Every call site is inside the refresh lifecycle, where a decoration
     /// failure must never change what the scan does or how its outcome is reported — so this
     /// swallows everything and returns nothing.
     /// </summary>
-    private async Task SfxAsync(string identifier, params object?[] args)
+    private async Task ScanEventAsync(string identifier, params object?[] args)
     {
         try
         {

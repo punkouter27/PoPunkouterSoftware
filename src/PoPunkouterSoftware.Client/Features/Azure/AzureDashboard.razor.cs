@@ -305,11 +305,8 @@ public partial class AzureDashboard
         _refreshCts = new CancellationTokenSource(TimeSpan.FromSeconds(RefreshTimeoutSeconds));
         StateHasChanged();
 
-        // A full ARM scan takes about thirty seconds, which is exactly the duration after
-        // which someone switches tabs. The drone (and the chord that resolves it below) is
-        // how the outcome reaches a visitor who is no longer looking at the page. Silent
-        // unless they turned sound on — audioKit gates every one of these calls itself.
-        await SfxAsync("audioKit.refreshStart");
+        // The scan lifecycle drives the GPU backdrop's sweep and shockwave (app:refresh).
+        await ScanEventAsync("appScan.start");
 
         await EnsureHubConnectedAsync();
 
@@ -326,7 +323,7 @@ public partial class AzureDashboard
                 var detail = await ProblemDetailsParser.TryReadDetailAsync(resp);
                 Notify.Error("Refresh rejected",
                     detail ?? $"The server rejected the refresh request ({(int)resp.StatusCode}).");
-                await SfxAsync("audioKit.refreshEnd", "failure");
+                await ScanEventAsync("appScan.end", "failure");
                 _refreshing = false;
                 StateHasChanged();
                 return;
@@ -339,9 +336,8 @@ public partial class AzureDashboard
             else
             {
                 // No percent values will arrive, which is why the bar above renders
-                // indeterminate. The drone deepens its tremolo to say the same thing rather
-                // than sweeping its filter toward a completion it cannot actually observe.
-                await SfxAsync("audioKit.refreshIndeterminate");
+                // indeterminate; the backdrop's sweep says the same thing.
+                await ScanEventAsync("appScan.indeterminate");
                 await WaitForRefreshCompletionAsync(_refreshCts!.Token, delayMs: 1500);
             }
 
@@ -362,12 +358,12 @@ public partial class AzureDashboard
                 if (_refreshFailed)
                 {
                     Notify.Error("Refresh failed", _refreshFailureMessage ?? "Refresh failed. Check logs for details.");
-                    await SfxAsync("audioKit.refreshEnd", "failure");
+                    await ScanEventAsync("appScan.end", "failure");
                 }
                 else if (!_refreshCts.Token.IsCancellationRequested)
                 {
                     Notify.Success("Done", "Azure report refreshed successfully.");
-                    await SfxAsync("audioKit.refreshEnd",
+                    await ScanEventAsync("appScan.end",
                         brokenBefore > 0 && _summary?.BrokenServices == 0 ? "recovered" : "success");
                 }
             }
@@ -386,12 +382,12 @@ public partial class AzureDashboard
             catch { }
             Notify.Warning("Timeout",
                 "Refresh took too long (120s limit); the server scan was cancelled.");
-            await SfxAsync("audioKit.refreshEnd", "timeout");
+            await ScanEventAsync("appScan.end", "timeout");
         }
         catch (Exception ex)
         {
             Notify.Error("Error", ex.Message);
-            await SfxAsync("audioKit.refreshEnd", "failure");
+            await ScanEventAsync("appScan.end", "failure");
         }
         finally
         {
@@ -410,9 +406,9 @@ public partial class AzureDashboard
             _refreshCts.Cancel();
             Notify.Warning("Cancelled", "Refresh operation cancelled.");
             // Here rather than in the OperationCanceledException handler: that handler exists
-            // precisely because the cancellation toast has already been shown, so the sound
+            // precisely because the cancellation toast has already been shown, so the effect
             // belongs on the same side of that split as the toast it accompanies.
-            await SfxAsync("audioKit.refreshEnd", "cancelled");
+            await ScanEventAsync("appScan.end", "cancelled");
         }
         // Signal the server to stop the in-progress scan (best-effort — swallow errors).
         try
@@ -489,10 +485,10 @@ public partial class AzureDashboard
             }
             catch { }
 
-            // Walk the drone's filter to match the bar. Fire-and-forget: a progress tick is
+            // Walk the backdrop's sweep to match the bar. Fire-and-forget: a progress tick is
             // the hottest path on this page, and awaiting an interop call here would
-            // serialise the hub callback behind the audio graph.
-            _ = SfxAsync("audioKit.refreshProgress", _progressPercent);
+            // serialise the hub callback behind it.
+            _ = ScanEventAsync("appScan.progress", _progressPercent);
 
             // Route the tick to the progress strip ALONE.
             //

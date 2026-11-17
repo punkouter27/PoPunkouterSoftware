@@ -7,29 +7,33 @@
     max-width: 48rem;
 }
 
-.settings-list {
-    display: grid;
-}
-
-.settings-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--app-space-xs) var(--app-space-md);
-    padding: var(--app-space-sm) 0;
-}
-
-.settings-row + .settings-row {
-    border-top: 1px solid var(--app-border);
-}
-
-.settings-row__copy {
-    flex: 1 1 16rem;
-    min-width: 0;
-}
-
-.settings-row__copy h2,
-.settings-row__copy p {
+.settings-page header h1,
+.settings-fixed h2 {
     margin: 0;
+}
+
+.settings-page header p {
+    margin: var(--app-space-xs) 0 0;
+}
+
+.settings-fixed {
+    display: grid;
+    gap: var(--app-space-sm);
+}
+
+.settings-fixed dl {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: var(--app-space-xs) var(--app-space-md);
+    margin: 0;
+}
+
+.settings-fixed dt {
+    font-weight: 600;
+}
+
+.settings-fixed dd {
+    margin: 0;
+    color: var(--app-text-muted);
+    overflow-wrap: anywhere;
 }

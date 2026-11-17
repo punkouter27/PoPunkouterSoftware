@@ -12,7 +12,7 @@ minimal-API **BFF** that reads an Azure inventory report out of Azure Table Stor
 JSON fallback).
 
 There are exactly **five pages**: `/` (the app catalog), `/azure` (the ops dashboard),
-`/users` (who has signed in, across every Po app), `/settings` (visitor preferences) and
+`/users` (who has signed in, across every Po app), `/settings` (what the app looks like, fixed) and
 `/diag` (is the app and everything it relies on working). Everything else is an endpoint.
 
 For years this said *two* pages, and that was load-bearing — the count is a budget, not a
@@ -23,13 +23,21 @@ a question the existing pages cannot answer without becoming two pages in a tren
 **`/settings` is the fourth page by the owner's explicit call (2026-10-19), not by that standard.**
 A first `/settings` (2026-10-04 to 2026-10-19) was deleted: reachable only from Ctrl+K, one of
 its four controls saved and read by nothing, two duplicating palette commands, and its heading
-icon rendering as the word "PALETTE". The owner then asked for a settings page that puts
-optional features behind toggles defaulting to the simplest set, and the rebuild keeps the
-rules the first one broke: it is the **only** home of theme, density, sound and details (the
-palette's toggles were removed, it has one "Go to Settings" row), it is reachable from Ctrl+K (its header link is hidden since 2026-10-20 — see "The header
-is just the brand" below), every
-control is read by something, and every default is the simplest choice. All four go through
-`window.appSettings` in `theme-kit.js`; each value stays owned by the kit that applies it. The
+icon rendering as the word "PALETTE". The rebuild held four toggles — Theme, Density, Sound,
+Details — until **2026-11-17, when the owner fixed all four for everyone: Theme = System (follows
+the device), Density = Compact, Sound = Off, Details = Full**, and the controls were removed. The
+page now has no controls: it says there is nothing to change and lists, in plain words, how the
+app looks and behaves. The route stays, and so does the header gear (`AccountMenu`) and the
+Ctrl+K "Go to Settings" row, because the estate standard puts a settings control at the upper
+right. How each fixed value is built in: theme — `po-tokens.css`/`boot.css` key off
+`prefers-color-scheme` only and App.razor's Radzen sheets carry matching `media` attributes (no
+script, no `data-app-theme`); density — the base `--app-density` is the compact 0.82; sound —
+`audio-kit.js` was deleted outright (nothing could ever turn it on), the scan lifecycle event it
+also dispatched moved to `appScan` in `helpers.js`; details — the `[data-detail]` hiding rule and
+the palette's `detail` filter were deleted, so the chips, card scores/trend and Ctrl+K repo/Actions
+rows always show. `theme-kit.js` now only deletes the old stored keys
+(`popunkoutersoftware:theme|density|sound|details`, `pops:theme`) so a returning visitor cannot
+stay on an old choice. Do not re-add a preference without the owner asking. The
 default sign-in window is still `/users` remembering the last window picked (`pops:signin-days`).
 Do not cite either page as a precedent for a sixth — that still needs the standard above.
 
@@ -361,8 +369,10 @@ management flag, cold starts) lives in an icon-only `AppHint`, not a paragraph.
 
 - **`--app-density`** scales the whole spacing ladder (`--app-space-*` are all
   `calc(<base> * var(--app-density))`). Compacting the UI for a viewport is one declaration —
-  0.9 at 820px, 0.78 at 640px — not a per-component `padding` override repeated in every
-  breakpoint of every stylesheet, which is what it replaced.
+  0.78 at 640px — not a per-component `padding` override repeated in every
+  breakpoint of every stylesheet, which is what it replaced. Its base is the compact 0.82 for
+  everyone since 2026-11-17 (the Density toggle that switched 1 ↔ 0.82 was removed, and the
+  0.9 step at 820px with it, which would have been less compact than Compact).
 - **`--app-step--2 … --app-step-5`** is the fluid type ladder. Every font-size above ~0.9rem
   resolves from a step. Do **not** write a new `clamp()`: the catalogue h1 grew at `5vw` while the
   dashboard hero grew at `3vw`, so the two pages' headings crossed over somewhere mid-range and
@@ -433,7 +443,7 @@ no scroller at all.
   Steps live in `.Discovery`, `.Metrics`, `.Cost`, `.Security`, `.Inventory`, `.Cleanup`,
   `.GitHubCorrelation`, `.Helpers`.
 - `AzureDashboard.razor.cs` — state, lifecycle, loading, refresh, SignalR. Display mapping in
-  `.Presentation`, refresh sound cues in `.Audio`. The pure projections are NOT a partial-class aspect any
+  `.Presentation`, the scan-lifecycle event calls in `.ScanEvents` (`.Audio` until sound was removed, 2026-11-17). The pure projections are NOT a partial-class aspect any
   more: they live in `DashboardDerivations.cs`, a plain `public static` class, because as private
   members of the component ~460 lines of impact scoring, actionability tiering and cleanup
   reasoning were unreachable from a test even though both test projects reference this assembly.
@@ -447,18 +457,17 @@ no scroller at all.
 
 ## Graphics and audio
 
-Ten files in [wwwroot/js/](src/PoPunkouterSoftware.Client/wwwroot/js/). Read the header
+Nine files (`audio-kit.js` was deleted 2026-11-17 — there is no sound in the app) in [wwwroot/js/](src/PoPunkouterSoftware.Client/wwwroot/js/). Read the header
 comment in each before changing it; they document the reasoning, this is the map.
 
 | File | Role |
 |---|---|
 | `motion-kit.js` | **The frame governor.** ONE `requestAnimationFrame` loop for the whole app, one gate (reduced-motion / hidden / blur / no runnable subscriber), and an adaptive quality controller. Must load first. |
-| `audio-kit.js` | Programmatic Web Audio — synthesis only, **zero audio assets**. UI SFX, the refresh drone (plus a sub "boom" and a three-note outcome motif at its end), and the analyser tap the shaders read. Everything runs through one synthesised-impulse convolution reverb send. |
-| `gpu-backdrop.js` | Orchestrator for `#app-gpu-backdrop`: tier selection, colour tokens, glass rects, audio energy, and the DOM reads that feed the event effects (attractors, origins, the palette lens). Owns no pixels. |
+| `gpu-backdrop.js` | Orchestrator for `#app-gpu-backdrop`: tier selection, colour tokens, glass rects (the renderer's energy input is a constant 0 since the audio kit went), and the DOM reads that feed the event effects (attractors, origins, the palette lens). Owns no pixels. |
 | `gfx-webgl.js` | WebGL2 renderer (curl-noise field, transform-feedback particles, dual-Kawase blur + bloom, glass composite with prism edges) with a WebGL1 field-only fallback. **The top of the ladder.** |
 | `ui-physics.js` | Physics on the DOM, not a canvas: KPI values count up on a spring. (The catalogue-card tilt went with the cards, 2026-11-03.) Per-frame work is motionKit subscribers that unsubscribe when settled. |
-| `helpers.js` | Topbar, clipboard, download, `appRevealFocus` (the `/azure?focus=` scroll), `appShowDialog` (opens an `AppDrawer`) — plus the Radzen accessibility repairs (`appRepairRadzenA11y`). Unrelated to the animation layers. (The `appMedia` matchMedia bridge went with the resource explorer's data-grid branch — it had exactly one caller.) |
-| `theme-kit.js` | The visitor's light/dark choice and the compact-density flag, plus `window.appSettings` — the one facade `/settings` reads (`read()` → `theme|density|sound|details`) and writes all four preferences through. Applies `data-app-theme` to `<html>` and rewrites the two Radzen theme sheets' `media` attributes. Must load before Blazor. |
+| `helpers.js` | Topbar, clipboard, download, `appRevealFocus` (the `/azure?focus=` scroll), `appShowDialog` (opens an `AppDrawer`), `appScan` (dispatches the scan lifecycle as `app:refresh`) — plus the Radzen accessibility repairs (`appRepairRadzenA11y`). Unrelated to the animation layers. (The `appMedia` matchMedia bridge went with the resource explorer's data-grid branch — it had exactly one caller.) |
+| `theme-kit.js` | Since 2026-11-17 only deletes the stored keys of the removed /settings toggles. Theme, density, sound and details are fixed (see the page budget at the top). |
 | `app-boot.js` | Host-page boot: dismisses the loading splash, drives the nav progress bar, filters hot-reload console noise. Not an animation layer — no rAF. Was inline in `App.razor` until the CSP banned inline script. |
 | `blazor-hooks.js` | Registers the enhanced-navigation callbacks. Must load **after** `blazor.web.js`, which defines `Blazor`. Also ex-inline. |
 | `command-palette.js` | Ctrl+K / Cmd+K overlay: navigation (Settings included — it holds no setting toggles of its own), and a launcher — open / copy link / show uptime / repo / GitHub Actions for every app (from `/api/portfolio`, fetched on first open; repo rows come from the catalog's `githubRepo`. There is deliberately no Azure portal row: a portal deep link carries the subscription id every anonymous endpoint here masks) plus "Rescan Azure" when management actions are on. Fuzzy matching is hand-written: the CSP's `script-src 'self'` rules out a CDN library. |
@@ -483,15 +492,10 @@ HRTF fleet hums and the Sync arpeggio riding on it, plus a `motionKit.suppress()
 existed for its exclusivity claim. All of it went together; `/` now draws the same shared
 backdrop as every other page.
 
-**Silence is the default and it is an accessibility floor.** `audioKit.enabled` starts false;
-the `AudioContext` is not even *constructed* until a user gesture, because one built during
-page load is a suspended context that silently swallows sound plus an unrequested hardware
-claim. Sound is switched on from `/settings` only (`/azure`'s Listen button went 2026-11-07); the header toggle and its `[data-sound-toggle]` wiring went on 2026-10-05.
-`[data-sfx]` / `[data-sfx-hover]` are wired by **delegation on `document`** (enhanced
-navigation re-inserts the header, so a direct listener would be lost or double-bound). Sound carries information in one place — the
-refresh lifecycle (a ~30s scan is exactly how long it takes someone to switch tabs; its end
-is a boom plus a motif that differs for success, recovery, failure and timeout): a second
-*modality* on a fact already on the page, not a second copy of it. Only primitives cross the interop boundary.
+**There is no sound (owner's call, 2026-11-17).** The app had a synthesised Web Audio kit
+(`audio-kit.js`: UI clicks, a refresh drone and outcome motif, haptics) behind a /settings Sound
+opt-in that defaulted off. Sound is now fixed Off for everyone, so the kit, its `[data-sfx]`
+attributes and every `audioKit` call were deleted rather than left unreachable.
 
 **The backdrop is a capability ladder**: WebGL2 → WebGL1 → the CSS grid in
 `modern-ui.css`. Every rung degrades silently to the next and records the outcome in
@@ -514,9 +518,8 @@ decided in `RefreshAsync`) adds a particle bloom from `[data-fx-origin="health"]
 field orbits every visible `[data-fx-attract=weight]` (down/degraded uptime rows, spend
 spikes); `/users` calls `appFx.comets(n)` once per visit for sign-ins in the last 24h; the
 pointer (or phone tilt, Android only) lights the glass rims. The scan lifecycle reaches the
-visuals as an `app:refresh` DOM event that `audio-kit.js` dispatches **before** its sound
-gate, so the dashboard's existing `audioKit.refresh*` calls drive both layers and neither
-references the other. Deferred effects run on a frame-advanced clock, not wall time, so a
+visuals as an `app:refresh` DOM event that `appScan` in `helpers.js` dispatches from the
+dashboard's `appScan.start/progress/indeterminate/end` calls (`AzureDashboard.ScanEvents.cs`). Deferred effects run on a frame-advanced clock, not wall time, so a
 scan that ends in a background tab plays its shockwave on return.
 
 **There is one effects set (2026-11-07).** /settings used to offer Effects → Full, adding a
@@ -531,15 +534,9 @@ the Effects row, `appFx.setFull`, `pops:fx` (cleared on load), `[data-fx-flock]`
 - **Palette** (`app:palette` events from `command-palette.js`): a lens toward the open
   palette, and the header brand morphs into the new h1 through a View Transition.
 
-**Sound and touch follow the visitor's one opt-in.** `[data-sfx]` clicks are panned to the
-element's screen position. `navigator.vibrate` mirrors the outcome sounds and sits behind the same
-`enabled` flag — no buzz for a visitor who never turned feedback on.
-
-**Four pieces of polish are plain CSS/platform.** MetricBars spring in on `--app-ease-bounce`
+**Three pieces of polish are plain CSS/platform.** MetricBars spring in on `--app-ease-bounce`
 (a damped spring sampled into `linear()`), drawn on the fill's `::before` so the fill's own
-box — what `Azure_GlancePanels_DrawTheirMetrics` measures — is final from the first frame. The theme toggle is a circular View
-Transition reveal from the button (`theme-kit.js` + `.is-theme-reveal` in `modern-ui.css`;
-instant under reduced motion or without support). Cards and panes rise in on a scroll
+box — what `Azure_GlancePanels_DrawTheirMetrics` measures — is final from the first frame.(The theme toggle's circular View Transition reveal went with the toggle, 2026-11-17.) Cards and panes rise in on a scroll
 timeline (`animation-timeline: view()`, entry range, backwards fill, **opacity + translate
 only** — a `scale` there shrank off-screen panes and failed the pane-geometry test). The three
 accent tokens are `color(display-p3 …)` on wide-gamut screens, luminance-matched to the sRGB
@@ -841,25 +838,15 @@ proves a context and program were created, not that anything reached the screen.
   instance from `CreateClient(name)` — handler chains are pooled, so a per-call mutation leaks that
   header, credentials included, to every other consumer. The `github` PAT is bound once in
   `Program.cs`. Pass per-call values on the `HttpRequestMessage`.
-- **The theme is a choice, not only a media query.** `theme-kit.js` owns it: the `/settings`
-  Theme row (System / Light / Dark, via `appSettings.set`) writes
-  `localStorage` `pops:theme` and sets `data-app-theme` on `<html>`. Rejected alternatives, so they
-  are not re-litigated: Radzen's `RadzenTheme`/`RadzenAppearanceToggle` would make a second theme
-  authority alongside this app's own token block, which is the same class of bug as the Radzen token
-  bridge; `light-dark()` would collapse the palette to one line per token but fails *silently and
-  totally* on a browser that lacks it, because every token becomes invalid at computed-value time.
-  Consequences to keep in step:
-  - **The light palette exists twice** in `modern-ui.css` — once under
-    `@media (prefers-color-scheme: light) { :root:not([data-app-theme="dark"]) … }` (the no-choice
-    case, which applies before any script runs and so cannot flash) and once under
-    `:root[data-app-theme="light"]`. CSS has no way to share a declaration block across those two
-    selectors. **Change one, change both.** `boot.css` and `.azure-ops-page`'s `--tone-*` block have
-    the same two-place shape, and the tones matter most: they are data-viz strokes graded against a
-    3:1 non-text floor, and the old plain media query left a light green at 2.91:1 on a dark card.
-  - **Radzen's two theme sheets are switched by rewriting their `media` attributes**, because
-    `App.razor` scopes them with media queries and no CSS selector can reach a stylesheet's `media`
-    attribute. Skipping that leaves every Radzen surface (badges, buttons, chart legend) on the
-    system's theme while the page around them flips.
+- **The theme follows the device, and only the device (2026-11-17).** It was a choice: a
+  /settings Theme row wrote a `data-app-theme` override, which forced a second copy of the light
+  palette (attribute-scoped beside the media-query one) and a script that rewrote the two Radzen
+  sheets' `media` attributes. The row, the override, the second palette copies (`po-tokens.css`,
+  `boot.css`, `.azure-ops-page`'s `--tone-*`) and the script went together; each palette now has
+  one dark default and one `@media (prefers-color-scheme: light)` block. Rejected alternatives,
+  still: Radzen's `RadzenTheme`/`RadzenAppearanceToggle` (a second theme authority) and
+  `light-dark()` (fails silently and totally on a browser that lacks it). The `--tone-*` strokes
+  are data-viz graded against a 3:1 non-text floor — keep their light values in that one block.
 - **Radzen's own markup is repaired from `js/helpers.js`, not at 22 call sites.** Two defects in
   what the library renders: an icon is real text (`<i class="rzi">refresh</i>`), so every Radzen icon
   button's accessible name is the ligature name plus its label — measured as `"refresh Rescan

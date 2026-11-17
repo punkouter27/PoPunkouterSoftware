@@ -232,3 +232,22 @@ window.appRepairRadzenA11y = (function () {
         start();
     }
 })();
+
+/* ═════════════════════════════════════════════════════════════════════════════
+   Scan lifecycle → `app:refresh` on document, which js/gpu-backdrop.js draws (sweep while
+   scanning, shockwave at the end). Called by AzureDashboard. It lived in js/audio-kit.js,
+   ahead of that file's sound gate, until sound was fixed Off and the kit deleted (2026-11-17).
+   ═════════════════════════════════════════════════════════════════════════════ */
+(function () {
+    function announce(detail) {
+        try { document.dispatchEvent(new CustomEvent('app:refresh', { detail: detail })); }
+        catch (e) { /* the backdrop is decoration; never break the scan over it */ }
+    }
+
+    window.appScan = {
+        start: function () { announce({ phase: 'start' }); },
+        progress: function (percent) { announce({ phase: 'progress', percent: percent }); },
+        indeterminate: function () { announce({ phase: 'indeterminate' }); },
+        end: function (outcome) { announce({ phase: 'end', outcome: outcome }); }
+    };
+})();

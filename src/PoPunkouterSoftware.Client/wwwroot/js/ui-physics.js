@@ -2,8 +2,7 @@
  * ui-physics — physics applied to the DOM itself, not to a canvas.
  *
  * One effect, wired by observation so no Blazor component needs an interop call, an
- * OnAfterRender hook or a disposal path — the same contract audio-kit.js follows for
- * `[data-sfx]`:
+ * OnAfterRender hook or a disposal path:
  *
  *   ODOMETER  a KPI value (`.app-kpis strong`) counts up to its number on a damped spring
  *             the first time it appears. Only the text node's value changes; if Blazor

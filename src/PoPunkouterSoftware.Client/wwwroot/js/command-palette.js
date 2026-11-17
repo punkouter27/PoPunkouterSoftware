@@ -15,9 +15,8 @@
         { id: 'nav-apps', title: 'Go to Apps Portfolio', icon: 'home', category: 'Navigation', action: function () { navigate('/'); } },
         { id: 'nav-azure', title: 'Go to Azure Ops Dashboard', icon: 'monitor_heart', category: 'Navigation', action: function () { navigate('/azure'); } },
         { id: 'nav-users', title: 'Go to User Sign-Ins', icon: 'group', category: 'Navigation', action: function () { navigate('/users'); } },
-        // Theme, density, sound and effects live on /settings and nowhere else: a control that
-        // exists twice is two places to keep in step, and the deleted 2026-10 page proved it.
-        { id: 'nav-settings', title: 'Go to Settings (theme, density, sound, effects)', icon: 'settings', category: 'Navigation', action: function () { navigate('/settings'); } },
+        // /settings has no controls since 2026-11-17 (every preference is fixed); it explains them.
+        { id: 'nav-settings', title: 'Go to Settings', icon: 'settings', category: 'Navigation', action: function () { navigate('/settings'); } },
         { id: 'nav-diag', title: 'Go to Diagnostics (is everything working?)', icon: 'monitor_heart', category: 'Navigation', action: function () { navigate('/diag'); } },
         { id: 'act-reload', title: 'Hard Reload Application', icon: 'refresh', category: 'System', action: function () { window.location.reload(); } }
     ];
@@ -51,9 +50,9 @@
                 // endpoint here masks (see /api/diag/report).
                 if (app.githubRepo) {
                     var repo = 'https://github.com/' + app.githubRepo;
-                    cmds.push({ id: 'repo-' + app.id, title: 'Open ' + app.name + ' repo', icon: 'data_object', category: 'Apps', app: true, detail: true,
+                    cmds.push({ id: 'repo-' + app.id, title: 'Open ' + app.name + ' repo', icon: 'data_object', category: 'Apps', app: true,
                         action: function () { window.open(repo, '_blank', 'noopener'); } });
-                    cmds.push({ id: 'actions-' + app.id, title: 'Open ' + app.name + ' GitHub Actions', icon: 'history', category: 'Apps', app: true, detail: true,
+                    cmds.push({ id: 'actions-' + app.id, title: 'Open ' + app.name + ' GitHub Actions', icon: 'history', category: 'Apps', app: true,
                         action: function () { window.open(repo + '/actions', '_blank', 'noopener'); } });
                 }
             });
@@ -214,9 +213,8 @@
         var query = (input ? input.value : '').toLowerCase().trim();
         // With no query the list stays short — the per-app rows only appear once you type.
         if (!query) return COMMANDS.concat(appCommands.filter(function (c) { return !c.app; }));
-        // Details rows (repo / Actions) only when the visitor chose /settings → Details → Full.
-        var full = document.documentElement.getAttribute('data-app-details') === 'full';
-        var ranked = COMMANDS.concat(appCommands.filter(function (c) { return full || !c.detail; }))
+        // Every row, including the per-app repo / Actions rows (Details is fixed at Full since 2026-11-17).
+        var ranked = COMMANDS.concat(appCommands)
             .map(function (cmd) { return { cmd: cmd, score: Math.max(fuzzyScore(query, cmd.title), fuzzyScore(query, cmd.category) - 5) }; })
             .filter(function (x) { return x.score >= 0; })
             .sort(function (a, b) { return b.score - a.score; });
@@ -293,7 +291,6 @@
         selectedIndex = 0;
         renderList();
         setTimeout(function () { input.focus(); }, 50);
-        if (window.audioKit) window.audioKit.play('open');
         fx('open');
     }
 
@@ -301,7 +298,6 @@
         if (!isOpen) return;
         isOpen = false;
         if (overlay) overlay.classList.remove('is-open');
-        if (window.audioKit) window.audioKit.play('close');
         fx('close');
     }
 
