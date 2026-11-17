@@ -172,7 +172,7 @@ public class PortfolioEndpointTests
         // details — the real-time column included.
         apps.EnumerateArray().Select(a => a.GetProperty("stack").ToString())
             .Should().Contain(s => s.Contains("\"frontend\":\"Blazor WASM\"") && s.Contains("\"realtime\":\"SignalR")
-                && s.Contains("\"frontend\":\"Blazor WebAssembly: "));
+                && s.Contains("\"details\":{\"frontend\":\""));
         // Catalog repos become source links (no scan has said any is private in the seed).
         apps.EnumerateArray()
             .Select(a => a.TryGetProperty("sourceUrl", out var u) ? u.GetString() : null)
