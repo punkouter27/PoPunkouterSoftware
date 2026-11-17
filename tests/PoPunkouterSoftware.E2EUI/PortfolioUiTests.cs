@@ -78,7 +78,8 @@ public class PortfolioUiTests : IAsyncLifetime
         await Assertions.Expect(page.GetByText("PoPunkouterSoftware").First).ToBeVisibleAsync();
         // The header is the brand and nothing else (links hidden 2026-10-20, removed 2026-10-30).
         await Assertions.Expect(page.Locator(".app-topbar a")).ToHaveCountAsync(1);
-        await Assertions.Expect(page.Locator(".portfolio-stack__row").First).ToBeVisibleAsync();
+        // 40s, not the 5s default: a cold /api/portfolio (first call after start) took ~10s.
+        await Assertions.Expect(page.Locator(".portfolio-stack__row").First).ToBeVisibleAsync(new() { Timeout = 40_000 });
         // The matrix's point: every row says what it is built with, in its Tech stack cell —
         // a pinned column, so it is in every row of both tables.
         var unnamed = await page.EvaluateAsync<int>(@"() => [...document.querySelectorAll('.portfolio-stack')]
@@ -603,6 +604,9 @@ public class PortfolioUiTests : IAsyncLifetime
 
         // Either branch is a correct render — a deployment with no Monitoring Reader role
         // shows the reason instead of the roster — but a page stuck on the skeleton is not.
+        // Wait for one of them first: NetworkIdle fires before the WASM island has rendered
+        // the answer, and counting then read "not unavailable" off the skeleton.
+        await page.WaitForSelectorAsync(".signins-unavailable, .signins-stats", new() { Timeout = 40_000 });
         var unavailable = await page.Locator(".signins-unavailable").CountAsync();
         if (unavailable == 0)
         {
