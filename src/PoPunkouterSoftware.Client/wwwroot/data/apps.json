@@ -350,6 +350,42 @@
       }
     },
     {
+      "id": "pobasketball",
+      "name": "PoBasketball",
+      "description": "An autonomous streetball humanoid gym in Unreal Engine whose players learn balance, dribbling and jump shots with reinforcement learning; watch baked replays in the browser.",
+      "category": "rl-training",
+      "status": "active",
+      "technologies": [
+        "Azure Static Web Apps",
+        "Unreal Engine",
+        "Reinforcement learning"
+      ],
+      "url": "https://lively-flower-0ec39e30f.8.azurestaticapps.net",
+      "githubRepo": "punkouter27/PoBasketball",
+      "expect": "<title>PoBasketball Replays</title>",
+      "stack": {
+        "frontend": "Unreal Engine 5.8",
+        "ai": "RL agents",
+        "physics": "MuJoCo 4.0",
+        "training": "MuJoCo Warp + PPO (PyTorch)",
+        "trainingPath": "sim",
+        "extras": "NNE (ONNX Runtime) + three.js",
+        "details": {
+          "frontend": "The full showcase runs in Unreal Engine 5.8 with Chaos disabled on gameplay actors; the website is a three.js replay viewer baked from golden simulation frames",
+          "physics": "MuJoCo 4.0 steps the 29-joint mannequin, basketball, court and rims at 500 Hz in both the trainer and Unreal's MuJoCoRuntime plugin",
+          "training": "Trained on GPU with MuJoCo Warp and PyTorch PPO across five stages (balance, court traversal, stationary and moving dribble, loose-ball scramble and jump shot), reading 125 observations and driving 29 joints",
+          "extras": "Unreal's NNE (ONNX Runtime) runs the 50 Hz ONNX skill policies on CPU in the gym, while three.js renders the baked replay trajectories in the browser"
+        },
+        "aiServices": [
+          {
+            "cloud": "In-app",
+            "name": "Reinforcement-learning agents",
+            "use": "Five ONNX skill policies (balance, locomotion, dribble, scramble and shot) run at 50 Hz via Unreal's NNE, reading 125 observations and driving 29 joints"
+          }
+        ]
+      }
+    },
+    {
       "id": "pobox",
       "name": "PoBox",
       "description": "A boxing broadcast where physics-driven boxers with trained brains fight, cameras follow the action and three judges score it.",
