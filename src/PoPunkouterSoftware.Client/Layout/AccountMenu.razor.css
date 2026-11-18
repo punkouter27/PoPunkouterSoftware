@@ -5,15 +5,6 @@
     flex-shrink: 0;
 }
 
-.app-account-pill {
-    font-size: var(--app-step--2);
-    color: var(--app-text-muted);
-    background: var(--app-surface-soft);
-    border: 1px solid var(--app-border);
-    border-radius: var(--app-radius-pill);
-    padding: 0.25rem 0.65rem;
-}
-
 .app-account-select {
     font-size: var(--app-step--2);
     color: var(--app-text);
