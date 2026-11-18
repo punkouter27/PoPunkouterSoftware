@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Copies the shared CI/CD files from each app type's reference repo to every other repo of that type.
 
@@ -43,13 +43,16 @@ foreach ($typeName in $config.types.PSObject.Properties.Name) {
         if (-not (Test-Path $dir)) { "  ${repo}: not cloned next to this repo, skipped"; continue }
         $changed = @()
         foreach ($f in $t.files) {
-            if ($f.when -and -not (Test-Path (Join-Path $dir $f.when))) { continue }
-            $src = Join-Path $refDir $f.path
-            $dst = Join-Path $dir $f.path
+            $whenPath = if ($f.when) { $f.when -replace '\{Repo\}', $repo } else { $null }
+            if ($whenPath -and -not (Test-Path (Join-Path $dir $whenPath))) { continue }
+            $srcRel = $f.path -replace '\{Repo\}', $t.reference
+            $dstRel = $f.path -replace '\{Repo\}', $repo
+            $src = Join-Path $refDir $srcRel
+            $dst = Join-Path $dir $dstRel
             $srcText = [IO.File]::ReadAllText($src)
             $same = (Test-Path $dst) -and ([IO.File]::ReadAllText($dst) -ceq $srcText)
             if ($same) { continue }
-            $changed += $f.path
+            $changed += $dstRel
             if (-not $Check -and $repo -ne $t.reference) {
                 New-Item -ItemType Directory -Force (Split-Path $dst) | Out-Null
                 [IO.File]::WriteAllText($dst, $srcText)   # byte-for-byte, no BOM, no newline rewrite

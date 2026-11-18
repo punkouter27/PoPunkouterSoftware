@@ -9,13 +9,13 @@ set -u
 owner=punkouter27
 fails=0
 config="$(dirname "$0")/ci-repos.json"
+PY=$(command -v python3 || command -v python)
 raw() { curl -fsS --max-time 30 "https://raw.githubusercontent.com/$owner/$1/master/$2" 2>/dev/null; }
 gap() { echo "  ✗ $1"; fails=$((fails + 1)); }
 
 for repo in $(gh repo list "$owner" --limit 200 --no-archived --json name -q '.[] | select(.name | startswith("Po")) | .name' | sort); do
   echo "$repo"
   [ "$(gh api "repos/$owner/$repo" -q .default_branch)" = master ] || gap "default branch is not master"
-  raw "$repo" .github/dependabot.yml > /dev/null || gap "no .github/dependabot.yml"
   raw "$repo" .gitattributes | grep -qE '^\* +text=auto' || gap ".gitattributes lacks '* text=auto'"
   raw "$repo" .editorconfig > /dev/null || gap "no .editorconfig"
   raw "$repo" AGENTS.md | grep -q '^## CI/CD and Azure' || gap "AGENTS.md lacks the shared 'CI/CD and Azure' section"
@@ -24,22 +24,25 @@ for repo in $(gh repo list "$owner" --limit 200 --no-archived --json name -q '.[
   # One workflow file per repo: it builds and deploys (Po web standard: no tests, no Bicep job).
   # PoPunkouterSoftware is the exception: it also holds the fleet jobs (watcher, digest, scans).
   if [ "$repo" != PoPunkouterSoftware ]; then
-    wf=$(gh api "repos/$owner/$repo/contents/.github/workflows" -q '[.[] | select(.name | test("\\.ya?ml$")) | .name] | join(" ")' 2>/dev/null)
+    wf=$(gh api "repos/$owner/$repo/contents/.github/workflows" -q 'if type == "array" then [.[] | select(.name | test("\\.ya?ml$")) | .name] | join(" ") else "" end' 2>/dev/null || true)
     [ "$(wc -w <<< "$wf")" -gt 1 ] && gap "more than one workflow file ($wf); fold them into one"
   fi
 
   # Shared CI/CD files: every repo of an app type holds an identical copy (each repo owns it);
-  # compared against the repo ci-repos.json names as the source (copied by scripts/sync-ci.ps1). The step-by-step greps
-  # this replaced missed any repo whose scripts folder was spelled SCRIPTS.
-  type=$(jq -r --arg r "$repo" '.types | to_entries[] | select(.value.repos | index($r)) | .key' "$config")
+  # compared against the repo ci-repos.json names as the source (copied by scripts/sync-ci.ps1).
+  type=$("$PY" -c 'import json,sys; d=json.load(open(sys.argv[1])); r=sys.argv[2]; print(next((k for k,v in d["types"].items() if r in v["repos"]), ""))' "$config" "$repo")
   if [ -n "$type" ]; then
-    ref=$(jq -r --arg t "$type" '.types[$t].reference' "$config")
+    ref=$("$PY" -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["types"][sys.argv[2]]["reference"])' "$config" "$type")
     while IFS=$'\t' read -r path when; do
-      [ -n "$when" ] && ! raw "$repo" "$when" > /dev/null && continue
-      want=$(raw "$ref" "$path") || { gap "reference $ref has no $path"; continue; }
-      have=$(raw "$repo" "$path") || { gap "no $path (a $type repo; copy it with scripts/sync-ci.ps1)"; continue; }
-      [ "$have" = "$want" ] || gap "$path differs from $ref's copy (run scripts/sync-ci.ps1)"
-    done < <(jq -r --arg t "$type" '.types[$t].files[] | [.path, (.when // "")] | @tsv' "$config")
+      [ -z "$path" ] && continue
+      ref_path="${path//\{Repo\}/$ref}"
+      repo_path="${path//\{Repo\}/$repo}"
+      when_path="${when//\{Repo\}/$repo}"
+      [ -n "$when_path" ] && ! raw "$repo" "$when_path" > /dev/null && continue
+      want=$(raw "$ref" "$ref_path") || { gap "reference $ref has no $ref_path"; continue; }
+      have=$(raw "$repo" "$repo_path") || { gap "no $repo_path (a $type repo; copy it with scripts/sync-ci.ps1)"; continue; }
+      [ "$have" = "$want" ] || gap "$repo_path differs from $ref's copy (run scripts/sync-ci.ps1)"
+    done < <("$PY" -c 'import json,sys; d=json.load(open(sys.argv[1])); [print(f.get("path","")+"\t"+f.get("when","")) for f in d["types"][sys.argv[2]]["files"]]' "$config" "$type")
     if [ "$type" = dotnet-web ]; then
       raw "$repo" scripts/ensure-azure-access.ps1 > /dev/null || gap "no scripts/ensure-azure-access.ps1 (lower-case scripts/)"
     fi
@@ -52,7 +55,7 @@ done
 
 # The reference copies themselves keep the rules that make them safe.
 webgl=$(raw PoBox .github/workflows/webgl.yml)
-grep -q 'self-hosted' <<< "$webgl" && gap "PoBox webgl.yml uses a self-hosted runner (CI must be GitHub-hosted)"
+grep -qE 'runs-on:.*self-hosted' <<< "$webgl" && gap "PoBox webgl.yml uses a self-hosted runner (CI must be GitHub-hosted)"
 grep -qE '^[[:space:]]+pull_request:' <<< "$webgl" && gap "PoBox webgl.yml has a pull_request trigger (deploys only from master)"
 grep -qE 'secrets\.AZURE_(CLIENT|TENANT|SUBSCRIPTION)_ID' <<< "$(raw PoTraffic .github/workflows/deploy.yml)" \
   && gap "PoTraffic deploy.yml reads Azure IDs from secrets, not vars"

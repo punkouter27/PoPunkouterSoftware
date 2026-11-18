@@ -9,7 +9,10 @@
       ],
       "files": [
         { "path": ".github/workflows/deploy.yml" },
-        { "path": ".github/dependabot.yml" }
+        { "path": "src/{Repo}.Client/wwwroot/css/po-tokens.css" },
+        { "path": "src/{Repo}.Client/wwwroot/js/po-dev.js" },
+        { "path": "src/{Repo}.Client/wwwroot/js/po-devwindow.js" },
+        { "path": "src/{Repo}.Client/wwwroot/po-dev.html" }
       ]
     },
     "unity-webgl": {
