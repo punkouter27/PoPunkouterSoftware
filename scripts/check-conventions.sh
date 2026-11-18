@@ -21,15 +21,15 @@ for repo in $(gh repo list "$owner" --limit 200 --no-archived --json name -q '.[
   raw "$repo" AGENTS.md | grep -q '^## CI/CD and Azure' || gap "AGENTS.md lacks the shared 'CI/CD and Azure' section"
   raw "$repo" CLAUDE.md | grep -q '@AGENTS.md' || gap "CLAUDE.md does not import @AGENTS.md"
 
-  # One workflow file per repo: it builds and deploys (the .NET one also runs Bicep on demand).
+  # One workflow file per repo: it builds and deploys (Po web standard: no tests, no Bicep job).
   # PoPunkouterSoftware is the exception: it also holds the fleet jobs (watcher, digest, scans).
   if [ "$repo" != PoPunkouterSoftware ]; then
     wf=$(gh api "repos/$owner/$repo/contents/.github/workflows" -q '[.[] | select(.name | test("\\.ya?ml$")) | .name] | join(" ")' 2>/dev/null)
     [ "$(wc -w <<< "$wf")" -gt 1 ] && gap "more than one workflow file ($wf); fold them into one"
   fi
 
-  # Shared CI/CD files: every repo of an app type holds byte-identical copies of its reference
-  # repo's files (scripts/ci-repos.json; copied by scripts/sync-ci.ps1). The step-by-step greps
+  # Shared CI/CD files: every repo of an app type holds an identical copy (each repo owns it);
+  # compared against the repo ci-repos.json names as the source (copied by scripts/sync-ci.ps1). The step-by-step greps
   # this replaced missed any repo whose scripts folder was spelled SCRIPTS.
   type=$(jq -r --arg r "$repo" '.types | to_entries[] | select(.value.repos | index($r)) | .key' "$config")
   if [ -n "$type" ]; then

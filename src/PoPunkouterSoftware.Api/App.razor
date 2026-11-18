@@ -19,6 +19,11 @@
        round trip completed. modern-ui.css now declares the same family against the local
        file, so the header icons and the Radzen ones resolve from one same-origin request
        that was already being made. Re-adding this link would reintroduce the block. *@
+    @* Po web standard: po-tokens.css (the estate file, same in every Po app) comes FIRST. It
+       self-hosts Inter and Space Grotesk (fonts/, same-origin, so `font-src 'self'` holds) and
+       carries the shared shell: .po-header, .po-version, /diag cards. modern-ui.css aliases the
+       app's own tokens to its --po-* values. *@
+    <link rel="stylesheet" href="css/po-tokens.css" />
     <link rel="stylesheet" href="css/boot.css" />
     @* Radzen ships one stylesheet per theme and its component colours are baked in — they
        do not follow prefers-color-scheme. Loading only software-dark.css meant that in
@@ -27,7 +32,6 @@
        the scheme it was built for. *@
     <link rel="stylesheet" href="_content/Radzen.Blazor/css/software.css" media="(prefers-color-scheme: light)" />
     <link rel="stylesheet" href="_content/Radzen.Blazor/css/software-dark.css" media="(prefers-color-scheme: dark)" />
-    <link rel="stylesheet" href="css/po-tokens.css" />
     <link rel="stylesheet" href="css/po-motion.css" />
     <link rel="stylesheet" href="css/modern-ui.css" />
     <link rel="stylesheet" href="PoPunkouterSoftware.Client.styles.css" />
@@ -54,6 +58,9 @@
        by the browser and the loading splash would never be dismissed. Any new host-page
        script goes in a file under wwwroot/js for the same reason. *@
     <script src="js/app-boot.js"></script>
+    @* Po web standard: Tab with nothing focused opens /po-dev.html (live diagnostics) in its
+       own window. A plain external file (same in every Po app), so the CSP holds. *@
+    <script src="js/po-devwindow.js"></script>
     @* Clears the visitor-preference keys the removed /settings toggles used to store (theme,
        density, sound and details are fixed for everyone since 2026-11-17 — see the file). *@
     <script src="js/theme-kit.js"></script>

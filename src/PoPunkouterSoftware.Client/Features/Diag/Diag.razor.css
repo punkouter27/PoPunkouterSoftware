@@ -32,30 +32,24 @@
     margin: 0;
 }
 
+/* Each row is a .po-diag__card (po-tokens.css): a two-column grid, name and badge on top,
+   the purpose and the verdict spanning both columns under them. */
 .diag-section ::deep .diag-row {
-    padding: var(--app-space-sm) 0;
     min-width: 0;
-}
-
-.diag-section ::deep .diag-row + .diag-row {
-    border-top: 1px solid var(--app-border);
-}
-
-.diag-section ::deep .diag-row__head {
-    display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    gap: var(--app-space-xs) var(--app-space-sm);
 }
 
 .diag-section ::deep .diag-row__name {
     margin: 0;
+    min-width: 0;
     font-size: var(--app-step-0);
+    overflow-wrap: anywhere;
 }
 
 .diag-section ::deep .diag-row__purpose,
 .diag-section ::deep .diag-row__summary {
-    margin: 0.25rem 0 0;
+    grid-column: 1 / -1;
+    margin: 0;
     overflow-wrap: anywhere;
 }
 

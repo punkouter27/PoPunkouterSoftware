@@ -1,12 +1,10 @@
 @namespace PoPunkouterSoftware.Client
-@* One dependency on /diag: name + status badge, what it is for, the plain-English verdict,
-   and how long the check took. *@
+@* One dependency on /diag, as the estate's .po-diag__card: name + status badge, what it is
+   for, the plain-English verdict, and how long the check took. *@
 
-<div class="diag-row">
-    <div class="diag-row__head">
-        <h3 class="diag-row__name">@Name</h3>
-        <RadzenBadge Text="@Status" IsPill="true" BadgeStyle="@StyleFor(Status)" />
-    </div>
+<div class="diag-row po-diag__card">
+    <h3 class="diag-row__name">@Name</h3>
+    <span class="po-badge po-badge--@BadgeFor(Status)">@Status</span>
     <p class="diag-row__purpose">@Purpose</p>
     <p class="diag-row__summary">
         @Summary
@@ -26,10 +24,11 @@
         (LatencyMs is { } ms ? $"{ms:0} ms" : "not probed")
         + (CheckedAt is { } at ? $" · checked {RelativeTime.FormatDetailed(DateTimeOffset.UtcNow - at)}" : "");
 
-    private static BadgeStyle StyleFor(string status) => status switch
+    // The estate's po-badge--ok|warn|bad (po-tokens.css).
+    private static string BadgeFor(string status) => status switch
     {
-        "Healthy" => BadgeStyle.Success,
-        "Degraded" => BadgeStyle.Warning,
-        _ => BadgeStyle.Danger,
+        "Healthy" => "ok",
+        "Degraded" => "warn",
+        _ => "bad",
     };
 }

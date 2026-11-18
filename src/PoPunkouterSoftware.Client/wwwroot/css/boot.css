@@ -47,7 +47,7 @@
     background: #060a14;
     color: #94a3b8;
     z-index: 9999;
-    font-family: "Segoe UI", Arial, sans-serif;
+    font-family: var(--po-font);
     transition: opacity 0.3s;
 }
 

@@ -76,8 +76,14 @@ public class PortfolioUiTests : IAsyncLifetime
         response!.Ok.Should().BeTrue();
         (await page.TitleAsync()).Should().Contain("PoPunkouterSoftware");
         await Assertions.Expect(page.GetByText("PoPunkouterSoftware").First).ToBeVisibleAsync();
-        // The header is the brand and nothing else (links hidden 2026-10-20, removed 2026-10-30).
-        await Assertions.Expect(page.Locator(".app-topbar a")).ToHaveCountAsync(1);
+        // The header is the estate's (Po web standard, 2026-11-18): the brand upper-left and the
+        // settings gear upper-right, nothing else (page links removed 2026-10-30).
+        await Assertions.Expect(page.Locator(".app-topbar a")).ToHaveCountAsync(2);
+        await Assertions.Expect(page.Locator(".po-header .po-header__settings[href='/settings']")).ToHaveCountAsync(1);
+        var brand = (await page.Locator(".po-header__title").BoundingBoxAsync())!;
+        var gear = (await page.Locator(".po-header__settings").BoundingBoxAsync())!;
+        brand.X.Should().BeLessThan(width * 0.2f, $"the app name sits upper-left at {label}");
+        (gear.X + gear.Width).Should().BeGreaterThan(width * 0.85f, $"the gear sits upper-right at {label}");
         // 40s, not the 5s default: a cold /api/portfolio (first call after start) took ~10s.
         await Assertions.Expect(page.Locator(".portfolio-stack__row").First).ToBeVisibleAsync(new() { Timeout = 40_000 });
         // The matrix's point: every row says what it is built with, in its Tech stack cell —
@@ -520,9 +526,11 @@ public class PortfolioUiTests : IAsyncLifetime
                 return !!(link && document.querySelector(link.getAttribute('href')));
             }")).Should().BeTrue($"the skip link must resolve on {route} at {label}");
 
-            // The YYMMDD build stamp sits in the lower-right corner of the VIEWPORT on every
-            // page (it was an in-flow footer, below the fold on any long page, with no date).
-            var stamp = page.Locator(".app-build-version span");
+            // The YYMMDD build stamp (the estate's .po-version, exactly one) sits in the lower-right
+            // corner of the VIEWPORT on every page (it was an in-flow footer, below the fold on any
+            // long page, with no date).
+            var stamp = page.Locator(".po-version");
+            (await stamp.CountAsync()).Should().Be(1, $"one build stamp on {route} at {label}");
             (await stamp.InnerTextAsync()).Should().MatchRegex(@"^v\d{6}$", $"the build stamp on {route} at {label}");
             var box = (await stamp.BoundingBoxAsync())!;
             (box.X + box.Width).Should().BeGreaterThan(width * 0.85f, $"the build stamp sits at the right on {route} at {label}");

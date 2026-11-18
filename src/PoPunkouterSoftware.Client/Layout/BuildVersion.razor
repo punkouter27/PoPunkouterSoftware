@@ -1,11 +1,10 @@
 @namespace PoPunkouterSoftware.Client
 
-@* The build stamp, YYMMDD, pinned to the lower-right corner of every page (estate standard,
-   2026-11-17). It used to be an in-flow footer under the page body reading
-   "PoPunkouterSoftware · v1.0.0+<sha>", so on any page taller than the window it was
-   off-screen, and it never carried a date at all. The value comes from the BuildVersion
-   assembly metadata (see the client csproj and Services/Ui/BuildStamp.cs). Decoration with
-   pointer-events: none so it can never sit on top of a tap target. *@
+@* The build stamp, vYYMMDD, pinned to the lower-right corner of every page: the estate's
+   .po-version (po-tokens.css). YYMMDD is the UTC date of the HEAD commit, computed once by
+   PoBuildStamp in Directory.Build.props and read through Services/Ui/BuildStamp.cs, so this
+   stamp (server-rendered) and /diag (WASM) show the same value. On a phone it rides above the
+   bottom nav (--po-stamp-lift, BottomNav.razor.css). Click-through, so it never covers a tap. *@
 <footer class="app-build-version" aria-label="Application build version">
-    <span title="Build @BuildStamp.Value">v@(BuildStamp.Value)</span>
+    <span class="po-version" title="Build @BuildStamp.Value">v@(BuildStamp.Value)</span>
 </footer>

@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.JSInterop;
 using PoPunkouterSoftware.Client;
 using PoPunkouterSoftware.Shared;
 using Radzen;
@@ -31,4 +32,21 @@ builder.Services.AddScoped<DialogService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<DialogNotificationHelper>();
 
-await builder.Build().RunAsync();
+var host = builder.Build();
+
+// A developer persona saved in this browser (localStorage, DevPersonaState.StorageKey) is
+// restored here. Until 2026-11-18 the header's AccountMenu did it and also showed a dropdown
+// to change it; the header is now the estate's (brand + settings gear) and the dropdown went.
+try
+{
+    var js = host.Services.GetRequiredService<IJSRuntime>();
+    var saved = await js.InvokeAsync<string?>("localStorage.getItem", DevPersonaState.StorageKey);
+    if (!string.IsNullOrWhiteSpace(saved))
+        host.Services.GetRequiredService<DevPersonaState>().SetPersona(saved);
+}
+catch (JSException)
+{
+    // localStorage unavailable in strict privacy contexts: the guest persona stands.
+}
+
+await host.RunAsync();

@@ -1,319 +1,214 @@
-/* ============================================================================
-   po-tokens.css — CSS Design Tokens & Radzen Variable Bridge
-   Standardized fleet pattern (:root / prefers-color-scheme / [data-theme] aliases).
-   ============================================================================ */
+/* po-tokens.css — SAME FILE IN EVERY PO WEB APP. Do not edit one copy: change all ten together.
+   One look for the estate: light and dark follow the device, one indigo accent, Inter for text,
+   Space Grotesk for titles, one spacing ladder, one shell (header, version stamp, settings gear).
+   Fonts are self-hosted (wwwroot/fonts/, variable woff2, latin subset): no external host, so no
+   CSP change and no third-party request. App stylesheets alias their own variables to these
+   tokens instead of defining new colours. */
 
-/* ═══════════════════════════════════════════════════════════════════════════════
-   DESIGN TOKENS — the single source of truth.
-
-   Every colour, radius, shadow, spacing step, and motion curve in the app resolves
-   from this block. Nothing downstream (global or scoped) may hardcode a hex, an
-   rgba(), or a px radius; accent washes are derived with color-mix() from the base
-   accent so they track the light/dark flip automatically instead of drifting.
-   ═══════════════════════════════════════════════════════════════════════════════ */
-:root {
-    /* ── Surfaces & text ────────────────────────────────────────────────────── */
-    --app-bg: #0b1220;
-    --app-bg-deep: #060a14;
-    --app-bg-alt: #131c2e;
-    /* Cards no longer sit behind a backdrop-filter, so the surface carries its own
-       opacity rather than relying on a blur to separate it from the page. */
-    --app-surface: rgba(20, 30, 45, 0.92);
-    --app-surface-strong: rgba(28, 40, 58, 0.96);
-    --app-surface-soft: rgba(255, 255, 255, 0.035);
-    --app-border: rgba(148, 163, 184, 0.14);
-    --app-border-strong: rgba(148, 163, 184, 0.24);
-    --app-text: #f1f5f9;
-    --app-text-muted: #94a3b8;
-    /* WCAG AA floor, not a taste call. #64748b measured 3.5:1 against --app-surface and
-       3.9:1 against --app-bg, and it is applied to the SMALLEST type in the app
-       (.azure-glance-subtitle 0.72rem, .portfolio-summary__auto 0.74rem, .app-note) — the
-       one place a soft grey is least affordable. #7c8ba3 measures 4.9:1 on --app-surface
-       and 5.4:1 on --app-bg while staying visibly softer than --app-text-muted (7.3:1),
-       so the three-step hierarchy survives. Re-measure against --app-surface, not
-       --app-bg: cards are the darker of the two backgrounds these sit on. */
-    --app-text-soft: #7c8ba3;
-    --app-on-accent: #051018;
-
-    /* ── Accents ────────────────────────────────────────────────────────────── */
-    --app-accent: #93b4f5;
-    --app-accent-strong: #5b7cd6;
-    --app-accent-warm: #f1b663;
-    --app-danger-soft: #f28888;
-    --app-danger-strong: #b94a4a;
-
-    /* Derived washes — replace the hand-typed rgba() literals that had already
-       drifted out of sync with their source token (the warm wash was authored as
-       rgb(248,195,107) while --app-accent-warm is rgb(241,182,99)). */
-    --app-accent-wash: color-mix(in srgb, var(--app-accent-strong) 14%, transparent);
-    --app-accent-wash-strong: color-mix(in srgb, var(--app-accent-strong) 24%, transparent);
-    --app-accent-edge: color-mix(in srgb, var(--app-accent) 35%, transparent);
-    --app-warm-wash: color-mix(in srgb, var(--app-accent-warm) 13%, transparent);
-    --app-warm-edge: color-mix(in srgb, var(--app-accent-warm) 35%, transparent);
-    --app-hover-wash: color-mix(in srgb, var(--app-text) 7%, transparent);
-    --app-sunken: color-mix(in srgb, var(--app-bg-deep) 55%, transparent);
-
-    /* ── Elevation ──────────────────────────────────────────────────────────── */
-    --app-shadow-sm: 0 2px 8px rgba(2, 6, 16, 0.22);
-    --app-shadow-md: 0 8px 20px rgba(2, 6, 16, 0.32);
-    --app-shadow-lg: 0 12px 32px rgba(2, 6, 16, 0.45);
-    --app-shadow-chrome: 0 12px 40px rgba(0, 0, 0, 0.3);
-    --app-shadow-chrome-raised: 0 16px 48px rgba(0, 0, 0, 0.45);
-    --app-shadow-accent: 0 8px 20px color-mix(in srgb, var(--app-accent-strong) 22%, transparent);
-
-    /* ── Radii ──────────────────────────────────────────────────────────────── */
-    --app-radius-sm: 6px;
-    --app-radius-md: 8px;
-    --app-radius-lg: 12px;
-    --app-radius-xl: 16px;
-    --app-radius-pill: 999px;
-
-    /* ── Spacing scale ──────────────────────────────────────────────────────────
-       Every step is derived from --app-density, so compacting the UI for a small
-       viewport is ONE declaration rather than a per-component override in each of the
-       five breakpoints this file and AzureDashboard.razor.css used to carry. Change the
-       dial, not the steps. */
-    /* Compact for everyone (owner's call, 2026-11-17): the /settings Density toggle that
-       switched between 1 and this value was removed, so the compact step is the base. */
-    --app-density: 0.82;
+@font-face {
+  font-family: "Inter";
+  src: url("../fonts/inter-latin.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("../fonts/space-grotesk-latin.woff2") format("woff2");
+  font-weight: 300 700;
+  font-style: normal;
+  font-display: swap;
 }
 
 :root {
-    --app-space-3xs: calc(0.25rem * var(--app-density));
-    --app-space-2xs: calc(0.35rem * var(--app-density));
-    --app-space-xs: calc(0.5rem * var(--app-density));
-    --app-space-sm: calc(0.75rem * var(--app-density));
-    --app-space-md: calc(1rem * var(--app-density));
-    --app-space-lg: calc(1.25rem * var(--app-density));
-    --app-space-xl: calc(2rem * var(--app-density));
+  color-scheme: light dark;
 
-    /* ── Type scale ─────────────────────────────────────────────────────────────
-       One fluid ladder, 390px → 1280px. Before this, headings carried hand-written
-       clamp()s that disagreed with each other across pages — the catalog h1 grew at
-       5vw while the dashboard h1 grew at 3vw, so the two pages' headings crossed over
-       somewhere in the middle of the range and neither was ever deliberate. Every
-       font-size above 0.9rem should resolve from a step.
+  /* colour — light (default) */
+  --po-bg: #f6f7fb;
+  --po-surface: #ffffff;
+  --po-surface-2: #eef0f6;
+  --po-border: #dcdfe8;
+  --po-text: #141826;
+  --po-text-muted: #596075;
+  --po-accent: #4f46e5;
+  --po-accent-hover: #4338ca;
+  --po-on-accent: #ffffff;
+  --po-accent-soft: #e8e7fd;
+  --po-success: #157f3d;
+  --po-warning: #9a5b00;
+  --po-danger: #c0262d;
+  --po-info: #1d5fbf;
+  --po-focus: #4f46e5;
 
-       The bottom step is also the app's most-repeated size — `.app-kicker`, the card
-       subtitles and `.app-note` all resolve from it — and it used to bottom out at
-       0.68rem (10.88px), which is below the size at which a tracked all-caps kicker
-       stays comfortably readable on a phone. The floor is now 0.76rem (12.16px) at
-       390px and 0.82rem (13.12px) at 1280px. If a pane stops fitting its viewport,
-       fix the pane — do not put the floor back, and do not scale this step with
-       --app-density (see the note on the density dial below). */
-    --app-step--2: clamp(0.76rem, 0.735rem + 0.10vw, 0.82rem);
-    --app-step--1: clamp(0.76rem, 0.725rem + 0.15vw, 0.86rem);
-    --app-step-0: clamp(0.92rem, 0.89rem + 0.13vw, 1rem);
-    --app-step-1: clamp(1rem, 0.95rem + 0.22vw, 1.15rem);
-    --app-step-2: clamp(1.15rem, 1.05rem + 0.42vw, 1.42rem);
-    --app-step-3: clamp(1.35rem, 1.16rem + 0.79vw, 1.85rem);
-    --app-step-4: clamp(1.6rem, 1.28rem + 1.34vw, 2.45rem);
-    --app-step-5: clamp(1.85rem, 1.4rem + 1.9vw, 3.05rem);
+  /* type */
+  --po-font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --po-font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --po-font-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  --po-text-xs: 0.75rem;
+  --po-text-sm: 0.875rem;
+  --po-text-md: 1rem;
+  --po-text-lg: 1.25rem;
+  --po-text-xl: 1.5rem;
+  --po-text-2xl: 2rem;
 
-    /* ── Motion ─────────────────────────────────────────────────────────────── */
-    --app-dur-fast: 120ms;
-    --app-dur-base: 200ms;
-    --app-dur-slow: 380ms;
-    --app-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-    --app-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-    /* A real damped spring (zeta 0.38), sampled into linear(): it overshoots, swings back
-       under, and settles — a cubic-bezier can only overshoot once. Unsupported browsers
-       drop the declaration that uses it and get no animation, never a broken one. */
-    --app-ease-bounce: linear(0, 0.083, 0.287, 0.546, 0.804, 1.021, 1.173, 1.255, 1.274, 1.245, 1.185, 1.113, 1.043, 0.986, 0.947, 0.928, 0.925, 0.935, 0.952, 0.972, 0.991, 1.006, 1.016, 1.02, 1.02, 1.017, 1.012, 1.007, 1.002, 0.998, 1);
-    --app-ease-smooth: cubic-bezier(0.25, 0.8, 0.25, 1);
+  /* space, shape, depth */
+  --po-space-1: 4px;
+  --po-space-2: 8px;
+  --po-space-3: 12px;
+  --po-space-4: 16px;
+  --po-space-5: 24px;
+  --po-space-6: 32px;
+  --po-radius-sm: 6px;
+  --po-radius: 10px;
+  --po-radius-pill: 999px;
+  --po-shadow: 0 1px 2px rgb(16 20 38 / 6%), 0 4px 16px rgb(16 20 38 / 6%);
+  --po-header-h: 56px;
+  --po-z-header: 100;
+  --po-z-stamp: 1000;
 
-    /* ── Layering ───────────────────────────────────────────────────────────── */
-    --app-z-header: 1000;
-    --app-z-skip: 10000;
-
-    /* Glassmorphism is reserved for chrome (the header). Applying it per-card created
-       one backdrop root per card and was the dominant mobile GPU cost. The chrome fill
-       stays translucent so the blur has something to do; it derives from --app-bg-deep
-       and therefore tracks the light/dark flip. */
-    --app-glass-blur: 18px;
-    --app-chrome: color-mix(in srgb, var(--app-bg-deep) 72%, transparent);
-
-    /* ── Layout ─────────────────────────────────────────────────────────────── */
-    --app-content-width: 1280px;
-    --app-header-height: 64px;
-    --app-header-offset: 12px;
-    /* Header is position:fixed, so the body must reserve its footprint. */
-    --app-header-reserve: calc(var(--app-header-height) + var(--app-header-offset) + 4px);
-    --app-headline-font: "Aptos Display", "Segoe UI Variable Display", "Bahnschrift", "Trebuchet MS", sans-serif;
-    --app-body-font: "Aptos", "Segoe UI Variable Text", "Segoe UI", sans-serif;
-
-    /* ── Radzen token bridge ──────────────────────────────────────────────────
-       Every name below is a variable Radzen's theme actually reads. The previous
-       bridge set `--rz-primary-color` and `--rz-primary-hover-color`, neither of
-       which exists in the theme — so every Radzen button, badge, and selected tab
-       silently kept the theme's stock teal (#598087) instead of the app accent. */
-    --rz-primary: var(--app-accent-strong);
-    --rz-primary-light: var(--app-accent);
-    --rz-primary-lighter: var(--app-accent-wash);
-    --rz-primary-dark: var(--app-accent-strong);
-    --rz-primary-darker: var(--app-accent-strong);
-    --rz-border-radius: var(--app-radius-lg);
-    --rz-grid-cell-color: var(--app-text-muted);
-    --rz-body-background-color: var(--app-bg);
-    --rz-card-background-color: var(--app-surface);
-    --rz-card-border: 1px solid var(--app-border);
-    --rz-text-color: var(--app-text);
-    --rz-text-secondary-color: var(--app-text-muted);
-
-    /* ── Radzen status palette ────────────────────────────────────────────────
-       The bridge above covers `--rz-primary*`, which the theme reads for buttons,
-       selected tabs and focused fields. It does NOT cover the four status colours,
-       and `.rz-badge-<style>` is written against `--rz-<style>` / `--rz-on-<style>`
-       — so every filled badge kept the theme's pastel fill with WHITE text baked on
-       top of it, in both schemes (Radzen's badge palette does not follow
-       prefers-color-scheme). Measured on the running app before this: "3 actionable"
-       and "1 cleanup" at 1.64:1, "AI" / "Current" / "On track" at 2.29:1, "1 security"
-       at 2.63:1 — every one of them a WCAG AA failure at 12px, and the worst of them
-       the single least legible text in the app.
-
-       A pastel fill is unusable under white text at any size, so the fills are dark
-       and the single on-colour stays white. Ratios below are white-on-fill, all above
-       the 4.5:1 the 12px badge needs and two of them above AAA's 7:1.
-
-       These are deliberately NOT redefined per scheme. A saturated fill with white
-       text is legible on either ground — the badge carries its own contrast — and
-       Radzen's light/dark sheets define `--rz-warning` to the same pastel anyway, so
-       a per-scheme block would only be a second place to keep in sync. */
-    --rz-success: #146c43;          /* white 6.45:1 */
-    --rz-on-success: #ffffff;
-    --rz-warning: #8a5a00;          /* white 5.93:1 */
-    --rz-on-warning: #ffffff;
-    --rz-danger: #b0393f;           /* white 5.99:1 */
-    --rz-on-danger: #ffffff;
-    --rz-info: #2f5aa8;             /* white 6.67:1 */
-    --rz-on-info: #ffffff;
-
-    /* Radzen's theme sheet colours bare `h1`..`h6` from its own display tokens, which
-       are baked for its dark theme. Left unbridged, every heading that does not set an
-       explicit colour renders near-white — invisible against the light-mode surface. */
-    --rz-text-title-color: var(--app-text);
-    --rz-text-display-h1-color: var(--app-text);
-    --rz-text-display-h2-color: var(--app-text);
-    --rz-text-display-h3-color: var(--app-text);
-    --rz-text-display-h4-color: var(--app-text);
-    --rz-text-display-h5-color: var(--app-text);
-    --rz-text-display-h6-color: var(--app-text);
-    --rz-text-h1-color: var(--app-text);
-    --rz-text-h2-color: var(--app-text);
-    --rz-text-h3-color: var(--app-text);
-    --rz-text-h4-color: var(--app-text);
-    --rz-text-h5-color: var(--app-text);
-    --rz-text-h6-color: var(--app-text);
+  /* Radzen bridge: apps that use Radzen inherit the accent and status colours. */
+  --rz-primary: var(--po-accent);
+  --rz-primary-light: var(--po-accent-hover);
+  --rz-primary-lighter: var(--po-accent-soft);
+  --rz-primary-dark: var(--po-accent-hover);
+  --rz-on-primary: var(--po-on-accent);
+  --rz-success: var(--po-success);
+  --rz-warning: var(--po-warning);
+  --rz-danger: var(--po-danger);
+  --rz-info: var(--po-info);
+  --rz-text-font-family: var(--po-font);
+  --rz-body-background-color: var(--po-bg);
+  --rz-base-background-color: var(--po-surface);
+  --rz-text-color: var(--po-text);
 }
 
-
-/* Compat alias selectors for the fleet [data-theme] convention (nothing here sets it). */
-:root[data-theme="light"] {
-    color-scheme: light;
-    --app-bg: #f6f8fa;
-    --app-bg-deep: #eaeef3;
-    --app-bg-alt: #eef2f6;
-    --app-surface: rgba(255, 255, 255, 0.94);
-    --app-surface-strong: rgba(255, 255, 255, 0.98);
-    --app-surface-soft: rgba(15, 23, 42, 0.04);
-    --app-border: rgba(15, 23, 42, 0.10);
-    --app-border-strong: rgba(15, 23, 42, 0.20);
-    --app-text: #0f172a;
-    --app-text-muted: #475569;
-    --app-text-soft: #57647a;
-    --app-on-accent: #ffffff;
-    --app-accent: #3b5cb6;
-    --app-accent-strong: #2a449a;
-    --app-accent-warm: #b6761f;
-    --app-danger-soft: #c43d3d;
-    --app-danger-strong: #a03434;
-    --app-shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
-    --app-shadow-md: 0 8px 20px rgba(15, 23, 42, 0.07);
-    --app-shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.10);
-    --app-shadow-chrome: 0 12px 40px rgba(15, 23, 42, 0.12);
-    --app-shadow-chrome-raised: 0 16px 48px rgba(15, 23, 42, 0.18);
+@media (prefers-color-scheme: dark) {
+  :root {
+    --po-bg: #0f1117;
+    --po-surface: #171a23;
+    --po-surface-2: #1f2330;
+    --po-border: #2c3142;
+    --po-text: #e8eaf2;
+    --po-text-muted: #a1a8bd;
+    --po-accent: #8b85ff;
+    --po-accent-hover: #a29dff;
+    --po-on-accent: #0f1117;
+    --po-accent-soft: #24224a;
+    --po-success: #5fd08c;
+    --po-warning: #f0b84f;
+    --po-danger: #ff7b7b;
+    --po-info: #79a8ff;
+    --po-focus: #a29dff;
+    --po-shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 4px 16px rgb(0 0 0 / 30%);
+  }
 }
 
-:root[data-theme="dark"] {
-    color-scheme: dark;
+html { background: var(--po-bg); }
+body {
+  background: var(--po-bg);
+  color: var(--po-text);
+  font-family: var(--po-font);
+  font-size: var(--po-text-md);
+  line-height: 1.5;
+}
+h1, h2, h3, .po-display { font-family: var(--po-font-display); letter-spacing: -0.01em; }
+:focus-visible { outline: 2px solid var(--po-focus); outline-offset: 2px; }
+
+/* ── Shell: header (title upper-left; email + settings upper-right). Shown signed in AND out. ── */
+.po-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--po-z-header);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--po-space-3);
+  min-height: var(--po-header-h);
+  padding: 0 max(var(--po-space-4), env(safe-area-inset-right, 0px)) 0 max(var(--po-space-4), env(safe-area-inset-left, 0px));
+  background: var(--po-surface);
+  border-bottom: 1px solid var(--po-border);
+}
+.po-header__title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--po-space-2);
+  min-width: 0;
+  font-family: var(--po-font-display);
+  font-size: var(--po-text-lg);
+  font-weight: 600;
+  color: var(--po-text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.po-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--po-space-2);
+  flex-shrink: 0;
+  min-width: 0;
+}
+.po-header__email {
+  max-width: 28ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--po-text-sm);
+  color: var(--po-text-muted);
+}
+@media (max-width: 480px) {
+  .po-header__email { max-width: 16ch; font-size: var(--po-text-xs); }
+}
+.po-header__settings {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--po-border);
+  background: var(--po-surface-2);
+  color: var(--po-text);
+  cursor: pointer;
+  text-decoration: none;
+}
+.po-header__settings:hover { border-color: var(--po-accent); color: var(--po-accent); }
+.po-header__settings svg { width: 20px; height: 20px; }
+
+/* ── Shell: build stamp, vYYMMDD, fixed lower-right on every page ── */
+.po-version {
+  position: fixed;
+  right: max(var(--po-space-3), env(safe-area-inset-right, 0px));
+  bottom: max(var(--po-space-3), env(safe-area-inset-bottom, 0px));
+  z-index: var(--po-z-stamp);
+  padding: 2px 8px;
+  border-radius: var(--po-radius-pill);
+  background: var(--po-surface);
+  border: 1px solid var(--po-border);
+  color: var(--po-text-muted);
+  font-family: var(--po-font-mono);
+  font-size: var(--po-text-xs);
+  line-height: 1.6;
+  pointer-events: none;
+  opacity: 0.9;
+}
+/* Apps with a bottom nav on phones lift the stamp above it by setting --po-stamp-lift. */
+@media (max-width: 768px) {
+  .po-version { bottom: calc(max(var(--po-space-3), env(safe-area-inset-bottom, 0px)) + var(--po-stamp-lift, 0px)); }
 }
 
-/* ── Light theme ─────────────────────────────────────────────────────────────
-   Only tokens are reassigned, and only by the OS: the theme follows the device for everyone
-   (owner's call, 2026-11-17 — the /settings Theme toggle and the `data-app-theme` override
-   it wrote were removed, and with them the second, attribute-scoped copy of this palette).
-   Because the accent washes are derived with color-mix() from --app-accent-strong, every
-   wash, edge, and shadow re-derives for free.
-*/
-@media (prefers-color-scheme: light) {
-    :root {
-        --app-bg: #f6f8fa;
-        --app-bg-deep: #eaeef3;
-        --app-bg-alt: #eef2f6;
-        --app-surface: rgba(255, 255, 255, 0.94);
-        --app-surface-strong: rgba(255, 255, 255, 0.98);
-        --app-surface-soft: rgba(15, 23, 42, 0.04);
-        --app-border: rgba(15, 23, 42, 0.10);
-        --app-border-strong: rgba(15, 23, 42, 0.20);
-        --app-text: #0f172a;
-        --app-text-muted: #475569;
-        /* 4.45:1 against --app-bg in light mode — a fail by the same measurement as the
-           dark value above. #57647a measures 5.6:1. */
-        --app-text-soft: #57647a;
-        --app-on-accent: #ffffff;
-        --app-accent: #3b5cb6;
-        --app-accent-strong: #2a449a;
-        --app-accent-warm: #b6761f;
-        --app-danger-soft: #c43d3d;
-        --app-danger-strong: #a03434;
-        --app-shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
-        --app-shadow-md: 0 8px 20px rgba(15, 23, 42, 0.07);
-        --app-shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.10);
-        --app-shadow-chrome: 0 12px 40px rgba(15, 23, 42, 0.12);
-        --app-shadow-chrome-raised: 0 16px 48px rgba(15, 23, 42, 0.18);
-    }
-
-    /* On <html>, not <body> — see the note above about negative-z backdrop layers painting
-       under an opaque body background. */
-    html {
-        background: var(--app-bg);
-    }
-
-
-    html body::before {
-        background-image:
-            linear-gradient(rgba(0, 0, 0, 0.018) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 0, 0, 0.018) 1px, transparent 1px);
-    }
-
-    html a {
-        color: var(--app-accent-strong);
-    }
+/* ── Shell: /diag status cards ── */
+.po-diag { display: grid; gap: var(--po-space-4); max-width: 960px; margin: 0 auto; padding: var(--po-space-5) var(--po-space-4); }
+.po-diag__group { display: grid; gap: var(--po-space-2); }
+.po-diag__card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--po-space-1) var(--po-space-3);
+  padding: var(--po-space-3) var(--po-space-4);
+  background: var(--po-surface);
+  border: 1px solid var(--po-border);
+  border-radius: var(--po-radius);
 }
-
-/* ── Wide gamut ──────────────────────────────────────────────────────────────────
-   On a Display-P3 screen the three accents step outside sRGB. Each value is the sRGB
-   token above converted to P3 and pushed ~1.3x away from grey AT CONSTANT LUMINANCE
-   (CIE Y, what WCAG contrast is computed from), so every contrast ratio measured
-   against these tokens is unchanged — only chroma moved. Regenerate them that way, do
-   not hand-tune: a brighter-looking pick silently re-opens the contrast audit.
-   Two blocks: the dark default and the OS-light override. js/gpu-backdrop.js parses
-   `color(display-p3 …)`. */
-@media (color-gamut: p3) {
-    :root {
-        --app-accent: color(display-p3 0.5653 0.7014 0.9993);
-        --app-accent-strong: color(display-p3 0.3304 0.4761 0.8930);
-        --app-accent-warm: color(display-p3 0.9561 0.7113 0.2020);
-    }
-}
-
-@media (color-gamut: p3) and (prefers-color-scheme: light) {
-    :root {
-        --app-accent: color(display-p3 0.1975 0.3488 0.7641);
-        --app-accent-strong: color(display-p3 0.1293 0.2531 0.6493);
-        --app-accent-warm: color(display-p3 0.7005 0.4661 0.0026);
-    }
-}
-
-
-
+.po-badge { display: inline-block; padding: 2px 10px; border-radius: var(--po-radius-pill); font-size: var(--po-text-xs); font-weight: 600; }
+.po-badge--ok { color: var(--po-success); background: color-mix(in srgb, var(--po-success) 14%, transparent); }
+.po-badge--warn { color: var(--po-warning); background: color-mix(in srgb, var(--po-warning) 16%, transparent); }
+.po-badge--bad { color: var(--po-danger); background: color-mix(in srgb, var(--po-danger) 14%, transparent); }

@@ -1,23 +1,5 @@
-/* Fixed to the lower-right corner. Small, muted and click-through: it is read out on a
-   support call, never clicked. */
+/* The stamp itself is .po-version (po-tokens.css): fixed lower-right, lifted above the phone
+   bottom nav by --po-stamp-lift. This wrapper only has to stay out of layout. */
 .app-build-version {
-    position: fixed;
-    right: calc(env(safe-area-inset-right, 0px) + 0.5rem);
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 0.25rem);
-    z-index: var(--app-z-header);
-    font-size: 0.6875rem;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-    color: var(--app-text-muted);
-    pointer-events: none;
-    user-select: none;
-    white-space: nowrap;
-}
-
-/* On a phone the bottom nav (3.5rem + inset, BottomNav.razor.css, same 768px breakpoint)
-   owns the bottom edge; the stamp rides just above it instead of over its last button. */
-@media (max-width: 768px) {
-    .app-build-version {
-        bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px) + 0.25rem);
-    }
+    display: contents;
 }

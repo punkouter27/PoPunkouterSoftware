@@ -3,10 +3,12 @@
     Copies the shared CI/CD files from each app type's reference repo to every other repo of that type.
 
 .DESCRIPTION
-    Every Po repo keeps its own workflow files, but all repos of one app type hold IDENTICAL copies
-    (scripts/ci-repos.json lists the types, their reference repo and the shared files). Change the
-    reference repo's file, then run this to copy it everywhere. Repo-specific values never go in
-    these files: they are repo variables, Tools/webgl.json, or hook scripts.
+    Every Po repo owns its own workflow files, and all repos of one app type hold IDENTICAL copies
+    (scripts/ci-repos.json lists the types, the repo to copy from and the shared files). There is
+    no master copy: change the file in the repo named as 'reference' (or make that repo match
+    first), then run this to copy it everywhere. Repo-specific values never go in these files:
+    they are repo variables, Tools/webgl.json, or hook scripts. Run -Check first: a repo that
+    already carries a newer copy than the source would be overwritten with the older one.
 
     Expects the repos side by side as sibling folders of this one (…\_CODEMATT\<Repo>).
     It never pushes: a push to master deploys. With -Commit it commits each changed repo locally.

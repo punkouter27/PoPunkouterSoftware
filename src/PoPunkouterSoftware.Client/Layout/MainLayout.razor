@@ -27,20 +27,27 @@
    `grid-template-areas` override that used to sit here was inert. .rz-body reserves
    the header footprint via --app-header-reserve instead. *@
 <RadzenLayout>
-    <RadzenHeader>
-        @* Brand only, at every width. The four page links were hidden from 2026-10-20 and removed
-           on 2026-10-30; pages are reached from Ctrl+K, the 404 page's list, or a typed URL.
+    <RadzenHeader class="po-header">
+        @* The estate header (.po-header, po-tokens.css): the app name upper-left, the settings
+           gear upper-right, on every page. The four page links were hidden from 2026-10-20 and
+           removed on 2026-10-30; pages are reached from Ctrl+K, the 404 page's list, the bottom
+           nav on a phone, or a typed URL.
 
            This layout is STATICALLY server-rendered (<Routes /> carries no render mode;
            only the page components are InteractiveWebAssembly). Nothing here may depend
            on a Blazor event handler or on OnInitializedAsync doing useful work — an
            @onclick never fires, and the server's injected HttpClient has no BaseAddress
-           so a relative-URI fetch throws. A "MOCK DATA" badge and a Session/Logout slot
-           lived here and could never render for exactly those reasons; both were removed
-           rather than left as chrome that only looks functional. *@
+           so a relative-URI fetch throws. That is why the gear is a plain link to /settings
+           and not a button: it works with no interactivity at all. (Until 2026-11-18 it was
+           a WASM island, AccountMenu, beside a developer persona dropdown; the dropdown gated
+           nothing, since no endpoint uses the "Management" policy, and went with it.) *@
         <nav class="app-topbar" aria-label="Primary navigation">
-            <a href="/" class="app-topbar-brand">PoPunkouterSoftware</a>
-            <AccountMenu @rendermode="WasmRenderModes.Interactive" />
+            <a href="/" class="app-topbar-brand po-header__title">PoPunkouterSoftware</a>
+            <div class="po-header__actions">
+                <a class="po-header__settings" href="/settings" aria-label="Settings" title="Settings">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </a>
+            </div>
         </nav>
     </RadzenHeader>
     <RadzenBody>
@@ -52,7 +59,7 @@
     </RadzenBody>
 </RadzenLayout>
 <BottomNav @rendermode="WasmRenderModes.Interactive" />
-@* Outside RadzenLayout on purpose: the stamp is position:fixed, and an ancestor inside the
+@* The one .po-version stamp (vYYMMDD). Outside RadzenLayout on purpose: the stamp is position:fixed, and an ancestor inside the
    layout establishes a containing block, which pinned it to the bottom of the PAGE (y≈4100 on
    the home page) instead of the viewport. *@
 <BuildVersion />

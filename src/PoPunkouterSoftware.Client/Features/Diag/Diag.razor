@@ -11,8 +11,10 @@
    server-rendered /diag (see CLAUDE.md). It answers one question in plain English: "is this
    app and everything it leans on working right now?" Anonymous in Production, so its only
    source is GET /api/diag/status — health-check verdict words, latencies and fixed text built
-   server-side by DiagStatusBuilder. Nothing here reads /health's data or config blocks. *@
-<main id="main-content" class="app-page diag-page" tabindex="-1">
+   server-side by DiagStatusBuilder. Nothing here reads /health's data or config blocks.
+   Drawn with the estate's /diag classes (Po standard, 2026-11-18): groups API / Data /
+   Services, one .po-diag__card per dependency with a .po-badge--ok|warn|bad. *@
+<main id="main-content" class="app-page diag-page po-diag" tabindex="-1">
     <header class="diag-header">
         <div>
             <h1>Diagnostics</h1>
@@ -31,7 +33,7 @@
     {
         <ErrorRetryBanner Title="The app's server did not answer."
                           Message="@(_error ?? "No response.")" OnRetry="LoadAsync" AlertStyle="AlertStyle.Danger" />
-        <section class="app-card diag-section" aria-labelledby="diag-api">
+        <section class="diag-section po-diag__group" aria-labelledby="diag-api">
             <h2 id="diag-api" class="app-card-title">API</h2>
             <DiagRow Name="App server" Status="Unhealthy" Summary="Not reachable from this browser."
                      Purpose="Serves every page and all the data on them." LatencyMs="@_apiMs" />
@@ -50,15 +52,15 @@
             <p class="app-note" role="alert">Refresh failed — showing the previous result. @_error</p>
         }
 
-        <section class="app-card diag-section" aria-labelledby="diag-api">
+        <section class="diag-section po-diag__group" aria-labelledby="diag-api">
             <h2 id="diag-api" class="app-card-title">API</h2>
             <DiagRow Name="App server" Status="Healthy" Summary="Reachable from this browser."
                      Purpose="Serves every page and all the data on them." LatencyMs="@_apiMs"
                      CheckedAt="@_status.CheckedAtUtc" />
         </section>
 
-        <section class="app-card diag-section" aria-labelledby="diag-storage">
-            <h2 id="diag-storage" class="app-card-title">Database / storage</h2>
+        <section class="diag-section po-diag__group" aria-labelledby="diag-storage">
+            <h2 id="diag-storage" class="app-card-title">Data</h2>
             @foreach (var c in Storage)
             {
                 <DiagRow Name="@Friendly(c.Name)" Status="@c.Status" Summary="@c.Summary" Purpose="@c.Purpose"
@@ -66,7 +68,7 @@
             }
         </section>
 
-        <section class="app-card diag-section" aria-labelledby="diag-services">
+        <section class="diag-section po-diag__group" aria-labelledby="diag-services">
             <h2 id="diag-services" class="app-card-title">Services</h2>
             @if (Services.Count == 0)
             {

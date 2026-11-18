@@ -354,13 +354,17 @@
 
 .portfolio-stack__ai {
     display: grid;
+    /* The chip column is as wide as the widest cloud name in this cell, shared by every row
+       through subgrid. It was a fixed 3.6rem, so "Fish Audio" (about 4.5rem) ran under the
+       service names beside it (2026-11-18). */
+    grid-template-columns: minmax(3.6rem, max-content) minmax(0, 1fr);
     gap: var(--app-space-2xs);
 }
 
 .portfolio-stack__ai > li {
     display: grid;
-    grid-template-columns: 3.6rem minmax(0, 1fr);
-    gap: var(--app-space-2xs);
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
     align-items: baseline;
 }
 

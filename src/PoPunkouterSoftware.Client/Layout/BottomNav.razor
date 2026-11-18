@@ -23,7 +23,8 @@
         new("/", "home", "Apps"),
         new("/azure", "monitor_heart", "Azure"),
         new("/users", "group", "Users"),
-        new("/settings", "settings", "Settings"),
+        // No Settings slot (Po standard, 2026-11-18): settings is the gear in the header, on
+        // every width, so a second settings control here was a duplicate.
     ];
 
     protected override void OnInitialized() =>

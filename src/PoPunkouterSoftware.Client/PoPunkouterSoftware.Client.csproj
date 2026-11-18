@@ -26,15 +26,8 @@
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
   </ItemGroup>
 
-  <!-- The build date as YYMMDD (the estate's version stamp), stamped into this assembly as
-       [AssemblyMetadata("BuildVersion", "…")] and read by Services/Ui/BuildStamp.cs for the
-       lower-right corner stamp and the /diag page. Same pattern as PoTraffic.Client. -->
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
-      <_Parameter1>BuildVersion</_Parameter1>
-      <_Parameter2>$([System.DateTime]::Now.ToString('yyMMdd'))</_Parameter2>
-    </AssemblyAttribute>
-  </ItemGroup>
+  <!-- The build stamp ([AssemblyMetadata("BuildVersion", "YYMMDD")], read by
+       Services/Ui/BuildStamp.cs) comes from PoBuildStamp in Directory.Build.props. -->
 
   <ItemGroup>
     <!-- Shared domain models (AzureReport, UserInfo, etc.) -->

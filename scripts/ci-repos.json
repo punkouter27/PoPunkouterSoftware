@@ -1,5 +1,5 @@
 {
-  "_comment": "Which Po repos share which CI/CD files. Each type has a reference repo; every other repo of that type must hold byte-identical copies of the listed files. sync-ci.ps1 copies them, check-conventions.sh fails on any difference. Files marked optional are only required when the repo has the 'when' path.",
+  "_comment": "Which Po repos share which CI/CD files. Every repo of a type holds an identical copy of the listed files and owns that copy (no shared repo or package). 'reference' only names the repo sync-ci.ps1 copies from and check-conventions.sh compares against; it is not a master copy. Since 2026-11-18 the dotnet-web deploy.yml is the Po web standard's build-and-deploy-only workflow. Files marked optional are only required when the repo has the 'when' path.",
   "types": {
     "dotnet-web": {
       "reference": "PoTraffic",

@@ -8,10 +8,255 @@
    the critical path and bought nothing a section comment does not.
 
    Order is the original import order and is load-bearing: base defines the
-   design tokens, components consume them, responsive overrides both.
+   design tokens, components consume them, responsive overrides both. The token
+   block (until 2026-11-18 a separate css/po-tokens.css) aliases the estate's
+   --po-* tokens; po-tokens.css is now the shared estate file, loaded first.
    ============================================================================ */
 
 /* ── BASE: design tokens, resets, typography ─────────────────────────────── */
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS — the single source of truth.
+
+   Every colour, radius, shadow, spacing step, and motion curve in the app resolves
+   from this block. Nothing downstream (global or scoped) may hardcode a hex, an
+   rgba(), or a px radius; accent washes are derived with color-mix() from the base
+   accent so they track the light/dark flip automatically instead of drifting.
+   ═══════════════════════════════════════════════════════════════════════════════ */
+:root {
+    /* ── Surfaces & text ──────────────────────────────────────────────────────
+       Po web standard (2026-11-18): every colour is an alias of a --po-* token in
+       po-tokens.css (the estate file, same in every Po app), which flips with the
+       device's light/dark setting on its own. So this block needs no light copy. */
+    --app-bg: var(--po-bg);
+    --app-bg-deep: color-mix(in srgb, var(--po-bg) 92%, #000);
+    --app-bg-alt: var(--po-surface-2);
+    /* Cards no longer sit behind a backdrop-filter, so the surface carries its own
+       opacity rather than relying on a blur to separate it from the page. */
+    --app-surface: color-mix(in srgb, var(--po-surface) 94%, transparent);
+    --app-surface-strong: color-mix(in srgb, var(--po-surface) 98%, transparent);
+    --app-surface-soft: color-mix(in srgb, var(--po-text) 4%, transparent);
+    --app-border: var(--po-border);
+    --app-border-strong: color-mix(in srgb, var(--po-text-muted) 40%, var(--po-border));
+    --app-text: var(--po-text);
+    --app-text-muted: var(--po-text-muted);
+    /* The smallest type in the app reads this, so it is the estate's muted text (AA on
+       --po-surface in both schemes) rather than a softer third grey. */
+    --app-text-soft: var(--po-text-muted);
+    --app-on-accent: var(--po-on-accent);
+
+    /* ── Accents ────────────────────────────────────────────────────────────── */
+    --app-accent: var(--po-accent);
+    --app-accent-strong: var(--po-accent-hover);
+    --app-accent-warm: var(--po-warning);
+    --app-danger-soft: var(--po-danger);
+    --app-danger-strong: color-mix(in srgb, var(--po-danger) 80%, #000);
+
+    /* Derived washes — replace the hand-typed rgba() literals that had already
+       drifted out of sync with their source token (the warm wash was authored as
+       rgb(248,195,107) while --app-accent-warm is rgb(241,182,99)). */
+    --app-accent-wash: color-mix(in srgb, var(--app-accent-strong) 14%, transparent);
+    --app-accent-wash-strong: color-mix(in srgb, var(--app-accent-strong) 24%, transparent);
+    --app-accent-edge: color-mix(in srgb, var(--app-accent) 35%, transparent);
+    --app-warm-wash: color-mix(in srgb, var(--app-accent-warm) 13%, transparent);
+    --app-warm-edge: color-mix(in srgb, var(--app-accent-warm) 35%, transparent);
+    --app-hover-wash: color-mix(in srgb, var(--app-text) 7%, transparent);
+    --app-sunken: color-mix(in srgb, var(--app-bg-deep) 55%, transparent);
+
+    /* ── Elevation ──────────────────────────────────────────────────────────── */
+    --app-shadow-sm: 0 2px 8px rgba(2, 6, 16, 0.22);
+    --app-shadow-md: 0 8px 20px rgba(2, 6, 16, 0.32);
+    --app-shadow-lg: 0 12px 32px rgba(2, 6, 16, 0.45);
+    --app-shadow-chrome: 0 12px 40px rgba(0, 0, 0, 0.3);
+    --app-shadow-chrome-raised: 0 16px 48px rgba(0, 0, 0, 0.45);
+    --app-shadow-accent: 0 8px 20px color-mix(in srgb, var(--app-accent-strong) 22%, transparent);
+
+    /* ── Radii ──────────────────────────────────────────────────────────────── */
+    --app-radius-sm: var(--po-radius-sm);
+    --app-radius-md: var(--po-radius);
+    --app-radius-lg: calc(var(--po-radius) + 2px);
+    --app-radius-xl: calc(var(--po-radius) + 6px);
+    --app-radius-pill: var(--po-radius-pill);
+
+    /* ── Spacing scale ──────────────────────────────────────────────────────────
+       Every step is derived from --app-density, so compacting the UI for a small
+       viewport is ONE declaration rather than a per-component override in each of the
+       five breakpoints this file and AzureDashboard.razor.css used to carry. Change the
+       dial, not the steps. */
+    /* Compact for everyone (owner's call, 2026-11-17): the /settings Density toggle that
+       switched between 1 and this value was removed, so the compact step is the base. */
+    --app-density: 0.82;
+}
+
+:root {
+    --app-space-3xs: calc(0.25rem * var(--app-density));
+    --app-space-2xs: calc(0.35rem * var(--app-density));
+    --app-space-xs: calc(0.5rem * var(--app-density));
+    --app-space-sm: calc(0.75rem * var(--app-density));
+    --app-space-md: calc(1rem * var(--app-density));
+    --app-space-lg: calc(1.25rem * var(--app-density));
+    --app-space-xl: calc(2rem * var(--app-density));
+
+    /* ── Type scale ─────────────────────────────────────────────────────────────
+       One fluid ladder, 390px → 1280px. Before this, headings carried hand-written
+       clamp()s that disagreed with each other across pages — the catalog h1 grew at
+       5vw while the dashboard h1 grew at 3vw, so the two pages' headings crossed over
+       somewhere in the middle of the range and neither was ever deliberate. Every
+       font-size above 0.9rem should resolve from a step.
+
+       The bottom step is also the app's most-repeated size — `.app-kicker`, the card
+       subtitles and `.app-note` all resolve from it — and it used to bottom out at
+       0.68rem (10.88px), which is below the size at which a tracked all-caps kicker
+       stays comfortably readable on a phone. The floor is now 0.76rem (12.16px) at
+       390px and 0.82rem (13.12px) at 1280px. If a pane stops fitting its viewport,
+       fix the pane — do not put the floor back, and do not scale this step with
+       --app-density (see the note on the density dial below). */
+    --app-step--2: clamp(0.76rem, 0.735rem + 0.10vw, 0.82rem);
+    --app-step--1: clamp(0.76rem, 0.725rem + 0.15vw, 0.86rem);
+    --app-step-0: clamp(0.92rem, 0.89rem + 0.13vw, 1rem);
+    --app-step-1: clamp(1rem, 0.95rem + 0.22vw, 1.15rem);
+    --app-step-2: clamp(1.15rem, 1.05rem + 0.42vw, 1.42rem);
+    --app-step-3: clamp(1.35rem, 1.16rem + 0.79vw, 1.85rem);
+    --app-step-4: clamp(1.6rem, 1.28rem + 1.34vw, 2.45rem);
+    --app-step-5: clamp(1.85rem, 1.4rem + 1.9vw, 3.05rem);
+
+    /* ── Motion ─────────────────────────────────────────────────────────────── */
+    --app-dur-fast: 120ms;
+    --app-dur-base: 200ms;
+    --app-dur-slow: 380ms;
+    --app-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --app-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* A real damped spring (zeta 0.38), sampled into linear(): it overshoots, swings back
+       under, and settles — a cubic-bezier can only overshoot once. Unsupported browsers
+       drop the declaration that uses it and get no animation, never a broken one. */
+    --app-ease-bounce: linear(0, 0.083, 0.287, 0.546, 0.804, 1.021, 1.173, 1.255, 1.274, 1.245, 1.185, 1.113, 1.043, 0.986, 0.947, 0.928, 0.925, 0.935, 0.952, 0.972, 0.991, 1.006, 1.016, 1.02, 1.02, 1.017, 1.012, 1.007, 1.002, 0.998, 1);
+    --app-ease-smooth: cubic-bezier(0.25, 0.8, 0.25, 1);
+
+    /* ── Layering ───────────────────────────────────────────────────────────── */
+    --app-z-header: 1000;
+    --app-z-skip: 10000;
+
+    /* Glassmorphism is reserved for chrome (the header). Applying it per-card created
+       one backdrop root per card and was the dominant mobile GPU cost. The chrome fill
+       stays translucent so the blur has something to do; it derives from --app-bg-deep
+       and therefore tracks the light/dark flip. */
+    --app-glass-blur: 18px;
+    --app-chrome: color-mix(in srgb, var(--app-bg-deep) 72%, transparent);
+
+    /* ── Layout ─────────────────────────────────────────────────────────────── */
+    --app-content-width: 1280px;
+    /* The estate header (.po-header): a full-width bar at the top, not a floating pill. */
+    --app-header-height: var(--po-header-h);
+    --app-header-offset: 0px;
+    /* The phone bottom nav's height (BottomNav.razor.css, same 768px breakpoint):
+       po-tokens.css lifts the .po-version stamp above it by this much. */
+    --po-stamp-lift: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+    /* Header is position:fixed, so the body must reserve its footprint. */
+    --app-header-reserve: calc(var(--app-header-height) + var(--app-header-offset) + 4px);
+    /* Space Grotesk for titles, Inter for text: self-hosted by po-tokens.css. */
+    --app-headline-font: var(--po-font-display);
+    --app-body-font: var(--po-font);
+
+    /* ── Radzen token bridge ──────────────────────────────────────────────────
+       Every name below is a variable Radzen's theme actually reads. The previous
+       bridge set `--rz-primary-color` and `--rz-primary-hover-color`, neither of
+       which exists in the theme — so every Radzen button, badge, and selected tab
+       silently kept the theme's stock teal (#598087) instead of the app accent. */
+    --rz-primary: var(--app-accent-strong);
+    --rz-primary-light: var(--app-accent);
+    --rz-primary-lighter: var(--app-accent-wash);
+    --rz-primary-dark: var(--app-accent-strong);
+    --rz-primary-darker: var(--app-accent-strong);
+    --rz-on-primary: var(--app-on-accent);
+    /* Radzen's software themes set their own text face (Source Sans Pro) on body and every
+       component through this variable; the estate face is Inter. */
+    --rz-text-font-family: var(--app-body-font);
+    --rz-border-radius: var(--app-radius-lg);
+    --rz-grid-cell-color: var(--app-text-muted);
+    --rz-body-background-color: var(--app-bg);
+    --rz-card-background-color: var(--app-surface);
+    --rz-card-border: 1px solid var(--app-border);
+    --rz-text-color: var(--app-text);
+    --rz-text-secondary-color: var(--app-text-muted);
+
+    /* ── Radzen status palette ────────────────────────────────────────────────
+       The bridge above covers `--rz-primary*`, which the theme reads for buttons,
+       selected tabs and focused fields. It does NOT cover the four status colours,
+       and `.rz-badge-<style>` is written against `--rz-<style>` / `--rz-on-<style>`
+       — so every filled badge kept the theme's pastel fill with WHITE text baked on
+       top of it, in both schemes (Radzen's badge palette does not follow
+       prefers-color-scheme). Measured on the running app before this: "3 actionable"
+       and "1 cleanup" at 1.64:1, "AI" / "Current" / "On track" at 2.29:1, "1 security"
+       at 2.63:1 — every one of them a WCAG AA failure at 12px, and the worst of them
+       the single least legible text in the app.
+
+       A pastel fill is unusable under white text at any size, so the fills are dark
+       and the single on-colour stays white. Ratios below are white-on-fill, all above
+       the 4.5:1 the 12px badge needs and two of them above AAA's 7:1.
+
+       These are deliberately NOT redefined per scheme. A saturated fill with white
+       text is legible on either ground — the badge carries its own contrast — and
+       Radzen's light/dark sheets define `--rz-warning` to the same pastel anyway, so
+       a per-scheme block would only be a second place to keep in sync. */
+    --rz-success: #146c43;          /* white 6.45:1 */
+    --rz-on-success: #ffffff;
+    --rz-warning: #8a5a00;          /* white 5.93:1 */
+    --rz-on-warning: #ffffff;
+    --rz-danger: #b0393f;           /* white 5.99:1 */
+    --rz-on-danger: #ffffff;
+    --rz-info: #2f5aa8;             /* white 6.67:1 */
+    --rz-on-info: #ffffff;
+
+    /* Radzen's theme sheet colours bare `h1`..`h6` from its own display tokens, which
+       are baked for its dark theme. Left unbridged, every heading that does not set an
+       explicit colour renders near-white — invisible against the light-mode surface. */
+    --rz-text-title-color: var(--app-text);
+    --rz-text-display-h1-color: var(--app-text);
+    --rz-text-display-h2-color: var(--app-text);
+    --rz-text-display-h3-color: var(--app-text);
+    --rz-text-display-h4-color: var(--app-text);
+    --rz-text-display-h5-color: var(--app-text);
+    --rz-text-display-h6-color: var(--app-text);
+    --rz-text-h1-color: var(--app-text);
+    --rz-text-h2-color: var(--app-text);
+    --rz-text-h3-color: var(--app-text);
+    --rz-text-h4-color: var(--app-text);
+    --rz-text-h5-color: var(--app-text);
+    --rz-text-h6-color: var(--app-text);
+}
+
+
+/* ── Light scheme ────────────────────────────────────────────────────────────
+   The theme follows the device only (owner's call, 2026-11-17). The palette itself flips in
+   po-tokens.css; only the shadows and the backdrop grid need a light value here. */
+@media (prefers-color-scheme: light) {
+    :root {
+        --app-shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.05);
+        --app-shadow-md: 0 8px 20px rgba(15, 23, 42, 0.07);
+        --app-shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.10);
+        --app-shadow-chrome: 0 12px 40px rgba(15, 23, 42, 0.12);
+        --app-shadow-chrome-raised: 0 16px 48px rgba(15, 23, 42, 0.18);
+    }
+
+    /* On <html>, not <body> — see the note above about negative-z backdrop layers painting
+       under an opaque body background. */
+    html {
+        background: var(--app-bg);
+    }
+
+
+    html body::before {
+        background-image:
+            linear-gradient(rgba(0, 0, 0, 0.018) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 0, 0, 0.018) 1px, transparent 1px);
+    }
+
+    html a {
+        color: var(--app-accent-strong);
+    }
+}
+
+
 
 html,
 body {
@@ -222,28 +467,23 @@ a {
     padding: var(--app-space-lg) var(--app-space-md) var(--app-space-xl);
 }
 
-/* ── Top bar: the brand, nothing else ────────────────────────────────────────
-   The page links were hidden from 2026-10-20 and removed on 2026-10-30. */
+/* ── Top bar: the brand upper-left, the settings gear upper-right ────────────
+   The estate header (.po-header in po-tokens.css draws the title and the gear). The page
+   links were hidden from 2026-10-20 and removed on 2026-10-30. */
 .app-topbar {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: var(--app-space-md);
-    width: min(100%, calc(var(--app-content-width) + var(--app-space-xl)));
-    margin: 0 auto;
-    padding: 0 var(--app-space-md);
+    width: 100%;
+    margin: 0;
+    padding: 0;
     height: 100%;
 }
 
 .app-topbar-brand {
-    flex: 1 1 0;
     min-width: 0;
-    font-family: var(--app-headline-font);
-    font-size: var(--app-step-0);
-    font-weight: 600;
-    color: var(--app-accent);
     text-decoration: none;
-    letter-spacing: -0.02em;
-    white-space: nowrap;
     /* WCAG 2.2 2.5.8: 24x24 CSS px minimum for a pointer target. The wordmark is one line
        of text, so it measured 169x23 on a phone and 501x23 on a desktop — a 23px-tall band,
        one pixel under the floor, and the only target in the app that failed it. The padding
@@ -253,7 +493,7 @@ a {
 }
 
 .app-topbar-brand:hover {
-    color: var(--app-text);
+    color: var(--po-accent);
     text-decoration: none;
 }
 
@@ -752,18 +992,20 @@ html .rz-tooltip .rz-tooltip-content { max-width: min(24rem, calc(100vw - 2rem))
    backdrop-filter element repaints the blur every frame.
 */
 .rz-header {
+    /* Full-width estate header (Po web standard, 2026-11-18): it was a floating pill
+       centred at the content width. Fixed rather than the kit's sticky, because Radzen's
+       layout grid would otherwise lay it out; .rz-body reserves its height. */
     position: fixed !important;
-    top: var(--app-header-offset);
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(calc(var(--app-content-width) + var(--app-space-xl)), 96%) !important;
+    top: 0;
+    left: 0;
+    transform: none;
+    width: 100% !important;
     height: var(--app-header-height) !important;
-    border-radius: var(--app-radius-pill);
-    border: 1px solid var(--app-border) !important;
-    background: var(--app-chrome) !important;
-    backdrop-filter: blur(var(--app-glass-blur));
-    -webkit-backdrop-filter: blur(var(--app-glass-blur));
-    box-shadow: var(--app-shadow-chrome) !important;
+    border-radius: 0;
+    border: 0 !important;
+    border-bottom: 1px solid var(--po-border) !important;
+    background: var(--po-surface) !important;
+    box-shadow: none !important;
     z-index: var(--app-z-header);
     will-change: transform;
     transition: transform var(--app-dur-slow) var(--app-ease-out),
@@ -771,11 +1013,11 @@ html .rz-tooltip .rz-tooltip-content { max-width: min(24rem, calc(100vw - 2rem))
 }
 
 .rz-header.nav-hidden {
-    transform: translate(-50%, -140%);
+    transform: translateY(-110%);
 }
 
 .rz-header.nav-scrolled {
-    box-shadow: var(--app-shadow-chrome-raised) !important;
+    box-shadow: var(--po-shadow) !important;
 }
 
 /* ── Radzen layout overrides ─────────────────────────────────────────────────
@@ -852,10 +1094,6 @@ html .rz-tooltip .rz-tooltip-content { max-width: min(24rem, calc(100vw - 2rem))
 @media (max-width: 640px) {
     :root {
         --app-density: 0.78;
-        /* The pill header is pure chrome, and on a 844px-tall screen it is competing
-           with content for the fold. */
-        --app-header-height: 54px;
-        --app-header-offset: 8px;
     }
 
     .app-shell-body,
@@ -1042,9 +1280,10 @@ html[data-gpu-backdrop] .app-palette-backdrop {
     }
 }
 
+/* Phones: clear the fixed bottom nav (3.5rem) and the .po-version stamp lifted above it. */
 @media (max-width: 768px) {
     .app-shell-body {
-        padding-bottom: calc(3.75rem + env(safe-area-inset-bottom));
+        padding-bottom: calc(5.25rem + env(safe-area-inset-bottom));
     }
 }
 

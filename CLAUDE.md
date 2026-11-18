@@ -27,9 +27,11 @@ icon rendering as the word "PALETTE". The rebuild held four toggles — Theme, D
 Details — until **2026-11-17, when the owner fixed all four for everyone: Theme = System (follows
 the device), Density = Compact, Sound = Off, Details = Full**, and the controls were removed. The
 page now has no controls: it says there is nothing to change and lists, in plain words, how the
-app looks and behaves. The route stays, and so does the header gear (`AccountMenu`) and the
-Ctrl+K "Go to Settings" row, because the estate standard puts a settings control at the upper
-right. How each fixed value is built in: theme — `po-tokens.css`/`boot.css` key off
+app looks and behaves. The route stays, and so does the header gear (a plain
+`<a class="po-header__settings" href="/settings">` in `MainLayout`, the Po web standard's gear) and
+the Ctrl+K "Go to Settings" row, because the estate standard puts a settings control at the upper
+right. Since 2026-11-18 it is the only settings control: the phone bottom nav no longer has a
+Settings slot, and the page also lists the build stamp. How each fixed value is built in: theme — `po-tokens.css`/`boot.css` key off
 `prefers-color-scheme` only and App.razor's Radzen sheets carry matching `media` attributes (no
 script, no `data-app-theme`); density — the base `--app-density` is the compact 0.82; sound —
 `audio-kit.js` was deleted outright (nothing could ever turn it on), the scan lifecycle event it
@@ -627,9 +629,24 @@ proves a context and program were created, not that anything reached the screen.
   of the deleted Session/Logout slot, had no caller left, and were removed under the
   "every endpoint needs a consumer" rule — `/api/config` is now the only route in the Config slice.
   Do not add a real identity provider unless the owner reverses this.
-- **The header is just the brand, at every width.** The four page links were hidden on
-  2026-10-20 and removed from `MainLayout` on 2026-10-30. The other pages are reached from the
-  brand link home, the 404 page's list, Ctrl+K, or a typed URL.
+- **The header is the brand and the settings gear, at every width.** The four page links were
+  hidden on 2026-10-20 and removed from `MainLayout` on 2026-10-30. The other pages are reached
+  from the brand link home, the 404 page's list, Ctrl+K, the phone bottom nav, or a typed URL.
+- **Po web standard (2026-11-18): the shell is shared with every Po app.**
+  `wwwroot/css/po-tokens.css`, `wwwroot/fonts/inter-latin.woff2` + `space-grotesk-latin.woff2`,
+  `wwwroot/js/po-devwindow.js`, `wwwroot/js/po-dev.js` and `wwwroot/po-dev.html` are the SAME FILES
+  in every Po web app: never edit one copy. po-tokens.css loads first in App.razor; the token block
+  at the top of `modern-ui.css` aliases every `--app-*` colour, radius and font to its `--po-*`
+  tokens (one indigo accent, light/dark from the device, Inter text, Space Grotesk titles; the
+  Material Symbols subset stays the only other face). The header is `.po-header` (RadzenHeader,
+  a full-width bar, no longer the floating pill): the brand is `.po-header__title`, the gear
+  `.po-header__settings`. The build stamp is the one `.po-version`. `/diag` draws each dependency
+  as a `.po-diag__card` with a `.po-badge--ok|warn|bad`, grouped API / Data / Services.
+  **Tab with nothing focused opens `/po-dev.html`** in its own window (po-devwindow.js), which
+  polls `/health/live` (`X-Commit`) and `/api/diag/status`; it is static, same-origin and its
+  script is a file, so `script-src 'self'` holds. The developer persona dropdown that sat in the
+  header went with `AccountMenu`: no endpoint uses the "Management" policy, so it gated nothing;
+  `Program.cs` still restores a persona saved under `DevPersonaState.StorageKey`.
 - **No login UI in the header, deliberately.** `MainLayout.razor` is statically server-rendered
   (`<Routes />` carries no render mode), so `@onclick` never fires and its injected `HttpClient` has
   no `BaseAddress`. A Session/Logout slot and "MOCK DATA" banner were built, could never render, and
@@ -656,10 +673,10 @@ proves a context and program were created, not that anything reached the screen.
   catalog content check, and on a custom domain crossing 30 days to expiry. Outage alerts link to
   `/azure?focus=<service>`, which highlights and scrolls to that uptime row.
   Tracker state is in-memory: an app still down when this site restarts is re-alerted.
-  Two senders live in GitHub Actions because only they hold the facts: `deploy.yml` on a
-  rollback and `screenshots.yml` on a Lighthouse category dropping 15+ points overnight. Both
-  read the optional `NTFY_TOPIC` GitHub secret and fall back to the Key Vault secret (which
-  works only if the OIDC identity can read `kv-poshared2`); with neither they stay silent.
+  One sender lives in GitHub Actions because only it holds the facts: `screenshots.yml` on a
+  Lighthouse category dropping 15+ points overnight (`deploy.yml` sent one on a rollback until
+  2026-11-18, when the workflow lost its rollback). It reads the optional `NTFY_TOPIC` GitHub secret and fall back to the Key Vault secret (which
+  works only if the OIDC identity can read `kv-poshared2`); with neither it stays silent.
 - **Two anonymous endpoints are rate-limited, globally.** `Host/RateLimits.cs`: `/api/signins`
   (live Log Analytics) 30/min, `POST /api/diag/ai` (paid completion) 20/hour. Global windows,
   not per-IP, on purpose — a hard cost ceiling IP rotation cannot beat, and no trust in
@@ -746,10 +763,13 @@ proves a context and program were created, not that anything reached the screen.
   in flight and the handler returns early on re-entry. The `/users` filter box also uses a Shared
   validator, but it is a filter, not a form. Any future form follows the estate pattern
   (PoTraffic's `FluentValidationValidator` bridge on a `RadzenTemplateForm`).
-- **Build stamp.** Every page shows the build date as `vYYMMDD`, `position: fixed` in the lower-right
-  corner (above the bottom nav at ≤768px), from `[AssemblyMetadata("BuildVersion")]` written by the
-  client csproj and read through `Services/Ui/BuildStamp.cs` (also shown on `/diag`). It was an
-  in-flow footer showing `v1.0.0+<sha>`, below the fold on any long page, until 2026-11-17.
+- **Build stamp.** Every page shows `vYYMMDD` as the estate's `.po-version`, fixed in the
+  lower-right corner (lifted above the bottom nav at ≤768px by `--po-stamp-lift`). YYMMDD is the
+  UTC date of the HEAD commit (UTC build date without git), computed by the `PoBuildStamp` target in
+  `Directory.Build.props` into `[AssemblyMetadata("BuildVersion")]` and read through
+  `Services/Ui/BuildStamp.cs` (also shown on `/diag` and `/settings`). Until 2026-11-18 the client
+  csproj stamped the local-time BUILD date. It was an in-flow footer showing `v1.0.0+<sha>`, below
+  the fold on any long page, until 2026-11-17.
 - **Routing.** `/api/diag/*` and `/api/portfolio/*` use `MapGroup`. `/health` (deep probe, one
   `IHealthCheck` per external dependency) and `/health/live` (static liveness) sit off the `/api` group.
   **`/openapi/v1.json` and `/scalar/v1` are mapped only outside Production** — they were
@@ -1149,26 +1169,24 @@ commit every outstanding change, run `dotnet test` on the Unit and Integration p
 the filtered subset that covered the edit — this is the gate that stands in for a review), then
 push. Everywhere else, run only the tests covering what changed.
 
-**CI/CD:** the workflows below, plus the estate-wide `ci-watch.yml` and `conventions.yml`. Only `deploy.yml` runs tests, and only the Unit tier — the other
-three tiers still run locally before a push.
+**CI/CD:** the workflows below, plus the estate-wide `ci-watch.yml` and `conventions.yml`. **No
+workflow runs tests** (Po web standard, 2026-11-18): all four tiers run locally before a push.
 
-- [deploy.yml](.github/workflows/deploy.yml) — **the shared Po web workflow, byte-identical in all
-  ten .NET web repos** (reference copy: PoTraffic's; never edit it here — change PoTraffic's and run
-  `scripts/sync-ci.ps1`; `scripts/ci-repos.json` lists the repos and files, and the weekly
-  `conventions.yml` fails on any copy that differs). Build, **unit tests**, back up, deploy, health
-  gate (this commit on `/health/live`, then `/health`), then this repo's hook
-  `scripts/post-deploy-smoke.ps1` (`/api/diag/summary`: 200, or 404 before any scan); any failure
-  OR cancel redeploys the backup. Target comes from repo variables `AZURE_WEBAPP_NAME` /
+- [deploy.yml](.github/workflows/deploy.yml) — **the Po web workflow, identical in all ten .NET web
+  repos; each repo owns its copy** (no shared repo or package). `scripts/ci-repos.json` lists the
+  repos and files; `scripts/sync-ci.ps1` copies the file from the repo it names as the source, and
+  the weekly `conventions.yml` fails on any copy that differs from it. It **builds and deploys
+  only**: build, publish, the optional `scripts/ci-package.ps1` / `scripts/pre-deploy.ps1` hooks,
+  deploy, then wait until `/health/live` answers with this commit's `X-Commit`. No tests, no
+  format check, no infra job, no backup or rollback, no `post-deploy-smoke.ps1` call (run it by
+  hand with `-BaseUrl`), and no pull-request runs; it runs on a push to master (notes-only pushes
+  skipped) or by hand. Target comes from repo variables `AZURE_WEBAPP_NAME` /
   `AZURE_RESOURCE_GROUP`. (Until 2026-11-13 this repo had its own workflow, which built
   `PoPunkouterSoftware.sln` after the solution became `.slnx` — every deploy from 2026-11-12 failed
-  at restore.) The same deploy.yml, run by hand with `infra` = what-if or apply, is the Bicep path;
-  no deploy applies Bicep. Unity games share `webgl.yml` and `Tools/publish_webgl.ps1` the same way
-  (reference: PoBox); since 2026-11-17 their WebGL is built locally by `publish_webgl.ps1` and published as a
-  `webgl-*` GitHub Release, and `webgl.yml` only deploys that release's zip (CI has no Unity licence). Unit is the only tier
-  that belongs in a deploy pipeline: no Docker, no network, no live host, ~0.5s for 100 tests
-  against an assembly the job already built. Integration needs Testcontainers Azurite; both E2E
-  tiers need a running app and a `BASE_URL`. Adding any of them would trade a fast gate for a
-  slow flaky one and start blocking deploys on infrastructure rather than on code.
+  at restore.) Bicep is applied out-of-band (`az deployment ... what-if`, then create); no
+  workflow applies it. Unity games share `webgl.yml` and `Tools/publish_webgl.ps1` the same way
+  (source: PoBox); since 2026-11-17 their WebGL is built locally by `publish_webgl.ps1` and published as a
+  `webgl-*` GitHub Release, and `webgl.yml` only deploys that release's zip (CI has no Unity licence).
 - [weekly-digest.yml](.github/workflows/weekly-digest.yml) — Monday 07:05 UTC ntfy push built
   from `/api/diag/summary` and `/api/signins?days=7`: health, 30-day spend against a week ago
   (the last `costHistory` point labelled that date), month projection, lowest uptime,
