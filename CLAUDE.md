@@ -1162,7 +1162,9 @@ three tiers still run locally before a push.
   `AZURE_RESOURCE_GROUP`. (Until 2026-11-13 this repo had its own workflow, which built
   `PoPunkouterSoftware.sln` after the solution became `.slnx` — every deploy from 2026-11-12 failed
   at restore.) The same deploy.yml, run by hand with `infra` = what-if or apply, is the Bicep path;
-  no deploy applies Bicep. Unity games share `webgl.yml` the same way (reference: PoBox). Unit is the only tier
+  no deploy applies Bicep. Unity games share `webgl.yml` and `Tools/publish_webgl.ps1` the same way
+  (reference: PoBox); since 2026-11-17 their WebGL is built locally by `publish_webgl.ps1` and published as a
+  `webgl-*` GitHub Release, and `webgl.yml` only deploys that release's zip (CI has no Unity licence). Unit is the only tier
   that belongs in a deploy pipeline: no Docker, no network, no live host, ~0.5s for 100 tests
   against an assembly the job already built. Integration needs Testcontainers Azurite; both E2E
   tiers need a running app and a `BASE_URL`. Adding any of them would trade a fast gate for a

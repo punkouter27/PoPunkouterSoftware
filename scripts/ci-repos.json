@@ -18,7 +18,7 @@
       "files": [
         { "path": ".github/workflows/webgl.yml" },
         { "path": "Tools/deploy_webgl.ps1" },
-        { "path": ".github/dependabot.yml" }
+        { "path": "Tools/publish_webgl.ps1" }
       ]
     }
   }
