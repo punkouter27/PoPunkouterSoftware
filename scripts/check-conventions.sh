@@ -9,7 +9,8 @@ set -u
 owner=punkouter27
 fails=0
 config="$(dirname "$0")/ci-repos.json"
-PY=$(command -v python3 || command -v python)
+PY=python
+python --version >/dev/null 2>&1 || PY=python3
 raw() { curl -fsS --max-time 30 "https://raw.githubusercontent.com/$owner/$1/master/$2" 2>/dev/null; }
 gap() { echo "  ✗ $1"; fails=$((fails + 1)); }
 
