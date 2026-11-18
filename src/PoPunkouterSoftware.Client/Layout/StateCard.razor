@@ -1,0 +1,18 @@
+<section class="po-card po-state-card" role="@(IsError ? "alert" : "status")">
+    <h2 class="po-title">@Title</h2>
+    @if (ChildContent is not null)
+    {
+        <div class="po-state-card__body">@ChildContent</div>
+    }
+    @if (Actions is not null)
+    {
+        <div class="po-state-card__actions">@Actions</div>
+    }
+</section>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter] public bool IsError { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment? Actions { get; set; }
+}
