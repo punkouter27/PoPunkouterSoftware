@@ -43,7 +43,7 @@
                 {
                     <div>
                         <dt>@shared.Label @SectionHint(shared.Key, speak: true)</dt>
-                        <dd>@Hinted(shared.Value, shared.Detail, null)</dd>
+                        <dd>@Hinted(shared.Value, shared.Detail)</dd>
                     </div>
                 }
             </dl>
@@ -168,13 +168,13 @@
                                     @foreach (var group in app.Stack.AiServices.GroupBy(a => a.Cloud))
                                     {
                                         <li>
-                                            <AppHint Text="@(TechGlossary.Describe(group.Key) ?? group.Key)"><span class="portfolio-stack__cloud" data-cloud="@group.Key">@group.Key</span></AppHint>
+                                            <AppHint Text="@($"{app.Name}'s models in {group.Key}: {string.Join(", ", group.Select(g => g.Name))}.")"><span class="portfolio-stack__cloud" data-cloud="@group.Key">@group.Key</span></AppHint>
                                             <ul>
                                                 @foreach (var service in group)
                                                 {
                                                     var use = service.Use.TrimEnd('.') + (service.Optional ? ". Optional: off unless configured." : ".");
                                                     <li class="@(service.Optional ? "is-optional" : null)">
-                                                        <AppHint Text="@(TechGlossary.Hint(service.Name, use, app.Name) ?? use)" Class="portfolio-stack__hint">@service.Name</AppHint>@if (service.Optional)
+                                                        <AppHint Text="@(use)" Class="portfolio-stack__hint">@service.Name</AppHint>@if (service.Optional)
                                                         {<span class="portfolio-stack__optional">optional</span>}<span class="app-sr-only">: @service.Use</span>
                                                     </li>
                                                 }
@@ -198,7 +198,7 @@
                                             <dd>
                                                 @if (part.Key == "training" && app.SourceUrl is { } repo && app.Stack.TrainingPath is { } folder)
                                                 {
-                                                    <AppHint Text="@(TechGlossary.Hint(part.Value, partHint, app.Name) ?? "Training code on GitHub")" Class="portfolio-stack__hint"><a class="portfolio-stack__cell-link" href="@($"{repo}/tree/HEAD/{folder}")" target="_blank" rel="noopener noreferrer">@part.Value<span class="app-sr-only">: training code on GitHub</span></a></AppHint>
+                                                    <AppHint Text="@(TechGlossary.Hint(part.Value, partHint) ?? "Training code on GitHub")" Class="portfolio-stack__hint"><a class="portfolio-stack__cell-link" href="@($"{repo}/tree/HEAD/{folder}")" target="_blank" rel="noopener noreferrer">@part.Value<span class="app-sr-only">: training code on GitHub</span></a></AppHint>
                                                     @if (partHint is not null)
                                                     {
                                                         <span class="app-sr-only">: @partHint</span>
@@ -206,11 +206,11 @@
                                                 }
                                                 else if (part.Key == "data" && part.Value.Contains(" + "))
                                                 {
-                                                    @HintedList(part.Value, partHint, app.Name)
+                                                    @HintedList(part.Value, partHint)
                                                 }
                                                 else
                                                 {
-                                                    @Hinted(part.Value, partHint, app.Name)
+                                                    @Hinted(part.Value, partHint)
                                                 }
                                             </dd>
                                         </div>
@@ -223,11 +223,11 @@
                             }
                             else if (column.Key == "extras" && value.Contains(" + "))
                             {
-                                @HintedList(value, app.Stack.Details.GetValueOrDefault(column.Key), app.Name)
+                                @HintedList(value, app.Stack.Details.GetValueOrDefault(column.Key))
                             }
                             else
                             {
-                                @Hinted(value, app.Stack.Details.GetValueOrDefault(column.Key), app.Name)
+                                @Hinted(value, app.Stack.Details.GetValueOrDefault(column.Key))
                             }
                         </td>
                     }
@@ -330,9 +330,8 @@
     }
 
     // ── Hints (owner's ask, 2026-11-03: a tooltip on every section and every piece of text).
-    // A value's hint is what it IS (TechGlossary) then how THIS app uses it (its stack.details
-    // note). Only the app-specific note is also sr-only text: the glossary would add a
-    // paragraph per cell to every screen-reader pass of the table.
+    // A value's hint says only how THIS app uses it (its stack.details note), never what the
+    // technology is in general (owner's call, 2026-11-19). The note is also sr-only text.
 
     /// <summary>The ⓘ beside a column heading or a Tech stack line label. Silent to a screen
     /// reader, which repeats headings with every cell; the table's caption says it once.</summary>
@@ -363,12 +362,12 @@
     private static readonly HashSet<string> NoSectionIcon = ["app", "signIn", "techstack", "frontend", "backend"];
 
     /// <summary>One value, underlined, with its hint.</summary>
-    private static RenderFragment Hinted(string value, string? note, string? appName) => __builder =>
+    private static RenderFragment Hinted(string value, string? note, bool speak = true) => __builder =>
     {
-        if (TechGlossary.Hint(value, note, appName) is { } text)
+        if (TechGlossary.Hint(value, note) is { } text)
         {
             <AppHint Text="@text" Class="portfolio-stack__hint">@value</AppHint>
-            @if (note is not null && note != value)
+            @if (speak)
             {
                 <span class="app-sr-only">: @note</span>
             }
@@ -379,21 +378,20 @@
         }
     };
 
-    /// <summary>"A + B + C" as one line each, each with its own "what it is" hint; the app's
-    /// note covers the whole list, so it stays on one ⓘ after it. One wrapper, so on a phone
-    /// (where the cell is a label | value grid) the list and its ⓘ stay together.</summary>
-    private static RenderFragment HintedList(string value, string? note, string? appName) => __builder =>
+    /// <summary>"A + B + C" as one line each. The app's note covers the whole list, so every
+    /// item's hint is that note; a screen reader hears it once, after the list.</summary>
+    private static RenderFragment HintedList(string value, string? note) => __builder =>
     {
         <span class="portfolio-stack__multi">
             <ul class="portfolio-stack__lines">
                 @foreach (var item in value.Split(" + "))
                 {
-                    <li>@Hinted(item, null, null)</li>
+                    <li>@Hinted(item, note, speak: false)</li>
                 }
             </ul>
             @if (note is not null)
             {
-                <AppHint Text="@(appName is null ? note : $"In {appName}: {note}")" />
+                <span class="app-sr-only">: @note</span>
             }
         </span>
     };

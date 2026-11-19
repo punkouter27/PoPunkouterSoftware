@@ -287,10 +287,10 @@ A column empty on every row of a table is not drawn (the RL table has
 no backend). **It stays a table down to 641px**: when the columns outgrow the card, the card
 scrolls sideways (tabindex + role=group) with the app column `position: sticky` and opaque.
 **Every value, heading and line label carries a hint** (owner's ask, 2026-11-03): a value's
-hint is what the term IS, from `TechGlossary` in the Client (~100 plain-English entries,
-versioned labels fall back to their longest prefix), then how THIS app uses it, from its
-`stack.details` note. A term added to apps.json with no glossary entry still renders, just
-without the first half — add it to `TechGlossary`. Headings and line labels get an ⓘ — except App, Sign-in, Tech stack,
+hint is ONLY how THIS app uses it — its `stack.details` note (each item of a "A + B" list gets
+the whole note), an AI model's `use`, and a cloud badge lists that app's models there. Never
+what the technology is in general: the ~100-entry "what it is" glossary was deleted 2026-11-19
+(owner's call); `TechGlossary` now holds only the column/line `Sections` text. Headings and line labels get an ⓘ — except App, Sign-in, Tech stack,
 Frontend and Backend, whose names say enough (`NoSectionIcon`, owner's call) — that is
 silent to screen readers (`AppHint SpeakText=false`); the table's sr-only caption says what each
 column means once instead of with every cell.
