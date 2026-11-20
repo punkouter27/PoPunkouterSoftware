@@ -1,8 +1,8 @@
-// po-dev.js — SAME FILE IN EVERY PO WEB APP (wwwroot/js/po-dev.js). Drives po-dev.html.
+// po-dev.js — drives po-dev.html (the Tab developer window). This repo owns this file.
 // Polls the server every 2 s and reads the opener page's live stats (window.__poStats).
 // A separate file because some Po apps forbid inline script in their CSP.
 (function () {
-  var DIAG_CANDIDATES = ['/api/diag/status', '/api/diag', '/health/json', '/health'];
+  var DIAG_CANDIDATES = ['/api/diag', '/health/json', '/health'];
   var diagUrl = null;
   var $ = function (id) { return document.getElementById(id); };
 
@@ -19,7 +19,7 @@
     if (!node || typeof node !== 'object' || out.length > 60) return;
     if (Array.isArray(node)) { node.forEach(function (n) { collect(n, out); }); return; }
     var status = node.status || node.Status || node.state || node.verdict;
-    var name = node.name || node.Name || node.key || node.title || node.label || nameHint;
+    var name = node.label || node.name || node.Name || node.key || node.title || nameHint;
     if (status && name && typeof status === 'string') {
       var ms = node.durationMs || node.latencyMs || node.duration || node.elapsedMs || node.ms;
       out.push({ name: name, status: status, ms: typeof ms === 'number' ? Math.round(ms) : (typeof ms === 'string' ? ms : '') });

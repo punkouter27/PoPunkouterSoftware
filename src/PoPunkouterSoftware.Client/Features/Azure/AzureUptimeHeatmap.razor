@@ -107,7 +107,7 @@
             <span><i class="azure-uptime__cell is-healthy"></i> up</span>
             <span><i class="azure-uptime__cell is-degraded"></i> degraded</span>
             <span><i class="azure-uptime__cell is-broken"></i> down</span>
-            <span><i class="azure-uptime__cell is-no-data"></i> no scan</span>
+            <span><i class="azure-uptime__cell is-no-data"></i> no data</span>
             <span><i class="azure-uptime__cell is-healthy has-deploy"></i> deploy landed</span>
             @* Keyed only when a row actually carries the chip: a legend for marks that are not
                on screen is one more line to read for nothing. The chips and their keys always show
@@ -188,7 +188,8 @@
         + "day; the percentage counts individual checks rather than days, so one bad check among many "
         + "does not read as a whole day of downtime. Unobserved days stay blank and count for nothing "
         + "either way, and a ping that times out is recorded as neither — free-tier apps sleep, and a "
-        + "missed cold start is not an outage.";
+        + "missed cold start is not an outage. No nightly scan runs (dropped on 2026-11-20), so a day on "
+        + "which nobody opened this site has no data.";
 
     private string EvidenceLabel => Map.PingCount > 0
         ? $"{DashboardDerivations.Plural(Map.ScanCount, "scan")} · {DashboardDerivations.Plural(Map.PingCount, "ping")}"

@@ -18,7 +18,7 @@ namespace PoPunkouterSoftware.Api;
 /// Being anonymous AND a live query is why it is rate-limited — see
 /// <c>RateLimits</c>. A management gate would also make it unreachable from the page —
 /// the WASM client cannot present the <c>X-Management-Key</c> header — leaving an endpoint
-/// whose only caller is its own test, which is the exact shape CLAUDE.md forbids.</para>
+/// whose only caller is its own test, which is the exact shape docs/architecture.md forbids.</para>
 /// </remarks>
 internal static class SignInEndpoints
 {

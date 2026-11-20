@@ -19,8 +19,11 @@ namespace PoPunkouterSoftware.Integration;
 /// </summary>
 public sealed class AzuriteWebApp : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private readonly AzuriteContainer _azurite = new AzuriteBuilder("mcr.microsoft.com/azure-storage/azurite:latest")
-        .Build();
+    // Built only when Docker answers: xunit creates a class fixture even when every test using it is skipped,
+    // and building a container needs a Docker endpoint.
+    private readonly AzuriteContainer? _azurite = Docker.IsAvailable
+        ? new AzuriteBuilder("mcr.microsoft.com/azure-storage/azurite:latest").Build()
+        : null;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -37,18 +40,19 @@ public sealed class AzuriteWebApp : WebApplicationFactory<Program>, IAsyncLifeti
                 ["AzureKeyVaultUri"] = "",
                 ["ApplicationInsights:ConnectionString"] = "",
                 ["Pinger:Enabled"] = "false",
-                ["AzureTableStorage:ConnectionString"] = _azurite.GetConnectionString(),
+                ["AzureTableStorage:ConnectionString"] = _azurite?.GetConnectionString() ?? "",
             });
         });
     }
 
-    Task IAsyncLifetime.InitializeAsync() => _azurite.StartAsync();
+    Task IAsyncLifetime.InitializeAsync() => _azurite?.StartAsync() ?? Task.CompletedTask;
 
     async Task IAsyncLifetime.DisposeAsync()
     {
         // Tear the host down first so nothing is still talking to storage, then the container.
         await base.DisposeAsync();
-        await _azurite.DisposeAsync();
+        if (_azurite is not null)
+            await _azurite.DisposeAsync();
     }
 }
 
@@ -97,7 +101,7 @@ public class AzuriteWebAppTests : IClassFixture<AzuriteWebApp>
         return report;
     }
 
-    [Fact]
+    [DockerFact]
     public async Task SeededReport_IsServedBy_DiagReportEndpoint()
     {
         await SeedReportAsync();
@@ -112,7 +116,7 @@ public class AzuriteWebAppTests : IClassFixture<AzuriteWebApp>
         doc.RootElement.GetProperty("webServices").GetProperty("total").GetInt32().Should().Be(2);
     }
 
-    [Fact]
+    [DockerFact]
     public async Task DiagSummary_Returns200_WithComputedHealthPercent()
     {
         await SeedReportAsync();

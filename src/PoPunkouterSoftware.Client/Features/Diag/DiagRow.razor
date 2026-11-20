@@ -1,34 +1,32 @@
 @namespace PoPunkouterSoftware.Client
-@* One dependency on /diag, as the estate's .po-diag__card: name + status badge, what it is
-   for, the plain-English verdict, and how long the check took. *@
+@using PoPunkouterSoftware.Shared
+@* One dependency on /diag, as a .po-diag__card: label + status pill, what it is for, the latency, then the
+   problem (when there is one) or the detail. *@
 
-<div class="diag-row po-diag__card">
-    <h3 class="diag-row__name">@Name</h3>
-    <span class="po-badge po-badge--@BadgeFor(Status)">@Status</span>
-    <p class="diag-row__purpose">@Purpose</p>
+<div class="diag-row po-diag__card" data-check="@Check.Name">
+    <h3 class="diag-row__name">@Check.Label</h3>
+    <span class="po-badge po-badge--@Diag.Tone(Check.Status)">@Check.Status</span>
+    <p class="diag-row__purpose">@Check.Purpose</p>
     <p class="diag-row__summary">
-        @Summary
-        <span class="diag-row__meta">@Meta</span>
+        @if (Check.Problem is not null)
+        {
+            <strong class="diag-row__problem">@Check.Problem</strong>
+        }
+        else
+        {
+            @Check.Detail
+        }
+        <span class="diag-row__meta">@Latency</span>
     </p>
 </div>
 
 @code {
-    [Parameter, EditorRequired] public string Name { get; set; } = "";
-    [Parameter, EditorRequired] public string Status { get; set; } = "";
-    [Parameter] public string Summary { get; set; } = "";
-    [Parameter] public string Purpose { get; set; } = "";
-    [Parameter] public double? LatencyMs { get; set; }
-    [Parameter] public DateTimeOffset? CheckedAt { get; set; }
+    [Parameter, EditorRequired] public DiagCheckDto Check { get; set; } = default!;
 
-    private string Meta =>
-        (LatencyMs is { } ms ? $"{ms:0} ms" : "not probed")
-        + (CheckedAt is { } at ? $" · checked {RelativeTime.FormatDetailed(DateTimeOffset.UtcNow - at)}" : "");
-
-    // The estate's po-badge--ok|warn|bad (po-tokens.css).
-    private static string BadgeFor(string status) => status switch
+    private string Latency => Check.LatencyMs switch
     {
-        "Healthy" => "ok",
-        "Degraded" => "warn",
-        _ => "bad",
+        <= 0 => "no call made",
+        < 1 => "under 1 ms",
+        var ms => $"{ms:0} ms",
     };
 }

@@ -64,18 +64,29 @@
     margin-left: 0.25rem;
 }
 
-.diag-about dl {
-    display: grid;
-    grid-template-columns: max-content minmax(0, 1fr);
-    gap: 0.25rem var(--app-space-md);
-    margin: 0;
+.diag-section ::deep .diag-row__problem {
+    font-weight: 600;
 }
 
-.diag-about dt {
-    color: var(--app-text-muted);
+/* The overall banner: --po-text on the soft status background, the status colour only as the edge
+   (>= 4.5:1 in both themes; never warning-coloured text on a pale warning fill). */
+.diag-banner {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: var(--po-space-3) var(--po-space-4);
+    border-radius: var(--po-radius);
+    border: 1px solid var(--po-border);
+    border-left-width: 4px;
+    color: var(--po-text);
+    background: var(--po-surface);
 }
 
-.diag-about dd {
-    margin: 0;
-    font-variant-numeric: tabular-nums;
+.diag-banner--ok { background: var(--po-success-soft); border-color: var(--po-success); }
+.diag-banner--warn { background: var(--po-warning-soft); border-color: var(--po-warning); }
+.diag-banner--bad { background: var(--po-danger-soft); border-color: var(--po-danger); }
+.diag-banner--pending { background: var(--po-info-soft); border-color: var(--po-info); }
+
+.diag-meta {
+    font-size: var(--po-text-sm);
 }

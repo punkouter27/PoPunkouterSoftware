@@ -89,6 +89,11 @@
     }
     else if (data is not null)
     {
+        @* The nightly screenshot capture was dropped on 2026-11-20 (owner's choice): the pictures are the last ones taken. *@
+        @if (data.Apps.Any(a => !string.IsNullOrEmpty(a.ScreenshotUrl)))
+        {
+            <p class="app-note portfolio-shots-note">App pictures are from the last nightly capture and are no longer updated.</p>
+        }
         <PortfolioStackTable Apps="_webApps" Label="Web applications: how each one is built" FirstIsLcp="true" />
         @if (_rlApps.Count > 0)
         {

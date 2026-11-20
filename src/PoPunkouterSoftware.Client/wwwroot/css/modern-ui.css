@@ -1261,7 +1261,8 @@ html[data-gpu-backdrop] .app-palette-backdrop {
 /* ── Mobile safe area & touch compliance (Audit #22) ───────────────────────── */
 @supports (padding: env(safe-area-inset-bottom)) {
     .app-page {
-        padding-bottom: max(var(--app-space-lg), env(safe-area-inset-bottom));
+        /* The Po rule: main keeps a stamp-high gap so the fixed .po-version badge never covers content. */
+        padding-bottom: calc(var(--po-space-6) + env(safe-area-inset-bottom));
         padding-left: max(var(--app-space-md), env(safe-area-inset-left));
         padding-right: max(var(--app-space-md), env(safe-area-inset-right));
     }

@@ -74,6 +74,11 @@
     gap: var(--app-space-sm);
 }
 
+/* No stored picture (none are captured any more): the name takes the whole cell. */
+.portfolio-stack__app-grid:not(:has(.portfolio-stack__thumb)) {
+    grid-template-columns: minmax(0, 1fr);
+}
+
 /* (0,3,1) to beat the shared `th` padding rule above. Pinned: the columns scroll under it.
    Its own background must be OPAQUE or the scrolled cells show through — the card's is
    translucent wherever [data-glass] is active — so it is the surface laid over the page
@@ -207,46 +212,6 @@
     font-size: 0.95rem;
     color: var(--app-accent-warm);
 }
-
-/* One line of four small chips; a dot carries the band so the number stays full-contrast text. */
-.portfolio-stack__scores {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--app-space-2xs) var(--app-space-xs);
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    font-size: var(--app-step--2);
-    color: var(--app-text-muted);
-    font-variant-numeric: tabular-nums;
-}
-
-.portfolio-stack__scores li {
-    display: inline-flex;
-    align-items: center;
-    gap: .3em;
-}
-
-.portfolio-stack__scores li::before {
-    content: "";
-    width: .55em;
-    height: .55em;
-    border-radius: 50%;
-    background: var(--app-text-soft);
-}
-
-.portfolio-stack__scores li.is-good::before { background: #217a52; }  /* 5.29:1 white, 3.17:1 dark card — see the --tone-good note in AzureDashboard.razor.css */
-.portfolio-stack__scores li.is-warn::before { background: var(--app-accent-warm); }
-.portfolio-stack__scores li.is-bad::before { background: var(--app-danger-soft); }
-
-/* Performance trend. The sparkline's own styles are scoped to .azure-ops-page, so this states the few it needs. */
-.portfolio-stack__trend { flex: 0 0 2.75rem; display: inline-flex; }
-.portfolio-stack__trend ::deep .app-sparkline { width: 100%; height: 1rem; overflow: visible; }
-.portfolio-stack__trend ::deep .app-sparkline__line { fill: none; stroke: var(--trend); stroke-width: 1.5px; }
-.portfolio-stack__trend ::deep .app-sparkline__area { fill: none; }
-.portfolio-stack__trend ::deep .app-sparkline__dot { fill: var(--trend); }
-.portfolio-stack__trend ::deep .app-sparkline.tone-good { --trend: #217a52; }
-.portfolio-stack__trend ::deep .app-sparkline.tone-warn { --trend: var(--app-accent-warm); }
 
 /* ── "Shared by all N": the columns every app agrees on, once ──────────────────
    Above the table and outside its scroller. A definition list of label: value pairs that

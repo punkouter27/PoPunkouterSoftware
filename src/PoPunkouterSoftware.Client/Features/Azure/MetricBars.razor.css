@@ -1,5 +1,5 @@
 /* Scoped to MetricBars' own markup, so no ::deep is needed here — every element below is
-   emitted by this component (see CLAUDE.md on scoped CSS not crossing component boundaries). */
+   emitted by this component (see docs/architecture.md on scoped CSS not crossing component boundaries). */
 .metric-bars {
     display: grid;
     gap: var(--app-space-2xs);

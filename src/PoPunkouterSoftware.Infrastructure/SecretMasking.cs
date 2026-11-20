@@ -66,7 +66,7 @@ public static partial class SecretMasking
     /// <para><c>GET /api/diag/report</c> is anonymous — it has to be, because the Advanced
     /// diagnostics panel on /azure is a WASM client with no credential — and it returns the
     /// whole inventory: every resource id, and with it the subscription id repeated a few
-    /// hundred times. CLAUDE.md records that exact payload leaking once already, from
+    /// hundred times. docs/architecture.md records that exact payload leaking once already, from
     /// <c>wwwroot/data/azure-full-report.json</c> under a served directory. Moving it behind
     /// a route did not change who can read it.</para>
     /// <para>The subscription id is the one field in that payload that is a credential-shaped

@@ -1,0 +1,8 @@
+# Python lint for the helper script under scripts/ (Po web standard: test tiers + ruff).
+# CI runs `ruff check .` when this file exists; locally: `uvx ruff check .`.
+target-version = "py310"
+line-length = 120
+extend-exclude = ["**/bin", "**/obj", "**/node_modules"]
+
+[lint]
+select = ["E", "F", "W", "I", "B", "UP"]

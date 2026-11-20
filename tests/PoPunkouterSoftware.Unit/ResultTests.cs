@@ -2,7 +2,7 @@ using PoPunkouterSoftware.Shared;
 
 namespace PoPunkouterSoftware.Unit;
 
-// Trimmed to the budget (CLAUDE.md: 100 Unit). Result<T> is a four-property carrier, and
+// Trimmed to the budget (the old 100-test Unit budget). Result<T> is a four-property carrier, and
 // this file used twelve one-assertion Facts to describe it — Success_SetsIsSuccessTrue,
 // Success_SetsValue, Success_ErrorIsNull and Success_ExceptionIsNull all constructed the
 // same value and looked at a different field of it. Asserting the WHOLE shape of each

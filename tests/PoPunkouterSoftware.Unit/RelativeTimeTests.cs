@@ -2,7 +2,7 @@ using PoPunkouterSoftware.Client;
 
 namespace PoPunkouterSoftware.Unit;
 
-// Trimmed to the budget (CLAUDE.md: 100 Unit). Every retained case is a UNIT BOUNDARY —
+// Trimmed to the budget (the old 100-test Unit budget). Every retained case is a UNIT BOUNDARY —
 // the value that flips the format, or the one just below it. The dropped cases were
 // mid-bucket values (72h, 36h, 10d 23h) that can only fail if a boundary case already has.
 

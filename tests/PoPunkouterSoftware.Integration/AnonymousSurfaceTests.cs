@@ -17,12 +17,12 @@ public class AnonymousSurfaceTests(ProductionApp app) : IClassFixture<Production
     private static readonly string[] AnonymousAllowList =
     [
         "/api/config",
+        "/api/diag/",
         "/api/diag/ai",
         "/api/diag/cancel-refresh",
         "/api/diag/refresh",
         "/api/diag/report",
         "/api/diag/restart/{name}",
-        "/api/diag/status",
         "/api/diag/summary",
         "/api/portfolio/",
         "/api/portfolio/badge/{id}.svg",

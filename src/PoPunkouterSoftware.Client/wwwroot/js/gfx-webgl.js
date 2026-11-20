@@ -21,7 +21,7 @@
  * were opt-in (/settings → Effects → Full) — the default most visitors saw never drew them —
  * yet they were about half of this file, needed float render targets, and more than doubled
  * the measured dispatch cost (~6.4ms vs ~1.6ms). Every one had to be verified by looking
- * at pixels, which is exactly the cost CLAUDE.md warns a decorative layer carries.
+ * at pixels, which is exactly the cost docs/architecture.md warns a decorative layer carries.
  *
  * ── Event effects (driven by gpu-backdrop.js, never by a timer of their own) ────────────
  *   ATTRACT  up to 4 points the particle field bends toward and orbits (live findings).

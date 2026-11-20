@@ -149,7 +149,7 @@ public class ProductionBootTests : IClassFixture<ProductionApp>
     }
 
     /// <summary>
-    /// <c>/api/diag/status</c> feeds the anonymous <c>/diag</c> page, so in Production it must
+    /// <c>/api/diag</c> (DiagReportDto) feeds the anonymous <c>/diag</c> page, so in Production it must
     /// carry verdicts and nothing else: none of what got the first /diag deleted on 2026-09-04
     /// (ContentRoot path, config block, suffixed connection strings) and none of what the diag
     /// standard forbids (URIs, keys, ids, emails, exception messages, stack traces). Asserted
@@ -158,19 +158,25 @@ public class ProductionBootTests : IClassFixture<ProductionApp>
     [Fact]
     public async Task DiagStatus_IsFriendlyAndLeaksNothing_InProduction()
     {
-        var response = await _client.GetAsync("/api/diag/status");
+        var response = await _client.GetAsync("/api/diag");
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var body = await response.Content.ReadAsStringAsync();
 
         using var doc = JsonDocument.Parse(body);
         var root = doc.RootElement;
         root.GetProperty("environment").GetString().Should().Be("Production");
+        root.GetProperty("version").GetString().Should().MatchRegex("^[0-9]{6}$");
+        root.TryGetProperty("checkedMs", out _).Should().BeTrue();
         root.TryGetProperty("config", out _).Should().BeFalse();
         var checks = root.GetProperty("checks").EnumerateArray().ToList();
         checks.Select(c => c.GetProperty("name").GetString()).Should()
-            .Contain(["KeyVault", "TableStorage", "AzureInventory", "ApplicationInsights", "AI summaries"]);
-        checks.Should().OnlyContain(c => c.GetProperty("summary").GetString()!.Length > 0
-                                         && c.GetProperty("purpose").GetString()!.Length > 0);
+            .Contain(["server", "KeyVault", "TableStorage", "AzureInventory", "ApplicationInsights", "ai", "screenshots", "alerts"]);
+        checks.Select(c => c.GetProperty("group").GetString()).Should().OnlyContain(g => g == "api" || g == "data" || g == "service");
+        checks.Should().OnlyContain(c => c.GetProperty("label").GetString()!.Length > 0
+                                         && c.GetProperty("detail").GetString()!.Length > 0
+                                         && c.GetProperty("purpose").GetString()!.Length > 0
+                                         && (c.GetProperty("status").GetString() == "Healthy"
+                                             || c.GetProperty("problem").GetString()!.Length > 0));
 
         var contentRoot = _factory.Services.GetRequiredService<IWebHostEnvironment>().ContentRootPath;
         body.Should().NotContain(contentRoot.Replace("\\", "\\\\"))

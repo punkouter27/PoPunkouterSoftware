@@ -91,7 +91,7 @@ public class DiagReportEndpointTests
     /// <summary>
     /// The report endpoint is anonymous — the Advanced diagnostics panel is a WASM client
     /// with no credential — and it returns the whole inventory, resource ids included. Those
-    /// ids carry the subscription GUID a few hundred times over. CLAUDE.md records that exact
+    /// ids carry the subscription GUID a few hundred times over. docs/architecture.md records that exact
     /// payload leaking once already from a served static file; moving it behind a route did
     /// not change who can read it, so the GUID is masked on the way out.
     /// </summary>

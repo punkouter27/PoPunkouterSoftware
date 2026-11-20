@@ -29,10 +29,15 @@ public class AzureReportStoreNoConnectionTests
 
 public class AzureReportStoreAzuriteTests : IAsyncLifetime
 {
-    private readonly AzuriteContainer _container = new AzuriteBuilder("mcr.microsoft.com/azure-storage/azurite:latest")
-        .Build();
+    // Built in InitializeAsync, not a field initializer: building needs a Docker endpoint, and a skipped
+    // [DockerFact] must not touch Docker at all.
+    private AzuriteContainer _container = null!;
 
-    public async Task InitializeAsync() => await _container.StartAsync();
+    public async Task InitializeAsync()
+    {
+        _container = new AzuriteBuilder("mcr.microsoft.com/azure-storage/azurite:latest").Build();
+        await _container.StartAsync();
+    }
 
     public async Task DisposeAsync() => await _container.DisposeAsync();
 
@@ -48,7 +53,7 @@ public class AzureReportStoreAzuriteTests : IAsyncLifetime
         return new AzureReportStore(logger, config);
     }
 
-    [Fact]
+    [DockerFact]
     public async Task SaveThenLoad_RoundTrips_Report()
     {
         var store = BuildStore();
@@ -76,7 +81,7 @@ public class AzureReportStoreAzuriteTests : IAsyncLifetime
         loaded.WebServices!.Services.Should().HaveCount(2);
     }
 
-    [Fact]
+    [DockerFact]
     public async Task SaveTwice_OnlyLatestDataRemains()
     {
         var store = BuildStore();
@@ -87,7 +92,7 @@ public class AzureReportStoreAzuriteTests : IAsyncLifetime
         result.Value!.Subscription!.Name.Should().Be("Second");
     }
 
-    [Fact]
+    [DockerFact]
     public async Task Load_EmptyTable_ReturnsNull()
     {
         var store = BuildStore();
@@ -99,10 +104,15 @@ public class AzureReportStoreAzuriteTests : IAsyncLifetime
 
 public class AzureReportStoreHistoryTests : IAsyncLifetime
 {
-    private readonly AzuriteContainer _container = new AzuriteBuilder("mcr.microsoft.com/azure-storage/azurite:latest")
-        .Build();
+    // Built in InitializeAsync, not a field initializer: building needs a Docker endpoint, and a skipped
+    // [DockerFact] must not touch Docker at all.
+    private AzuriteContainer _container = null!;
 
-    public async Task InitializeAsync() => await _container.StartAsync();
+    public async Task InitializeAsync()
+    {
+        _container = new AzuriteBuilder("mcr.microsoft.com/azure-storage/azurite:latest").Build();
+        await _container.StartAsync();
+    }
 
     public async Task DisposeAsync() => await _container.DisposeAsync();
 
@@ -118,7 +128,7 @@ public class AzureReportStoreHistoryTests : IAsyncLifetime
         return new AzureReportStore(logger, config);
     }
 
-    [Fact]
+    [DockerFact]
     public async Task SaveThenSave_HistoryContainsPreviousReport()
     {
         var store = BuildStore();

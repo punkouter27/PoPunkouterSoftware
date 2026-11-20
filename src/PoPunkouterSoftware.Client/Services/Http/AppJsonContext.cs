@@ -21,5 +21,5 @@ namespace PoPunkouterSoftware.Client;
 [JsonSerializable(typeof(ProblemResponse))]
 [JsonSerializable(typeof(AiTriageAdHocRequest))]
 [JsonSerializable(typeof(AiTriageAdHocResponse))]
-[JsonSerializable(typeof(DiagStatus))]
+[JsonSerializable(typeof(DiagReportDto))]
 internal sealed partial class AppJsonContext : JsonSerializerContext;

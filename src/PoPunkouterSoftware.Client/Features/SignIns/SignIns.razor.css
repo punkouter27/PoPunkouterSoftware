@@ -1,5 +1,5 @@
 /* Every rule below the page-root block MUST use the `.signins-page ::deep …` form, base
-   rules and media-query overrides alike — see CLAUDE.md and the same note in
+   rules and media-query overrides alike — see docs/architecture.md and the same note in
    AzureDashboard.razor.css. Two reasons, and the second one is the one that bites:
 
      · Most of this markup lives in child components (SignInRoster, SignInFeed,

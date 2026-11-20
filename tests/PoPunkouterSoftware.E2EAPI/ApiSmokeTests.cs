@@ -32,7 +32,7 @@ public class ApiSmokeTests : IClassFixture<ApiSmokeFixture>
 
     // ─── Broad availability sweep ─────────────────────────────────────────────
 
-    [Theory]
+    [LiveAppTheory]
     [InlineData("/health/live")]
     [InlineData("/health")]
     [InlineData("/api/config")]
@@ -50,7 +50,7 @@ public class ApiSmokeTests : IClassFixture<ApiSmokeFixture>
 
     // ─── Health ───────────────────────────────────────────────────────────────
 
-    [Fact]
+    [LiveAppFact]
     public async Task Liveness_Returns200_WithOkStatus()
     {
         var resp = await _client.GetAsync("/health/live");
@@ -71,7 +71,7 @@ public class ApiSmokeTests : IClassFixture<ApiSmokeFixture>
     /// characters name the vault. So this asserts "absent, or present and fully masked",
     /// which is the contract on every host this tier can be pointed at.</para>
     /// </summary>
-    [Fact]
+    [LiveAppFact]
     public async Task Health_Returns200_WithChecks_AndConfigOnlyWhenNotProduction()
     {
         var resp = await _client.GetAsync("/health");
@@ -118,7 +118,7 @@ public class ApiSmokeTests : IClassFixture<ApiSmokeFixture>
     /// of them. They come from Host/SecurityHeaders.cs now, and this is the assertion that
     /// would have caught the gap: it reads the response, not the config file.
     /// </summary>
-    [Fact]
+    [LiveAppFact]
     public async Task EveryResponse_CarriesTheSecurityHeaders()
     {
         var resp = await _client.GetAsync("/");
@@ -149,7 +149,7 @@ public class ApiSmokeTests : IClassFixture<ApiSmokeFixture>
     /// table — management routes included — of an app with no login. They are development
     /// tooling and must not answer on the live host.
     /// </summary>
-    [Fact]
+    [LiveAppFact]
     public async Task Api_DoesNotPublishItsOwnSchemaInProduction()
     {
         var health = await ReadJsonAsync(await _client.GetAsync("/health"));
@@ -167,7 +167,7 @@ public class ApiSmokeTests : IClassFixture<ApiSmokeFixture>
 
     // ─── Config ───────────────────────────────────────────────────────────────
 
-    [Fact]
+    [LiveAppFact]
     public async Task Config_Returns200_WithApiBaseEndingInApi()
     {
         var resp = await _client.GetAsync("/api/config");
@@ -177,7 +177,7 @@ public class ApiSmokeTests : IClassFixture<ApiSmokeFixture>
         doc.RootElement.GetProperty("apiBase").GetString().Should().EndWith("/api");
     }
 
-    [Fact]
+    [LiveAppFact]
     public async Task Config_HasNoAuthFlags_SiteIsNoAuthByDesign()
     {
         var resp = await _client.GetAsync("/api/config");
@@ -191,7 +191,7 @@ public class ApiSmokeTests : IClassFixture<ApiSmokeFixture>
     /// /api/config is exactly the three fields the WASM client binds — see the matching
     /// integration test. Pinned closed so the response cannot regrow unread payload.
     /// </summary>
-    [Fact]
+    [LiveAppFact]
     public async Task Config_ReturnsExactlyTheThreeFieldsTheClientBinds()
     {
         var resp = await _client.GetAsync("/api/config");
@@ -203,7 +203,7 @@ public class ApiSmokeTests : IClassFixture<ApiSmokeFixture>
 
     // ─── Portfolio ────────────────────────────────────────────────────────────
 
-    [Fact]
+    [LiveAppFact]
     public async Task Portfolio_ReturnsNonEmptyEnvelope_EveryItemHasIdStatusDescription()
     {
         var resp = await _client.GetAsync("/api/portfolio");
@@ -230,7 +230,7 @@ public class ApiSmokeTests : IClassFixture<ApiSmokeFixture>
     /// rendered card URL must actually resolve and answer. Network-bound by design —
     /// this is the E2E tier, which already requires a running app and real DNS.
     /// </summary>
-    [Fact]
+    [LiveAppFact]
     public async Task Portfolio_EveryCardUrl_ActuallyResolvesAndResponds()
     {
         var resp = await _client.GetAsync("/api/portfolio");
@@ -284,7 +284,22 @@ public class ApiSmokeTests : IClassFixture<ApiSmokeFixture>
 
     // ─── Diag ─────────────────────────────────────────────────────────────────
 
-    [Fact]
+    /// <summary>GET /api/diag is the Po diag contract (DiagReportDto) behind the System status page.</summary>
+    [LiveAppFact]
+    public async Task Diag_ReturnsDiagReport_WithApiDataAndServiceRows()
+    {
+        var resp = await _client.GetAsync("/api/diag");
+
+        resp.StatusCode.Should().Be(HttpStatusCode.OK);
+        using var doc = await ReadJsonAsync(resp);
+        var root = doc.RootElement;
+        root.GetProperty("status").GetString().Should().BeOneOf("Healthy", "Degraded", "Unhealthy");
+        root.GetProperty("version").GetString().Should().MatchRegex("^[0-9]{6}$");
+        var groups = root.GetProperty("checks").EnumerateArray().Select(c => c.GetProperty("group").GetString()).ToList();
+        groups.Should().Contain(["api", "data", "service"]).And.OnlyContain(g => g == "api" || g == "data" || g == "service");
+    }
+
+    [LiveAppFact]
     public async Task DiagSummary_Returns200Or404_ShapeIsOpsSummaryNotRawReport()
     {
         var resp = await _client.GetAsync("/api/diag/summary");
@@ -302,7 +317,7 @@ public class ApiSmokeTests : IClassFixture<ApiSmokeFixture>
             because: "the summary is a projection, never the raw report graph");
     }
 
-    [Fact]
+    [LiveAppFact]
     public async Task DiagReport_Returns200Or404Or503_SuccessIsJson()
     {
         var resp = await _client.GetAsync("/api/diag/report");
@@ -315,7 +330,7 @@ public class ApiSmokeTests : IClassFixture<ApiSmokeFixture>
 
     // ─── Host plumbing ────────────────────────────────────────────────────────
 
-    [Fact]
+    [LiveAppFact]
     public async Task RobotsTxt_Returns200_TextPlain_WithUserAgentDirective()
     {
         var resp = await _client.GetAsync("/robots.txt");
@@ -325,7 +340,7 @@ public class ApiSmokeTests : IClassFixture<ApiSmokeFixture>
         (await resp.Content.ReadAsStringAsync()).Should().Contain("User-agent");
     }
 
-    [Fact]
+    [LiveAppFact]
     public async Task Favicon_Returns200_WithImageContentType()
     {
         // /favicon.ico 302-redirects to the static asset; HttpClient follows it.
@@ -337,7 +352,7 @@ public class ApiSmokeTests : IClassFixture<ApiSmokeFixture>
 
     // ─── Errors and API docs ──────────────────────────────────────────────────
 
-    [Theory]
+    [LiveAppTheory]
     [InlineData("/api/does-not-exist")]
     [InlineData("/api/nope/deeper/route")]
     public async Task UnknownApiRoute_Returns404_WithJsonStatusAndPath(string path)
@@ -350,7 +365,7 @@ public class ApiSmokeTests : IClassFixture<ApiSmokeFixture>
         doc.RootElement.GetProperty("path").GetString().Should().Be(path);
     }
 
-    [Fact]
+    [LiveAppFact]
     public async Task OpenApiDocument_Returns200_AndParsesAsJson()
     {
         var resp = await _client.GetAsync("/openapi/v1.json");

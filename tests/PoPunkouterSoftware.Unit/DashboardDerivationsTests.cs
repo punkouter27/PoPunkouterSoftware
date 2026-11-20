@@ -11,7 +11,7 @@ namespace PoPunkouterSoftware.Unit;
 /// has always referenced the client assembly.
 ///
 /// <para>Five whole-contract tests rather than one per property, and no <c>[Theory]</c> where
-/// a table of asserts says the same thing: the tier budget is a ceiling (CLAUDE.md), and
+/// a table of asserts says the same thing: keep each tier lean (docs/testing.md), and
 /// making room for these meant collapsing <c>ReverseChronoRowKeyTests</c>, so they have to
 /// earn their place. Each test drives one builder with one representative report and asserts
 /// the whole shape that comes back.</para>

@@ -9,7 +9,7 @@
     <MinVerDefaultPreReleaseIdentifiers>preview.0</MinVerDefaultPreReleaseIdentifiers>
     <InvariantGlobalization>false</InvariantGlobalization>
     <!--
-      <UserSecretsId> intentionally absent. CLAUDE.md standing rule: "No `dotnet user-secrets`.
+      <UserSecretsId> intentionally absent. AGENTS.md standing rule: "No `dotnet user-secrets`.
       Local config goes in appsettings*.json; real secrets go in the kv-poshared2 Key Vault."
       Declaring the id would make ASP.NET auto-load %APPDATA%\Microsoft\UserSecrets\<id>\secrets.json
       in Development, reintroducing the per-machine config drift the rule exists to prevent.

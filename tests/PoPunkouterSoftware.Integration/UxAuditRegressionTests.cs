@@ -141,12 +141,12 @@ public class PortfolioExclusionRegressionTests
     public PortfolioExclusionRegressionTests(TestWebApp factory) => _client = factory.CreateClient();
 
     /// <summary>
-    /// The card renders screenshot + name + description + PageSpeed chips + link. Everything
+    /// The card renders screenshot + name + description + link. Everything
     /// else was payload serialised onto every app and read by nothing. Category is read by the
     /// page, not the card: it picks the section (web apps or RL training). GithubRepo is read by
     /// the Ctrl+K palette (repo and Actions rows).
     /// </summary>
-    private static readonly string[] AllowedAppFields = ["id", "name", "category", "description", "url", "status", "screenshotUrl", "scores", "cleanDays", "githubRepo", "stack", "sourceUrl", "playStoreUrl"];
+    private static readonly string[] AllowedAppFields = ["id", "name", "category", "description", "url", "status", "screenshotUrl", "cleanDays", "githubRepo", "stack", "sourceUrl", "playStoreUrl"];
 
     [Fact]
     public async Task Portfolio_Cards_CarryOnlyWhatTheCardBinds()

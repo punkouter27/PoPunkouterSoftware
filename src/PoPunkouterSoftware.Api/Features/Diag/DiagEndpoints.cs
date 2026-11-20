@@ -17,24 +17,25 @@ internal static class DiagEndpoints
         // All machine endpoints share the /api/diag prefix and the "Diag" OpenAPI tag.
         //
         // The server maps nothing at a bare `/diag`: that path is the WASM page
-        // (Client/Features/Diag/Diag.razor, owner's call 2026-11-17), fed by GET /api/diag/status
-        // below. A server-rendered /diag existed until 2026-09-04 and was removed because it
-        // answered anonymously in Production with the absolute ContentRoot path, the masked
-        // config block and masked-but-suffixed connection strings. /api/diag/status is built
-        // as an allow-list (DiagStatusBuilder) so none of that can come back.
+        // (Client/Features/Diag/Diag.razor, System status), fed by GET /api/diag below. A
+        // server-rendered /diag existed until 2026-09-04 and was removed because it answered
+        // anonymously in Production with the absolute ContentRoot path, the masked config block
+        // and masked-but-suffixed connection strings. GET /api/diag is built as an allow-list
+        // (DiagStatusBuilder) so none of that can come back.
         var diag = app.MapGroup("/api/diag").WithTags("Diag");
 
-        // The /diag page's only fetch. Runs the same health checks as /health (which is already
-        // anonymous, so this exposes no new probe) and projects them through DiagStatusBuilder.
-        diag.MapGet("/status", async (
-            HealthCheckService health, IWebHostEnvironment env, AiTriageService ai, TimeProvider clock,
-            CancellationToken ct) =>
+        // The /diag page's only fetch: DiagReportDto, the Po diag contract. Runs the same health
+        // checks as /health (already anonymous, so this exposes no new probe) and projects them
+        // through DiagStatusBuilder.
+        diag.MapGet("", async (
+            HealthCheckService health, IWebHostEnvironment env, AiTriageService ai, IConfiguration config,
+            TimeProvider clock, CancellationToken ct) =>
         {
             var report = await health.CheckHealthAsync(ct);
-            return Results.Json(DiagStatusBuilder.Build(report, env.EnvironmentName, ai, clock.GetUtcNow()));
+            return Results.Json(DiagStatusBuilder.Build(report, env.EnvironmentName, ai, config, clock.GetUtcNow()));
         })
-        .WithName("GetDiagStatus")
-        .Produces<DiagStatus>(StatusCodes.Status200OK);
+        .WithName("GetDiag")
+        .Produces<DiagReportDto>(StatusCodes.Status200OK);
 
         // Anonymous by necessity — the Advanced diagnostics panel is WASM with no credential —
         // so the subscription id is masked out of every resource id on the way out. See
@@ -160,7 +161,7 @@ internal static class DiagEndpoints
         // full Azure rescan. The persisted-per-scan summary shown by default on the dashboard
         // is precomputed by ReportRefreshRunner via AiTriageService.GenerateSummaryAsync (which
         // calls AiTriageService.SummarizeAsync in-process, not this HTTP route) and flows
-        // through AzureReport.AiSummary / OpsSummary.AiSummary — see AGENT.MD.
+        // through AzureReport.AiSummary / OpsSummary.AiSummary — see docs/architecture.md.
         diag.MapPost("/ai", async (
             AiTriageAdHocRequest req, IValidator<AiTriageAdHocRequest> validator, AiTriageService ai,
             CancellationToken ct) =>

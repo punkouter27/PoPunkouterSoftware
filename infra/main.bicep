@@ -114,8 +114,9 @@ resource storage 'Microsoft.Storage/storageAccounts@2024-01-01' = {
   }
 }
 
-// 30-day blob lifecycle: app screenshots are re-captured daily, so any blob untouched
-// for 30 days belongs to an app no longer in the portfolio. Table data is aged out in
+// 30-day blob lifecycle (declared here; not applied to the live account as of 2026-11-20). Nothing re-captures
+// the app screenshots since the nightly capture was dropped on 2026-11-20, so applying this would delete them
+// after 30 days; the home page then simply shows no thumbnails. Table data is aged out in
 // code instead (AzureReportStore retention sweep) — lifecycle policies cover blobs only.
 resource storageLifecycle 'Microsoft.Storage/storageAccounts/managementPolicies@2024-01-01' = {
   parent: storage

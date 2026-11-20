@@ -23,10 +23,8 @@ public record PortfolioApp
     public string Description { get; init; } = "";
     public string Url { get; init; } = "";
     public string Status { get; init; } = "unknown";
-    /// <summary>API path of the stored home-page screenshot; null when none captured yet.</summary>
+    /// <summary>API path of the last captured home-page screenshot (no longer updated); null when none exists.</summary>
     public string? ScreenshotUrl { get; init; }
-    /// <summary>Latest nightly PageSpeed Insights scores; null until one has been captured.</summary>
-    public LighthouseScores? Scores { get; init; }
     /// <summary>
     /// Observed days since this app's last down or degraded day on the 30-day uptime grid; 30
     /// means every day of the window was seen and clean. Null when the app was never observed — no streak to claim.

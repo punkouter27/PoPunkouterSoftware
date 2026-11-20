@@ -1,15 +1,19 @@
 name: Build & Deploy
 
-# The one workflow in every Po .NET web repo: check formatting, build, run the Unit tier, publish,
-# deploy to App Service, confirm the new build is the one answering. A red check stops the deploy
-# and the live site keeps its last good build. Integration, E2E and Bicep run locally, not here.
+# The only workflow in this repo: check formatting, build (Release, warnings are errors), run the Unit and Integration tiers
+# (Integration uses Testcontainers Azurite on the runner's Docker), publish, deploy to App Service, confirm the new
+# build is the one answering. A red check stops the deploy and the live site keeps its last good build. E2E tiers and
+# Bicep run locally, not here.
+# The scheduled ops workflows (ci-watch, conventions, uptime-scan, weekly-digest, screenshots) were dropped on
+# 2026-11-20 by the owner's choice; see AGENTS.md.
 #
 # Repo variables: AZURE_CLIENT_ID, AZURE_TENANT_ID, AZURE_SUBSCRIPTION_ID (GitHub OIDC sign-in),
 #                 AZURE_WEBAPP_NAME, AZURE_RESOURCE_GROUP (what is deployed, where).
 # Optional hooks: scripts/ci-package.ps1 -PublishDir   adds files to the package
 #                 scripts/pre-deploy.ps1 -BaseUrl      prepares the live site before deploy
 #                 (hooks get $env:APP, $env:RG and $env:BASE_URL)
-# Layout it relies on: one *.slnx at the root, global.json, src/*.Api/*.csproj, tests/*.Unit/*.csproj.
+# Layout it relies on: one *.slnx at the root, global.json, src/*.Api/*.csproj, tests/*.Unit/*.csproj,
+# tests/*.Integration/*.csproj.
 
 on:
   push:
@@ -58,11 +62,18 @@ jobs:
       - name: Check formatting
         run: dotnet format *.slnx --verify-no-changes
 
+      - name: Lint Python (ruff)
+        if: hashFiles('ruff.toml') != ''
+        run: pipx run ruff check .
+
       - name: Build
         run: dotnet build *.slnx -c Release
 
       - name: Unit tests
         run: dotnet test tests/*.Unit/*.csproj -c Release --no-build
+
+      - name: Integration tests
+        run: dotnet test tests/*.Integration/*.csproj -c Release --no-build
 
       - name: Publish
         run: dotnet publish src/*.Api/*.csproj -c Release --no-build -o publish

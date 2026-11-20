@@ -35,7 +35,9 @@
     <link rel="stylesheet" href="css/po-motion.css" />
     <link rel="stylesheet" href="css/modern-ui.css" />
     <link rel="stylesheet" href="PoPunkouterSoftware.Client.styles.css" />
-    <HeadOutlet />
+    @* Interactive (WASM, no prerender) so the <PageTitle> each WASM page sets reaches the tab: a static
+       HeadOutlet never hears from the interactive islands, and every tab read "PoPunkouterSoftware". *@
+    <HeadOutlet @rendermode="PoPunkouterSoftware.Client.WasmRenderModes.Interactive" />
 </head>
 @* No `rz-background-color-base rz-color-base` here: both resolve to `var(--rz-base)`
    (#505f65) with `!important`, so every heading that did not set its own colour

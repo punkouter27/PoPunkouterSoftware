@@ -37,9 +37,8 @@ internal static partial class PortfolioEndpoints
         var inventoryTask = LoadInventoryAsync(env, store, logger, ct);
         var metadataTask = LoadMetadataAsync(env, logger, ct);
         var screenshotVersionsTask = screenshots.ListVersionsAsync(ct);
-        var scoresTask = screenshots.LoadScoresAsync(ct);
         var uptimeTask = LoadUptimeAsync(store, uptimeSamples, clock, ct);
-        await Task.WhenAll(inventoryTask, metadataTask, screenshotVersionsTask, scoresTask, uptimeTask);
+        await Task.WhenAll(inventoryTask, metadataTask, screenshotVersionsTask, uptimeTask);
         var (report, services) = inventoryTask.Result;
         var metadata = metadataTask.Result;
         var screenshotVersions = screenshotVersionsTask.Result;
@@ -56,7 +55,7 @@ internal static partial class PortfolioEndpoints
         }
         // The streak chip: days since each card's last bad day on the /azure uptime grid —
         // the same row, so the card can never claim a streak the grid contradicts.
-        var apps = BuildApps(services, metadata, screenshotVersions, scoresTask.Result,
+        var apps = BuildApps(services, metadata, screenshotVersions,
                 StorageGroups(report), report?.PublicLinks)
             .Select(a => a with { CleanDays = RowFor(uptimeTask.Result, a)?.CleanDays })
             .ToList();
@@ -82,7 +81,6 @@ internal static partial class PortfolioEndpoints
     private static List<PortfolioApp> BuildApps(
         List<WebService> services, List<AppMeta> metadata,
         IReadOnlyDictionary<string, long> screenshotVersions,
-        IReadOnlyDictionary<string, LighthouseScores> scores,
         IReadOnlySet<string>? storageGroups = null, IReadOnlyList<PublicLinkCheck>? publicLinks = null)
     {
         storageGroups ??= NoGroups;
@@ -107,7 +105,7 @@ internal static partial class PortfolioEndpoints
                 {
                     var key = PortfolioIdentity.NormalizeName(string.IsNullOrWhiteSpace(s.FriendlyName) ? s.Name : s.FriendlyName);
                     metaByName.TryGetValue(key, out var meta);
-                    return ToPortfolioApp(meta, s, screenshotVersions, scores, storageGroups, links);
+                    return ToPortfolioApp(meta, s, screenshotVersions, storageGroups, links);
                 },
                 StringComparer.OrdinalIgnoreCase);
 
@@ -119,7 +117,7 @@ internal static partial class PortfolioEndpoints
             // Catalog entries marked active are the stable showcase, visible even when
             // Azure inventory is stale or unavailable. Only added when no live service
             // already claimed the key — otherwise the live entry's status wins.
-            appsByName.TryAdd(key, ToPortfolioApp(meta, null, screenshotVersions, scores, storageGroups, links));
+            appsByName.TryAdd(key, ToPortfolioApp(meta, null, screenshotVersions, storageGroups, links));
         }
 
         return appsByName.Values.OrderBy(a => a.Name, StringComparer.OrdinalIgnoreCase).ToList();
@@ -139,7 +137,7 @@ internal static partial class PortfolioEndpoints
         var (_, services) = await LoadInventoryAsync(env, store, logger, ct);
         var metadata = await LoadMetadataAsync(env, logger, ct);
         var key = PortfolioIdentity.NormalizeName(id);
-        var app = BuildApps(services, metadata, EmptyVersions, EmptyScores)
+        var app = BuildApps(services, metadata, EmptyVersions)
             .FirstOrDefault(a => PortfolioIdentity.NormalizeName(a.Id) == key || PortfolioIdentity.NormalizeName(a.Name) == key);
         if (app is null)
             return Results.NotFound();
@@ -186,7 +184,6 @@ internal static partial class PortfolioEndpoints
         uptime.Rows.FirstOrDefault(r => PortfolioIdentity.NormalizeName(r.Name) == PortfolioIdentity.NormalizeName(app.Name));
 
     private static readonly IReadOnlyDictionary<string, long> EmptyVersions = new Dictionary<string, long>();
-    private static readonly IReadOnlyDictionary<string, LighthouseScores> EmptyScores = new Dictionary<string, LighthouseScores>();
 
     private static async Task<IResult> GetScreenshot(
         string host, AppScreenshotStore screenshots, HttpContext http, CancellationToken ct)
@@ -194,13 +191,13 @@ internal static partial class PortfolioEndpoints
         if (!HostPattern().IsMatch(host))
             return Results.BadRequest(new { error = "Invalid host." });
 
-        // Read-only: screenshots.yml is the only writer. On-demand capture lived here until
-        // 2026-11-07 and launched a headless browser behind an anonymous URL.
+        // Read-only: nothing writes these any more (the nightly capture was dropped on 2026-11-20). On-demand
+        // capture lived here until 2026-11-07 and launched a headless browser behind an anonymous URL.
         var stream = await screenshots.OpenReadAsync(host, ct);
         if (stream is null)
             return Results.NotFound();
 
-        // Screenshots change at most daily; let browsers cache for an hour.
+        // The stored pictures no longer change; let browsers cache for an hour.
         http.Response.Headers.CacheControl = "public, max-age=3600";
         return Results.Stream(stream, "image/png");
     }
@@ -253,7 +250,6 @@ internal static partial class PortfolioEndpoints
 
     private static PortfolioApp ToPortfolioApp(
         AppMeta? meta, WebService? service, IReadOnlyDictionary<string, long> screenshotVersions,
-        IReadOnlyDictionary<string, LighthouseScores> scores,
         IReadOnlySet<string> storageGroups, IReadOnlyDictionary<string, PublicLinkCheck> links)
     {
         var name = meta?.Name ?? service?.FriendlyName ?? service?.Name ?? "Unnamed app";
@@ -276,7 +272,6 @@ internal static partial class PortfolioEndpoints
             Url = url,
             Status = status,
             ScreenshotUrl = hasScreenshot ? $"/api/portfolio/screenshots/{host}?v={version}" : null,
-            Scores = host is not null && scores.TryGetValue(host, out var score) ? score : null,
             GithubRepo = string.IsNullOrWhiteSpace(meta?.GithubRepo) ? null : meta.GithubRepo,
             // Source: hidden only when the scan SAW the repo answer 404 (private). No check yet
             // (a fresh deploy, a failed request) still links — a public repo is the norm here.

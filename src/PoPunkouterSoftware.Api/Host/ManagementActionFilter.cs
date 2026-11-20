@@ -6,7 +6,7 @@ namespace PoPunkouterSoftware.Api;
 /// <summary>
 /// Server-side gate for mutating / expensive control endpoints.
 ///
-/// This site has no user authentication by design (see AGENT.MD) — there is no login.
+/// This site has no user authentication by design (see docs/architecture.md) — there is no login.
 /// Instead, write and expensive control actions are enforced with the same
 /// <c>FeatureFlags:EnableManagementActions</c> flag the UI reads from <c>/api/config</c>,
 /// plus an optional shared key. Before this filter the flag was UI-only, so every
@@ -38,8 +38,9 @@ internal sealed class ManagementActionFilter : IEndpointFilter
         // Production the flag alone is the gate (local dev has no key and needs none), but a
         // public deployment with EnableManagementActions=true and no key would leave
         // /api/diag/refresh open to anonymous callers — a free, repeatable, ~30-second
-        // subscription scan for anyone who finds the route. This became reachable the moment
-        // the nightly uptime-scan workflow needed the flag turned on in Production.
+        // subscription scan for anyone who finds the route. The flag is on in Production so a
+        // key holder (the owner, by hand) can start a rescan; the nightly scan workflow that
+        // first needed it was dropped on 2026-11-20.
         if (env.IsProduction() && string.IsNullOrWhiteSpace(adminKey))
             return Results.Problem(
                 detail: "Management actions require Security:ManagementApiKey to be configured in Production.",

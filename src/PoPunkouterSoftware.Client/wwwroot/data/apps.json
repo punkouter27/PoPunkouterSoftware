@@ -12,7 +12,7 @@
       ],
       "url": "https://app-polocalcompare-win2.azurewebsites.net",
       "healthUrl": "https://app-polocalcompare-win2.azurewebsites.net/health/live",
-      "githubRepo": "punkouter26/PoLocalCompare",
+      "githubRepo": "punkouter27/PoLocalCompare",
       "expect": "<title>PoLocalCompare</title>",
       "stack": {
         "frontend": "Blazor WASM",
@@ -78,13 +78,12 @@
       ],
       "url": "https://app-5ln5hfdrvof5u-f1win2.azurewebsites.net",
       "healthUrl": "https://app-5ln5hfdrvof5u-f1win2.azurewebsites.net/health/live",
-      "githubRepo": "punkouter26/PoMiniGames",
+      "githubRepo": "punkouter27/PoMiniGames",
       "expect": "<title>PoMiniGames</title>",
       "stack": {
         "frontend": "Blazor WASM",
         "backend": "ASP.NET Core",
         "data": "Azure Table Storage + Azure Blob Storage",
-        "signIn": "Microsoft",
         "delivery": "GitHub Actions",
         "realtime": "SignalR + Web Push",
         "extras": "three.js + cannon-es + SharpGLTF + QRCoder",
@@ -92,7 +91,6 @@
           "frontend": "The C# shell hosts about 20 games; most game loops and 3D scenes run in JavaScript modules it loads on demand",
           "backend": "Minimal APIs serve scores, leaderboards, match history and invites, while server-side game loops run the multiplayer lobbies, races and matches",
           "data": "Azure Table Storage holds high scores, ladders, Elo ratings, match history and verified results; Azure Blob Storage holds saved PoEcosystem worlds and the keys that sign anti-cheat score tokens",
-          "signIn": "Sign in with a Microsoft account to put your name on leaderboards and play online",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
           "realtime": "13 SignalR hubs run lobbies, server-ticked races (up to 50 Hz), lockstep and rollback matches, live quizzes and board games; Web Push delivers game invites",
           "extras": "three.js draws the 3D games, cannon-es gives them physics, SharpGLTF turns 3D models into destructible voxels on the server and QRCoder makes invite QR codes"
@@ -112,14 +110,13 @@
       ],
       "url": "https://app-pomode2.azurewebsites.net",
       "healthUrl": "https://app-pomode2.azurewebsites.net/health/live",
-      "githubRepo": "punkouter26/PoMode",
+      "githubRepo": "punkouter27/PoMode",
       "expect": "<title>PoMode</title>",
       "stack": {
         "frontend": "Blazor WASM",
         "backend": "ASP.NET Core",
         "data": "Azure Blob Storage",
         "ai": "On-device",
-        "signIn": "Microsoft",
         "delivery": "GitHub Actions",
         "realtime": "SignalR + Server-sent events + Web Push",
         "extras": "ONNX Runtime + Whisper.net + AcoustID + DryWetMidi + tus uploads",
@@ -127,7 +124,6 @@
           "frontend": "The C# client, built with Radzen components, plays the stems, draws pitch, chords and beats over the song, records your humming for practice, and can split stems or run a language model in your browser when your device can",
           "backend": "Minimal APIs take uploads and serve results, while a background worker queue runs each song through separation, pitch, beat, chord, mode and lyrics stages",
           "data": "Azure Blob Storage mirrors each analysis job's folder, the upload and every result, so jobs survive a restart. No tables",
-          "signIn": "Optional: you start as a guest, and signing in with a Microsoft account keeps your library and lets you open songs from OneDrive",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
           "realtime": "One SignalR hub pushes each job's progress, server-sent events stream the written interpretation of the song and answers to your questions, and Web Push says when a job finishes",
           "extras": "ONNX Runtime runs the audio models, Whisper.net transcribes the separated vocals, AcoustID can name the song from its fingerprint, DryWetMidi writes the MIDI export and tus makes big uploads resumable"
@@ -171,7 +167,7 @@
       ],
       "url": "https://app-porepolinetracker2.azurewebsites.net",
       "healthUrl": "https://app-porepolinetracker2.azurewebsites.net/health/live",
-      "githubRepo": "punkouter26/PoRepoLineTracker",
+      "githubRepo": "punkouter27/PoRepoLineTracker",
       "expect": "<title>PoRepoLineTracker</title>",
       "stack": {
         "frontend": "Blazor WASM",
@@ -204,7 +200,7 @@
       ],
       "url": "https://potraffic-api-win2.azurewebsites.net",
       "healthUrl": "https://potraffic-api-win2.azurewebsites.net/health/live",
-      "githubRepo": "punkouter26/PoTraffic",
+      "githubRepo": "punkouter27/PoTraffic",
       "expect": "<title>PoTraffic</title>",
       "stack": {
         "frontend": "Blazor WASM",
@@ -238,7 +234,7 @@
       ],
       "url": "https://app-powatch-win2.azurewebsites.net",
       "healthUrl": "https://app-powatch-win2.azurewebsites.net/health/live",
-      "githubRepo": "punkouter26/PoWatch",
+      "githubRepo": "punkouter27/PoWatch",
       "expect": "<title>PoWatch</title>",
       "stack": {
         "frontend": "Blazor WASM",
@@ -296,7 +292,7 @@
       ],
       "url": "https://app-poseereview2.azurewebsites.net",
       "healthUrl": "https://app-poseereview2.azurewebsites.net/health/live",
-      "githubRepo": "punkouter26/PoSeeReview",
+      "githubRepo": "punkouter27/PoSeeReview",
       "stack": {
         "frontend": "Blazor WASM",
         "backend": "ASP.NET Core",
@@ -656,7 +652,7 @@
         "Blazor"
       ],
       "url": "https://app-pofightjudge2.azurewebsites.net",
-      "githubRepo": "punkouter26/PoFightJudge",
+      "githubRepo": "punkouter27/PoFightJudge",
       "stack": {
         "frontend": "Blazor WASM",
         "backend": "ASP.NET Core",
@@ -733,7 +729,7 @@
         "Blazor"
       ],
       "url": "https://app-poredomedia2.azurewebsites.net",
-      "githubRepo": "punkouter26/PoRedoMedia",
+      "githubRepo": "punkouter27/PoRedoMedia",
       "stack": {
         "frontend": "Blazor WASM",
         "backend": "ASP.NET Core",

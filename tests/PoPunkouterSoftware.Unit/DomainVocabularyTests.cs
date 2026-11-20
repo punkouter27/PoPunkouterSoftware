@@ -2,7 +2,7 @@ using PoPunkouterSoftware.Shared;
 
 namespace PoPunkouterSoftware.Unit;
 
-// Trimmed to the budget (CLAUDE.md: 100 Unit). The cases removed were extra casing
+// Trimmed to the budget (the old 100-test Unit budget). The cases removed were extra casing
 // variants of a rule already proven once per method, and per-value rank assertions that
 // the ordering facts below subsume — one `BeInAscendingOrder` over the whole ladder is a
 // stronger claim than five independent equality checks, and does not have to be edited

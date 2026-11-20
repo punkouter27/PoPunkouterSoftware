@@ -81,32 +81,3 @@ public sealed class AiTriageAdHocRequestValidator : AbstractValidator<AiTriageAd
             .WithMessage($"An attention item is longer than {MaxItemLength} characters.");
     }
 }
-
-/// <summary>
-/// <c>GET /api/diag/status</c> — the anonymous, Production-safe source of the <c>/diag</c>
-/// page. Built only from health-check verdict WORDS, latencies and fixed descriptions: never a
-/// check's data dictionary (it carries exception messages, counts and timestamps), never the
-/// masked config block, never a URI, path, connection string or identifier.
-/// </summary>
-public sealed record DiagStatus(
-    [property: JsonPropertyName("status")] string Status,
-    [property: JsonPropertyName("environment")] string Environment,
-    [property: JsonPropertyName("checkedAtUtc")] DateTimeOffset CheckedAtUtc,
-    [property: JsonPropertyName("totalMs")] double TotalMs,
-    [property: JsonPropertyName("checks")] IReadOnlyList<DiagCheck> Checks);
-
-/// <summary>One dependency on the <c>/diag</c> page.</summary>
-/// <param name="Category"><c>storage</c> (Database / storage section) or <c>service</c>.</param>
-/// <param name="Status"><c>Healthy</c>, <c>Degraded</c> or <c>Unhealthy</c>.</param>
-/// <param name="Verdict">The check's own one-word verdict (e.g. <c>readable</c>, <c>not-configured</c>).</param>
-/// <param name="Summary">The verdict in plain English.</param>
-/// <param name="Purpose">What the app uses this dependency for.</param>
-/// <param name="LatencyMs">How long the check took; null when nothing was probed.</param>
-public sealed record DiagCheck(
-    [property: JsonPropertyName("name")] string Name,
-    [property: JsonPropertyName("category")] string Category,
-    [property: JsonPropertyName("status")] string Status,
-    [property: JsonPropertyName("verdict")] string Verdict,
-    [property: JsonPropertyName("summary")] string Summary,
-    [property: JsonPropertyName("purpose")] string Purpose,
-    [property: JsonPropertyName("latencyMs")] double? LatencyMs);

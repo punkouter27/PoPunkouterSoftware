@@ -8,7 +8,7 @@ namespace PoPunkouterSoftware.Integration;
 /// Every JSON response must reach the browser in camelCase, because the WASM client's
 /// source-generated <c>AppJsonContext</c> binds camelCase names and a reflection fallback
 /// does not exist (PublishTrimmed + EnableTrimAnalyzer, no escape hatch).
-/// <para>Trimmed to the budget (CLAUDE.md: 50 Integration). This was 15 tests: three
+/// <para>Trimmed to the budget (the old 50-test Integration budget). This was 15 tests: three
 /// theories with thirteen InlineData property names between them, each booting a request
 /// to assert one key. Casing is a single serializer setting per endpoint — asserting the
 /// whole key set in one request per endpoint is the same claim, and a failure now shows

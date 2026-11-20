@@ -36,12 +36,12 @@ The script verifies every requested ligature actually survived into the subset a
 loudly if one did not, so a typo cannot ship as a word rendered in a button.
 """
 
-import re
 import os
+import re
 import sys
 
+from fontTools.subset import Options, Subsetter
 from fontTools.ttLib import TTFont
-from fontTools.subset import Subsetter, Options
 
 # Names this repository asks for by name.
 APP_ICONS = [

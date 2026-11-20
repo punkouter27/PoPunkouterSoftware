@@ -6,10 +6,11 @@ namespace PoPunkouterSoftware.E2EUI;
 /// <summary>
 /// E2EUI — C# Playwright tests driving a real browser against the running app.
 /// Point at a live instance via BASE_URL (default http://localhost:8000); start it with
-/// F5 or `dotnet run`. These are run locally / on demand — never in CI/CD.
+/// ./scripts/run-dev.ps1. Without an app or a browser every test skips (LiveAppFactAttribute.cs).
+/// These are run locally / on demand — never in CI/CD.
 /// Every test runs at BOTH mobile-portrait and desktop-landscape form factors so the two
 /// renderings cannot drift apart unnoticed.
-/// First run requires browsers: pwsh bin/Debug/net10.0/playwright.ps1 install
+/// First run requires browsers: pwsh bin/Release/net10.0/playwright.ps1 install chromium
 /// </summary>
 public class PortfolioUiTests : IAsyncLifetime
 {
@@ -65,7 +66,7 @@ public class PortfolioUiTests : IAsyncLifetime
         return page;
     }
 
-    [Theory]
+    [LiveAppTheory]
     [MemberData(nameof(Viewports))]
     public async Task Portfolio_Home_LoadsAndShowsBrand(string label, int width, int height, bool isMobile)
     {
@@ -102,7 +103,7 @@ public class PortfolioUiTests : IAsyncLifetime
         await CaptureAsync(page, $"01-home-{label}.png");
     }
 
-    [Theory]
+    [LiveAppTheory]
     [MemberData(nameof(Viewports))]
     public async Task Azure_DefaultIsCompact_AndAdvancedDetailsAreOnDemand(string label, int width, int height, bool isMobile)
     {
@@ -134,7 +135,7 @@ public class PortfolioUiTests : IAsyncLifetime
     /// <c>error</c> means a path nobody designed was taken, and because the layers are
     /// decorative, nothing else on the page would show it.</para>
     /// </summary>
-    [Theory]
+    [LiveAppTheory]
     [MemberData(nameof(Viewports))]
     public async Task CoreRoutes_ReflowWithoutOverflowOrConsoleErrors(string label, int width, int height, bool isMobile)
     {
@@ -167,7 +168,7 @@ public class PortfolioUiTests : IAsyncLifetime
     /// <c>no-gpu</c> is a legitimate outcome here — the invariant is that the ladder reached
     /// one of its DEFINED states, never that it reached the top one.</para>
     /// </summary>
-    [Theory]
+    [LiveAppTheory]
     [MemberData(nameof(Viewports))]
     public async Task Backdrop_ResolvesATier_AndPreferencesAreFixedForEveryone(string label, int width, int height, bool isMobile)
     {
@@ -214,7 +215,7 @@ public class PortfolioUiTests : IAsyncLifetime
     /// observable form of the guarantee. A layer that faded to `opacity: 0` while still
     /// being scheduled would pass any screenshot check and still burn a phone's battery.</para>
     /// </summary>
-    [Fact]
+    [LiveAppFact]
     public async Task ReducedMotion_StopsEveryFrameLoop()
     {
         await using var ctx = await _browser.NewContextAsync(new()
@@ -257,7 +258,7 @@ public class PortfolioUiTests : IAsyncLifetime
     /// whose fill width resolves to zero, or a panel that renders no rows at all. The
     /// invariant is unchanged — a panel that reserves space must put marks in it.</para>
     /// </summary>
-    [Theory]
+    [LiveAppTheory]
     [MemberData(nameof(Viewports))]
     public async Task Azure_GlancePanels_DrawTheirMetrics(string label, int width, int height, bool isMobile)
     {
@@ -299,7 +300,7 @@ public class PortfolioUiTests : IAsyncLifetime
     /// The assertion is that the card's BOTTOM edge is above the fold, not merely its top —
     /// half a card is not a card.</para>
     /// </summary>
-    [Fact]
+    [LiveAppFact]
     public async Task Home_FirstScreen_ShowsAWholeRow()
     {
         var page = await NewPageAsync(390, 844, isMobile: true);
@@ -337,7 +338,7 @@ public class PortfolioUiTests : IAsyncLifetime
     /// <para>Element bounds, not scrollWidth, for the overflow half, for the reason
     /// <see cref="Users_RostersRender_AndNothingOverflowsTheBody"/> gives.</para>
     /// </summary>
-    [Fact]
+    [LiveAppFact]
     public async Task Azure_MobilePortrait_UptimeOpensOnToday_AndNothingOverflows()
     {
         var page = await NewPageAsync(390, 844, isMobile: true);
@@ -374,7 +375,7 @@ public class PortfolioUiTests : IAsyncLifetime
     /// <para>Asserting the tiles are stacked (equal left edge) rather than reading
     /// <c>grid-template-columns</c> keeps this about the visible result.</para>
     /// </summary>
-    [Fact]
+    [LiveAppFact]
     public async Task Azure_GlanceCards_StackVertically_OnMobile()
     {
         var page = await NewPageAsync(390, 844, isMobile: true);
@@ -403,7 +404,7 @@ public class PortfolioUiTests : IAsyncLifetime
     /// table that folds its metric columns on a phone, so there is no branch left. This test now guards against a second tree being
     /// reintroduced rather than against both rendering at once.</para>
     /// </summary>
-    [Theory]
+    [LiveAppTheory]
     [MemberData(nameof(Viewports))]
     public async Task Azure_ResourceExplorer_RendersExactlyOneTree(string label, int width, int height, bool isMobile)
     {
@@ -427,7 +428,7 @@ public class PortfolioUiTests : IAsyncLifetime
     /// can render invisible in the other (ButtonStyle.Light was white-on-white in light
     /// mode). Both schemes must clear the WCAG AA 4.5:1 floor.
     /// </summary>
-    [Theory]
+    [LiveAppTheory]
     [InlineData("dark")]
     [InlineData("light")]
     public async Task Azure_AdvancedToggle_IsLegibleInBothColorSchemes(string scheme)
@@ -495,7 +496,7 @@ public class PortfolioUiTests : IAsyncLifetime
     /// <c>/azure</c> once had no <c>&lt;main&gt;</c> — its root was a bare div — so "Skip to
     /// content" was a link to nothing there while the identical link on "/" worked.</para>
     /// </summary>
-    [Theory]
+    [LiveAppTheory]
     [MemberData(nameof(Viewports))]
     public async Task CoreRoutes_HaveOneMainLandmark_AWorkingSkipLink_AndNoSeriousAxeViolations(
         string label, int width, int height, bool isMobile)
@@ -503,7 +504,7 @@ public class PortfolioUiTests : IAsyncLifetime
         var page = await NewPageAsync(width, height, isMobile);
         var found = new List<string>();
 
-        foreach (var (route, ready) in new[] { ("/", ".portfolio-stack__row"), ("/azure", ".azure-uptime"), ("/users", "main h1"), ("/settings", ".settings-fixed"), ("/diag", ".diag-about") })
+        foreach (var (route, ready) in new[] { ("/", ".portfolio-stack__row"), ("/azure", ".azure-uptime"), ("/users", "main h1"), ("/settings", ".settings-fixed"), ("/diag", ".po-diag__card") })
         {
             await page.GotoAsync($"{BaseUrl}{route}", new() { WaitUntil = WaitUntilState.NetworkIdle });
             await page.WaitForSelectorAsync(ready, new() { Timeout = 40_000 });
@@ -560,7 +561,7 @@ public class PortfolioUiTests : IAsyncLifetime
     /// measures rendered width against font size, which is the only signal that separates the
     /// two, and it opens every disclosure first so the icons behind them are covered too.</para>
     /// </summary>
-    [Theory]
+    [LiveAppTheory]
     [MemberData(nameof(Viewports))]
     public async Task Azure_EveryIcon_RendersAsAGlyphNotItsName(
         string label, int width, int height, bool isMobile)
@@ -599,7 +600,7 @@ public class PortfolioUiTests : IAsyncLifetime
     /// likely to break. The roster and the raw feed are allowed their own horizontal
     /// scrollers; the BODY is not.
     /// </summary>
-    [Theory]
+    [LiveAppTheory]
     [MemberData(nameof(Viewports))]
     public async Task Users_RostersRender_AndNothingOverflowsTheBody(string label, int width, int height, bool isMobile)
     {
@@ -642,7 +643,7 @@ public class PortfolioUiTests : IAsyncLifetime
         // This measures ELEMENT BOUNDS, not document.scrollWidth, and the difference is the
         // whole point. An over-wide grid track gets clipped rather than scrolled, so
         // scrollWidth stayed exactly equal to clientWidth while the header, the KPI tiles and
-        // every card border ran 51px off the right of a 390px screen. CLAUDE.md records the
+        // every card border ran 51px off the right of a 390px screen. docs/architecture.md records the
         // same trap on /azure. Elements inside a deliberate overflow-x container are excluded:
         // those are allowed to run wide, because the visitor can scroll them.
         var overhang = await page.EvaluateAsync<string[]>(

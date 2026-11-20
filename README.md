@@ -1,10 +1,18 @@
 # PoPunkouterSoftware
 
-PoPunkouterSoftware is a .NET 10 Blazor Web App with a server host, a WebAssembly client, and operational endpoints for the Azure inventory report, the app portfolio, and diagnostics.
+PoPunkouterSoftware is the Po apps portfolio and Azure ops dashboard: a .NET 10 Blazor Web App (ASP.NET Core host +
+WebAssembly client) showing every Po app, how each is built, and the health, uptime, cost and security of the
+Azure estate behind them.
+
+- Live: https://app-popunkoutersoftware2.azurewebsites.net (System status: `/diag`)
+- Deploys: every push to `master` runs `.github/workflows/deploy.yml` (format, ruff, build, Unit + Integration
+  tests, publish, deploy to App Service, confirm `/health/live` reports the pushed commit in `X-Commit`).
+- Agents and contributors: read [AGENTS.md](AGENTS.md); the architecture map is [docs/architecture.md](docs/architecture.md),
+  the test tiers [docs/testing.md](docs/testing.md). Before/after pages of UI changes are kept in [SCREENSHOTS/](SCREENSHOTS/).
 
 ## Solution Layout
 
-- `src/PoPunkouterSoftware.API/`: ASP.NET Core host + BFF. Feature slices under `Features/<Area>/` (Config, Diag, Portfolio, SignIns); host-level plumbing that belongs to no slice lives in `Host/`. Hosts the Blazor WASM shell.
+- `src/PoPunkouterSoftware.Api/`: ASP.NET Core host + BFF. Feature slices under `Features/<Area>/` (Config, Diag, Portfolio, SignIns); host-level plumbing that belongs to no slice lives in `Host/`. Hosts the Blazor WASM shell.
 - `src/PoPunkouterSoftware.Client/`: WASM UI, layouts, pages, and static assets.
 - `src/PoPunkouterSoftware.Shared/`: contracts and models shared between the host and client.
 - `src/PoPunkouterSoftware.Infrastructure/`: Azure and integration adapters.
@@ -12,22 +20,25 @@ PoPunkouterSoftware is a .NET 10 Blazor Web App with a server host, a WebAssembl
 - `tests/PoPunkouterSoftware.Integration/`: `WebApplicationFactory` + Azurite Testcontainers.
 - `tests/PoPunkouterSoftware.E2EAPI/`: pure-HTTP contract tests against a live instance.
 - `tests/PoPunkouterSoftware.E2EUI/`: C# Playwright browser tests (run on demand against a live instance).
-- `SCRIPTS/`: setup and automation helpers.
+- `scripts/`: setup and helper scripts (`run-dev.ps1`, `ensure-azure-access.ps1`, `post-deploy-smoke.ps1`, the icon-font subset builder).
+- `infra/`: Bicep (`main.bicep`, `main.bicepparam`, `modules/`), applied by hand.
+- `docs/`: architecture and testing notes, plus the GitHub Pages site (privacy pages linked from app stores).
 
 ## Local Development
 
 Prerequisites:
 
 - .NET SDK from `global.json`
-- Node.js for Playwright tests
-- Docker Desktop for Azurite-backed integration scenarios
+- Docker Desktop (Azurite for the local run and the Integration tier's Testcontainers)
+- PowerShell 7 (`scripts/run-dev.ps1`)
 
-Common commands:
+Common commands (the full, tested list is "3. Verification" in [AGENTS.md](AGENTS.md)):
 
 ```powershell
-dotnet build .\PoPunkouterSoftware.slnx
-dotnet test .\tests\PoPunkouterSoftware.Unit
-dotnet test .\tests\PoPunkouterSoftware.Integration
+pwsh ./scripts/run-dev.ps1 -NoWatch        # http://localhost:8000 (starts Azurite if needed)
+dotnet build PoPunkouterSoftware.slnx -c Release
+dotnet test tests/PoPunkouterSoftware.Unit -c Release --no-build
+dotnet test tests/PoPunkouterSoftware.Integration -c Release --no-build
 ```
 
 Available VS Code tasks in this workspace include:
@@ -42,14 +53,14 @@ The app runs locally on HTTP port `8000`.
 
 ## Runtime Notes
 
-- `/health` is the deep probe (Key Vault, Table Storage); `/health/live` is a static liveness ping.
-- `/api/diag/*` (summary, report, status, refresh, cancel-refresh, restart/{name}, ai) expose diagnostics. `/diag` is a friendly WASM page (since 2026-11-17) showing whether the app and each dependency is working, fed only by `GET /api/diag/status` — health-check verdict words and latencies, safe for anonymous Production visitors (no config block, URIs, paths or ids). `POST /api/diag/ai` validates its body with the shared FluentValidation `AiTriageAdHocRequestValidator` (400 validation problem on a bad list). `restart/{name}` restarts (or starts) one scanned App Service and sits behind the same management gate as `refresh`; in Azure it also needs Website Contributor, which infra does not grant.
+- `/health` is the deep probe (Key Vault, Table Storage); `/health/live` is a static liveness ping carrying `X-Commit`.
+- `GET /api/diag` returns the System status report (`DiagReportDto`: status, environment, version, checks grouped api / data / service), the only source of the `/diag` page — statuses, latencies and fixed text, safe for anonymous Production visitors (no config block, URIs, paths or ids). `/api/diag/*` (summary, report, refresh, cancel-refresh, restart/{name}, ai) are the dashboard's own endpoints. `POST /api/diag/ai` validates its body with the shared FluentValidation `AiTriageAdHocRequestValidator` (400 validation problem on a bad list). `restart/{name}` restarts (or starts) one scanned App Service and sits behind the same management gate as `refresh`; in Azure it also needs Website Contributor, which infra does not grant.
 - Each scan also reads Azure Resource Health (for down apps), Azure Advisor, 24h exception types per app from the shared Application Insights component (`SignIns:ResourceId`), and open Dependabot alerts per matched repo (needs Dependabot enabled on the repo and a PAT with "Dependabot alerts: read").
-- Four keyless public APIs feed the scan through the `public-api` HttpClient: each matched repo's `Directory.Packages.props` (read with the GitHub PAT) is checked against nuget.org for newer versions and OSV.dev for known advisories; the Azure Retail Prices API prices B1/S1/P0v3 in each app's region; RDAP reads the registration expiry of any custom domain. Each catalog entry in `apps.json` may set `expect`, text the live page must contain; a page that answers 2xx without it is flagged. Each entry may also carry a `stack` block of short labels (`frontend`, `backend`, `realtime`, `data`, `extras` = the app's unique tech, `ai`, `signIn`, `delivery`) plus a `details` map of the same keys holding the full wording, and an `aiServices` list (`cloud`, `name`, `use`, `optional`) for the AI column. An entry may also set `androidPackage`; the nightly scan checks anonymously whether its Google Play page and its `githubRepo` are public, and the home page links each only once it is — the home page's matrix of how each app is built.
-- Push alerts go through ntfy (`Alerts:NtfyTopic`): app down/up, failed scan, spend spike, an SSL certificate crossing 14 days, the month-end forecast crossing the budget, a page losing its `expect` text, a custom domain crossing 30 days to expiry. `weekly-digest.yml` sends a Monday summary to the same topic. `screenshots.yml` (Lighthouse drop of 15+ points) sends to the same topic via the optional `NTFY_TOPIC` GitHub secret, falling back to the Key Vault secret.
-- `deploy.yml` builds and deploys only (no tests, no infra job, no rollback, no pull-request runs), then waits until `/health/live` reports the pushed commit in `X-Commit`. It is identical in every Po .NET web repo and each repo owns its copy. Tests run locally; `scripts/post-deploy-smoke.ps1 -BaseUrl <url>` is a manual check now.
-- The other five workflows are scheduled fleet jobs and stay: `ci-watch.yml`, `conventions.yml`, `screenshots.yml`, `uptime-scan.yml`, `weekly-digest.yml`.
-- Shell (Po web standard, 2026-11-18): the shared `po-tokens.css` look (indigo accent, light/dark from the device, Inter and Space Grotesk), a header with the app name upper-left and a settings gear upper-right, one `vYYMMDD` stamp lower-right (UTC date of HEAD), `/diag` cards, and Tab with nothing focused opens `/po-dev.html`, a live developer window reading `/health/live` and `/api/diag/status`.
+- Four keyless public APIs feed the scan through the `public-api` HttpClient: each matched repo's `Directory.Packages.props` (read with the GitHub PAT) is checked against nuget.org for newer versions and OSV.dev for known advisories; the Azure Retail Prices API prices B1/S1/P0v3 in each app's region; RDAP reads the registration expiry of any custom domain. Each catalog entry in `apps.json` may set `expect`, text the live page must contain; a page that answers 2xx without it is flagged. Each entry may also carry a `stack` block of short labels (`frontend`, `backend`, `realtime`, `data`, `extras` = the app's unique tech, `ai`, `signIn`, `delivery`) plus a `details` map of the same keys holding the full wording, and an `aiServices` list (`cloud`, `name`, `use`, `optional`) for the AI column. An entry may also set `androidPackage`; each scan checks anonymously whether its Google Play page and its `githubRepo` are public, and the home page links each only once it is — the home page's matrix of how each app is built.
+- Push alerts go through ntfy (`Alerts:NtfyTopic`): app down/up, failed scan, spend spike, an SSL certificate crossing 14 days, the month-end forecast crossing the budget, a page losing its `expect` text, a custom domain crossing 30 days to expiry.
+- `deploy.yml` is the only workflow (no infra job, no rollback, no pull-request runs). E2E tiers run locally; `scripts/post-deploy-smoke.ps1 -BaseUrl <url>` is a manual check.
+- **Dropped on 2026-11-20 (owner's choice, instead of upgrading the F1 plan):** the scheduled workflows `ci-watch.yml`, `conventions.yml`, `uptime-scan.yml`, `weekly-digest.yml` and `screenshots.yml`. There is no nightly scan (a scan runs when a visitor loads a report older than 12h, so a day nobody visits has no uptime data), no Monday digest, no estate CI watcher, and no new card screenshots: cards keep the last captured picture and the home page says so. The PageSpeed score chips went with the capture.
+- Shell (Po web standard, 2026-11-18): this repo's own `po-tokens.css` look (indigo accent, light/dark from the device, Inter and Space Grotesk), a header with the app name upper-left and nothing upper-right (no visitor sign-in; the owner removed the gear), one `vYYMMDD` stamp lower-right (UTC date of HEAD), `/diag` cards, and Tab with nothing focused opens `/po-dev.html`, a live developer window reading `/health/live` and `/api/diag`.
 - Azure behavior prefers Key Vault and managed identity when available, with local fallback configuration for development.
 - The client dashboard consumes the shared Azure report models generated by the server and infrastructure layers.
 - Every page shows the build date (YYMMDD) in the lower-right corner, from the client assembly's `BuildVersion` metadata.
@@ -62,9 +73,9 @@ Vault `kv-poshared2` under the prefix `PoPunkouterSoftware--` and are never comm
 
 | Key | What it does |
 |---|---|
-| `AzureBlobStorage:Endpoint` | Public endpoint of the account holding the `app-screenshots` container, used on the managed-identity path. `screenshots.yml` is the only writer; the app only reads. Without it stored screenshots never serve, which looks exactly like none were ever captured. Azurite wins in Development. |
+| `AzureBlobStorage:Endpoint` | Public endpoint of the account holding the `app-screenshots` container (the last captured card pictures; nothing writes them since 2026-11-20), used on the managed-identity path. Without it stored screenshots never serve. Azurite wins in Development. |
 | `ApplicationInsights:ConnectionString` | Left blank; supplied by the vault secret `ApplicationInsights--ConnectionString` or `APPLICATIONINSIGHTS_CONNECTION_STRING`. |
-| `FeatureFlags:EnableManagementActions` | On everywhere so `uptime-scan.yml` can `POST /api/diag/refresh`. Production still demands `Security:ManagementApiKey`, and `/api/config` reports `false` there, so no visitor sees a button that would 401. |
+| `FeatureFlags:EnableManagementActions` | On everywhere, so a caller holding the key can `POST /api/diag/refresh` in Production. Production still demands `Security:ManagementApiKey`, and `/api/config` reports `false` there, so no visitor sees a button that would 401. |
 | `FeatureFlags:EnableAutoInventoryRefresh` | A portfolio load with a report older than 12h starts a background rescan (30-min cooldown). Defaults on outside Development/Testing. |
 | `FeatureFlags:EnableAiSummary` | The AI status paragraph on `/azure`; `false` falls back to the rule-based narrative. |
 | `StatusNarrator:*` | Azure AI Foundry chat completions on `po-aiservices-shared2` (`gpt-5.4-nano`). Deliberately NOT named `AzureAi`: the vault's estate-wide `AzureAI--*` secrets would be picked up case-insensitively and 401 every call. Blank `ApiKey` means Entra ID (needs Cognitive Services OpenAI User), falling back to the vault's `AzureOpenAI--ApiKey`. |
@@ -74,17 +85,18 @@ Vault `kv-poshared2` under the prefix `PoPunkouterSoftware--` and are never comm
 | `RateLimits:*` | Global (not per-IP) ceilings on `/api/signins` and `POST /api/diag/ai`, the two anonymous endpoints that cost money per call. |
 | `Retention:HistoryDays` | Days before history rows are pruned (0 disables). Blob lifecycle is in `infra/main.bicep`. |
 | `Pinger:*` | Background sweep that warms cold starts and records daily reachability for the uptime grid. Off means the grid uses scan observations alone. |
-| `Security:ManagementApiKey` | Required in Production when management actions are on — the filter fails closed without it. Vault secret `PoPunkouterSoftware--Security--ManagementApiKey`, same value as the `MANAGEMENT_API_KEY` GitHub secret. |
+| `Security:ManagementApiKey` | Required in Production when management actions are on — the filter fails closed without it. Vault secret `PoPunkouterSoftware--Security--ManagementApiKey`. (The `MANAGEMENT_API_KEY` GitHub secret was only for the dropped `uptime-scan.yml`.) |
 
 ## Testing Strategy
 
 - Unit tests (`PoPunkouterSoftware.Unit`) cover pure logic and API helpers, no I/O.
 - Integration tests (`PoPunkouterSoftware.Integration`) cover host configuration, diagnostics endpoints, and Azure Table Storage behavior via `WebApplicationFactory` + Testcontainers Azurite.
-- E2E tests (`PoPunkouterSoftware.E2EAPI`, `PoPunkouterSoftware.E2EUI`) cover the HTTP contract and browser flows against a live instance; on demand, not in CI. E2EUI runs axe-core's WCAG 2.1 A/AA rules over every page (`Deque.AxeCore.Playwright`) and fails on serious or critical violations.
-- Each tier has a hard test budget — 100 Unit, 50 Integration, 25 E2E-API, 25 E2E-UI. Adding a test means removing one; prefer widening an existing test's assertions.
+- E2E tests (`PoPunkouterSoftware.E2EAPI`, `PoPunkouterSoftware.E2EUI`) cover the HTTP contract and browser flows against a live instance; on demand, not in CI, and they skip with a clear message when no app answers at `BASE_URL`. E2EUI runs axe-core's WCAG 2.1 A/AA rules over every page (`Deque.AxeCore.Playwright`) and fails on serious or critical violations.
+- Integration runs in CI; locally its 6 Azurite tests skip with a clear message when Docker is not running.
+- Current counts: Unit 91, Integration 43, E2E API 22, E2E UI 24 (see [docs/testing.md](docs/testing.md)).
 
 ## Developer Guidance
 
-- Read `CLAUDE.md` before broad changes — it is the single context map. (`AGENT.MD` was merged into it and deleted; `AGENTS.md` only points there.)
+- Read [AGENTS.md](AGENTS.md) before changing anything (CLAUDE.md just points there); [docs/architecture.md](docs/architecture.md) is the context map.
 - Keep `/api/diag/*` available but do not link them from the UI — diagnostics surface only in the `/azure` Advanced diagnostics drawer.
 - Preserve Po-prefixed naming and strict build quality defaults from `Directory.Build.props`.

@@ -84,8 +84,8 @@ public class ManagementActionFilterTests
     }
 
     // ── Production fail-closed: flag on, no key ────────────────────────────────
-    // Reachable for the first time because the nightly uptime-scan workflow needs
-    // EnableManagementActions turned on in Production. Without this guard, that config
+    // EnableManagementActions is on in Production so a key holder can start a rescan by
+    // hand. Without this guard, that config
     // would leave /api/diag/refresh open to anonymous callers — a free, repeatable,
     // ~30-second Azure subscription scan for anyone who finds the route.
 
@@ -121,7 +121,7 @@ public class ManagementActionFilterTests
         var resp = await client.SendAsync(request);
 
         resp.StatusCode.Should().Be(HttpStatusCode.OK,
-            because: "this is exactly the call the nightly uptime-scan workflow makes");
+            because: "a caller holding the key may start a rescan in Production");
     }
 
     [Fact]

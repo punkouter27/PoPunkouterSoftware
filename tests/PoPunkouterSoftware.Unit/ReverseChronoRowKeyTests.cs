@@ -6,7 +6,7 @@ namespace PoPunkouterSoftware.Unit;
 /// Two whole-property tests over one two-line method. This was six cases — a pair proving
 /// newer-sorts-first, a three-timestamp sort proving the same thing, a two-case width theory
 /// and a MaxValue fact — i.e. the "one-assertion Facts that each re-fetch the same document"
-/// shape CLAUDE.md describes, spending six tests' worth of a 100-test budget on one rule's
+/// shape docs/architecture.md describes, spending six tests' worth of a 100-test budget on one rule's
 /// worth of coverage. They collapse without losing a single boundary, which is what made room
 /// for <see cref="DashboardDerivationsTests"/>.
 /// </summary>

@@ -11,7 +11,7 @@
 }
 
 /* Every rule in this file MUST use the `.azure-ops-page ::deep …` form, base rules and
-   media-query overrides alike — see CLAUDE.md. It is not only about crossing component
+   media-query overrides alike — see docs/architecture.md. It is not only about crossing component
    boundaries: `::deep` moves the scope attribute onto `.azure-ops-page`, so a bare
    `.azure-glance-grid` compiles to `.azure-glance-grid[b-x]` (specificity 0,2,0) while the
    base rule compiles to `.azure-ops-page[b-x] .azure-glance-grid` (0,3,0). Media queries add

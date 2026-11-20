@@ -28,19 +28,15 @@
    the header footprint via --app-header-reserve instead. *@
 <RadzenLayout>
     <RadzenHeader class="po-header">
-        @* The estate header (.po-header, po-tokens.css): the app name upper-left, the settings
-           gear upper-right, on every page. The four page links were hidden from 2026-10-20 and
-           removed on 2026-10-30; pages are reached from Ctrl+K, the 404 page's list, the bottom
-           nav on a phone, or a typed URL.
+        @* The Po header (.po-header, po-tokens.css): the app name upper-left on every page, nothing
+           upper-right (no visitor sign-in; the owner removed the settings gear on 2026-11-18). Pages are
+           reached from Ctrl+K, the 404 page's list, the bottom nav on a phone, or a typed URL.
 
            This layout is STATICALLY server-rendered (<Routes /> carries no render mode;
            only the page components are InteractiveWebAssembly). Nothing here may depend
            on a Blazor event handler or on OnInitializedAsync doing useful work — an
            @onclick never fires, and the server's injected HttpClient has no BaseAddress
-           so a relative-URI fetch throws. That is why the gear is a plain link to /settings
-           and not a button: it works with no interactivity at all. (Until 2026-11-18 it was
-           a WASM island, AccountMenu, beside a developer persona dropdown; the dropdown gated
-           nothing, since no endpoint uses the "Management" policy, and went with it.) *@
+           so a relative-URI fetch throws. *@
         <PoHeader />
     </RadzenHeader>
     <RadzenBody>

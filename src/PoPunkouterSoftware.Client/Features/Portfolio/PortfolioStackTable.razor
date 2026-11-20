@@ -77,14 +77,16 @@
                         @* width/height are the box the CSS draws (16:10), not the phone-shaped
                            source, so nothing shifts when the stylesheet arrives. The first row's
                            image is the LCP element and loads eagerly; the rest are lazy. *@
-                        <div class="portfolio-stack__thumb" aria-hidden="true">
-                            @if (!string.IsNullOrEmpty(app.ScreenshotUrl))
-                            {
+                        @* Only when a stored picture exists: nothing captures new ones since 2026-11-20, so an
+                           app without one gets no thumbnail column rather than an empty placeholder box. *@
+                        @if (!string.IsNullOrEmpty(app.ScreenshotUrl))
+                        {
+                            <div class="portfolio-stack__thumb" aria-hidden="true">
                                 <img src="@app.ScreenshotUrl" alt="" width="160" height="100"
                                      loading="@(first ? "eager" : "lazy")" fetchpriority="@(first ? "high" : "auto")"
-                                     decoding="async" onerror="this.style.display='none'" />
-                            }
-                        </div>
+                                     decoding="async" onerror="this.parentElement.style.display='none'" />
+                            </div>
+                        }
                         <div class="portfolio-stack__id">
                             <h2 class="portfolio-stack__name">
                                 @if (string.IsNullOrWhiteSpace(app.Url))
@@ -111,26 +113,6 @@
                                         <RadzenIcon Icon="local_fire_department" /><span aria-hidden="true">@(days >= 30 ? "30d+" : $"{days}d")</span>
                                         <span class="app-sr-only">@(days >= 30 ? "No outage in 30 days" : $"{days} days without an outage")</span>
                                     </span>
-                                }
-                                @* Nightly PageSpeed Insights, mobile, and the performance trend —
-                                   always shown (Details is fixed at Full since 2026-11-17). *@
-                                @if (app.Scores is { } scores)
-                                {
-                                    <ul class="portfolio-stack__scores" aria-label="PageSpeed Insights, mobile">
-                                        <li class="@ScoreClass(scores.Performance)"><span aria-hidden="true">Perf</span><span class="app-sr-only">Performance</span> @scores.Performance</li>
-                                        <li class="@ScoreClass(scores.Accessibility)"><span aria-hidden="true">A11y</span><span class="app-sr-only">Accessibility</span> @scores.Accessibility</li>
-                                        <li class="@ScoreClass(scores.BestPractices)"><span aria-hidden="true">BP</span><span class="app-sr-only">Best practices</span> @scores.BestPractices</li>
-                                        <li class="@ScoreClass(scores.Seo)"><span aria-hidden="true">SEO</span><span class="app-sr-only">Search engine optimisation</span> @scores.Seo</li>
-                                    </ul>
-                                    @if (scores.PerformanceHistory.Count > 1)
-                                    {
-                                        var history = scores.PerformanceHistory;
-                                        <span class="portfolio-stack__trend">
-                                            <Sparkline Points="@history.Select((p, n) => new OpsMetricPoint(n.ToString(), p)).ToList()"
-                                                       Tone="@(history[^1] >= history[0] ? "good" : "warn")"
-                                                       AriaLabel="@($"Performance over {history.Count} nights, from {history[0]} to {history[^1]}")" />
-                                        </span>
-                                    }
                                 }
                             </div>
                         </div>
@@ -416,6 +398,4 @@
         return string.Join(" ", parts.Where(p => p.Length > 0));
     }
 
-    /// <summary>Lighthouse's own bands: 90+ good, 50–89 needs work, below 50 poor.</summary>
-    private static string ScoreClass(int score) => score >= 90 ? "is-good" : score >= 50 ? "is-warn" : "is-bad";
 }

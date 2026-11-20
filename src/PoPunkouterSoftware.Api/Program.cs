@@ -180,7 +180,7 @@ try
 
     // The commit this build came from (SDK-stamped as "<version>+<sha>"), so a deploy can prove
     // which build is answering: CI checks /health/live for X-Commit equal to the pushed sha.
-    var commit = PoPlatform.Version.Split('+') is [_, var sha, ..] ? sha : "unknown";
+    var commit = PoPlatform.Commit;
     app.Use((ctx, next) =>
     {
         ctx.Response.Headers["X-Commit"] = commit;
@@ -306,8 +306,8 @@ try
     // ─── Feature slices ───────────────────────────────────────────────
     app.MapConfigEndpoints();
     app.MapHealthEndpoints();
-    // Uniform cross-app liveness probe (see PoPlatform). Same shape in every Po app, which
-    // is what lets the portfolio dashboard poll them all and render one uptime grid.
+    // Liveness probe (see PoPlatform): the deploy checks its X-Commit header, and this app's
+    // own pinger polls the same path on every Po app for the uptime grid.
     app.MapPoLiveness();
     app.MapDiagEndpoints();
     app.MapPortfolioEndpoints();

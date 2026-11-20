@@ -13,7 +13,7 @@ namespace PoPunkouterSoftware.Infrastructure;
 /// <remarks>
 /// <para>This is the one read path in the app that queries Azure live on a page load, and it
 /// is a deliberate exception to the "everything is a projection of the stored report" rule in
-/// CLAUDE.md. The inventory scan is a ~30-second ARM walk whose answer changes slowly, so
+/// docs/architecture.md. The inventory scan is a ~30-second ARM walk whose answer changes slowly, so
 /// storing it and projecting it is right; a sign-in roster is a single cheap Log Analytics
 /// query whose whole value is being current, and folding it into the nightly scan would mean
 /// a visitor who signed in an hour ago does not appear until tomorrow.</para>

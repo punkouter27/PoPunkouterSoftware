@@ -441,7 +441,7 @@ public static partial class DashboardDerivations
         UptimeState.Healthy => "healthy",
         UptimeState.Broken => "unavailable",
         UptimeState.Degraded => "degraded",
-        _ => "no scan that day",
+        _ => "no data that day",
     };
 
     /// <summary>

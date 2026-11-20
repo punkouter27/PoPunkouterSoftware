@@ -5,7 +5,7 @@ namespace PoPunkouterSoftware.Unit;
 
 /// <summary>
 /// The whole <c>/users</c> projection in one contract assertion, rather than a Fact per
-/// field — the style CLAUDE.md asks for, and the reason this new slice costs the Unit tier
+/// field — the style docs/architecture.md asks for, and the reason this new slice costs the Unit tier
 /// one test method instead of a dozen.
 /// </summary>
 public class SignInReportBuilderTests
