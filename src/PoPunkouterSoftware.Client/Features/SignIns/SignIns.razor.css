@@ -153,6 +153,21 @@
     min-width: 140px;
 }
 
+/* The field is a RadzenTextBox (owner decision 2026-11-21). Radzen's hover and focus states repaint it as a
+   white, bordered, inset box inside our pill; the pill's own :focus-within ring is the focus signal here. */
+.signins-page ::deep .signins-search-wrap .rz-textbox.signins-search-input,
+.signins-page ::deep .signins-search-wrap .rz-textbox.signins-search-input:hover,
+.signins-page ::deep .signins-search-wrap .rz-textbox.signins-search-input:focus,
+.signins-page ::deep .signins-search-wrap .rz-textbox.signins-search-input:focus-visible {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    outline: none;
+    padding: 0;
+    height: auto;
+    min-height: 0;
+}
+
 /* Chromium and Safari draw their own clear button on type="search"; ours (which Firefox
    needs) sat right beside it, two × in a row. */
 .signins-page ::deep .signins-search-input::-webkit-search-cancel-button {
@@ -309,4 +324,9 @@
     .signins-page ::deep .app-disclosure .rz-chart {
         height: 210px;
     }
+}
+
+/* A long filter is one unbroken word; without this the "No one matches" line ran out of the card. */
+.signins-page ::deep .signin-empty {
+    overflow-wrap: anywhere;
 }
