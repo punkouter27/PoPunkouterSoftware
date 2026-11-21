@@ -24,7 +24,12 @@ builder.Services.AddScoped(sp =>
     };
 });
 builder.Services.AddScoped<PortfolioApiClient>();
-builder.Services.AddValidatorsFromAssemblyContaining<SignInSearchFilterValidator>();
+// Registered one by one, never by assembly scan: the published WASM bundle is trimmed, and a scan
+// reaches each validator only through reflection, so the trimmer dropped SignInSearchFilterValidator's
+// constructor and /users rendered nothing in production ("NoConstructorMatch"). A generic registration
+// tells the trimmer to keep the constructor.
+builder.Services.AddSingleton<IValidator<SignInSearchFilter>, SignInSearchFilterValidator>();
+builder.Services.AddSingleton<IValidator<AiTriageAdHocRequest>, AiTriageAdHocRequestValidator>();
 
 // ─── Radzen UI services ───────────────────────────────────────────────────────
 builder.Services.AddRadzenComponents();
