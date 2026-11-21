@@ -95,7 +95,7 @@ public static class PoPlatform
     /// </remarks>
     public static IEndpointRouteBuilder MapPoLiveness(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapGet("/health/live", () => Results.Ok(new
+        endpoints.MapMethods("/health/live", ["GET", "HEAD"], () => Results.Ok(new
         {
             status = "ok",
             app = AppName,
