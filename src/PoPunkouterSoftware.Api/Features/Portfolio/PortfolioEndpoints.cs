@@ -97,15 +97,20 @@ internal static partial class PortfolioEndpoints
         // the precedence it implemented — Azure overwrites catalog when both exist — was
         // implicit in the loop order and easy to invert by accident. Build the live list
         // first, then add catalog entries for keys nothing else claimed.
+        //
+        // Two live services can share one friendly name (an app moving to a new App Service keeps
+        // both sites in its resource group for a while). A plain ToDictionary threw on that and
+        // took the whole home page down with a 400 on 2026-11-21, so each key keeps ONE service:
+        // the one the catalog URL points at, else a running one, else the first by name.
         var appsByName = services
             .Where(s => !PortfolioIdentity.IsSelf(s.FriendlyName, s.Name))
+            .GroupBy(LiveKey, StringComparer.OrdinalIgnoreCase)
             .ToDictionary(
-                s => PortfolioIdentity.NormalizeName(string.IsNullOrWhiteSpace(s.FriendlyName) ? s.Name : s.FriendlyName),
-                s =>
+                g => g.Key,
+                g =>
                 {
-                    var key = PortfolioIdentity.NormalizeName(string.IsNullOrWhiteSpace(s.FriendlyName) ? s.Name : s.FriendlyName);
-                    metaByName.TryGetValue(key, out var meta);
-                    return ToPortfolioApp(meta, s, screenshotVersions, storageGroups, links);
+                    metaByName.TryGetValue(g.Key, out var meta);
+                    return ToPortfolioApp(meta, PickLiveService(g, meta), screenshotVersions, storageGroups, links);
                 },
                 StringComparer.OrdinalIgnoreCase);
 
@@ -122,6 +127,24 @@ internal static partial class PortfolioEndpoints
 
         return appsByName.Values.OrderBy(a => a.Name, StringComparer.OrdinalIgnoreCase).ToList();
     }
+
+    private static string LiveKey(WebService s) =>
+        PortfolioIdentity.NormalizeName(string.IsNullOrWhiteSpace(s.FriendlyName) ? s.Name : s.FriendlyName);
+
+    /// <summary>One service per catalog key: the catalog's own URL wins, then a running site, then name order.</summary>
+    internal static WebService PickLiveService(IEnumerable<WebService> candidates, string? catalogUrl)
+    {
+        var host = Uri.TryCreate(catalogUrl, UriKind.Absolute, out var u) ? u.Host : null;
+        return candidates
+            .OrderByDescending(s => host is not null && Uri.TryCreate(s.Url, UriKind.Absolute, out var su)
+                && string.Equals(su.Host, host, StringComparison.OrdinalIgnoreCase))
+            .ThenByDescending(s => string.Equals(s.PlatformState, "Running", StringComparison.OrdinalIgnoreCase))
+            .ThenBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
+            .First();
+    }
+
+    private static WebService PickLiveService(IEnumerable<WebService> candidates, AppMeta? meta) =>
+        PickLiveService(candidates, meta?.Url);
 
     /// <summary>
     /// Status plus 30-day uptime as an SVG badge, for each app's README. Read-only and cheap:

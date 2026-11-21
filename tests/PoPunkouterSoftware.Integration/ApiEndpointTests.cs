@@ -214,6 +214,25 @@ public class PortfolioEndpointTests
         names.Should().NotContain(n => n.Contains("app-popunkoutersoftware2", StringComparison.OrdinalIgnoreCase));
     }
 
+    /// <summary>
+    /// Two scanned sites with one friendly name (the seed has two "SeedHealthy" sites) must give
+    /// ONE card, not a 400: on 2026-11-21 a second PoMiniGames App Service made the whole home
+    /// page render only "The app list could not be loaded". The running site wins.
+    /// </summary>
+    [Fact]
+    public async Task GetPortfolio_TwoSitesWithOneFriendlyName_GiveOneCard()
+    {
+        var response = await _client.GetAsync("/api/portfolio");
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var seedHealthy = doc.RootElement.GetProperty("apps").EnumerateArray()
+            .Where(a => a.GetProperty("name").GetString() == "SeedHealthy")
+            .ToList();
+        seedHealthy.Should().ContainSingle();
+        seedHealthy[0].GetProperty("url").GetString().Should().Be("https://app-seed-healthy.example.net");
+    }
+
     [Fact]
     public async Task GetPortfolio_EnvelopeCarriesFreshness_SoTheUiCanBeHonestAboutLive()
     {

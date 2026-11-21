@@ -114,8 +114,8 @@ public class TestWebApp : WebApplicationFactory<Program>
         Subscription = new SubscriptionInfo { Name = "TestSubscription" },
         WebServices = new WebServicesInfo
         {
-            Total = 2,
-            ByStatus = new ByStatusInfo { Active = 1, Broken = 1, Other = 0 },
+            Total = 3,
+            ByStatus = new ByStatusInfo { Active = 2, Broken = 1, Other = 0 },
             Services = new List<WebService>
             {
                 new()
@@ -143,6 +143,21 @@ public class TestWebApp : WebApplicationFactory<Program>
                     HttpStatus = ServiceHealth.Broken,
                     PlatformState = "Running",
                     Connectivity = new ConnectivityInfo { Success = false, ResponseTime = 2100, Error = "503" },
+                },
+                // A second site with the SAME friendly name, as when an app moves to a new App
+                // Service and both sit in its resource group. /api/portfolio once threw on this
+                // (duplicate dictionary key) and the home page showed only an error banner.
+                new()
+                {
+                    Name = "app-seed-healthy-next",
+                    FriendlyName = "SeedHealthy",
+                    ResourceGroup = "rg-seed",
+                    ResourceType = "Microsoft.Web/sites",
+                    ResourceId = $"/subscriptions/{SeedSubscriptionId}/resourceGroups/rg-seed/providers/Microsoft.Web/sites/app-seed-healthy-next",
+                    Url = "https://app-seed-healthy-next.example.net",
+                    HttpStatus = ServiceHealth.Active,
+                    PlatformState = "Stopped",
+                    Connectivity = new ConnectivityInfo { Success = true, ResponseTime = 90 },
                 },
             },
         },
