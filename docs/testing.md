@@ -1,21 +1,22 @@
 # Testing — PoPunkouterSoftware
 
-Four projects, one per tier. Counts are real (2026-11-20), not caps: add a test where it buys coverage, but
+Four projects, one per tier. Counts are real (2026-11-21), not caps: add a test where it buys coverage, but
 prefer widening an existing test's assertions to adding a near-duplicate method (the tiers that had to be
 cut back were full of one-assertion Facts that each re-fetched the same document).
 
 | Tier | Project | Tests | Runs in CI | Needs | Without it |
 | --- | --- | --- | --- | --- | --- |
 | Unit | `tests/PoPunkouterSoftware.Unit` | 91 | yes | nothing | — |
-| Integration | `tests/PoPunkouterSoftware.Integration` | 43 (6 use Docker) | yes | Docker for the Testcontainers Azurite tests | those 6 skip with "Docker is not running…"; the other 37 run |
+| Integration | `tests/PoPunkouterSoftware.Integration` | 44 (6 use Docker) | yes | Docker for the Testcontainers Azurite tests | those 6 skip with "Docker is not running…"; the other 38 run |
 | E2E API | `tests/PoPunkouterSoftware.E2EAPI` | 22 | no | an app at `BASE_URL` (default http://localhost:8000) | every test skips with "No app is answering at …" |
-| E2E UI | `tests/PoPunkouterSoftware.E2EUI` | 24 | no | an app at `BASE_URL` + Playwright Chromium | every test skips with the reason |
+| E2E UI | `tests/PoPunkouterSoftware.E2EUI` | 24 | no | an app at `BASE_URL` with a stored Azure scan + Playwright Chromium | every test skips with the reason |
 
 ```powershell
 dotnet build PoPunkouterSoftware.slnx -c Release
 dotnet test tests/PoPunkouterSoftware.Unit -c Release --no-build
 dotnet test tests/PoPunkouterSoftware.Integration -c Release --no-build
 pwsh ./scripts/run-dev.ps1 -NoWatch                       # the app on :8000, for the E2E tiers
+curl -s https://app-popunkoutersoftware2.azurewebsites.net/api/diag/report -o src/PoPunkouterSoftware.Api/App_Data/azure-full-report.json   # E2E UI needs a scan; git-ignored
 $env:BASE_URL='http://localhost:8000'; dotnet test tests/PoPunkouterSoftware.E2EAPI -c Release --no-build
 pwsh tests/PoPunkouterSoftware.E2EUI/bin/Release/net10.0/playwright.ps1 install chromium   # once
 $env:BASE_URL='http://localhost:8000'; dotnet test tests/PoPunkouterSoftware.E2EUI -c Release --no-build
