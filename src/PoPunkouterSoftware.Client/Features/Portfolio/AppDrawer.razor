@@ -1,38 +1,66 @@
 @namespace PoPunkouterSoftware.Client
-@* A side drawer: a native <dialog> opened with showModal() (js/helpers.js appShowDialog).
+@implements IDisposable
+@inject DialogService Dialogs
+@* A side drawer: Radzen's side dialog (DialogService.OpenSideAsync), pinned right, full screen on a phone.
 
-   Not Radzen's DialogService.OpenSide, deliberately. A side dialog renders in the
-   <RadzenComponents> outlet in MainLayout — outside the page — so it loses the page's state
-   (a filter click inside it would not re-render it without DialogService.Refresh plumbing)
-   and, worse, every `.azure-ops-page ::deep …` rule: the content would arrive unstyled.
-   A <dialog> rendered INSIDE the page stays in the page's render tree and under its
-   selectors; showModal() lifts it into the top layer without moving it in the DOM.
-
-   The platform supplies the rest: focus trap, Escape, the inert page behind, focus returned
-   to the trigger, and `closedby="any"` light dismiss on the backdrop where supported. A
-   closed dialog is display:none, so it costs the page's layout nothing. *@
-@inject IJSRuntime JS
-
-<dialog class="app-drawer" @ref="_dialog" aria-labelledby="@_titleId" closedby="any">
-    <header class="app-drawer__header">
-        <h2 id="@_titleId" class="app-drawer__title">@Title</h2>
-        <form method="dialog">
-            <RadzenButton ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat" ButtonType="ButtonType.Submit" class="ppk-plain app-drawer__close" aria-label="Close">
-                <span class="material-symbols-outlined" aria-hidden="true">close</span>
-            </RadzenButton>
-        </form>
-    </header>
-    <div class="app-drawer__body">
-        @ChildContent
-    </div>
-</dialog>
+   It was a native <dialog> until 2026-11-21; the owner's "Radzen wins" decision replaced it. The two
+   things the <dialog> gave for free are kept by hand:
+   - Page state. The side dialog renders in the <RadzenComponents> outlet in MainLayout, outside the
+     page, so it re-renders only when told to. This component stays in the page: every page render
+     re-sets its parameters, and OnParametersSet then raises Changed, which the open dialog's
+     AppDrawerContent turns into a re-render, so a filter click inside the drawer shows at once.
+   - Scoped CSS. The page wraps the drawer's content in an element written in ITS .razor file with its
+     page class (e.g. `<div class="app-page azure-ops-page app-drawer__body">`), so that element carries
+     the page's scope attribute and every `.azure-ops-page ::deep …` rule still reaches the content.
+   Radzen supplies the rest: the mask, focus inside the panel, Escape, the close button and the
+   overlay click. *@
 
 @code {
     [Parameter, EditorRequired] public string Title { get; set; } = "";
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
-    private ElementReference _dialog;
-    private readonly string _titleId = $"drawer-{Guid.NewGuid():N}";
+    private bool _open;
 
-    public ValueTask OpenAsync() => JS.InvokeVoidAsync("appShowDialog", _dialog);
+    /// <summary>Raised on every page render; the open dialog's <see cref="AppDrawerContent"/> re-renders.</summary>
+    public event Action? Changed;
+
+    protected override void OnParametersSet() => Changed?.Invoke();
+
+    /// <summary>Opens the drawer and returns at once (not when it closes), so the caller can load into it.</summary>
+    public ValueTask OpenAsync()
+    {
+        if (_open)
+            return ValueTask.CompletedTask;
+        _open = true;
+        var closed = Dialogs.OpenSideAsync<AppDrawerContent>(Title,
+            new Dictionary<string, object?> { [nameof(AppDrawerContent.Drawer)] = this }, new SideDialogOptions
+        {
+            Position = DialogPosition.Right,
+            Width = "min(46rem, 100vw)",
+            Height = "100dvh",
+            ShowMask = true,
+            CloseDialogOnOverlayClick = true,
+            CssClass = "app-drawer",
+        });
+        _ = WhenClosedAsync(closed);
+        return ValueTask.CompletedTask;
+    }
+
+    private async Task WhenClosedAsync(Task closed)
+    {
+        try
+        {
+            await closed;
+        }
+        finally
+        {
+            _open = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_open)
+            Dialogs.CloseSide();
+    }
 }

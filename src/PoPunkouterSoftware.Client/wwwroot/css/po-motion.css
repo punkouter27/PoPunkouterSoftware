@@ -2,14 +2,7 @@
    po-motion.css — Keyframes, view transitions & reduced-motion guards
    ============================================================================ */
 
-@media (prefers-reduced-motion: no-preference) {
-    .app-drawer[open] { animation: app-drawer-in .28s var(--app-ease-out); }
-    .app-drawer[open]::backdrop { animation: app-drawer-fade .28s ease-out; }
-}
-
-@keyframes app-drawer-in { from { transform: translateX(100%); } }
-@keyframes app-drawer-fade { from { opacity: 0; } }
-
+/* The drawers slide in with Radzen's own side-dialog animation (AppDrawer.razor). */
 
 
 /* ── Motion ──────────────────────────────────────────────────────────────────

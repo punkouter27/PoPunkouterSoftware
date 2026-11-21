@@ -54,7 +54,7 @@ No `.cursorrules`, `.copilotignore`, `SPEC.md`, `tasks/`, `DOCS/` at the root (f
   DiagReportDto(string Status, string Environment, string Version, DateTimeOffset CheckedAt, double CheckedMs,
                 DiagCheckDto[] Checks)
   DiagCheckDto(string Name, string Group /* "api" | "data" | "service" */, string Label, string Status
-               /* Healthy|Degraded|Unhealthy */, string Purpose, string Detail, double LatencyMs, string? Problem)
+               /* Healthy|Degraded|Unhealthy|Off */, string Purpose, string Detail, double LatencyMs, string? Problem)
   ```
 - UI route `/diag` ONLY (delete other diagnostics pages/routes such as `/system`, `/diagnostics`, `/status`). Page
   `<title>` and `h1`: **System status**. Layout: overall banner in plain words ("Everything is working" /
@@ -100,9 +100,10 @@ for ruff; Docker Desktop for Azurite).
 | Python lint | `uvx ruff check .` (config: `ruff.toml`) | — |
 | Build | `dotnet build PoPunkouterSoftware.slnx -c Release` (warnings are errors) | — |
 | Unit (91) | `dotnet test tests/PoPunkouterSoftware.Unit -c Release --no-build` | nothing |
-| Integration (44) | `dotnet test tests/PoPunkouterSoftware.Integration -c Release --no-build` | Docker for the 6 Testcontainers Azurite tests; without it they skip with "Docker is not running…" |
+| Integration (45) | `dotnet test tests/PoPunkouterSoftware.Integration -c Release --no-build` | Docker for the 6 Testcontainers Azurite tests; without it they skip with "Docker is not running…" |
 | E2E API (22) | `BASE_URL=http://localhost:8000 dotnet test tests/PoPunkouterSoftware.E2EAPI -c Release --no-build` | a running app; without one every test skips ("No app is answering at …") |
-| E2E UI (24) | `BASE_URL=http://localhost:8000 dotnet test tests/PoPunkouterSoftware.E2EUI -c Release --no-build` | a running app with a stored Azure scan (on a fresh machine: `curl -s https://app-popunkoutersoftware2.azurewebsites.net/api/diag/report -o src/PoPunkouterSoftware.Api/App_Data/azure-full-report.json`) + Playwright Chromium (`pwsh tests/PoPunkouterSoftware.E2EUI/bin/Release/net10.0/playwright.ps1 install chromium` once); without either every test skips with the reason |
+| E2E UI (28) | `BASE_URL=http://localhost:8000 dotnet test tests/PoPunkouterSoftware.E2EUI -c Release --no-build` | a running app with a stored Azure scan (on a fresh machine: `curl -s https://app-popunkoutersoftware2.azurewebsites.net/api/diag/report -o src/PoPunkouterSoftware.Api/App_Data/azure-full-report.json`) + Playwright Chromium (`pwsh tests/PoPunkouterSoftware.E2EUI/bin/Release/net10.0/playwright.ps1 install chromium` once); without either every test skips with the reason |
+| E2E on the trimmed Release build | `pwsh ./scripts/run-e2eui.ps1 -Tiers E2EAPI,E2EUI` (publishes Release like deploy.yml, seeds the scan, starts Azurite + the published app on :8000, runs both tiers, stops everything) | Docker + Playwright Chromium |
 | Run locally | `pwsh ./scripts/run-dev.ps1 -NoWatch` (drop `-NoWatch` for hot reload) | Docker (starts Azurite via `docker compose` if :10002 is closed) → http://localhost:8000 |
 | Deploy | push to `master` → `.github/workflows/deploy.yml` (format, ruff, build, Unit, Integration, publish, deploy); `*.md` and `SCREENSHOTS/**` are paths-ignored | repo variables for OIDC |
 | Deploy check | `curl -sI https://app-popunkoutersoftware2.azurewebsites.net/health/live` → `X-Commit: <pushed sha>` | — |
@@ -127,18 +128,19 @@ for ruff; Docker Desktop for Azurite).
 - **Radzen wins (owner decision 2026-11-21).** Every interactive control is a Radzen component: buttons are
   `RadzenButton`, the /users filter is a `RadzenTextBox`. A button that keeps a bespoke look is
   `ButtonStyle.Base` + `Variant.Flat` + class `ppk-plain` (reset in `modern-ui.css`); its own class styles it
-  from a scoped sheet as `.<page> ::deep .<class>` so it outranks the theme. Two deliberate exceptions, both
-  non-interactive containers: the drawers stay native `<dialog>`s (`AppDrawer.razor`, reasons in
-  docs/architecture.md; their close button is a RadzenButton), and the six read-only data tables stay plain
-  `<table>`s (row headers, captions and the phone card layout; `RadzenTable` wraps them in a scrolling grid
-  with sticky, ellipsised headers). No other component library.
+  from a scoped sheet as `.<page> ::deep .<class>` so it outranks the theme. The drawers are Radzen side
+  dialogs (`AppDrawer.razor`, a native `<dialog>` until 2026-11-21; see docs/architecture.md for the refresh and scoped-CSS plumbing). Allowed exceptions
+  (owner list: resumable-upload file inputs, native audio/video, read-only data tables): only the six
+  read-only data tables, which stay plain `<table>`s (row headers, captions and the phone card layout;
+  `RadzenTable` wraps them in a scrolling grid with sticky, ellipsised headers). No other component library.
 - **Version stamp on phones is in the page flow.** At 768px and below `.po-version` is the last thing on the
   page (lower-right, above the bottom nav); wider, it is fixed lower-right and `.app-shell-body` leaves it an
   88px gutter. A fixed stamp on a phone sat on /diag cards as they scrolled past.
 - **/diag probes every outside service live** (`Features/Diag/ExternalServiceProbes.cs`, cached 1 minute):
   screenshot blob container, Azure Resource Manager, Application Insights (a `print` query on the Users-page
   resource), the AI endpoint (model list, never a paid completion), GitHub (`/rate_limit`), NuGet, OSV, Azure
-  retail prices, RDAP and ntfy (`/v1/health`, never a push) — plus the Key Vault, Table Storage and scan-data
+  retail prices, RDAP and ntfy (`/v1/health`, never a push; shown as a neutral **Off** row, not counted in the banner, while
+  `Alerts:NtfyTopic` is unset, which it is in production) — plus the Key Vault, Table Storage and scan-data
   health checks. Off in the `Testing` environment and when `Diag:ProbeServices=false`.
 
 ### Dropped on 2026-11-20 (owner's choice)

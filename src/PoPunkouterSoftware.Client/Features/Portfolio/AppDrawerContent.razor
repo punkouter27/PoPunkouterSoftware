@@ -1,0 +1,30 @@
+@namespace PoPunkouterSoftware.Client
+@implements IDisposable
+@* What a Radzen side dialog opened by AppDrawer renders: the drawer's current ChildContent. It re-renders
+   whenever the AppDrawer (which stays in the page) gets new parameters, i.e. on every page render. *@
+@Drawer.ChildContent
+
+@code {
+    [Parameter, EditorRequired] public AppDrawer Drawer { get; set; } = default!;
+
+    private AppDrawer? _subscribed;
+
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(_subscribed, Drawer))
+            return;
+        Unsubscribe();
+        _subscribed = Drawer;
+        _subscribed.Changed += OnDrawerChanged;
+    }
+
+    private void OnDrawerChanged() => _ = InvokeAsync(StateHasChanged);
+
+    private void Unsubscribe()
+    {
+        if (_subscribed is not null)
+            _subscribed.Changed -= OnDrawerChanged;
+    }
+
+    public void Dispose() => Unsubscribe();
+}

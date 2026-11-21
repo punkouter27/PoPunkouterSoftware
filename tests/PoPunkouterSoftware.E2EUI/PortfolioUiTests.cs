@@ -368,7 +368,7 @@ public class PortfolioUiTests : IAsyncLifetime
 
         var overhang = await page.EvaluateAsync<string[]>(
             @"() => [...document.querySelectorAll('main.azure-ops-page *')]
-                .filter(e => !e.closest('.azure-uptime__scroll, dialog'))
+                .filter(e => !e.closest('.azure-uptime__scroll, .rz-dialog-side'))
                 .filter(e => e.getBoundingClientRect().right > document.documentElement.clientWidth + 1)
                 .map(e => e.tagName + '.' + e.className + ' @' + Math.round(e.getBoundingClientRect().right) + 'px')");
         overhang.Should().BeEmpty("nothing outside the uptime scroller may run off the right of a 390px screen");
@@ -472,6 +472,99 @@ public class PortfolioUiTests : IAsyncLifetime
         // --rz-primary must resolve to the app accent, not Radzen's stock #598087 teal.
         probe[2].Should().NotBeNullOrWhiteSpace("--rz-primary is unset");
         probe[2].Should().NotContain("598087", "the accent silently fell back to Radzen stock");
+    }
+
+    /// <summary>
+    /// The drawers are Radzen side dialogs (owner decision 2026-11-21), not native &lt;dialog&gt;s. The content
+    /// renders in the dialog outlet outside the page, so this guards the two things AppDrawer restores by
+    /// hand: the page's scoped CSS still reaches it (the wrapper carries --azure-section-gap, set only by the
+    /// page's scoped `.azure-ops-page` rule) and a filter click inside it re-renders it; the panel is opaque and
+    /// fits the viewport. Escape closes it.
+    /// </summary>
+    [LiveAppTheory]
+    [MemberData(nameof(Viewports))]
+    public async Task Azure_Drawer_IsARadzenSidePanelWithThePageStyles(string label, int width, int height, bool isMobile)
+    {
+        var page = await NewPageAsync(width, height, isMobile);
+        await page.GotoAsync($"{BaseUrl}/azure", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.GetByRole(AriaRole.Button, new() { Name = "Advanced diagnostics" }).ClickAsync(new() { Timeout = 40_000 });
+
+        var drawer = page.Locator(".rz-dialog-side.app-drawer");
+        await Assertions.Expect(drawer).ToBeVisibleAsync();
+        await Assertions.Expect(drawer.Locator(".rz-dialog-side-title")).ToHaveTextAsync("Advanced diagnostics");
+        // Page state reaches the panel: a filter click inside it re-renders the list at once.
+        await drawer.GetByRole(AriaRole.Button, new() { Name = "All", Exact = true }).ClickAsync(new() { Timeout = 40_000 });
+        await Assertions.Expect(drawer.GetByRole(AriaRole.Button, new() { Name = "All", Exact = true }))
+            .ToHaveAttributeAsync("aria-pressed", "true");
+        await Assertions.Expect(drawer.Locator(".azure-resource-row").First).ToBeVisibleAsync();
+        (await page.Locator("dialog").CountAsync()).Should().Be(0, "no native <dialog> is left (Radzen wins)");
+
+        var probe = await page.EvaluateAsync<string[]>(@"() => {
+            const body = document.querySelector('.rz-dialog-side.app-drawer .app-drawer__body');
+            const panel = document.querySelector('.rz-dialog-side.app-drawer');
+            const r = panel.getBoundingClientRect();
+            return [getComputedStyle(body).getPropertyValue('--azure-section-gap').trim(),
+                    getComputedStyle(panel).backgroundImage, String(Math.round(r.right)), String(Math.round(r.width))];
+        }");
+        probe[0].Should().NotBeEmpty($"the page's scoped CSS must reach the drawer content at {label}");
+        probe[1].Should().Contain("gradient", "the panel must be opaque (surface over page colour)");
+        int.Parse(probe[2], System.Globalization.CultureInfo.InvariantCulture).Should().BeLessThanOrEqualTo(width + 1, "the drawer is pinned to the right edge, not off-screen");
+        int.Parse(probe[3], System.Globalization.CultureInfo.InvariantCulture).Should().BeLessThanOrEqualTo(width, "the drawer is at most the viewport wide");
+
+        await page.Keyboard.PressAsync("Escape");
+        await Assertions.Expect(drawer).ToHaveCountAsync(0);
+    }
+
+    /// <summary>
+    /// A service switched off on purpose (outage pushes with no ntfy topic) shows a neutral "Off" pill
+    /// and never counts toward the overall banner.
+    /// </summary>
+    [LiveAppFact]
+    public async Task Diag_OffRow_IsNeutralAndNotCountedInTheBanner()
+    {
+        var page = await NewPageAsync(1366, 800, false);
+        await page.GotoAsync($"{BaseUrl}/diag", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForSelectorAsync(".po-diag__card[data-check='alerts']", new() { Timeout = 40_000 });
+
+        var off = page.Locator(".po-diag__card[data-check='alerts'] .po-badge");
+        await Assertions.Expect(off).ToHaveTextAsync("Off");
+        (await off.GetAttributeAsync("class")).Should().Contain("po-badge--off");
+
+        var degraded = await page.Locator(".po-diag__card .po-badge--warn").CountAsync();
+        var unhealthy = await page.Locator(".po-diag__card .po-badge--bad").CountAsync();
+        var banner = (await page.Locator(".diag-banner strong").InnerTextAsync()).Trim();
+        if (unhealthy == 0)
+            banner.Should().Be(degraded switch
+            {
+                0 => "Everything is working",
+                1 => "Working, with 1 thing degraded",
+                var n => $"Working, with {n} things degraded",
+            }, "Off rows are not counted");
+    }
+
+    /// <summary>
+    /// /users went blank in production on 2026-11-21 because the trimmer removed the filter validator's
+    /// constructor (validators were assembly-scanned). Against the trimmed Release build: an over-long filter
+    /// shows the FluentValidation message inline under the field, and no browser dialog opens.
+    /// </summary>
+    [LiveAppFact]
+    public async Task Users_FilterValidation_ShowsInlineOnTheTrimmedBuild()
+    {
+        var page = await NewPageAsync(390, 844, true);
+        var dialogs = 0;
+        page.Dialog += (_, d) => { dialogs++; _ = d.DismissAsync(); };
+        await page.GotoAsync($"{BaseUrl}/users", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        var filter = page.GetByRole(AriaRole.Textbox, new() { Name = "Filter people or apps" });
+        await filter.WaitForAsync(new() { Timeout = 40_000 });
+
+        await filter.FillAsync(new string('x', 70));
+        var error = page.Locator("main.signins-page [role=alert]");
+        await Assertions.Expect(error).ToHaveTextAsync("Filter must be 64 characters or fewer.");
+        await Assertions.Expect(filter).ToHaveAttributeAsync("aria-invalid", "true");
+
+        await filter.FillAsync("Po");
+        await Assertions.Expect(error).ToHaveCountAsync(0);
+        dialogs.Should().Be(0, "validation never uses alert()/confirm()");
     }
 
     /// <summary>WCAG relative-luminance contrast ratio between two computed CSS colours.</summary>

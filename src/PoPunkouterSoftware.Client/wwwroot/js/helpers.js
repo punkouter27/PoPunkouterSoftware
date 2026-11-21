@@ -112,15 +112,6 @@ window.appRevealFocus = function (selector) {
 };
 
 /**
- * Open an AppDrawer's <dialog> modally. showModal() is the whole drawer behaviour: the
- * platform supplies the focus trap, Escape, the inert page behind it and focus return on
- * close. Closing needs no JS at all — the drawer's close button is a <form method="dialog">.
- */
-window.appShowDialog = function (dialog) {
-    if (dialog && !dialog.open) dialog.showModal();
-};
-
-/**
  * Force a cache-busting reload when the server BuildId no longer matches the loaded
  * WASM bundle. Replaces a JS `eval` string that was assembled in C#.
  */

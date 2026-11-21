@@ -232,11 +232,12 @@ else if (_summary is not null)
     <AzureUptimeHeatmap Map="@summary.Uptime" Focus="@Focus" OnSelect="@OpenAppAsync" />
     </section>
 
-    @* The two drawers. Both are native <dialog>s INSIDE this page (see AppDrawer.razor for
-       why not Radzen's side dialog): closed they are display:none and take no space; open
-       they sit in the top layer. Advanced diagnostics used to expand inline as a pane that
-       pushed everything below it down. *@
+    @* The two drawers: Radzen side dialogs (AppDrawer.razor). Each one's content sits in a wrapper
+       written HERE with this page's classes, so it carries this file's scope attribute and every
+       `.azure-ops-page ::deep` rule still reaches it inside the dialog outlet. Advanced diagnostics
+       used to expand inline as a pane that pushed everything below it down. *@
     <AppDrawer @ref="_diagnosticsDrawer" Title="Advanced diagnostics">
+    <div class="app-page azure-ops-page app-drawer__body">
         @* Banner alongside, not instead of — see the note on the page-level banner above. *@
         @if (!string.IsNullOrWhiteSpace(_advancedError))
         {
@@ -262,17 +263,16 @@ else if (_summary is not null)
                                    StatusBadgeFor="@ExplorerStatusBadge"
                                    RiskClassFor="@RiskClass">
                 <HeadingActions>
-                    @* Two plain buttons, not the RadzenSplitButton this was: a split button's
-                       menu is a Radzen popup, and anything outside a modal <dialog> is inert —
-                       a popup that escapes the dialog cannot be clicked. *@
                     <RadzenButton Text="Report JSON" Icon="download" Size="ButtonSize.Small"
                                   ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined" Click="DownloadReportAsync" />
                 </HeadingActions>
             </AzureResourceExplorer>
         }
+    </div>
     </AppDrawer>
 
     <AppDrawer @ref="_appDrawer" Title="@(_selectedRow?.Name ?? "App")">
+    <div class="app-page azure-ops-page app-drawer__body">
         @if (_selectedRow is { } selected)
         {
             var key = DashboardDerivations.AppMatchKey(selected.Name);
@@ -282,6 +282,7 @@ else if (_summary is not null)
                             Changes="@summary.Changes.Changes.Where(c => c.Text.Contains(selected.Name, StringComparison.OrdinalIgnoreCase)).ToList()"
                             SignIns="@_signIns" />
         }
+    </div>
     </AppDrawer>
 }
 </main>

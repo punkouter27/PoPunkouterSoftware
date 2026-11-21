@@ -360,7 +360,7 @@ comment in each before changing it; they document the reasoning, this is the map
 | `gpu-backdrop.js` | Orchestrator for `#app-gpu-backdrop`: tier selection, colour tokens, glass rects (the renderer's energy input is a constant 0 since the audio kit went), and the DOM reads that feed the event effects (attractors, origins, the palette lens). Owns no pixels. |
 | `gfx-webgl.js` | WebGL2 renderer (curl-noise field, transform-feedback particles, dual-Kawase blur + bloom, glass composite with prism edges) with a WebGL1 field-only fallback. **The top of the ladder.** |
 | `ui-physics.js` | Physics on the DOM, not a canvas: KPI values count up on a spring. (The catalogue-card tilt went with the cards, 2026-11-03.) Per-frame work is motionKit subscribers that unsubscribe when settled. |
-| `helpers.js` | Topbar, clipboard, download, `appRevealFocus` (the `/azure?focus=` scroll), `appShowDialog` (opens an `AppDrawer`), `appScan` (dispatches the scan lifecycle as `app:refresh`) — plus the Radzen accessibility repairs (`appRepairRadzenA11y`). Unrelated to the animation layers. (The `appMedia` matchMedia bridge went with the resource explorer's data-grid branch — it had exactly one caller.) |
+| `helpers.js` | Topbar, clipboard, download, `appRevealFocus` (the `/azure?focus=` scroll), `appScan` (dispatches the scan lifecycle as `app:refresh`) — plus the Radzen accessibility repairs (`appRepairRadzenA11y`). Unrelated to the animation layers. (The `appMedia` matchMedia bridge went with the resource explorer's data-grid branch — it had exactly one caller.) |
 | `theme-kit.js` | Since 2026-11-17 only deletes the stored keys of the removed /settings toggles. Theme, density, sound and details are fixed (see the page budget at the top). |
 | `app-boot.js` | Host-page boot: dismisses the loading splash, drives the nav progress bar, filters hot-reload console noise. Not an animation layer — no rAF. Was inline in `App.razor` until the CSP banned inline script. |
 | `blazor-hooks.js` | Registers the enhanced-navigation callbacks. Must load **after** `blazor.web.js`, which defines `Blazor`. Also ex-inline. |
@@ -784,19 +784,18 @@ proves a context and program were created, not that anything reached the screen.
   use — a hint on each of twelve catalogue cards would otherwise add twenty-four tab stops.
   With **no child content** it renders an ⓘ glyph plus the text as sr-only content: that is
   where read-once prose goes (methodology, owner-facing config keys) instead of a paragraph.
-- **Drawers are native `<dialog>`s, not Radzen's side dialog.** `AppDrawer.razor` renders a
-  `<dialog>` INSIDE the page and opens it with `showModal()` (`js/helpers.js` `appShowDialog`);
-  closing is a `<form method="dialog">` button, Escape, or `closedby="any"` on the backdrop.
-  `DialogService.OpenSide` was rejected because it renders in the `<RadzenComponents>` outlet in
-  `MainLayout`, outside the page: the content loses the page's state (a filter click would not
-  re-render it) and every `.azure-ops-page ::deep …` rule, so it arrives unstyled. `showModal()`
-  lifts the dialog into the top layer without moving it in the DOM, so scoped CSS still reaches it.
-  Two consequences: **no Radzen popup inside a drawer** (a `RadzenSplitButton` menu escapes the
-  modal and is then inert — the diagnostics download is two plain buttons for that reason), and
-  the drawer background is the surface tone laid over `--app-bg`, fully opaque, because the GPU
-  glass pass never sees the top layer. `/azure` has two: Advanced diagnostics (it was an inline
-  `.app-pane--tall` pane) and one per app, opened from an uptime row name (`AzureAppDetail`: the
-  row's sentence, response time, attention lines and changes naming it, and its reach/cost).
+- **Drawers are Radzen side dialogs** (owner decision 2026-11-21, "Radzen wins"; they were native
+  `<dialog>`s from 2026-10-19). `AppDrawer.razor` calls `DialogService.OpenSideAsync` (right edge,
+  `min(46rem, 100vw)` wide, mask, Escape and overlay click close it). The side dialog renders in the
+  `<RadzenComponents>` outlet in `MainLayout`, outside the page, which cost two things the `<dialog>`
+  had for free, both restored by hand: (1) page state — `AppDrawer` stays in the page and calls
+  `DialogService.Refresh()` from `OnParametersSet` while open, so a filter click inside the drawer
+  re-renders it; (2) scoped CSS — the page wraps the drawer content in
+  `<div class="app-page azure-ops-page app-drawer__body">` written in `AzureDashboard.razor`, so the
+  wrapper carries the page's scope attribute and every `.azure-ops-page ::deep …` rule still applies.
+  `/azure` has two: Advanced diagnostics (it was an inline `.app-pane--tall` pane) and one per app,
+  opened from an uptime row name (`AzureAppDetail`: the row's sentence, response time, attention
+  lines and changes naming it, and its reach/cost).
 - **KPI tiles, disclosures and tables are shared classes** in `modern-ui.css`: `.app-kpis`,
   `.app-disclosure` (`__heading`, `__title`, `__body`), `.app-table` and `.app-table-scroll`.
   Each used to exist once per page stylesheet and the copies had drifted. A page stylesheet
