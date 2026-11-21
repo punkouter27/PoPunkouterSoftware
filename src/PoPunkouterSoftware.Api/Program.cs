@@ -147,6 +147,8 @@ try
     // Singleton: LogsQueryClient walks the credential chain on construction, and /users is a
     // live read on every page load. Reused instance, one chain walk for the lifetime of the app.
     builder.Services.AddSingleton<SignInQueryService>();
+    // /api/diag's live probes of every outside service without a health check of its own.
+    builder.Services.AddSingleton<ExternalServiceProbes>();
 
     // ─── Health checks (NET_RULES §3) ─────────────────────────────────────────
     // One check per external dependency, each performing the real operation the app

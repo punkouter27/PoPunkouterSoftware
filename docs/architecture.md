@@ -677,6 +677,13 @@ proves a context and program were created, not that anything reached the screen.
   the app's own design system, fed only by the allow-listed `GET /api/diag` (see the page
   budget at the top). Do not add a server route at `/diag`, and do not widen `/api/diag`
   with check data, config, paths or ids.
+  Since 2026-11-21 every outside service the app calls has a row that is probed live by
+  `ExternalServiceProbes` (Api `Features/Diag/`), in parallel with a 5 s budget each and cached
+  for a minute so an anonymous visitor cannot use `/diag` to drive traffic: screenshot blob
+  container, ARM, Application Insights (a `print` query), the AI endpoint's free model list,
+  GitHub `/rate_limit`, NuGet, OSV, Azure retail prices, RDAP and ntfy `/v1/health`. Rows carry
+  fixed sentences only. Before that, four rows (AI, screenshots, ntfy, App Insights) only read
+  configuration and showed "Healthy" with 0 ms.
 - **An unmatched path gets the app, not JSON.** A browser that mistypes a URL, or follows a link
   to an app that was renamed, must land on the app's own chrome: shell, header, skip link, a way
   back, and a **real 404 status**. That is `NotFoundPage.razor`, rendered by

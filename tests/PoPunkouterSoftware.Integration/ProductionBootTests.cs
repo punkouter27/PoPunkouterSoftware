@@ -45,6 +45,9 @@ public sealed class ProductionApp : WebApplicationFactory<Program>
                 ["AzureTableStorage:ConnectionString"] = "",
                 ["AzureBlobStorage:Endpoint"] = "",
                 ["Pinger:Enabled"] = "false",
+                // /api/diag's live probes of GitHub, nuget.org, the AI endpoint and friends stay off:
+                // a test must not call the internet. The rows still appear, saying so.
+                ["Diag:ProbeServices"] = "false",
                 // Unset = the instant "unavailable" branch, rather than a credential-chain walk
                 // against live Azure on every call the rate-limit test makes.
                 ["SignIns:ResourceId"] = "",
@@ -170,7 +173,9 @@ public class ProductionBootTests : IClassFixture<ProductionApp>
         root.TryGetProperty("config", out _).Should().BeFalse();
         var checks = root.GetProperty("checks").EnumerateArray().ToList();
         checks.Select(c => c.GetProperty("name").GetString()).Should()
-            .Contain(["server", "KeyVault", "TableStorage", "AzureInventory", "ApplicationInsights", "ai", "screenshots", "alerts"]);
+            .Contain(["server", "KeyVault", "TableStorage", "AzureInventory", "ApplicationInsights", "ai", "screenshots", "alerts",
+                "AzureResourceManager", "GitHub", "NuGet", "OSV", "AzurePrices", "RDAP"])
+            .And.OnlyHaveUniqueItems();
         checks.Select(c => c.GetProperty("group").GetString()).Should().OnlyContain(g => g == "api" || g == "data" || g == "service");
         checks.Should().OnlyContain(c => c.GetProperty("label").GetString()!.Length > 0
                                          && c.GetProperty("detail").GetString()!.Length > 0

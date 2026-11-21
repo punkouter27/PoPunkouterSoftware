@@ -25,7 +25,6 @@ internal static partial class DiagStatusBuilder
         ["TableStorage"] = new("data", "Table Storage", "Keeps each Azure scan and the 30-day history behind the uptime grid."),
         ["AzureInventory"] = new("data", "Azure scan data", "The latest scan of the Azure estate (read through Azure Resource Manager) — what every page is drawn from."),
         ["KeyVault"] = new("service", "Key Vault", "Holds the app's secrets (API keys), read once when the app starts."),
-        ["ApplicationInsights"] = new("service", "Application Insights", "Telemetry for this app, and the sign-in data behind the Users page."),
     };
 
     private static readonly Dictionary<string, string> Summaries = new(StringComparer.Ordinal)
@@ -41,14 +40,13 @@ internal static partial class DiagStatusBuilder
         ["no-report"] = "No scan has been stored yet.",
         ["empty-inventory"] = "The last scan finished but found nothing.",
         ["disabled"] = "Turned off on this server.",
-        ["enabled"] = "Turned on. Not probed here: every call is a paid completion.",
     };
 
     [GeneratedRegex("^[a-z][a-z-]{0,31}$")]
     private static partial Regex VerdictWord();
 
     internal static DiagReportDto Build(
-        HealthReport report, string environment, AiTriageService ai, IConfiguration config, DateTimeOffset now)
+        HealthReport report, string environment, IReadOnlyList<DiagCheckDto> probes, DateTimeOffset now)
     {
         var checks = new List<DiagCheckDto>
         {
@@ -57,30 +55,12 @@ internal static partial class DiagStatusBuilder
                 "Serves every page and all the data on them.", "Answered this request.",
                 Math.Round(report.TotalDuration.TotalMilliseconds, 1), null),
         };
-        checks.AddRange(report.Entries.Select(kvp => FromEntry(kvp.Key, kvp.Value)));
-
-        // Dependencies with no health check of their own, reported from configuration only (no call made):
-        // probing the AI provider costs money on every page load, and a test ntfy push would page the owner.
-        var aiVerdict = ai.IsEnabled ? "enabled" : "disabled";
-        checks.Add(ConfigRow("ai", "service", "AI summaries",
-            "Writes the plain-English status paragraph on the Azure page.", Summaries[aiVerdict], degraded: false));
-
-        var screenshots = !string.IsNullOrWhiteSpace(config["AzureTableStorage:ConnectionString"])
-            || !string.IsNullOrWhiteSpace(config["AzureBlobStorage:Endpoint"]);
-        checks.Add(ConfigRow("screenshots", "data", "Screenshot storage",
-            "Blob container holding each app card's last captured screenshot (no longer updated since 2026-11-20).",
-            screenshots
-                ? "Set up on this server."
-                : "Not set up on this server — app cards show placeholders.",
-            degraded: !screenshots && environment == "Production"));
-
-        var alerts = !string.IsNullOrWhiteSpace(config["Alerts:NtfyTopic"]);
-        checks.Add(ConfigRow("alerts", "service", "Outage alerts (ntfy)",
-            "Pushes a phone notification when a Po app goes down or comes back.",
-            alerts
-                ? "Set up on this server."
-                : "Not set up on this server — outages are not pushed to a phone.",
-            degraded: !alerts && environment == "Production"));
+        // A live probe replaces a health-check entry of the same name (the ApplicationInsights health
+        // check only reads configuration; its probe runs a real query).
+        var probed = probes.Select(p => p.Name).ToHashSet(StringComparer.Ordinal);
+        checks.AddRange(report.Entries.Where(kvp => !probed.Contains(kvp.Key)).Select(kvp => FromEntry(kvp.Key, kvp.Value)));
+        // Every other outside service, each probed live by ExternalServiceProbes.
+        checks.AddRange(probes);
 
         var ordered = checks
             .OrderBy(c => c.Group switch { "api" => 0, "data" => 1, _ => 2 })
@@ -97,11 +77,6 @@ internal static partial class DiagStatusBuilder
             Math.Round(report.TotalDuration.TotalMilliseconds, 1),
             ordered);
     }
-
-    private static DiagCheckDto ConfigRow(string name, string group, string label, string purpose, string detail, bool degraded) =>
-        new(name, group, label,
-            degraded ? nameof(HealthStatus.Degraded) : nameof(HealthStatus.Healthy),
-            purpose, detail, 0, degraded ? detail : null);
 
     private static DiagCheckDto FromEntry(string name, HealthReportEntry entry)
     {

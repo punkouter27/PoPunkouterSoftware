@@ -25,14 +25,16 @@ internal static class DiagEndpoints
         var diag = app.MapGroup("/api/diag").WithTags("Diag");
 
         // The /diag page's only fetch: DiagReportDto, the Po diag contract. Runs the same health
-        // checks as /health (already anonymous, so this exposes no new probe) and projects them
-        // through DiagStatusBuilder.
+        // checks as /health plus a live probe of every other outside service (ExternalServiceProbes,
+        // cached a minute) and projects them through DiagStatusBuilder.
         diag.MapGet("", async (
-            HealthCheckService health, IWebHostEnvironment env, AiTriageService ai, IConfiguration config,
+            HealthCheckService health, ExternalServiceProbes probes, IWebHostEnvironment env,
             TimeProvider clock, CancellationToken ct) =>
         {
-            var report = await health.CheckHealthAsync(ct);
-            return Results.Json(DiagStatusBuilder.Build(report, env.EnvironmentName, ai, config, clock.GetUtcNow()));
+            var reportTask = health.CheckHealthAsync(ct);
+            var probeTask = probes.RunAsync(ct);
+            await Task.WhenAll(reportTask, probeTask);
+            return Results.Json(DiagStatusBuilder.Build(reportTask.Result, env.EnvironmentName, probeTask.Result, clock.GetUtcNow()));
         })
         .WithName("GetDiag")
         .Produces<DiagReportDto>(StatusCodes.Status200OK);
