@@ -38,11 +38,17 @@ internal sealed class ExternalServiceProbes(
     private DateTimeOffset _cachedAt = DateTimeOffset.MinValue;
     private IReadOnlyList<DiagCheckDto> _cached = [];
 
+    /// <param name="OffReason">Non-null when the service is switched off on purpose on this server (an
+    /// opt-in feature left unconfigured): the row then shows "Off" — neutral, not counted in the banner — and
+    /// nothing is called.</param>
     private sealed record Spec(string Name, string Group, string Label, string Purpose,
-        Func<CancellationToken, Task<Verdict>> Probe);
+        Func<CancellationToken, Task<Verdict>> Probe, Func<string?>? OffReason = null);
 
     /// <summary>One probe's answer. <paramref name="Healthy"/> false means Degraded.</summary>
     private sealed record Verdict(bool Healthy, string Detail);
+
+    /// <summary>The /diag status of a service switched off on purpose (see <see cref="Spec"/>).</summary>
+    internal const string OffStatus = "Off";
 
     private static Verdict Ok(string detail) => new(true, detail);
     private static Verdict Bad(string detail) => new(false, detail);
@@ -61,10 +67,14 @@ internal sealed class ExternalServiceProbes(
                 return _cached;
 
             var specs = Specs();
-            var rows = config.GetValue("Diag:ProbeServices", !env.IsEnvironment("Testing"))
-                ? await Task.WhenAll(specs.Select(s => RunOneAsync(s, ct)))
-                : specs.Select(s => new DiagCheckDto(s.Name, s.Group, s.Label, nameof(HealthStatus.Healthy), s.Purpose,
-                    "Not probed in this environment.", 0, null)).ToArray();
+            var probe = config.GetValue("Diag:ProbeServices", !env.IsEnvironment("Testing"));
+            var rows = await Task.WhenAll(specs.Select(s =>
+                s.OffReason?.Invoke() is { } off
+                    ? Task.FromResult(new DiagCheckDto(s.Name, s.Group, s.Label, OffStatus, s.Purpose, off, 0, null))
+                    : probe
+                        ? RunOneAsync(s, ct)
+                        : Task.FromResult(new DiagCheckDto(s.Name, s.Group, s.Label, nameof(HealthStatus.Healthy), s.Purpose,
+                            "Not probed in this environment.", 0, null))));
             _cached = rows;
             _cachedAt = clock.GetUtcNow();
             return rows;
@@ -139,7 +149,11 @@ internal sealed class ExternalServiceProbes(
             ct => ProbePublicAsync("https://rdap.org/domain/example.com", HttpMethod.Head, ct)),
         new("alerts", "service", "Outage alerts (ntfy)",
             "Pushes a phone notification when a Po app goes down or comes back.",
-            ProbeNtfyAsync),
+            ProbeNtfyAsync,
+            // AlertNotifier is opt-in: no topic means outage pushes are switched off, not broken.
+            () => string.IsNullOrWhiteSpace(config["Alerts:NtfyTopic"])
+                ? "Off — no topic is set on this server, so outages are not pushed to a phone."
+                : null),
     ];
 
     private async Task<Verdict> ProbeScreenshotsAsync(CancellationToken ct)
@@ -251,11 +265,9 @@ internal sealed class ExternalServiceProbes(
         var server = (config["Alerts:NtfyServer"] is { Length: > 0 } s ? s : "https://ntfy.sh").TrimEnd('/');
         // The health route sends nothing to anyone; a test push would page the owner.
         using var resp = await httpFactory.CreateClient("health").GetAsync(server + "/v1/health", ct);
-        if (!resp.IsSuccessStatusCode)
-            return Bad($"Answered with an error ({(int)resp.StatusCode}).");
-        return string.IsNullOrWhiteSpace(config["Alerts:NtfyTopic"])
-            ? new Verdict(!env.IsProduction(), "Reachable, but no topic is set on this server — outages are not pushed to a phone.")
-            : Ok("Working — reachable just now, and a topic is set.");
+        return resp.IsSuccessStatusCode
+            ? Ok("Working — reachable just now, and a topic is set.")
+            : Bad($"Answered with an error ({(int)resp.StatusCode}).");
     }
 
     private Verdict NotSetUp(string consequence) =>

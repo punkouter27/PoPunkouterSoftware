@@ -24,7 +24,7 @@ public sealed record DiagReportDto(
 /// <param name="Name">Stable machine name, e.g. <c>TableStorage</c>.</param>
 /// <param name="Group"><c>api</c>, <c>data</c> or <c>service</c>: the section it is listed under.</param>
 /// <param name="Label">What the page shows, e.g. "Table Storage".</param>
-/// <param name="Status"><c>Healthy</c>, <c>Degraded</c> or <c>Unhealthy</c>.</param>
+/// <param name="Status"><c>Healthy</c>, <c>Degraded</c>, <c>Unhealthy</c>, or <c>Off</c> (switched off on purpose: neutral, not counted in the overall status).</param>
 /// <param name="Purpose">One line: what the app uses it for.</param>
 /// <param name="Detail">The result in plain words, e.g. "Working — the app read from it just now."</param>
 /// <param name="LatencyMs">How long the check took; 0 when nothing was probed.</param>

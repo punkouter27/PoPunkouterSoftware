@@ -152,6 +152,20 @@ public class ProductionBootTests : IClassFixture<ProductionApp>
     }
 
     /// <summary>
+    /// Validators are registered one by one (Program.cs), not by an assembly scan, so a trimmed or
+    /// reordered assembly cannot silently drop one. Both endpoints that validate resolve theirs here.
+    /// </summary>
+    [Fact]
+    public void Validators_AreRegisteredByType()
+    {
+        using var scope = _factory.Services.CreateScope();
+        scope.ServiceProvider.GetRequiredService<FluentValidation.IValidator<SignInSearchFilter>>()
+            .Should().BeOfType<SignInSearchFilterValidator>();
+        scope.ServiceProvider.GetRequiredService<FluentValidation.IValidator<AiTriageAdHocRequest>>()
+            .Should().BeOfType<AiTriageAdHocRequestValidator>();
+    }
+
+    /// <summary>
     /// <c>/api/diag</c> (DiagReportDto) feeds the anonymous <c>/diag</c> page, so in Production it must
     /// carry verdicts and nothing else: none of what got the first /diag deleted on 2026-09-04
     /// (ContentRoot path, config block, suffixed connection strings) and none of what the diag
@@ -180,8 +194,18 @@ public class ProductionBootTests : IClassFixture<ProductionApp>
         checks.Should().OnlyContain(c => c.GetProperty("label").GetString()!.Length > 0
                                          && c.GetProperty("detail").GetString()!.Length > 0
                                          && c.GetProperty("purpose").GetString()!.Length > 0
-                                         && (c.GetProperty("status").GetString() == "Healthy"
+                                         && (new[] { "Healthy", "Off" }.Contains(c.GetProperty("status").GetString())
                                              || c.GetProperty("problem").GetString()!.Length > 0));
+
+        // Outage pushes are opt-in (no Alerts:NtfyTopic here): the row is "Off" — neutral, no problem
+        // text, nothing called — and an Off row never drags the overall status down.
+        var alerts = checks.Single(c => c.GetProperty("name").GetString() == "alerts");
+        alerts.GetProperty("status").GetString().Should().Be("Off");
+        alerts.GetProperty("problem").ValueKind.Should().Be(JsonValueKind.Null);
+        alerts.GetProperty("latencyMs").GetDouble().Should().Be(0);
+        if (checks.Where(c => c.GetProperty("group").GetString() != "api")
+            .All(c => c.GetProperty("status").GetString() is "Healthy" or "Off"))
+            root.GetProperty("status").GetString().Should().Be("Healthy");
 
         var contentRoot = _factory.Services.GetRequiredService<IWebHostEnvironment>().ContentRootPath;
         body.Should().NotContain(contentRoot.Replace("\\", "\\\\"))

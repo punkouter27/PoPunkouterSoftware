@@ -55,7 +55,9 @@ try
         aiConnectionString = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddProblemDetails();
-    builder.Services.AddValidatorsFromAssemblyContaining<PoPunkouterSoftware.Shared.SignInSearchFilterValidator>();
+    // Validators by type, not an assembly scan: the same explicit list as the Client (trim-safe, greppable).
+    builder.Services.AddSingleton<IValidator<PoPunkouterSoftware.Shared.SignInSearchFilter>, PoPunkouterSoftware.Shared.SignInSearchFilterValidator>();
+    builder.Services.AddSingleton<IValidator<PoPunkouterSoftware.Shared.AiTriageAdHocRequest>, PoPunkouterSoftware.Shared.AiTriageAdHocRequestValidator>();
     builder.AddAppLogging();
 
     // ─── .NET 10 TimeProvider abstraction — enables testable time ────────────

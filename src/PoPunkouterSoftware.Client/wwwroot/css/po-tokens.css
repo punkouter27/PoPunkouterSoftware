@@ -246,3 +246,5 @@ main { padding-bottom: calc(var(--po-space-6) + env(safe-area-inset-bottom, 0px)
 .po-badge--ok { color: var(--po-text); background: var(--po-success-soft); box-shadow: inset 0 0 0 1px var(--po-success); }
 .po-badge--warn { color: var(--po-text); background: var(--po-warning-soft); box-shadow: inset 0 0 0 1px var(--po-warning); }
 .po-badge--bad { color: var(--po-text); background: var(--po-danger-soft); box-shadow: inset 0 0 0 1px var(--po-danger); }
+/* Off: a service switched off on purpose. Neutral grey, never a warning colour. */
+.po-badge--off { color: var(--po-text); background: var(--po-surface-2); box-shadow: inset 0 0 0 1px var(--po-border); }

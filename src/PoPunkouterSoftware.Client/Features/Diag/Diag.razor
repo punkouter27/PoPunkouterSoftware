@@ -131,6 +131,9 @@
     {
         "Healthy" => "ok",
         "Degraded" => "warn",
+        // Switched off on purpose: a neutral pill. Headline() counts only Degraded and Unhealthy, so Off
+        // rows never change the banner.
+        "Off" => "off",
         _ => "bad",
     };
 }
