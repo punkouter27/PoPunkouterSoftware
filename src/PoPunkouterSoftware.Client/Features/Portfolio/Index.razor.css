@@ -100,7 +100,7 @@
     font-size: var(--app-step--1);
 }
 
-.portfolio-build-banner__action {
+.portfolio-build-banner ::deep .rz-button.portfolio-build-banner__action {
     padding: var(--app-space-2xs) var(--app-space-sm);
     border: 1px solid var(--app-accent);
     border-radius: var(--app-radius-pill);
@@ -112,11 +112,11 @@
     transition: background-color var(--app-dur-fast) var(--app-ease-smooth);
 }
 
-.portfolio-build-banner__action:hover {
+.portfolio-build-banner ::deep .rz-button.portfolio-build-banner__action:hover {
     background: var(--app-accent-wash);
 }
 
-.portfolio-build-banner__dismiss {
+.portfolio-build-banner ::deep .rz-button.portfolio-build-banner__dismiss {
     background: transparent;
     border: 0;
     color: var(--app-text-muted);
@@ -126,7 +126,7 @@
     padding: var(--app-space-3xs) var(--app-space-2xs);
 }
 
-.portfolio-build-banner__dismiss:hover {
+.portfolio-build-banner ::deep .rz-button.portfolio-build-banner__dismiss:hover {
     color: var(--app-text);
 }
 

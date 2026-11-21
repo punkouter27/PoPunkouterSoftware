@@ -807,6 +807,74 @@
           }
         ]
       }
+    },
+    {
+      "id": "poraceunreal",
+      "name": "PoRaceUnreal",
+      "description": "A watch-only race between physically simulated creatures, each driven by a brain learned with reinforcement learning, presented like a sports broadcast; watch it in the browser.",
+      "category": "rl-training",
+      "status": "active",
+      "technologies": [
+        "Azure Static Web Apps",
+        "Unreal Engine",
+        "Reinforcement learning"
+      ],
+      "url": "https://nice-ground-0c8496e0f.4.azurestaticapps.net",
+      "githubRepo": "punkouter27/PoRaceUnreal",
+      "expect": "<title>PoRace</title>",
+      "stack": {
+        "frontend": "Unreal Engine 5.8",
+        "ai": "RL agents",
+        "physics": "MuJoCo 4.0",
+        "training": "MuJoCo Playground + PPO (JAX)",
+        "trainingPath": "sim",
+        "details": {
+          "frontend": "Unreal Engine 5.8 renders and presents the race; the website is a lighter static spectator version",
+          "physics": "MuJoCo 4.0 is the only physics authority, in the trainer and in Unreal through the vendored URLab plugin",
+          "training": "Racer brains are trained with PPO on MuJoCo Playground (JAX) and exported to ONNX"
+        },
+        "aiServices": [
+          {
+            "cloud": "In-app",
+            "name": "Reinforcement-learning agents",
+            "use": "Each racer's learned policy drives its body; nobody steers and no motion is animated"
+          }
+        ]
+      }
+    },
+    {
+      "id": "porobottrain",
+      "name": "PoRobotTrain",
+      "description": "A digital twin of a Unitree R1 humanoid: behaviours trained in MuJoCo, rehearsed in an Unreal Engine twin, then run unchanged on the real robot.",
+      "category": "rl-training",
+      "status": "active",
+      "technologies": [
+        "Azure Static Web Apps",
+        "Unreal Engine",
+        "Reinforcement learning"
+      ],
+      "url": "https://blue-sand-08c93620f.5.azurestaticapps.net",
+      "githubRepo": "punkouter27/PoRobotTrain",
+      "expect": "<title>PoRobotTrain</title>",
+      "stack": {
+        "frontend": "Unreal Engine 5.8",
+        "ai": "RL agents",
+        "physics": "MuJoCo 4.0",
+        "training": "MuJoCo + PPO",
+        "trainingPath": "sim",
+        "details": {
+          "frontend": "An Unreal Engine 5.8 twin (URLab plugin, embedded MuJoCo) rehearses each behaviour before it runs on the robot",
+          "physics": "MuJoCo 4.0 is the one simulator, in training and inside the Unreal twin",
+          "training": "Level-by-level policies are trained in MuJoCo and exported as ONNX; the same file and controller code drive sim, twin and the real robot"
+        },
+        "aiServices": [
+          {
+            "cloud": "In-app",
+            "name": "Reinforcement-learning policies",
+            "use": "ONNX policies drive the R1's joints in simulation, in the twin and on the real robot through Unitree SDK2"
+          }
+        ]
+      }
     }
   ]
 }

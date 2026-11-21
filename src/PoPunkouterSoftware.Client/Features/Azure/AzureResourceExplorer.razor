@@ -34,21 +34,18 @@
     @* Segmented control as a plain `role="group"` of buttons. RadzenSelectBar does not
        expose a way to set `aria-pressed` on each item, so the currently selected view was
        indistinguishable to a screen reader — five buttons, no signal of which one is on.
-       Building the same shape from `<button aria-pressed>` keeps the visual treatment
-       identical (the .rz-button classes below match Radzen's small size) and gives AT the
-       fact it needed. `aria-pressed` is the right ARIA here, not `aria-selected`: every
+       Building the same shape from small RadzenButtons with `aria-pressed` keeps the visual
+       treatment identical and gives AT the fact it needed. `aria-pressed` is the right ARIA here, not `aria-selected`: every
        button stays focusable independently and the group is a filter rather than a tab
        list (the rows below are the content, not a tabpanel). *@
     <div class="azure-filter-bar" role="group" aria-label="Filter resources">
         @foreach (var view in Views)
         {
             var isSelected = string.Equals(view, SelectedView, StringComparison.OrdinalIgnoreCase);
-            <button type="button"
-                    class="rz-button rz-button-sm rz-button-text @(isSelected ? "rz-state-active" : null)"
-                    aria-pressed="@(isSelected ? "true" : "false")"
-                    @onclick="@(() => SelectedViewChanged.InvokeAsync(view))">
-                @view
-            </button>
+            <RadzenButton ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat" Size="ButtonSize.Small" Text="@view"
+                          class="@(isSelected ? "rz-state-active" : null)"
+                          aria-pressed="@(isSelected ? "true" : "false")"
+                          Click="@(() => SelectedViewChanged.InvokeAsync(view))" />
         }
     </div>
 
@@ -78,7 +75,7 @@
                         @* @key on the composite identity, not the name: two resources in different
                            resource groups can share a name, and a duplicate key makes Blazor's diff
                            reuse the wrong element. *@
-                        <tr class="azure-resource-row" @key="@($"{item.Type}|{item.ResourceGroup}|{item.Name}")">
+                        <tr class="azure-resource-row" @key="@(item.Key ?? $"{item.Type}|{item.ResourceGroup}|{item.Name}")">
                             <th scope="row">
                                 <span class="azure-resource-row__name">@item.Name</span>
                                 <span class="azure-resource-row__meta">@item.Type · @item.ResourceGroup · @item.Location</span>

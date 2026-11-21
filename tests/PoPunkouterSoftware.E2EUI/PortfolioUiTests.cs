@@ -343,6 +343,18 @@ public class PortfolioUiTests : IAsyncLifetime
     {
         var page = await NewPageAsync(390, 844, isMobile: true);
         await page.GotoAsync($"{BaseUrl}/azure", new() { WaitUntil = WaitUntilState.NetworkIdle });
+
+        // A fresh local app has a stored scan but no history yet (the history table and the pinger's
+        // tallies are empty), so there is no grid to open on today. That state has its own sentence;
+        // assert it instead of waiting 40 s for a grid that cannot exist.
+        var rows = await page.EvaluateAsync<int>("async () => (await (await fetch('/api/diag/summary')).json()).uptime.rows.length");
+        if (rows == 0)
+        {
+            (await page.Locator(".azure-uptime .azure-compact-state").InnerTextAsync(new() { Timeout = 40_000 }))
+                .Should().Contain("No history yet", "an empty uptime history says so in words");
+            return;
+        }
+
         await page.WaitForSelectorAsync(".azure-uptime__scroll", new() { Timeout = 40_000 });
 
         var todayVisible = await page.EvaluateAsync<bool>(@"() => {
@@ -468,9 +480,12 @@ public class PortfolioUiTests : IAsyncLifetime
         static double Luminance(string css)
         {
             var parts = System.Text.RegularExpressions.Regex.Matches(css, @"\d+(\.\d+)?");
+            // Chromium reports a translucent colour-mix as `color(srgb 1 1 1 / 0.94)`: channels 0-1, not
+            // 0-255. Read as 0-255 that white was near-black, and the light-mode check failed at 1.18:1.
+            var scale = css.StartsWith("color(srgb", StringComparison.Ordinal) ? 1.0 : 255.0;
             double Channel(int i)
             {
-                var c = double.Parse(parts[i].Value, System.Globalization.CultureInfo.InvariantCulture) / 255.0;
+                var c = double.Parse(parts[i].Value, System.Globalization.CultureInfo.InvariantCulture) / scale;
                 return c <= 0.03928 ? c / 12.92 : Math.Pow((c + 0.055) / 1.055, 2.4);
             }
             return 0.2126 * Channel(0) + 0.7152 * Channel(1) + 0.0722 * Channel(2);
@@ -525,15 +540,27 @@ public class PortfolioUiTests : IAsyncLifetime
                 return !!(link && document.querySelector(link.getAttribute('href')));
             }")).Should().BeTrue($"the skip link must resolve on {route} at {label}");
 
-            // The YYMMDD build stamp (the estate's .po-version, exactly one) sits in the lower-right
-            // corner of the VIEWPORT on every page (it was an in-flow footer, below the fold on any
-            // long page, with no date).
+            // The YYMMDD build stamp (the estate's .po-version, exactly one) sits lower-right and never
+            // on content: wider than a phone it is fixed in the VIEWPORT's lower-right corner beside the
+            // content column; on a phone (2026-11-21) it is the last thing in the page flow, lower-right,
+            // below everything in <main> — a fixed stamp there sat on /diag cards as they scrolled past.
             var stamp = page.Locator(".po-version");
             (await stamp.CountAsync()).Should().Be(1, $"one build stamp on {route} at {label}");
             (await stamp.InnerTextAsync()).Should().MatchRegex(@"^v\d{6}$", $"the build stamp on {route} at {label}");
             var box = (await stamp.BoundingBoxAsync())!;
             (box.X + box.Width).Should().BeGreaterThan(width * 0.85f, $"the build stamp sits at the right on {route} at {label}");
-            (box.Y + box.Height).Should().BeInRange(height * 0.8f, height, $"the build stamp sits at the bottom on {route} at {label}");
+            if (width > 768)
+            {
+                (box.Y + box.Height).Should().BeInRange(height * 0.8f, height, $"the build stamp sits at the bottom on {route} at {label}");
+                var mainRight = await page.EvaluateAsync<double>("() => document.querySelector('.app-shell-body').getBoundingClientRect().right");
+                box.X.Should().BeGreaterThanOrEqualTo((float)mainRight, $"the build stamp sits beside the content column on {route} at {label}");
+            }
+            else
+            {
+                var tops = await page.EvaluateAsync<double[]>(
+                    "() => [document.querySelector('.po-version').getBoundingClientRect().top + scrollY, document.querySelector('main').getBoundingClientRect().bottom + scrollY]");
+                tops[0].Should().BeGreaterThanOrEqualTo(tops[1], $"the phone build stamp comes after the page content on {route} at {label}");
+            }
 
             var result = await page.RunAxe(new Deque.AxeCore.Commons.AxeRunOptions
             {

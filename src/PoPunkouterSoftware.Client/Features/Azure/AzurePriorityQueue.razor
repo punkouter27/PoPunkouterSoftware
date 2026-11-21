@@ -51,19 +51,21 @@
                         <div class="azure-item-actions">
                             @if (!string.IsNullOrWhiteSpace(item.Command))
                             {
-                                <button class="azure-copy-command" @onclick="@(() => OnCopyCommand.InvokeAsync(item.Command))"
-                                        title="Copy Azure CLI command">
+                                <RadzenButton ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat" class="ppk-plain azure-copy-command"
+                                              Click="@(() => OnCopyCommand.InvokeAsync(item.Command))"
+                                              title="Copy Azure CLI command">
                                     <code>@item.Command</code><RadzenIcon Icon="content_copy" />
-                                </button>
+                                </RadzenButton>
                             }
                             @if (CanRestart && item.Source == "Reliability")
                             {
                                 @* One tap from "it is down" to "try turning it off and on again" —
                                    the server picks Start for a stopped site, Restart otherwise. *@
-                                <button class="azure-action-button" @onclick="@(() => OnRestart.InvokeAsync(item))"
-                                        title="Restart this App Service (starts it if it is stopped)">
+                                <RadzenButton ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat" class="ppk-plain azure-action-button"
+                                              Click="@(() => OnRestart.InvokeAsync(item))"
+                                              title="Restart this App Service (starts it if it is stopped)">
                                     <RadzenIcon Icon="restart_alt" /><span>Restart</span>
-                                </button>
+                                </RadzenButton>
                             }
                         </div>
                     </div>

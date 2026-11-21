@@ -62,8 +62,9 @@
                 <strong>The dashboard has been updated since this page loaded.</strong>
                 <span>A newer build is live; click "Reload" to pick up the freshest inventory and live status.</span>
             </div>
-            <button type="button" class="portfolio-build-banner__action" @onclick="HardReloadAsync">Reload</button>
-            <button type="button" class="portfolio-build-banner__dismiss" aria-label="Dismiss update banner" @onclick="@(() => _buildMismatchDismissed = true)">×</button>
+            <RadzenButton ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat" class="ppk-plain portfolio-build-banner__action" Click="HardReloadAsync">Reload</RadzenButton>
+            <RadzenButton ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat" class="ppk-plain portfolio-build-banner__dismiss" aria-label="Dismiss update banner"
+                          Click="@(() => _buildMismatchDismissed = true)">×</RadzenButton>
         </div>
     }
 

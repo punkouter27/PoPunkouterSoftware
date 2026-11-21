@@ -362,7 +362,10 @@ public static partial class DashboardDerivations
                 Requests7d: portfolio?.Requests7d ?? service?.Metrics7Days?.Requests ?? 0,
                 Errors7d: portfolio?.Http5xx7d ?? service?.Metrics7Days?.Http5xx ?? 0,
                 ResponseTimeMs: portfolio?.ResponseTimeMs ?? service?.Connectivity?.ResponseTime,
-                Detail: details.TryGetValue(resource.Name, out var found) ? string.Join("; ", found) : null
+                Detail: details.TryGetValue(resource.Name, out var found) ? string.Join("; ", found) : null,
+                // The RESOURCE identity, not the shown name: two App Services can share one friendly
+                // name (PoMiniGames had two on 2026-11-21) and a duplicate @key crashed the explorer.
+                Key: $"{resource.Type}|{resource.ResourceGroup}|{resource.Name}"
             ));
         }
 

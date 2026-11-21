@@ -312,6 +312,21 @@ public class DashboardDerivationsTests
         rows.Single(r => r.Name == "PoWell").Detail.Should().BeNull();
 
         DashboardDerivations.BuildResourceExplorerItems(null, [], []).Should().BeEmpty();
+
+        // Two sites with one friendly name (PoMiniGames had two on 2026-11-21) show the same Name,
+        // so the row key must be the resource identity: a duplicate @key crashed the whole explorer.
+        var twins = new AzureReport
+        {
+            WebServices = new WebServicesInfo
+            {
+                Services = [Service("app-twin-a", status: "active", requests: 1, friendly: "PoTwin"),
+                            Service("app-twin-b", status: "active", requests: 1, friendly: "PoTwin")],
+            },
+        };
+        var twinRows = DashboardDerivations.BuildResourceExplorerItems(
+            twins, DashboardDerivations.BuildConsolidatedServices(twins), DashboardDerivations.BuildSafeToRemove(twins));
+        twinRows.Select(r => r.Name).Should().OnlyContain(n => n == "PoTwin").And.HaveCount(2);
+        twinRows.Select(r => r.Key).Should().OnlyHaveUniqueItems().And.NotContainNulls();
     }
 
     [Fact]

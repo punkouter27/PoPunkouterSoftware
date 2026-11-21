@@ -4,7 +4,7 @@ namespace PoPunkouterSoftware.E2EUI;
 
 /// <summary>
 /// What this tier needs and whether it is there, probed once per run: an app answering <c>/health/live</c> at
-/// BASE_URL (default http://localhost:8000) and a browser Playwright can launch. Without either, every test SKIPS
+/// BASE_URL (default http://localhost:8000) with a stored Azure scan, and a browser Playwright can launch. Without either, every test SKIPS
 /// with one clear reason instead of failing on "connection refused" or "Executable doesn't exist".
 /// </summary>
 public static class LiveApp
@@ -25,6 +25,19 @@ public static class LiveApp
             {
                 return NoApp;
             }
+
+            // Every page here is drawn from a stored Azure scan. A fresh local app has none, and without
+            // one the suite used to run for ~55 minutes and fail 21 tests on 40 s waits for cards that
+            // can never render. One clear skip instead.
+            try
+            {
+                if (http.GetAsync($"{BaseUrl}/api/diag/summary").GetAwaiter().GetResult().StatusCode == System.Net.HttpStatusCode.NotFound)
+                    return NoScan;
+            }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+            {
+                return NoApp;
+            }
         }
 
         // BROWSER_CHANNEL=chrome drives the installed Google Chrome; otherwise the bundled Chromium must exist.
@@ -39,6 +52,11 @@ public static class LiveApp
     private static string NoApp =>
         $"No app is answering at {BaseUrl}/health/live. Start it with ./scripts/run-dev.ps1 (or set BASE_URL "
         + "to a running instance), then rerun. E2E tiers are local-only and never run in CI.";
+
+    private static string NoScan =>
+        $"The app at {BaseUrl} has no stored Azure scan (/api/diag/summary is 404), so no page has data to draw. "
+        + "Copy production's: curl -s https://app-popunkoutersoftware2.azurewebsites.net/api/diag/report -o "
+        + "src/PoPunkouterSoftware.Api/App_Data/azure-full-report.json (git-ignored), then rerun.";
 
     /// <summary>Null when the tier can run; otherwise why it cannot.</summary>
     public static string? SkipReason => Probe.Value;

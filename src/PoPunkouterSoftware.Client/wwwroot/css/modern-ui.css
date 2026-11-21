@@ -838,7 +838,37 @@ html .rz-tooltip .rz-tooltip-content { max-width: min(24rem, calc(100vw - 2rem))
     flex-wrap: wrap;
 }
 
-.app-segmented__btn {
+/* ── Radzen buttons with a bespoke look (owner decision 2026-11-21: every control is a Radzen one) ──
+   ButtonStyle.Base + Variant.Flat + class "ppk-plain" strips the theme back to a bare button (no fill,
+   padding, size floor or type scale; the hover/focus gradients are switched off through Radzen's own
+   variables). The bespoke class then styles it as before: in a scoped stylesheet as
+   `.<page> ::deep .<class>` (or `.rz-button.<class>`), which outranks this reset by load order. */
+.rz-button.rz-base.ppk-plain {
+    --rz-button-hover-gradient: none;
+    --rz-button-active-gradient: none;
+    --rz-button-focus-gradient: none;
+    --rz-button-hover-shadow: none;
+    --rz-button-active-shadow: none;
+    --rz-button-focus-shadow: none;
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    line-height: inherit;
+    letter-spacing: inherit;
+    text-align: inherit;
+    vertical-align: middle;
+}
+
+.rz-button.ppk-plain > .rz-button-box {
+    display: contents;
+}
+
+.rz-button.ppk-plain.app-segmented__btn {
     border: 1px solid var(--app-border);
     background: var(--app-surface-soft);
     color: var(--app-text-muted);
@@ -851,18 +881,18 @@ html .rz-tooltip .rz-tooltip-content { max-width: min(24rem, calc(100vw - 2rem))
                 color var(--app-dur-fast) var(--app-ease-out);
 }
 
-.app-segmented__btn:hover:not(:disabled) {
+.rz-button.ppk-plain.app-segmented__btn:hover:not(:disabled) {
     background: var(--app-hover-wash);
     color: var(--app-text);
 }
 
-.app-segmented__btn.is-active {
+.rz-button.ppk-plain.app-segmented__btn.is-active {
     background: var(--app-accent-wash-strong);
     border-color: var(--app-accent-edge);
     color: var(--app-text);
 }
 
-.app-segmented__btn:disabled {
+.rz-button.ppk-plain.app-segmented__btn:disabled {
     opacity: .55;
     cursor: default;
 }
@@ -957,7 +987,7 @@ html .rz-tooltip .rz-tooltip-content { max-width: min(24rem, calc(100vw - 2rem))
 
 .app-drawer__header form { margin: 0; }
 
-.app-drawer__close {
+.rz-button.ppk-plain.app-drawer__close {
     display: grid;
     place-items: center;
     width: 2.25rem;
@@ -969,7 +999,7 @@ html .rz-tooltip .rz-tooltip-content { max-width: min(24rem, calc(100vw - 2rem))
     cursor: pointer;
 }
 
-.app-drawer__close:hover { background: var(--app-hover-wash); }
+.rz-button.ppk-plain.app-drawer__close:hover { background: var(--app-hover-wash); }
 
 .app-drawer__body {
     display: grid;
@@ -1268,23 +1298,43 @@ html[data-gpu-backdrop] .app-palette-backdrop {
     }
 }
 
-.app-segmented__btn,
+.rz-button.ppk-plain.app-segmented__btn,
 .rz-button {
     min-height: 38px;
     touch-action: manipulation;
 }
 
 @media (max-width: 640px) {
-    .app-segmented__btn {
+    .rz-button.ppk-plain.app-segmented__btn {
         min-height: 44px;
         min-width: 44px;
     }
 }
 
-/* Phones: clear the fixed bottom nav (3.5rem) and the .po-version stamp lifted above it. */
+/* The .po-version stamp never sits on content (2026-11-21: it covered /diag cards and app rows
+   as they scrolled past it).
+   - Wider than a phone it stays fixed lower-right, and the content column leaves it an 88px
+     gutter on each side (11rem in all), so nothing can scroll under it.
+   - On a phone it is no longer fixed: it is the last thing in the page flow, lower-right, lifted
+     above the fixed bottom nav by --po-stamp-lift, so it is seen at the end of every page and
+     never floats over a card. The shell keeps only its ordinary bottom padding. */
+@media (min-width: 769px) {
+    .app-shell-body {
+        width: min(100%, calc(var(--app-content-width) + var(--app-space-xl)), calc(100vw - 11rem));
+    }
+}
+
 @media (max-width: 768px) {
     .app-shell-body {
-        padding-bottom: calc(5.25rem + env(safe-area-inset-bottom));
+        padding-bottom: var(--app-space-md);
+    }
+
+    .po-version {
+        position: static;
+        display: block;
+        width: fit-content;
+        margin: 0 max(var(--po-space-3), env(safe-area-inset-right, 0px)) calc(var(--po-space-3) + var(--po-stamp-lift, 0px)) auto;
+        opacity: 1;
     }
 }
 

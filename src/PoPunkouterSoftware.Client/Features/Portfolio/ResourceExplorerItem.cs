@@ -19,5 +19,6 @@ public sealed record ResourceExplorerItem(
     int Requests7d,
     int Errors7d,
     int? ResponseTimeMs,
-    string? Detail = null
+    string? Detail = null,
+    string? Key = null
 );
