@@ -838,6 +838,16 @@ html .rz-tooltip .rz-tooltip-content { max-width: min(24rem, calc(100vw - 2rem))
     flex-wrap: wrap;
 }
 
+/* ── Outlined RadzenAlert (ErrorRetryBanner): words in the text colour ──
+   Radzen colours an outlined alert's text with --rz-<style>, and those are the dark fills tuned for white
+   badge text above. On the dark-mode page the warning banner ("The app list could not be loaded") read
+   3.21:1. The words take --app-text in both schemes; the border and icon keep the status colour. */
+.rz-alert.rz-variant-outlined .rz-alert-content,
+.rz-alert.rz-variant-outlined .rz-alert-message,
+.rz-alert.rz-variant-outlined .rz-alert-title {
+    color: var(--app-text);
+}
+
 /* ── Radzen buttons with a bespoke look (owner decision 2026-11-21: every control is a Radzen one) ──
    ButtonStyle.Base + Variant.Flat + class "ppk-plain" strips the theme back to a bare button (no fill,
    padding, size floor or type scale; the hover/focus gradients are switched off through Radzen's own
