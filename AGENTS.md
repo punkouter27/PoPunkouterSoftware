@@ -91,6 +91,12 @@ Several sessions (people and agents) commit to this repo, sometimes at the same 
 
 ## 3. Verification
 
+One command sequence verifies the repo (build, Unit, Integration, then both E2E tiers on the trimmed Release publish):
+
+```powershell
+dotnet build PoPunkouterSoftware.slnx -c Release && dotnet test tests/PoPunkouterSoftware.Unit -c Release --no-build && dotnet test tests/PoPunkouterSoftware.Integration -c Release --no-build && pwsh ./scripts/run-e2eui.ps1 -Tiers E2EAPI,E2EUI
+```
+
 Tested 2026-11-21 (.NET SDK 10.0.4xx per `global.json`, `rollForward: latestFeature`; Python 3.10+ and `uvx`
 for ruff; Docker Desktop for Azurite).
 
@@ -111,37 +117,26 @@ for ruff; Docker Desktop for Azurite).
 
 ## Repo-specific notes
 
-### Exceptions to the standard (deliberate)
+### Deliberate deviations
 
-- **Header right side is empty.** The app has no visitor sign-in (no email, no Sign in button), and the owner
-  removed the settings gear from the top bar on 2026-11-18 although `/settings` still exists (reached from
-  Ctrl+K). Don't re-add the gear without the owner asking.
-- **Azure names predate the naming rule.** App Service `app-popunkoutersoftware2` on plan
-  `asp-PoPunkouterSoftware-f1` (F1 Free, no Always On) in resource group `PoPunkouterSoftware`; Key Vault
-  `kv-poshared2` and the shared App Insights live in `PoShared`. Renaming means recreating the site.
-- **An extra `src/PoPunkouterSoftware.Infrastructure` project** holds the Azure adapters (Table Storage, ARM
-  scan, pinger, alerts, AI triage); the skeleton's Api/Client/Shared stay as they are.
-- **Reading other Po apps is the product.** `wwwroot/data/apps.json` lists the portfolio, and the app pings each
-  app's public `/health/live` and reads its public pages and repos. That is data, not shared code: nothing here
-  writes to, copies into or checks the conventions of another repo.
-- `SCREENSHOTS/` holds before/after UI pages (owner's rule below) and is referenced from README.md.
-- **Radzen wins (owner decision 2026-11-21).** Every interactive control is a Radzen component: buttons are
-  `RadzenButton`, the /users filter is a `RadzenTextBox`. A button that keeps a bespoke look is
-  `ButtonStyle.Base` + `Variant.Flat` + class `ppk-plain` (reset in `modern-ui.css`); its own class styles it
-  from a scoped sheet as `.<page> ::deep .<class>` so it outranks the theme. The drawers are Radzen side
-  dialogs (`AppDrawer.razor`, a native `<dialog>` until 2026-11-21; see docs/architecture.md for the refresh and scoped-CSS plumbing). Allowed exceptions
-  (owner list: resumable-upload file inputs, native audio/video, read-only data tables): only the six
-  read-only data tables, which stay plain `<table>`s (row headers, captions and the phone card layout;
-  `RadzenTable` wraps them in a scrolling grid with sticky, ellipsised headers). No other component library.
-- **Version stamp on phones is in the page flow.** At 768px and below `.po-version` is the last thing on the
-  page (lower-right, above the bottom nav); wider, it is fixed lower-right and `.app-shell-body` leaves it an
-  88px gutter. A fixed stamp on a phone sat on /diag cards as they scrolled past.
-- **/diag probes every outside service live** (`Features/Diag/ExternalServiceProbes.cs`, cached 1 minute):
-  screenshot blob container, Azure Resource Manager, Application Insights (a `print` query on the Users-page
-  resource), the AI endpoint (model list, never a paid completion), GitHub (`/rate_limit`), NuGet, OSV, Azure
-  retail prices, RDAP and ntfy (`/v1/health`, never a push; shown as a neutral **Off** row, not counted in the banner, while
-  `Alerts:NtfyTopic` is unset, which it is in production) — plus the Key Vault, Table Storage and scan-data
-  health checks. Off in the `Testing` environment and when `Diag:ProbeServices=false`.
+| Deviation | Why | Commit sha / date | How to undo |
+| --- | --- | --- | --- |
+| Header right side is empty: no visitor sign-in, no email; settings gear removed (`/settings` still reached from Ctrl+K) | owner rule for this app; gear removed by the owner | 2026-11-18 | owner asks to re-add |
+| Azure names predate the naming rule: `app-popunkoutersoftware2` on `asp-PoPunkouterSoftware-f1`, RG `PoPunkouterSoftware` | renaming means recreating the site | — | owner-approved recreate |
+| Extra `src/PoPunkouterSoftware.Infrastructure` project (Azure adapters) | keeps Api/Client/Shared as the skeleton has them | — | fold it into Api |
+| Reads other Po apps' public `/health/live`, pages and repos (`wwwroot/data/apps.json`) | that is the product; data, not shared code | — | — |
+| Radzen exceptions: only the six read-only data `<table>`s (row headers, captions, phone card layout). Drawers are Radzen side dialogs, no longer native `<dialog>` | owner decision "Radzen wins" (Profile A) overrides the 2026-10-19 native-dialog choice | `b61c8df`, `8498a04` 2026-11-21 | `git revert 8498a04` brings the `<dialog>` drawers back |
+| Version stamp on phones (<= 768px) is the last item in the page flow, not fixed | a fixed stamp sat on /diag cards | `b61c8df` 2026-11-21 | `git revert b61c8df` (stamp part) |
+| /diag: ntfy shows as a neutral **Off** row while `Alerts:NtfyTopic` is unset (it is in production); probes are off in `Testing` and when `Diag:ProbeServices=false` | ntfy alerts are opt-in; the owner dropped the ntfy jobs 2026-11-20 | `a8eb8ec` 2026-11-21 | set `Alerts:NtfyTopic` |
+| Five scheduled workflows dropped (see below) | F1 has no Always On; owner chose not to upgrade | `2a36dc5` 2026-11-20 | restore from history |
+
+/diag probes every outside service live (`Features/Diag/ExternalServiceProbes.cs`, cached 1 minute): screenshot
+blob, ARM, Application Insights, the AI endpoint (model list only), GitHub, NuGet, OSV, Azure retail prices, RDAP
+and ntfy, plus Key Vault, Table Storage and scan-data health checks. `SCREENSHOTS/` holds before/after UI pages.
+Button styling: `ButtonStyle.Base` + `Variant.Flat` + class `ppk-plain`; see docs/architecture.md.
+
+**Hosting:** App Service F1 (Free, `asp-PoPunkouterSoftware-f1`, no Always On): 165 MB of data out and 60 CPU-minutes
+per day. Never run test suites against the live site; live checks = at most 6 page loads + /diag + X-Commit.
 
 ### Dropped on 2026-11-20 (owner's choice)
 
