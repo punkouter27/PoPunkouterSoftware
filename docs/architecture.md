@@ -296,7 +296,7 @@ centred under 230px of nothing, and four screens of paging held what now fits in
 scrolling; it also needed a `--tall` opt-out, a specificity hack and its own E2E test to stay
 honest. Do not bring it back. `/` is a ~19-row catalogue and guarantees its first screen is
 complete (`Home_FirstScreen_ShowsAWholeRow`). **No route truncates.** Advanced diagnostics is
-not a pane but a drawer (see "Drawers are native dialogs" below).
+not a pane but a drawer (see "Drawers are Radzen side dialogs" below).
 `Azure_MobilePortrait_UptimeOpensOnToday_AndNothingOverflows` holds the phone layout.
 
 **At every width `/azure` is one column of four panes, in the order status, actions, spend,
