@@ -135,8 +135,8 @@ blob, ARM, Application Insights, the AI endpoint (model list only), GitHub, NuGe
 and ntfy, plus Key Vault, Table Storage and scan-data health checks. `SCREENSHOTS/` holds before/after UI pages.
 Button styling: `ButtonStyle.Base` + `Variant.Flat` + class `ppk-plain`; see docs/architecture.md.
 
-**Hosting:** App Service F1 (Free, `asp-PoPunkouterSoftware-f1`, no Always On): 165 MB of data out and 60 CPU-minutes
-per day. Never run test suites against the live site; live checks = at most 6 page loads + /diag + X-Commit.
+**Hosting:** App Service F1 (Free, Windows, `asp-PoPunkouterSoftware-f1`, no Always On): 60 CPU-minutes and a data-out
+quota per day (Azure reported 2.0 GB on 2026-11-22; over it the site stops until 00:00 UTC). Never run test suites against the live site; live checks = at most 6 page loads + /diag + X-Commit.
 
 ### Dropped on 2026-11-20 (owner's choice)
 
