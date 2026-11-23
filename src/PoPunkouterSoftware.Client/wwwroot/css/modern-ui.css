@@ -497,6 +497,52 @@ a {
     text-decoration: none;
 }
 
+/* ── Letter fall (js/letter-fall.js) ─────────────────────────────────────────
+   The × in the top bar, the overlay the letters fall in, and the page's own text
+   going see-through underneath while they are down. */
+.app-topbar-drop {
+    display: inline-grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--app-radius-pill);
+    background: none;
+    color: var(--app-text-soft);
+    cursor: pointer;
+}
+.app-topbar-drop:hover { color: var(--app-text); border-color: var(--app-border); }
+.app-topbar-drop:focus-visible { outline: 2px solid var(--app-accent); outline-offset: 2px; }
+.app-topbar-drop .material-symbols-outlined { font-size: 20px; }
+@media (prefers-reduced-motion: reduce) { .app-topbar-drop { display: none; } }
+
+html.lf-fallen body * {
+    color: transparent !important;
+    -webkit-text-fill-color: transparent !important;
+    text-shadow: none !important;
+}
+
+.lf-layer {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    overflow: hidden;
+    cursor: pointer;
+    contain: strict;
+}
+
+.lf-glyph {
+    position: absolute;
+    left: 0;
+    top: 0;
+    text-align: center;
+    white-space: pre;
+    will-change: transform;
+    pointer-events: none;
+    user-select: none;
+}
+
 /* ── Surfaces ────────────────────────────────────────────────────────────────
    No backdrop-filter here by design — see --app-glass-blur.
 */

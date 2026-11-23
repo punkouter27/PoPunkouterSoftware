@@ -20,8 +20,8 @@
    libraries and APIs only that app uses (three.js, LibGit2Sharp, WebLLM…).
 
    Cells are SHORT labels ("Table + Blob", "Azure OpenAI") so a column scans at a glance;
-   the full wording is a hint on the cell (AppHint: hover, focus or tap) and sr-only text
-   after it, so a screen reader gets it without the hint and without 100 extra tab stops.
+   the full wording is sr-only text after it. No tooltips or ⓘ icons anywhere in this table
+   (owner's call, 2026-11-23, replacing the 2026-11-03 "a hint on everything" ask).
 
    Above 640px it stays a real table: when the columns outgrow the card the card scrolls
    sideways and the app column stays pinned (owner's call, 2026-11-03 — comparing down a
@@ -37,12 +37,12 @@
     {
         @* Outside the scroller, so it stays put when the columns scroll sideways. *@
         <div class="portfolio-stack__shared">
-            <span class="portfolio-stack__shared-title">Shared by all @Apps.Count @SectionHint("shared", speak: true)</span>
+            <span class="portfolio-stack__shared-title">Shared by all @Apps.Count</span>
             <dl>
                 @foreach (var shared in _shared)
                 {
                     <div>
-                        <dt>@shared.Label @SectionHint(shared.Key, speak: true)</dt>
+                        <dt>@shared.Label</dt>
                         <dd>@Hinted(shared.Value, shared.Detail)</dd>
                     </div>
                 }
@@ -51,15 +51,14 @@
     }
     <div class="portfolio-stack__scroll" tabindex="0" role="group" aria-label="@($"{Label}. Scrolls sideways when the columns do not fit.")">
     <table class="portfolio-stack__table" role="table" aria-label="@Label">
-        @* What each column and Tech stack line means, once, for a screen reader — the ⓘ
-           beside each heading is silent, or every cell would repeat its paragraph. *@
+        @* What each column and Tech stack line means, once, for a screen reader. *@
         <caption class="app-sr-only">@CaptionText</caption>
         <thead role="rowgroup">
             <tr role="row">
-                <th scope="col" role="columnheader">App @SectionHint("app")</th>
+                <th scope="col" role="columnheader">App</th>
                 @foreach (var column in _columns)
                 {
-                    <th scope="col" role="columnheader">@column.Label @SectionHint(column.Key)</th>
+                    <th scope="col" role="columnheader">@column.Label</th>
                 }
             </tr>
         </thead>
@@ -91,13 +90,11 @@
                             <h2 class="portfolio-stack__name">
                                 @if (string.IsNullOrWhiteSpace(app.Url))
                                 {
-                                    <AppHint Text="@AppSummary(app)">@app.Name</AppHint>
+                                    @app.Name
                                 }
                                 else
                                 {
-                                    @* The hint wraps the stretched link, so hovering anywhere on
-                                       the app cell (picture included) shows the app summary. *@
-                                    <AppHint Text="@AppSummary(app)"><a class="portfolio-stack__link" href="@app.Url" target="_blank" rel="noopener noreferrer">@app.Name</a></AppHint>
+                                    <a class="portfolio-stack__link" href="@app.Url" target="_blank" rel="noopener noreferrer">@app.Name</a>
                                 }
                             </h2>
                             <div class="portfolio-stack__meta">
@@ -144,19 +141,18 @@
                             @if (column.Key == "ai" && app.Stack.AiServices.Count > 0)
                             {
                                 @* The AI column lists every model, grouped by where it runs:
-                                   Azure, Google, In-app. A name is a hint saying what it is for;
+                                   Azure, Google, In-app. What each is for is sr-only text;
                                    "optional" marks one wired in the code but off by default. *@
                                 <ul class="portfolio-stack__ai">
                                     @foreach (var group in app.Stack.AiServices.GroupBy(a => a.Cloud))
                                     {
                                         <li>
-                                            <AppHint Text="@($"{app.Name}'s models in {group.Key}: {string.Join(", ", group.Select(g => g.Name))}.")"><span class="portfolio-stack__cloud" data-cloud="@group.Key">@group.Key</span></AppHint>
+                                            <span class="portfolio-stack__cloud" data-cloud="@group.Key">@group.Key</span>
                                             <ul>
                                                 @foreach (var service in group)
                                                 {
-                                                    var use = service.Use.TrimEnd('.') + (service.Optional ? ". Optional: off unless configured." : ".");
                                                     <li class="@(service.Optional ? "is-optional" : null)">
-                                                        <AppHint Text="@(use)" Class="portfolio-stack__hint">@service.Name</AppHint>@if (service.Optional)
+                                                        <span class="portfolio-stack__service">@service.Name</span>@if (service.Optional)
                                                         {<span class="portfolio-stack__optional">optional</span>}<span class="app-sr-only">: @service.Use</span>
                                                     </li>
                                                 }
@@ -169,18 +165,18 @@
                             {
                                 @* Everything technical in one cell, as labelled lines: Frontend /
                                    Backend / Real-time / Data for a web app, Engine / Physics /
-                                   RL training / Data for a game. Each line keeps its hint; RL training keeps its link
+                                   RL training / Data for a game. RL training keeps its link
                                    to the training code. *@
                                 <dl class="portfolio-stack__tech">
                                     @foreach (var part in TechParts(app.Stack))
                                     {
                                         var partHint = app.Stack.Details.GetValueOrDefault(part.Key);
                                         <div>
-                                            <dt>@part.Label @SectionHint(part.Key == "frontend" && part.Label == "Engine" ? "engine" : part.Key)</dt>
+                                            <dt>@part.Label</dt>
                                             <dd>
                                                 @if (part.Key == "training" && app.SourceUrl is { } repo && app.Stack.TrainingPath is { } folder)
                                                 {
-                                                    <AppHint Text="@(TechGlossary.Hint(part.Value, partHint) ?? "Training code on GitHub")" Class="portfolio-stack__hint"><a class="portfolio-stack__cell-link" href="@($"{repo}/tree/HEAD/{folder}")" target="_blank" rel="noopener noreferrer">@part.Value<span class="app-sr-only">: training code on GitHub</span></a></AppHint>
+                                                    <a class="portfolio-stack__cell-link" href="@($"{repo}/tree/HEAD/{folder}")" target="_blank" rel="noopener noreferrer">@part.Value<span class="app-sr-only">: training code on GitHub</span></a>
                                                     @if (partHint is not null)
                                                     {
                                                         <span class="app-sr-only">: @partHint</span>
@@ -311,19 +307,8 @@
         return new(column.Key, column.Label, column.Value(first)!, details is [{ } only] ? only : null);
     }
 
-    // ── Hints (owner's ask, 2026-11-03: a tooltip on every section and every piece of text).
-    // A value's hint says only how THIS app uses it (its stack.details note), never what the
-    // technology is in general (owner's call, 2026-11-19). The note is also sr-only text.
-
-    /// <summary>The ⓘ beside a column heading or a Tech stack line label. Silent to a screen
-    /// reader, which repeats headings with every cell; the table's caption says it once.</summary>
-    private static RenderFragment SectionHint(string key, bool speak = false) => __builder =>
-    {
-        if (!NoSectionIcon.Contains(key) && TechGlossary.Sections.GetValueOrDefault(key) is { } text)
-        {
-            <AppHint Text="@text" Class="portfolio-stack__section-hint" SpeakText="@speak" />
-        }
-    };
+    // ── Notes. No visible tooltips (owner's call, 2026-11-23). A value's note says only how
+    // THIS app uses it (its stack.details note) and is sr-only text after the value.
 
     private string CaptionText => string.Join(" ",
         new[] { "app" }.Concat(_columns.Select(c => c.Key))
@@ -339,29 +324,18 @@
              ?? Apps.SelectMany(a => TechParts(a.Stack)).FirstOrDefault(p => p.Key == key)?.Label ?? key,
     };
 
-    /// <summary>Sections whose name says enough on its own: no ⓘ (owner's call, 2026-11-03).
-    /// Their meaning is still in the table's sr-only caption.</summary>
-    private static readonly HashSet<string> NoSectionIcon = ["app", "signIn", "techstack", "frontend", "backend"];
-
-    /// <summary>One value, underlined, with its hint.</summary>
+    /// <summary>One value, followed by its note as sr-only text.</summary>
     private static RenderFragment Hinted(string value, string? note, bool speak = true) => __builder =>
     {
-        if (TechGlossary.Hint(value, note) is { } text)
+        @value
+        @if (speak && note is not null)
         {
-            <AppHint Text="@text" Class="portfolio-stack__hint">@value</AppHint>
-            @if (speak)
-            {
-                <span class="app-sr-only">: @note</span>
-            }
-        }
-        else
-        {
-            @value
+            <span class="app-sr-only">: @note</span>
         }
     };
 
-    /// <summary>"A + B + C" as one line each. The app's note covers the whole list, so every
-    /// item's hint is that note; a screen reader hears it once, after the list.</summary>
+    /// <summary>"A + B + C" as one line each. The app's note covers the whole list; a screen
+    /// reader hears it once, after the list.</summary>
     private static RenderFragment HintedList(string value, string? note) => __builder =>
     {
         <span class="portfolio-stack__multi">
@@ -377,25 +351,5 @@
             }
         </span>
     };
-
-    /// <summary>The app cell's hint: where the name goes, and how the app is doing.</summary>
-    private static string AppSummary(PortfolioApp app)
-    {
-        var parts = new List<string>();
-        if (!string.IsNullOrWhiteSpace(app.Url) && Uri.TryCreate(app.Url, UriKind.Absolute, out var url))
-            parts.Add($"Opens the live app at {url.Host} in a new tab.");
-        parts.Add(app.Status switch
-        {
-            "unavailable" => "It is down right now.",
-            "degraded" => "It is up but degraded right now.",
-            "healthy" => "It is up right now.",
-            _ => "",
-        });
-        if (app.CleanDays is > 0 and var days)
-            parts.Add(days >= 30 ? "No outage in the last 30 days." : $"{days} days without an outage.");
-        if (app.SourceUrl is not null) parts.Add("Its source code is public on GitHub.");
-        if (app.PlayStoreUrl is not null) parts.Add("It is on Google Play.");
-        return string.Join(" ", parts.Where(p => p.Length > 0));
-    }
 
 }

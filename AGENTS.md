@@ -247,8 +247,8 @@ Standing instructions from the owner. They outrank default habits and apply to e
 - **Where the prose lives.** [docs/architecture.md](docs/architecture.md) is the architecture map and the
   decisions behind it; [docs/testing.md](docs/testing.md) the test tiers. The rest of [docs/](docs/) is the
   GitHub Pages site (landing page, per-app privacy policies and store art for PoBox, PoCross, PoDance, PoFlag,
-  PoFootball, PoRacer, PoSoccer and PoSumo, none of which are in this portfolio): leave those paths alone, app
-  stores link to them.
+  PoFootball, PoRacer, PoSoccer and PoSumo; PoCross, PoDance, PoFlag and PoRacer are not in this portfolio):
+  leave those paths alone, app stores link to them.
 
 ### Git workflow
 

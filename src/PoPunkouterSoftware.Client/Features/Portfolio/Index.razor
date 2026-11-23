@@ -26,13 +26,8 @@
                 <strong>@data.Apps.Count apps</strong>
                 @if (data.GeneratedAt is DateTime updated)
                 {
-                    @* Focusable because the exact read time exists nowhere else on the page: the
-                       visible text is relative, and `title` — which is what this used to be —
-                       never appears on a touch device and is not announced on focus. *@
-                    <AppHint Class="@(data.Stale ? "is-stale" : "")" Focusable="true"
-                             Text="@($"Last read {updated:u}.{(data.Stale ? " This page treats that as stale; the server rescans a stale inventory on its own." : "")} The list is re-read on every visit, and weekly in a tab left open.")">
-                        Updated @RelativeTime.Format(updated)@(data.Stale ? " · stale" : "")
-                    </AppHint>
+                    @* No tooltips on the home page (owner's call, 2026-11-23). *@
+                    <span class="@(data.Stale ? "is-stale" : null)">Updated @RelativeTime.Format(updated)@(data.Stale ? " · stale" : "")</span>
                 }
                 @if (_canSync)
                 {

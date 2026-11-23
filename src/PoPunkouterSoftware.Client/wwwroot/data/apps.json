@@ -35,8 +35,13 @@
         "aiServices": [
           {
             "cloud": "Azure",
+            "name": "GPT-4.1 nano",
+            "use": "Judges every duel unless a person votes within 10 seconds, reading the pages in both orders"
+          },
+          {
+            "cloud": "Azure",
             "name": "GPT-5.4 mini",
-            "use": "Judges every duel unless a person votes within 10 seconds, reading the pages in both orders, and gets the first re-ask when the two orderings disagree"
+            "use": "Gets the first re-ask when the two orderings of a duel disagree"
           },
           {
             "cloud": "Azure",
@@ -88,11 +93,11 @@
         "realtime": "SignalR + Web Push",
         "extras": "three.js + cannon-es + SharpGLTF + QRCoder",
         "details": {
-          "frontend": "The C# shell hosts about 20 games; most game loops and 3D scenes run in JavaScript modules it loads on demand",
+          "frontend": "The C# shell hosts 14 games; most game loops and 3D scenes run in JavaScript modules it loads on demand",
           "backend": "Minimal APIs serve scores, leaderboards, match history and invites, while server-side game loops run the multiplayer lobbies, races and matches",
           "data": "Azure Table Storage holds high scores, ladders, Elo ratings, match history and verified results; Azure Blob Storage holds saved PoEcosystem worlds and the keys that sign anti-cheat score tokens",
           "delivery": "GitHub Actions builds, tests and deploys every push to Azure",
-          "realtime": "13 SignalR hubs run lobbies, server-ticked races (up to 50 Hz), lockstep and rollback matches, live quizzes and board games; Web Push delivers game invites",
+          "realtime": "18 SignalR hubs run lobbies, server-ticked races (up to 50 Hz), lockstep and rollback matches, live quizzes and board games; Web Push delivers game invites",
           "extras": "three.js draws the 3D games, cannon-es gives them physics, SharpGLTF turns 3D models into destructible voxels on the server and QRCoder makes invite QR codes"
         }
       }
@@ -143,7 +148,7 @@
           {
             "cloud": "In-app",
             "name": "ONNX audio models",
-            "use": "Split stems (HTDemucs), track notes, vocal pitch, beats and chords, and power sound search (CLAP) on the server"
+            "use": "Split stems (HTDemucs where the server can run it, otherwise MDX-Net in your browser), track notes, vocal pitch, beats and chords, and power sound search (CLAP)"
           },
           {
             "cloud": "In-app",
@@ -348,7 +353,7 @@
     {
       "id": "pobasketball",
       "name": "PoBasketball",
-      "description": "An autonomous streetball humanoid gym in Unreal Engine whose players learn balance, dribbling and jump shots with reinforcement learning; watch baked replays in the browser.",
+      "description": "An autonomous streetball humanoid gym in Unreal Engine whose players learn balance, running, dribbling and loose-ball scrambles with reinforcement learning; watch baked replays in the browser.",
       "category": "rl-training",
       "status": "active",
       "technologies": [
@@ -369,14 +374,14 @@
         "details": {
           "frontend": "The full showcase runs in Unreal Engine 5.8 with Chaos disabled on gameplay actors; the website is a three.js replay viewer baked from golden simulation frames",
           "physics": "MuJoCo 4.0 steps the 29-joint mannequin, basketball, court and rims at 500 Hz in both the trainer and Unreal's MuJoCoRuntime plugin",
-          "training": "Trained on GPU with MuJoCo Warp and PyTorch PPO across five stages (balance, court traversal, stationary and moving dribble, loose-ball scramble and jump shot), reading 125 observations and driving 29 joints",
+          "training": "Trained on GPU with MuJoCo Warp and PyTorch PPO across five stages (balance, court traversal, stationary and moving dribble, loose-ball scramble, plus a jump-shot stage still in training), reading 125 observations and driving 29 joints",
           "extras": "Unreal's NNE (ONNX Runtime) runs the 50 Hz ONNX skill policies on CPU in the gym, while three.js renders the baked replay trajectories in the browser"
         },
         "aiServices": [
           {
             "cloud": "In-app",
             "name": "Reinforcement-learning agents",
-            "use": "Five ONNX skill policies (balance, locomotion, dribble, scramble and shot) run at 50 Hz via Unreal's NNE, reading 125 observations and driving 29 joints"
+            "use": "Four ONNX skill policies (balance, locomotion, dribble and scramble) run at 50 Hz via Unreal's NNE, reading 125 observations and driving 29 joints"
           }
         ]
       }
@@ -399,14 +404,14 @@
       "stack": {
         "frontend": "Unity 6.6 (WebGL)",
         "ai": "RL agents",
-        "physics": "MuJoCo 3.5",
+        "physics": "MuJoCo 3.15",
         "training": "MuJoCo Warp + PPO (PyTorch)",
-        "trainingPath": "training",
+        "trainingPath": "Training",
         "extras": "Cinemachine + glTFast",
         "details": {
           "frontend": "Built on Unity 6000.6 for the browser in a portrait broadcast layout, with URP renderers tuned separately for phone and PC",
-          "physics": "MuJoCo 3.5, compiled to WebAssembly for the browser, simulates both boxers' bodies at 200 steps a second; the ring has no Unity physics objects at all",
-          "training": "Each boxer learns in stages (footwork, sparring, getting up off the canvas) with the repo's own PPO trainer in PyTorch while MuJoCo Warp runs 4,096 copies of the fight at once on the GPU; every brain is then re-checked in the same MuJoCo 3.5 the game uses",
+          "physics": "MuJoCo 3.15, compiled to WebAssembly for the browser, simulates both boxers' bodies at 200 steps a second; the ring has no Unity physics objects at all",
+          "training": "Each boxer learns in stages (footwork, sparring, getting up off the canvas) with the repo's own PPO trainer in PyTorch while MuJoCo Warp runs 4,096 copies of the fight at once on the GPU; every brain is then re-checked in the same MuJoCo 3.15 the game uses",
           "extras": "Eleven Cinemachine cameras are cut like a TV broadcast, jumping to a close-up just before a heavy punch lands and going overhead for a knockdown count; glTFast imports the eight boxers' 3D models in the editor"
         },
         "aiServices": [
@@ -438,7 +443,7 @@
         "ai": "RL agents",
         "physics": "Unity 2D physics",
         "training": "Unity ML-Agents 4.1",
-        "trainingPath": "Config",
+        "trainingPath": "Training",
         "extras": "VContainer + MessagePipe + UniTask + Burst",
         "details": {
           "frontend": "A top-down 2D game drawn with URP's 2D Renderer and built for WebGL, so all 22 players play out in the browser",
@@ -458,7 +463,7 @@
     {
       "id": "pohillking",
       "name": "PoHillKing",
-      "description": "Six physics-simulated human bodies fight to stay on a mountain top as the sea rises, each body type driven by its own trained brain.",
+      "description": "Sixteen physics-simulated bodies of three types fight to stay on a mountain top as the sea rises, each body type driven by its own trained brain.",
       "category": "rl-training",
       "status": "active",
       "technologies": [
@@ -475,11 +480,11 @@
         "ai": "RL agents",
         "physics": "MuJoCo 3.15",
         "training": "MuJoCo Warp + rsl_rl PPO (PyTorch)",
-        "trainingPath": "training",
+        "trainingPath": "Training",
         "extras": "Cinemachine + glTFast",
         "details": {
           "frontend": "Built on Unity 6000.6 for the browser; URP draws the mountain map and the rising sea, and a custom shockwave effect plays on big hits",
-          "physics": "MuJoCo 3.15, compiled to WebAssembly, simulates all six bodies, the hill and the sea's buoyancy at 500 steps a second; Unity's own physics is switched off",
+          "physics": "MuJoCo 3.15, compiled to WebAssembly, simulates all sixteen bodies, the hill and the sea's buoyancy at 500 steps a second; Unity's own physics is switched off",
           "training": "Trained with rsl_rl PPO on PyTorch 2.9 while MuJoCo Warp runs 4,096 hilltop fights at once on the GPU; each body's fighter learned against the other two bodies' frozen fighters",
           "extras": "Cinemachine is the only camera: a crane shot up the mountain on a spline for the intro, then orbits and group shots of whoever is still on top, with shake on big impacts; glTFast imports Trump's model and the mountain map in the editor"
         },
@@ -495,7 +500,7 @@
     {
       "id": "poolympic",
       "name": "PoOlympic",
-      "description": "Up to eight physics-simulated athletes, driven by trained brains, compete in made-up Olympic-style events such as Sumo Ring, Narrow Bridge and Hilltop Scramble.",
+      "description": "Up to eight physics-simulated athletes, driven by trained brains, compete in made-up Olympic-style events such as Gust Gauntlet, Slalom Sprint and Steeplechase Jog.",
       "category": "rl-training",
       "status": "active",
       "technologies": [
@@ -512,10 +517,10 @@
         "ai": "RL agents",
         "physics": "MuJoCo 3.11",
         "training": "MuJoCo Warp + rsl_rl PPO (PyTorch)",
-        "trainingPath": "training",
+        "trainingPath": "Training",
         "extras": "Cinemachine + glTFast + VFX Graph + PrimeTween",
         "details": {
-          "frontend": "Built on Unity 6000.6 for the browser as a portrait sports broadcast, with URP drawing the stadium and 13 event arenas",
+          "frontend": "Built on Unity 6000.6 for the browser as a portrait sports broadcast, with URP drawing the stadium and 11 event arenas",
           "physics": "MuJoCo 3.11, compiled to WebAssembly, simulates up to eight athletes plus the event props and obstacles at 200 steps a second",
           "training": "Trained with mjlab on MuJoCo Warp and rsl_rl PPO in PyTorch, one skill at a time (standing, running, crawling, slopes, getting up) for each of the four bodies, then checked against the game's MuJoCo before shipping",
           "extras": "Cinemachine cuts follow the race's tension, closing in on the leader or on an athlete about to fall; glTFast imports the athletes and stadium in the editor; VFX Graph makes the impact sparks on Android, while the web build swaps in ordinary particles; PrimeTween animates the scoreboard captions"
@@ -524,7 +529,7 @@
           {
             "cloud": "In-app",
             "name": "Reinforcement-learning agents",
-            "use": "About 27 small skill brains (stand, run, crawl, climb slopes, get up) for four athletes run in Unity's Inference Engine 50 times a second; each reads 84 numbers about its body and a speed command, and sets targets for 23 joints"
+            "use": "About 30 small skill brains (stand, run, crawl, climb slopes, get up) for four athletes run in Unity's Inference Engine 50 times a second; each reads 84 numbers about its body and a speed command, and sets targets for 23 joints"
           }
         ]
       }
@@ -549,13 +554,13 @@
         "ai": "RL agents",
         "physics": "Unity 2D physics",
         "training": "Unity ML-Agents 4.1",
-        "trainingPath": "config",
-        "extras": "UniTask + 2D Tilemap",
+        "trainingPath": "Training",
+        "extras": "UniTask",
         "details": {
           "frontend": "A top-down 2D pitch drawn with URP's 2D Renderer and built for WebGL for portrait play in the browser",
           "physics": "Each player and the ball are 2D rigidbodies and all ball control is physical contact: heavier players win collisions, and a hard hit briefly costs a player control",
           "training": "Each character has its own PPO brain and reward table, trained in stages against a rule-based bot, with a curriculum that narrows the goal and toughens the bot; trained with an embedded copy of ML-Agents 4.1",
-          "extras": "UniTask times the kickoff countdown, halftime and hit effects; 2D Tilemap builds the crowd stands around the pitch at runtime"
+          "extras": "UniTask times the kickoff countdown, halftime and hit effects"
         },
         "aiServices": [
           {
@@ -598,7 +603,7 @@
           {
             "cloud": "In-app",
             "name": "Reinforcement-learning agents",
-            "use": "Sixteen trained wrestler brains run in the browser through Unity's Inference Engine; each reads 51 body and contact measurements, mirrored so one brain works facing either way, and drives the ragdoll's joint motors"
+            "use": "Sixteen trained wrestler brains run in the browser through Unity's Inference Engine; each reads 53 body and contact measurements, mirrored so one brain works facing either way, and drives the ragdoll's joint motors"
           }
         ]
       }
@@ -700,7 +705,8 @@
           {
             "cloud": "Fish Audio",
             "name": "Fish Audio voices",
-            "use": "Cloned voices for personas that have one"
+            "use": "Cloned voices for personas that have one, when a Fish Audio key is configured",
+            "optional": true
           },
           {
             "cloud": "Google",
@@ -826,12 +832,12 @@
         "frontend": "Unreal Engine 5.8",
         "ai": "RL agents",
         "physics": "MuJoCo 4.0",
-        "training": "MuJoCo Playground + PPO (JAX)",
-        "trainingPath": "sim",
+        "training": "MuJoCo Playground + Brax PPO (JAX)",
+        "trainingPath": "training",
         "details": {
           "frontend": "Unreal Engine 5.8 renders and presents the race; the website is a lighter static spectator version",
-          "physics": "MuJoCo 4.0 is the only physics authority, in the trainer and in Unreal through the vendored URLab plugin",
-          "training": "Racer brains are trained with PPO on MuJoCo Playground (JAX) and exported to ONNX"
+          "physics": "MuJoCo is the only physics authority: MuJoCo Warp 3.15 in the trainer, MuJoCo 4.0 in Unreal through the pinned, patched URLab plugin",
+          "training": "Racer brains are trained with Brax PPO on MuJoCo Playground (JAX) and exported to ONNX"
         },
         "aiServices": [
           {
@@ -860,12 +866,12 @@
         "frontend": "Unreal Engine 5.8",
         "ai": "RL agents",
         "physics": "MuJoCo 4.0",
-        "training": "MuJoCo + PPO",
-        "trainingPath": "sim",
+        "training": "MuJoCo + PPO (PyTorch)",
+        "trainingPath": "RobotControl/training",
         "details": {
           "frontend": "An Unreal Engine 5.8 twin (URLab plugin, embedded MuJoCo) rehearses each behaviour before it runs on the robot",
-          "physics": "MuJoCo 4.0 is the one simulator, in training and inside the Unreal twin",
-          "training": "Level-by-level policies are trained in MuJoCo and exported as ONNX; the same file and controller code drive sim, twin and the real robot"
+          "physics": "MuJoCo 4.0 trains the upper-body skills and runs inside the Unreal twin; walking trains on mjlab with MuJoCo 3.5",
+          "training": "Upper-body skills are trained level by level with PPO (PyTorch) and exported as ONNX, and the same file drives sim, twin and the real robot; walking policies stay in simulation"
         },
         "aiServices": [
           {
