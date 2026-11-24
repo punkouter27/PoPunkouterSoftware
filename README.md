@@ -8,7 +8,7 @@ Azure estate behind them.
 - Deploys: every push to `master` runs `.github/workflows/deploy.yml` (format, ruff, build, Unit + Integration
   tests, publish, deploy to App Service, confirm `/health/live` reports the pushed commit in `X-Commit`).
 - Agents and contributors: read [AGENTS.md](AGENTS.md); the architecture map is [docs/architecture.md](docs/architecture.md),
-  the test tiers [docs/testing.md](docs/testing.md). Before/after pages of UI changes are kept in [SCREENSHOTS/](SCREENSHOTS/).
+  the test tiers [docs/testing.md](docs/testing.md). Before/after pages of UI changes are kept in [SCREENSHOTS/](SCREENSHOTS/); `pwsh ./scripts/screenshots.ps1 -Feature <name>` makes one (local Release builds of before and after, never the live site).
 
 ## Solution Layout
 

@@ -110,6 +110,7 @@ for ruff; Docker Desktop for Azurite).
 | E2E API (22) | `BASE_URL=http://localhost:8000 dotnet test tests/PoPunkouterSoftware.E2EAPI -c Release --no-build` | a running app; without one every test skips ("No app is answering at …") |
 | E2E UI (32) | `BASE_URL=http://localhost:8000 dotnet test tests/PoPunkouterSoftware.E2EUI -c Release --no-build` | a running app with a stored Azure scan (on a fresh machine: `curl -s https://app-popunkoutersoftware2.azurewebsites.net/api/diag/report -o src/PoPunkouterSoftware.Api/App_Data/azure-full-report.json`) + Playwright Chromium (`pwsh tests/PoPunkouterSoftware.E2EUI/bin/Release/net10.0/playwright.ps1 install chromium` once); without either every test skips with the reason |
 | E2E on the trimmed Release build | `pwsh ./scripts/run-e2eui.ps1 -Tiers E2EAPI,E2EUI` (publishes Release like deploy.yml, seeds the scan, starts Azurite + the published app on :8000 with the pinger and outside probes off so no test traffic reaches the live Po apps, runs both tiers, stops the app and removes the Azurite container it started) | Docker + Playwright Chromium |
+| Before/after page | `pwsh ./scripts/screenshots.ps1 -Feature <name> [-Before <ref>\|-BeforeDir <pngs>] [-After <ref>] [-Screens 'home=/','home-fallen=/|[data-letter-fall]'] [-Crops 'home-fallen_1366x768=1166,688,200,80'] [-Notes '...']`\|[data-letter-fall]'] [-Notes '...']` | publishes `-Before` (default `HEAD~1`, in a temp worktree) and `-After` (default the working tree) Release, runs each on :8010 like run-e2eui.ps1 (pinger/probes off, Azurite started and removed if needed), shoots 1366x768 + 390x844, boxes changed pixels in red, writes `SCREENSHOTS/<yyMMdd>-<name>.html` + `.png` (≤300 KB). Never the live site. Docker + Playwright Chromium |
 | Run locally | `pwsh ./scripts/run-dev.ps1 -NoWatch` (drop `-NoWatch` for hot reload) | Docker (starts Azurite via `docker compose` if :10002 is closed) → http://localhost:8000 |
 | Deploy | push to `master` → `.github/workflows/deploy.yml` (format, ruff, build, Unit, Integration, publish, deploy); `*.md` and `SCREENSHOTS/**` are paths-ignored | repo variables for OIDC |
 | Deploy check | `curl -sI https://app-popunkoutersoftware2.azurewebsites.net/health/live` → `X-Commit: <pushed sha>` | — |
@@ -235,7 +236,8 @@ Standing instructions from the owner. They outrank default habits and apply to e
 - **A UI change ships a before/after page.** Capture the old and new states, annotate what moved,
   save it as `SCREENSHOTS/YYMMDD-feature-name.html` (self-contained, images inlined) and give the
   owner its full absolute path. Also save the same before/after, with its notes, as one PNG
-  beside it (`SCREENSHOTS/YYMMDD-feature-name.png`).
+  beside it (`SCREENSHOTS/YYMMDD-feature-name.png`). `pwsh ./scripts/screenshots.ps1 -Feature feature-name -Notes '...'`
+  does all of it in one go (section 3).
 - **A change over 100 lines ends with three follow-up questions** about future direction or
   logic, unless questions are already pending with the owner.
 - **Keep [README.md](README.md) in step with this file and [docs/architecture.md](docs/architecture.md)** whenever a dependency, configuration key
