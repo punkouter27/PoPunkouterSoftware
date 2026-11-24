@@ -19,19 +19,23 @@
        round trip completed. modern-ui.css now declares the same family against the local
        file, so the header icons and the Radzen ones resolve from one same-origin request
        that was already being made. Re-adding this link would reintroduce the block. *@
-    @* Po web standard: po-tokens.css (the estate file, same in every Po app) comes FIRST. It
+    @* Radzen's theme loads FIRST, once, before every app stylesheet (Po rule a_radzen): the app's own
+       sheets then win every equal-specificity tie, so a plain class keeps the app look on a Radzen
+       control. Nothing else may load Radzen CSS (no @import, no <RadzenTheme>); the E2E test
+       Head_LoadsRadzenCssFirst_AndOnlyOnce holds this.
+       Radzen ships one stylesheet per theme and its component colours are baked in — they
+       do not follow prefers-color-scheme. Loading only software-dark.css meant that in
+       light mode every Radzen surface (data grid, paginator, badges, base text) kept
+       dark-theme values while the page around them flipped. Each sheet is scoped to the
+       scheme it was built for, so exactly one of them applies. *@
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/software.css" media="(prefers-color-scheme: light)" />
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/software-dark.css" media="(prefers-color-scheme: dark)" />
+    @* Po web standard: po-tokens.css comes first of the app's own sheets. It
        self-hosts Inter and Space Grotesk (fonts/, same-origin, so `font-src 'self'` holds) and
        carries the shared shell: .po-header, .po-version, /diag cards. modern-ui.css aliases the
        app's own tokens to its --po-* values. *@
     <link rel="stylesheet" href="css/po-tokens.css" />
     <link rel="stylesheet" href="css/boot.css" />
-    @* Radzen ships one stylesheet per theme and its component colours are baked in — they
-       do not follow prefers-color-scheme. Loading only software-dark.css meant that in
-       light mode every Radzen surface (data grid, paginator, badges, base text) kept
-       dark-theme values while the page around them flipped. Each sheet is now scoped to
-       the scheme it was built for. *@
-    <link rel="stylesheet" href="_content/Radzen.Blazor/css/software.css" media="(prefers-color-scheme: light)" />
-    <link rel="stylesheet" href="_content/Radzen.Blazor/css/software-dark.css" media="(prefers-color-scheme: dark)" />
     <link rel="stylesheet" href="css/po-motion.css" />
     <link rel="stylesheet" href="css/modern-ui.css" />
     <link rel="stylesheet" href="PoPunkouterSoftware.Client.styles.css" />

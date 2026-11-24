@@ -567,6 +567,55 @@ public class PortfolioUiTests : IAsyncLifetime
         dialogs.Should().Be(0, "validation never uses alert()/confirm()");
     }
 
+    /// <summary>
+    /// Radzen's theme is the first stylesheet in the head, before every app sheet, so the app's own classes win
+    /// equal-specificity ties; it loads once (one light and one dark file, exactly one of which applies), and nothing
+    /// else pulls Radzen CSS in (no @import, no &lt;RadzenTheme&gt; copy). The header's letter-fall button is a Radzen one.
+    /// </summary>
+    [LiveAppFact]
+    public async Task Head_LoadsRadzenCssFirst_AndOnlyOnce()
+    {
+        var page = await NewPageAsync(1366, 800, false);
+        await page.GotoAsync($"{BaseUrl}/", new() { WaitUntil = WaitUntilState.NetworkIdle });
+
+        var hrefs = await page.EvaluateAsync<string[]>(
+            "() => [...document.querySelectorAll('link[rel=stylesheet]')].map(l => l.getAttribute('href'))");
+        hrefs.Take(2).Should().Equal(
+            "_content/Radzen.Blazor/css/software.css", "_content/Radzen.Blazor/css/software-dark.css");
+        hrefs.Skip(2).Should().NotContain(h => h.Contains("Radzen", StringComparison.OrdinalIgnoreCase));
+        hrefs.Skip(2).Should().NotBeEmpty("the app's own sheets follow the theme");
+
+        var applied = await page.EvaluateAsync<int>(
+            "() => [...document.styleSheets].filter(s => s.href && s.href.includes('Radzen.Blazor') && matchMedia(s.media.mediaText || 'all').matches).length");
+        applied.Should().Be(1, "exactly one theme sheet matches the colour scheme");
+        var imports = await page.EvaluateAsync<int>(
+            "() => [...document.styleSheets].reduce((n, s) => { try { return n + [...s.cssRules].filter(r => r instanceof CSSImportRule).length; } catch { return n; } }, 0)");
+        imports.Should().Be(0, "no stylesheet @imports another");
+
+        await Assertions.Expect(page.Locator(".po-header button.rz-button.app-topbar-drop[data-letter-fall]")).ToHaveCountAsync(1);
+    }
+
+    /// <summary>
+    /// /health and /api/diag share one round of checks for 60 s (DiagSnapshotCache): two /diag loads a few
+    /// seconds apart show the same CheckedAt.
+    /// </summary>
+    [LiveAppFact]
+    public async Task Diag_TwoLoadsInsideAMinute_ShowTheSameCheckedAt()
+    {
+        var page = await NewPageAsync(1366, 800, false);
+        var stamps = new List<string?>();
+        for (var i = 0; i < 2; i++)
+        {
+            await page.GotoAsync($"{BaseUrl}/diag", new() { WaitUntil = WaitUntilState.NetworkIdle });
+            var banner = page.Locator(".diag-banner[data-checked-at]");
+            await banner.WaitForAsync(new() { Timeout = 40_000 });
+            stamps.Add(await banner.GetAttributeAsync("data-checked-at"));
+        }
+
+        stamps[0].Should().NotBeNullOrEmpty();
+        stamps[1].Should().Be(stamps[0]);
+    }
+
     /// <summary>WCAG relative-luminance contrast ratio between two computed CSS colours.</summary>
     private static double ContrastRatio(string foreground, string background)
     {

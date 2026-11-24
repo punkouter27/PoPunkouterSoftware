@@ -5,8 +5,9 @@
 .DESCRIPTION
     1. dotnet publish the Api (and with it the trimmed WASM client) to a temp folder.
     2. Puts a stored Azure scan in the publish's App_Data (the repo's local copy, or the live one).
-    3. Starts Azurite (docker compose) if :10002 is closed, then the published app on :8000 (Development).
-    4. Runs the E2E tiers (-Tiers, default E2EUI) with BASE_URL, then stops the app and any Azurite it started.
+    3. Starts Azurite (docker compose) if :10002 is closed, then the published app on :8000 (Development, pinger
+       and outside-service probes off, so no test traffic reaches the live Po apps).
+    4. Runs the E2E tiers (-Tiers, default E2EUI) with BASE_URL, then stops the app and removes any Azurite it started.
 
 .EXAMPLE
     pwsh ./scripts/run-e2eui.ps1
@@ -48,6 +49,10 @@ if (-not (Test-NetConnection 127.0.0.1 -Port 10002 -WarningAction SilentlyContin
 
 $env:ASPNETCORE_ENVIRONMENT = 'Development'
 $env:ASPNETCORE_URLS = $baseUrl
+# Tests never reach the live Po apps (F1 quotas) or outside services: no background pinger sweep of the other
+# apps' /health/live, and /diag shows its outside-service rows as "Not probed in this environment."
+$env:Pinger__Enabled = 'false'
+$env:Diag__ProbeServices = 'false'
 $app = Start-Process -FilePath (Join-Path $publish 'PoPunkouterSoftware.Api.exe') -WorkingDirectory $publish `
     -RedirectStandardOutput (Join-Path $publish 'app.out.log') -RedirectStandardError (Join-Path $publish 'app.err.log') -PassThru
 try {
@@ -69,6 +74,7 @@ try {
 }
 finally {
     Stop-Process -Id $app.Id -Force -ErrorAction SilentlyContinue
-    if ($startedAzurite) { docker compose -f (Join-Path $repoRoot 'docker-compose.yml') stop azurite | Out-Null }
+    # Remove (not just stop) the Azurite container this run started; one someone else started is left alone.
+    if ($startedAzurite) { docker compose -f (Join-Path $repoRoot 'docker-compose.yml') rm --stop --force azurite | Out-Null }
 }
 exit $code

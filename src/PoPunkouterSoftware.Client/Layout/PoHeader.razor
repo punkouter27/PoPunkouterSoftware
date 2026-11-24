@@ -11,8 +11,12 @@
     <a href="/" class="app-topbar-brand po-header__title">PoPunkouterSoftware</a>
     @if (Nav.ToBaseRelativePath(Nav.Uri).Split('?', '#')[0].Length == 0)
     {
-        <button type="button" class="app-topbar-drop" data-letter-fall aria-label="Let the letters fall">
+        @* A Radzen button like every other control (Po rule a_radzen); ppk-plain strips the theme and
+           .app-topbar-drop (modern-ui.css) draws the round icon button. No Click handler: this header is
+           static, so js/letter-fall.js catches the click on [data-letter-fall]. *@
+        <RadzenButton ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat" class="ppk-plain app-topbar-drop"
+                      data-letter-fall aria-label="Let the letters fall">
             <span class="material-symbols-outlined" aria-hidden="true">close</span>
-        </button>
+        </RadzenButton>
     }
 </nav>

@@ -97,7 +97,7 @@ One command sequence verifies the repo (build, Unit, Integration, then both E2E 
 dotnet build PoPunkouterSoftware.slnx -c Release && dotnet test tests/PoPunkouterSoftware.Unit -c Release --no-build && dotnet test tests/PoPunkouterSoftware.Integration -c Release --no-build && pwsh ./scripts/run-e2eui.ps1 -Tiers E2EAPI,E2EUI
 ```
 
-Tested 2026-11-21 (.NET SDK 10.0.4xx per `global.json`, `rollForward: latestFeature`; Python 3.10+ and `uvx`
+Tested 2026-11-23 (.NET SDK 10.0.4xx per `global.json`, `rollForward: latestFeature`; Python 3.10+ and `uvx`
 for ruff; Docker Desktop for Azurite).
 
 | Step | Command | Needs / without it |
@@ -105,11 +105,11 @@ for ruff; Docker Desktop for Azurite).
 | Format | `dotnet format PoPunkouterSoftware.slnx --verify-no-changes` | — |
 | Python lint | `uvx ruff check .` (config: `ruff.toml`) | — |
 | Build | `dotnet build PoPunkouterSoftware.slnx -c Release` (warnings are errors) | — |
-| Unit (91) | `dotnet test tests/PoPunkouterSoftware.Unit -c Release --no-build` | nothing |
+| Unit (94) | `dotnet test tests/PoPunkouterSoftware.Unit -c Release --no-build` | nothing |
 | Integration (45) | `dotnet test tests/PoPunkouterSoftware.Integration -c Release --no-build` | Docker for the 6 Testcontainers Azurite tests; without it they skip with "Docker is not running…" |
 | E2E API (22) | `BASE_URL=http://localhost:8000 dotnet test tests/PoPunkouterSoftware.E2EAPI -c Release --no-build` | a running app; without one every test skips ("No app is answering at …") |
-| E2E UI (28) | `BASE_URL=http://localhost:8000 dotnet test tests/PoPunkouterSoftware.E2EUI -c Release --no-build` | a running app with a stored Azure scan (on a fresh machine: `curl -s https://app-popunkoutersoftware2.azurewebsites.net/api/diag/report -o src/PoPunkouterSoftware.Api/App_Data/azure-full-report.json`) + Playwright Chromium (`pwsh tests/PoPunkouterSoftware.E2EUI/bin/Release/net10.0/playwright.ps1 install chromium` once); without either every test skips with the reason |
-| E2E on the trimmed Release build | `pwsh ./scripts/run-e2eui.ps1 -Tiers E2EAPI,E2EUI` (publishes Release like deploy.yml, seeds the scan, starts Azurite + the published app on :8000, runs both tiers, stops everything) | Docker + Playwright Chromium |
+| E2E UI (30) | `BASE_URL=http://localhost:8000 dotnet test tests/PoPunkouterSoftware.E2EUI -c Release --no-build` | a running app with a stored Azure scan (on a fresh machine: `curl -s https://app-popunkoutersoftware2.azurewebsites.net/api/diag/report -o src/PoPunkouterSoftware.Api/App_Data/azure-full-report.json`) + Playwright Chromium (`pwsh tests/PoPunkouterSoftware.E2EUI/bin/Release/net10.0/playwright.ps1 install chromium` once); without either every test skips with the reason |
+| E2E on the trimmed Release build | `pwsh ./scripts/run-e2eui.ps1 -Tiers E2EAPI,E2EUI` (publishes Release like deploy.yml, seeds the scan, starts Azurite + the published app on :8000 with the pinger and outside probes off so no test traffic reaches the live Po apps, runs both tiers, stops the app and removes the Azurite container it started) | Docker + Playwright Chromium |
 | Run locally | `pwsh ./scripts/run-dev.ps1 -NoWatch` (drop `-NoWatch` for hot reload) | Docker (starts Azurite via `docker compose` if :10002 is closed) → http://localhost:8000 |
 | Deploy | push to `master` → `.github/workflows/deploy.yml` (format, ruff, build, Unit, Integration, publish, deploy); `*.md` and `SCREENSHOTS/**` are paths-ignored | repo variables for OIDC |
 | Deploy check | `curl -sI https://app-popunkoutersoftware2.azurewebsites.net/health/live` → `X-Commit: <pushed sha>` | — |
@@ -122,15 +122,16 @@ for ruff; Docker Desktop for Azurite).
 | Deviation | Why | Commit sha / date | How to undo |
 | --- | --- | --- | --- |
 | Header right side is empty: no visitor sign-in, no email; settings gear removed (`/settings` still reached from Ctrl+K) | owner rule for this app; gear removed by the owner | 2026-11-18 | owner asks to re-add |
-| Azure names predate the naming rule: `app-popunkoutersoftware2` on `asp-PoPunkouterSoftware-f1`, now in RG `PoShared` (moved from the deleted `PoPunkouterSoftware` group 2026-11-23; CI holds Website Contributor on the site only) | renaming means recreating the site | — | owner-approved recreate |
+| Azure names predate the naming rule: `app-popunkoutersoftware2` on `asp-PoPunkouterSoftware-f1`, with `stpopunkoutersoftware2`, all in RG `PoShared` (moved from the deleted `PoPunkouterSoftware` group 2026-11-23; CI holds Website Contributor on the site only) | renaming or moving means recreating the site | — | owner-approved recreate |
 | Extra `src/PoPunkouterSoftware.Infrastructure` project (Azure adapters) | keeps Api/Client/Shared as the skeleton has them | — | fold it into Api |
 | Reads other Po apps' public `/health/live`, pages and repos (`wwwroot/data/apps.json`) | that is the product; data, not shared code | — | — |
-| Radzen exceptions: only the six read-only data `<table>`s (row headers, captions, phone card layout). Drawers are Radzen side dialogs, no longer native `<dialog>` | owner decision "Radzen wins" (Profile A) overrides the 2026-10-19 native-dialog choice | `b61c8df`, `8498a04` 2026-11-21 | `git revert 8498a04` brings the `<dialog>` drawers back |
+| Radzen exceptions: only the six read-only data `<table>`s (row headers, captions, phone card layout). Drawers are Radzen side dialogs, no longer native `<dialog>`; the header's letter-fall × is a `RadzenButton` too (2026-11-23) | owner decision "Radzen wins" (Profile A) overrides the 2026-10-19 native-dialog choice | `b61c8df`, `8498a04` 2026-11-21 | `git revert 8498a04` brings the `<dialog>` drawers back |
 | Version stamp on phones (<= 768px) is the last item in the page flow, not fixed | a fixed stamp sat on /diag cards | `b61c8df` 2026-11-21 | `git revert b61c8df` (stamp part) |
 | /diag: ntfy shows as a neutral **Off** row while `Alerts:NtfyTopic` is unset (it is in production); probes are off in `Testing` and when `Diag:ProbeServices=false` | ntfy alerts are opt-in; the owner dropped the ntfy jobs 2026-11-20 | `a8eb8ec` 2026-11-21 | set `Alerts:NtfyTopic` |
 | Five scheduled workflows dropped (see below) | F1 has no Always On; owner chose not to upgrade | `2a36dc5` 2026-11-20 | restore from history |
 
-/diag probes every outside service live (`Features/Diag/ExternalServiceProbes.cs`, cached 1 minute): screenshot
+/diag probes every outside service live (`Features/Diag/ExternalServiceProbes.cs`); probes and health checks run as one
+round cached 60 s for both `/health` and `/api/diag` (`Infrastructure/Diag/DiagSnapshotCache.cs`, 10 s per health check, 5 s per probe): screenshot
 blob, ARM, Application Insights, the AI endpoint (model list only), GitHub, NuGet, OSV, Azure retail prices, RDAP
 and ntfy, plus Key Vault, Table Storage and scan-data health checks. `SCREENSHOTS/` holds before/after UI pages.
 Button styling: `ButtonStyle.Base` + `Variant.Flat` + class `ppk-plain`; see docs/architecture.md.

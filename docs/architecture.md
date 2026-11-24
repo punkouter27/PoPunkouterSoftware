@@ -528,7 +528,8 @@ proves a context and program were created, not that anything reached the screen.
 - **Po web standard (2026-11-18): the Po look.** `wwwroot/css/po-tokens.css`,
   `wwwroot/fonts/inter-latin.woff2` + `space-grotesk-latin.woff2`, `wwwroot/js/po-devwindow.js`,
   `wwwroot/js/po-dev.js` and `wwwroot/po-dev.html` are this repo's own copies of the Po look; edit them
-  here like any other file. po-tokens.css loads first in App.razor; the token block
+  here like any other file. Radzen's theme sheets load first in App.razor (since 2026-11-23, so app
+  classes win equal-specificity ties; E2E `Head_LoadsRadzenCssFirst_AndOnlyOnce`), then po-tokens.css; the token block
   at the top of `modern-ui.css` aliases every `--app-*` colour, radius and font to its `--po-*`
   tokens (one indigo accent, light/dark from the device, Inter text, Space Grotesk titles; the
   Material Symbols subset stays the only other face). The header is `.po-header` (RadzenHeader,
@@ -679,8 +680,11 @@ proves a context and program were created, not that anything reached the screen.
   budget at the top). Do not add a server route at `/diag`, and do not widen `/api/diag`
   with check data, config, paths or ids.
   Since 2026-11-21 every outside service the app calls has a row that is probed live by
-  `ExternalServiceProbes` (Api `Features/Diag/`), in parallel with a 5 s budget each and cached
-  for a minute so an anonymous visitor cannot use `/diag` to drive traffic: screenshot blob
+  `ExternalServiceProbes` (Api `Features/Diag/`), in parallel with a 5 s budget each. Since
+  2026-11-23 the probes and the four health checks (each registered with a 10 s timeout, failing
+  as Degraded) run as ONE round in `DiagSnapshotCache` (Infrastructure `Diag/`), kept 60 s and served
+  to both `/health` and `/api/diag` (`CheckedAt` = when the round ran), so an anonymous visitor or a
+  monitor cannot use either route to drive traffic: screenshot blob
   container, ARM, Application Insights (a `print` query), the AI endpoint's free model list,
   GitHub `/rate_limit`, NuGet, OSV, Azure retail prices, RDAP and ntfy `/v1/health`. Rows carry
   fixed sentences only. Before that, four rows (AI, screenshots, ntfy, App Insights) only read
