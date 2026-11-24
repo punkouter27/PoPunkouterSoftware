@@ -518,11 +518,18 @@ a {
 .app-topbar-drop .material-symbols-outlined { font-size: 20px; }
 @media (prefers-reduced-motion: reduce) { .rz-button.rz-base.ppk-plain.app-topbar-drop { display: none; } }
 
-html.lf-fallen body * {
+html.lf-fallen body *:not(.po-version) {
     color: transparent !important;
     -webkit-text-fill-color: transparent !important;
     text-shadow: none !important;
 }
+
+/* The vYYMMDD stamp never falls (owner, 2026-11-24): it keeps its colour and sits above the overlay,
+   so falling letters pass behind it. On a phone it is static in the flow, so it needs a position for z-index
+   (inset: auto drops the fixed-stamp offsets from po-tokens.css, which would otherwise shift it). */
+/* -webkit-text-fill-color is inherited: the stamp's wrapper goes transparent, so the stamp sets its own. */
+html.lf-fallen .po-version { z-index: 10001; -webkit-text-fill-color: currentcolor; }
+@media (max-width: 768px) { html.lf-fallen .po-version { position: relative; inset: auto; } }
 
 .lf-layer {
     position: fixed;

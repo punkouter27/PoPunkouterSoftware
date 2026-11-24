@@ -596,6 +596,62 @@ public class PortfolioUiTests : IAsyncLifetime
     }
 
     /// <summary>
+    /// The home page's letter fall (js/letter-fall.js) drops every letter after the idle wait, but the vYYMMDD stamp
+    /// stays where it is at full contrast (owner, 2026-11-24). The init script shortens the 30 s wait through the
+    /// file's test hook, window.letterFallIdleMs.
+    /// </summary>
+    [LiveAppTheory]
+    [MemberData(nameof(Viewports))]
+    public async Task LetterFall_AfterIdle_LeavesTheVersionStampReadable(string label, int width, int height, bool isMobile)
+    {
+        var page = await NewPageAsync(width, height, isMobile);
+        await page.AddInitScriptAsync("window.letterFallIdleMs = 1500;");
+        await page.GotoAsync($"{BaseUrl}/", new() { WaitUntil = WaitUntilState.NetworkIdle });
+        await page.WaitForSelectorAsync(".portfolio-stack__row", new() { Timeout = 40_000 });
+        // On a phone the stamp is the last thing in the flow: bring it into view first (scrolling counts as activity,
+        // so the idle clock starts over from here).
+        await page.Locator(".po-version").ScrollIntoViewIfNeededAsync();
+        // Page coordinates (scroll offset added), so a smooth scroll still settling cannot read as a moved stamp.
+        const string StampOnPage = "() => { const r = document.querySelector('.po-version').getBoundingClientRect(); return [Math.round(r.left + scrollX), Math.round(r.top + scrollY)]; }";
+        var before = await page.EvaluateAsync<double[]>(StampOnPage);
+
+        await page.WaitForSelectorAsync("html.lf-fallen .lf-layer .lf-glyph", new() { State = WaitForSelectorState.Attached, Timeout = 20_000 });
+
+        // Other letters did fall: the page's own text went see-through under the overlay.
+        (await page.EvaluateAsync<string>("() => getComputedStyle(document.querySelector('.po-header__title')).color"))
+            .Should().Be("rgba(0, 0, 0, 0)", $"the rest of the page still lets its letters go at {label}");
+
+        var stamp = page.Locator(".po-version");
+        await Assertions.Expect(stamp).ToBeVisibleAsync();
+        (await stamp.InnerTextAsync()).Should().MatchRegex(@"^v\d{6}$");
+        (await page.EvaluateAsync<double[]>(StampOnPage)).Should().Equal(before, $"the stamp does not move at {label}");
+        var glyphs = await page.EvaluateAsync<string[]>("() => [...document.querySelectorAll('.lf-glyph')].map(g => g.textContent)");
+        string.Concat(glyphs).Should().NotContain(await stamp.InnerTextAsync(), "the stamp's letters are not in the overlay");
+
+        // Full contrast against its own pill, and nothing (the overlay included) on top of it.
+        var colours = await page.EvaluateAsync<string[]>(@"() => { const s = getComputedStyle(document.querySelector('.po-version'));
+            return [s.color, s.webkitTextFillColor, s.backgroundColor]; }");
+        colours[0].Should().NotBe("rgba(0, 0, 0, 0)");
+        colours[1].Should().NotBe("rgba(0, 0, 0, 0)");
+        ContrastRatio(colours[0], colours[2]).Should().BeGreaterThanOrEqualTo(4.5, $"the stamp keeps its contrast at {label}");
+        // The stamp is pointer-events:none, which hit-testing skips; switch it on for the probe only.
+        var onTop = await page.EvaluateAsync<bool>(@"() => { const el = document.querySelector('.po-version');
+            el.style.pointerEvents = 'auto';
+            const r = el.getBoundingClientRect();
+            const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+            el.style.pointerEvents = '';
+            return !!hit && !!hit.closest('.po-version'); }");
+        onTop.Should().BeTrue($"the stamp sits above the letter overlay at {label}");
+
+        var axe = await stamp.RunAxe(new Deque.AxeCore.Commons.AxeRunOptions
+        {
+            RunOnly = new Deque.AxeCore.Commons.RunOnlyOptions { Type = "rule", Values = ["color-contrast"] },
+        });
+        axe.Violations.Should().BeEmpty($"axe color-contrast on the stamp after the fall at {label}");
+        axe.Passes.Should().NotBeEmpty("axe actually measured the stamp");
+    }
+
+    /// <summary>
     /// /health and /api/diag share one round of checks for 60 s (DiagSnapshotCache): two /diag loads a few
     /// seconds apart show the same CheckedAt.
     /// </summary>

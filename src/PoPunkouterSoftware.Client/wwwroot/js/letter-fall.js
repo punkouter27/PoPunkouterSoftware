@@ -19,13 +19,20 @@
  * motionKit "minimal" device turns the whole thing off, × included (hidden in CSS).
  *
  * The overlay is aria-hidden: a screen reader keeps reading the real page underneath.
+ *
+ * The vYYMMDD stamp (.po-version, KEEP_SEL) never falls and never fades: the owner wants the
+ * version readable at all times (2026-11-24). Every other letter still drops.
+ *
+ * Test hook: a page may set `window.letterFallIdleMs` (e.g. from a Playwright init script) before
+ * this file runs to shorten the 30 s idle wait. Nothing in the app sets it.
  */
 (function () {
     'use strict';
 
-    var IDLE_MS = 30000;
+    var IDLE_MS = window.letterFallIdleMs > 0 ? window.letterFallIdleMs : 30000;
     var MAX_LETTERS = 2200;   // a dense viewport of the stack table is ~1,500; beyond this Matter stutters
     var ICON_SEL = '.material-symbols-outlined, .material-icons, .rz-icon';
+    var KEEP_SEL = '.po-version';   // stays put and keeps its colour (html.lf-fallen rule in modern-ui.css)
 
     var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
     var lastActivity = Date.now();
@@ -135,7 +142,7 @@
             acceptNode: function (n) {
                 if (!/\S/.test(n.nodeValue)) return NodeFilter.FILTER_REJECT;
                 var p = n.parentElement;
-                if (!p || p.closest('script,style,noscript,template,[hidden],[aria-hidden="true"].app-sr-only,.lf-layer')) return NodeFilter.FILTER_REJECT;
+                if (!p || p.closest('script,style,noscript,template,[hidden],[aria-hidden="true"].app-sr-only,.lf-layer,' + KEEP_SEL)) return NodeFilter.FILTER_REJECT;
                 return NodeFilter.FILTER_ACCEPT;
             }
         });

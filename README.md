@@ -93,7 +93,7 @@ Vault `kv-poshared2` under the prefix `PoPunkouterSoftware--` and are never comm
 - Integration tests (`PoPunkouterSoftware.Integration`) cover host configuration, diagnostics endpoints, and Azure Table Storage behavior via `WebApplicationFactory` + Testcontainers Azurite.
 - E2E tests (`PoPunkouterSoftware.E2EAPI`, `PoPunkouterSoftware.E2EUI`) cover the HTTP contract and browser flows against a live instance; on demand, not in CI, and they skip with a clear message when no app answers at `BASE_URL`. E2EUI runs axe-core's WCAG 2.1 A/AA rules over every page (`Deque.AxeCore.Playwright`) and fails on serious or critical violations.
 - Integration runs in CI; locally its 6 Azurite tests skip with a clear message when Docker is not running.
-- Current counts: Unit 94, Integration 45, E2E API 22, E2E UI 30 (see [docs/testing.md](docs/testing.md)).
+- Current counts: Unit 94, Integration 45, E2E API 22, E2E UI 32 (see [docs/testing.md](docs/testing.md)).
 
 ## Developer Guidance
 
