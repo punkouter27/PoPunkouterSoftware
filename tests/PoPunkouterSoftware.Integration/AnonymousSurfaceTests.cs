@@ -28,6 +28,7 @@ public class AnonymousSurfaceTests(ProductionApp app) : IClassFixture<Production
         "/api/portfolio/badge/{id}.svg",
         "/api/portfolio/screenshots/{host}",
         "/api/signins",
+        "/api/visit",
         "/api/{**rest}",
         "/favicon.ico",
         "/health",

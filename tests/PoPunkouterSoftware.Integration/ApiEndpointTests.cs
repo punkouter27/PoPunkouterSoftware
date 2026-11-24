@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -265,3 +266,29 @@ public class PortfolioEndpointTests
 }
 
 
+
+[Collection("WebApp")]
+public class VisitEndpointTests
+{
+    private readonly HttpClient _client;
+
+    public VisitEndpointTests(TestWebApp factory) => _client = factory.CreateClient();
+
+    /// <summary>
+    /// POST /api/visit records only a well-formed browser id (js/visit.js shape) with optional
+    /// three-letter initials; anything else is rejected with 400 and never logged.
+    /// </summary>
+    [Theory]
+    [InlineData("0123456789abcdef", null, HttpStatusCode.NoContent)]
+    [InlineData("0123456789abcdef0123456789abcdef", " mjp ", HttpStatusCode.NoContent)]
+    [InlineData("0123456789ABCDEF", null, HttpStatusCode.BadRequest)]
+    [InlineData("short", null, HttpStatusCode.BadRequest)]
+    [InlineData(null, null, HttpStatusCode.BadRequest)]
+    [InlineData("0123456789abcdef", "M1", HttpStatusCode.BadRequest)]
+    public async Task PostVisit_AcceptsOnlyWellFormedInput(string? visitorId, string? initials, HttpStatusCode expected)
+    {
+        var response = await _client.PostAsJsonAsync("/api/visit", new { visitorId, initials });
+
+        response.StatusCode.Should().Be(expected);
+    }
+}

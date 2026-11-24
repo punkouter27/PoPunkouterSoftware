@@ -43,14 +43,33 @@ internal static partial class VisitEndpoints
     /// </summary>
     /// <param name="visitorId">Random per-browser id from localStorage (hex, untrusted).</param>
     /// <param name="initials">The visitor's initials where the app asks for them; null here.</param>
+    /// <returns>The record, or null when either input is malformed (the endpoint answers 400).</returns>
     internal static VisitRecord? Describe(string? visitorId, string? initials)
     {
-        // TODO(human): validate both inputs and build the record.
-        throw new NotImplementedException();
+        // The id is the only thing that tells visitors apart, so it must be exactly the shape
+        // js/visit.js makes; anything else is junk or a probe and is never logged.
+        if (visitorId is null || !VisitorIdShape().IsMatch(visitorId))
+            return null;
+
+        // Initials are optional (this site never asks), but when sent they must be three letters.
+        string? letters = null;
+        if (!string.IsNullOrWhiteSpace(initials))
+        {
+            letters = initials.Trim().ToUpperInvariant();
+            if (!InitialsShape().IsMatch(letters))
+                return null;
+        }
+
+        // A short id slice keeps /users readable without exposing the whole browser id.
+        var name = letters ?? $"Visitor {visitorId[..6]}";
+        return new VisitRecord($"visitor:{visitorId}", name, "anonymous");
     }
 
     [GeneratedRegex("^[a-f0-9]{16,32}$")]
     internal static partial Regex VisitorIdShape();
+
+    [GeneratedRegex("^[A-Z]{3}$")]
+    private static partial Regex InitialsShape();
 
     /// <summary>
     /// Writes the record OUTSIDE the request's trace. The Azure Monitor distro samples traces at
