@@ -24,17 +24,14 @@ internal static class DiagEndpoints
         // (DiagStatusBuilder) so none of that can come back.
         var diag = app.MapGroup("/api/diag").WithTags("Diag");
 
-        // The /diag page's only fetch: DiagReportDto, the Po diag contract. Runs the same health
-        // checks as /health plus a live probe of every other outside service (ExternalServiceProbes,
-        // cached a minute) and projects them through DiagStatusBuilder.
-        diag.MapGet("", async (
-            HealthCheckService health, ExternalServiceProbes probes, IWebHostEnvironment env,
-            TimeProvider clock, CancellationToken ct) =>
+        // The /diag page's only fetch: DiagReportDto, the Po diag contract. The same snapshot /health
+        // serves (DiagSnapshotCache: the health checks plus a live probe of every other outside
+        // service, one round per 60 s), projected through DiagStatusBuilder. CheckedAt is when that
+        // round ran, so two loads inside a minute show the same time.
+        diag.MapGet("", async (DiagSnapshotCache cache, IWebHostEnvironment env, CancellationToken ct) =>
         {
-            var reportTask = health.CheckHealthAsync(ct);
-            var probeTask = probes.RunAsync(ct);
-            await Task.WhenAll(reportTask, probeTask);
-            return Results.Json(DiagStatusBuilder.Build(reportTask.Result, env.EnvironmentName, probeTask.Result, clock.GetUtcNow()));
+            var snapshot = await cache.GetAsync(ct);
+            return Results.Json(DiagStatusBuilder.Build(snapshot.Health, env.EnvironmentName, snapshot.Probes, snapshot.CheckedAt));
         })
         .WithName("GetDiag")
         .Produces<DiagReportDto>(StatusCodes.Status200OK);

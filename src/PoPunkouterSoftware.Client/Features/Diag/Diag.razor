@@ -31,7 +31,8 @@
     }
     else
     {
-        <div class="diag-banner diag-banner--@Tone(_report.Status)" role="status" data-status="@_report.Status">
+        <div class="diag-banner diag-banner--@Tone(_report.Status)" role="status" data-status="@_report.Status"
+             data-checked-at="@_report.CheckedAt.ToString("O", System.Globalization.CultureInfo.InvariantCulture)">
             <strong>@Headline(_report)</strong>
             <span class="diag-meta">
                 @_report.Environment · version v@(_report.Version) · checks took @Ms(_report.CheckedMs) ·

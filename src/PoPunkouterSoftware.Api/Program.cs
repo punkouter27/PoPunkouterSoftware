@@ -56,8 +56,8 @@ try
     builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
     builder.Services.AddProblemDetails();
     // Validators by type, not an assembly scan: the same explicit list as the Client (trim-safe, greppable).
-    builder.Services.AddSingleton<IValidator<PoPunkouterSoftware.Shared.SignInSearchFilter>, PoPunkouterSoftware.Shared.SignInSearchFilterValidator>();
-    builder.Services.AddSingleton<IValidator<PoPunkouterSoftware.Shared.AiTriageAdHocRequest>, PoPunkouterSoftware.Shared.AiTriageAdHocRequestValidator>();
+    builder.Services.AddScoped<IValidator<PoPunkouterSoftware.Shared.SignInSearchFilter>, PoPunkouterSoftware.Shared.SignInSearchFilterValidator>();
+    builder.Services.AddScoped<IValidator<PoPunkouterSoftware.Shared.AiTriageAdHocRequest>, PoPunkouterSoftware.Shared.AiTriageAdHocRequestValidator>();
     builder.AddAppLogging();
 
     // ─── .NET 10 TimeProvider abstraction — enables testable time ────────────
@@ -151,6 +151,11 @@ try
     builder.Services.AddSingleton<SignInQueryService>();
     // /api/diag's live probes of every outside service without a health check of its own.
     builder.Services.AddSingleton<ExternalServiceProbes>();
+    // One round of checks (health checks + probes) shared by /health and /api/diag, kept 60 s.
+    builder.Services.AddSingleton(sp => new DiagSnapshotCache(
+        ct => sp.GetRequiredService<Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckService>().CheckHealthAsync(ct),
+        ct => sp.GetRequiredService<ExternalServiceProbes>().RunAsync(ct),
+        sp.GetRequiredService<TimeProvider>()));
 
     // ─── Health checks (NET_RULES §3) ─────────────────────────────────────────
     // One check per external dependency, each performing the real operation the app
@@ -161,11 +166,15 @@ try
     var externalStorageTags = new[] { "external", "storage" };
     var dataTags = new[] { "data" };
     var externalTelemetryTags = new[] { "external", "telemetry" };
+    // Each check has its own timeout, so one slow dependency cannot hold the shared round (DiagSnapshotCache);
+    // a timed-out or crashed check reports Degraded, keeping the "no check returns Unhealthy" rule (HealthEndpoints.cs).
+    var checkTimeout = DiagSnapshotCache.CheckTimeout;
+    var degraded = Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Degraded;
     builder.Services.AddHealthChecks()
-        .AddCheck<KeyVaultHealthCheck>("KeyVault", tags: externalKvTags)
-        .AddCheck<TableStorageHealthCheck>("TableStorage", tags: externalStorageTags)
-        .AddCheck<AzureInventoryHealthCheck>("AzureInventory", tags: dataTags)
-        .AddCheck<AppInsightsHealthCheck>("ApplicationInsights", tags: externalTelemetryTags);
+        .AddCheck<KeyVaultHealthCheck>("KeyVault", failureStatus: degraded, tags: externalKvTags, timeout: checkTimeout)
+        .AddCheck<TableStorageHealthCheck>("TableStorage", failureStatus: degraded, tags: externalStorageTags, timeout: checkTimeout)
+        .AddCheck<AzureInventoryHealthCheck>("AzureInventory", failureStatus: degraded, tags: dataTags, timeout: checkTimeout)
+        .AddCheck<AppInsightsHealthCheck>("ApplicationInsights", failureStatus: degraded, tags: externalTelemetryTags, timeout: checkTimeout);
 
     var jsonCompressionMimeTypes = new[] { "application/json" };
     builder.Services.AddResponseCompression(o =>

@@ -62,8 +62,11 @@
     color: var(--app-text);
 }
 
+/* Body text colour, not --app-accent-warm: the warm accent fell below 4.5:1 on the page background (axe
+   color-contrast, seen whenever the stored scan is older than 12 h). The word "stale" carries it. */
 .portfolio-summary .is-stale {
-    color: var(--app-accent-warm);
+    color: var(--app-text);
+    font-weight: 600;
 }
 
 /* ── Build-mismatch banner ───────────────────────────────────────────────────

@@ -16,8 +16,9 @@ namespace PoPunkouterSoftware.Api;
 /// depends on (a free one: no paid AI completion, no ntfy push), in parallel, with a 5 second budget.
 ///
 /// <para>The rows carry fixed sentences written here, never an exception message, URL or id: the
-/// page is anonymous. Results are cached for a minute so an anonymous visitor hammering /diag cannot
-/// turn this server into a traffic source against GitHub, nuget.org or the AI endpoint.</para>
+/// page is anonymous. Results are cached for a minute by <see cref="DiagSnapshotCache"/> (with the health
+/// checks, one round for /health and /api/diag) so an anonymous visitor hammering /diag cannot turn this
+/// server into a traffic source against GitHub, nuget.org or the AI endpoint.</para>
 ///
 /// <para>Off in the Testing environment and wherever <c>Diag:ProbeServices</c> is false (the Production
 /// boot test sets it), so no test calls the internet; the rows then say "Not probed in this environment."</para>
@@ -28,15 +29,9 @@ internal sealed class ExternalServiceProbes(
     IConfiguration config,
     AiTriageService ai,
     IWebHostEnvironment env,
-    TimeProvider clock,
-    ILogger<ExternalServiceProbes> logger) : IDisposable
+    ILogger<ExternalServiceProbes> logger)
 {
     private static readonly TimeSpan Budget = TimeSpan.FromSeconds(5);
-    private static readonly TimeSpan CacheFor = TimeSpan.FromMinutes(1);
-
-    private readonly SemaphoreSlim _gate = new(1, 1);
-    private DateTimeOffset _cachedAt = DateTimeOffset.MinValue;
-    private IReadOnlyList<DiagCheckDto> _cached = [];
 
     /// <param name="OffReason">Non-null when the service is switched off on purpose on this server (an
     /// opt-in feature left unconfigured): the row then shows "Off" — neutral, not counted in the banner — and
@@ -53,36 +48,17 @@ internal sealed class ExternalServiceProbes(
     private static Verdict Ok(string detail) => new(true, detail);
     private static Verdict Bad(string detail) => new(false, detail);
 
-    public void Dispose() => _gate.Dispose();
-
+    /// <summary>Runs every probe once, in parallel. Uncached here: callers go through DiagSnapshotCache.</summary>
     internal async Task<IReadOnlyList<DiagCheckDto>> RunAsync(CancellationToken ct)
     {
-        if (clock.GetUtcNow() - _cachedAt < CacheFor)
-            return _cached;
-
-        await _gate.WaitAsync(ct);
-        try
-        {
-            if (clock.GetUtcNow() - _cachedAt < CacheFor)
-                return _cached;
-
-            var specs = Specs();
-            var probe = config.GetValue("Diag:ProbeServices", !env.IsEnvironment("Testing"));
-            var rows = await Task.WhenAll(specs.Select(s =>
-                s.OffReason?.Invoke() is { } off
-                    ? Task.FromResult(new DiagCheckDto(s.Name, s.Group, s.Label, OffStatus, s.Purpose, off, 0, null))
-                    : probe
-                        ? RunOneAsync(s, ct)
-                        : Task.FromResult(new DiagCheckDto(s.Name, s.Group, s.Label, nameof(HealthStatus.Healthy), s.Purpose,
-                            "Not probed in this environment.", 0, null))));
-            _cached = rows;
-            _cachedAt = clock.GetUtcNow();
-            return rows;
-        }
-        finally
-        {
-            _gate.Release();
-        }
+        var probe = config.GetValue("Diag:ProbeServices", !env.IsEnvironment("Testing"));
+        return await Task.WhenAll(Specs().Select(s =>
+            s.OffReason?.Invoke() is { } off
+                ? Task.FromResult(new DiagCheckDto(s.Name, s.Group, s.Label, OffStatus, s.Purpose, off, 0, null))
+                : probe
+                    ? RunOneAsync(s, ct)
+                    : Task.FromResult(new DiagCheckDto(s.Name, s.Group, s.Label, nameof(HealthStatus.Healthy), s.Purpose,
+                        "Not probed in this environment.", 0, null))));
     }
 
     private async Task<DiagCheckDto> RunOneAsync(Spec spec, CancellationToken ct)

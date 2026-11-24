@@ -28,8 +28,8 @@ builder.Services.AddScoped<PortfolioApiClient>();
 // reaches each validator only through reflection, so the trimmer dropped SignInSearchFilterValidator's
 // constructor and /users rendered nothing in production ("NoConstructorMatch"). A generic registration
 // tells the trimmer to keep the constructor.
-builder.Services.AddSingleton<IValidator<SignInSearchFilter>, SignInSearchFilterValidator>();
-builder.Services.AddSingleton<IValidator<AiTriageAdHocRequest>, AiTriageAdHocRequestValidator>();
+builder.Services.AddScoped<IValidator<SignInSearchFilter>, SignInSearchFilterValidator>();
+builder.Services.AddScoped<IValidator<AiTriageAdHocRequest>, AiTriageAdHocRequestValidator>();
 
 // ─── Radzen UI services ───────────────────────────────────────────────────────
 builder.Services.AddRadzenComponents();

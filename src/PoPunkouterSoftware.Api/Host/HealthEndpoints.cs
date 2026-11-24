@@ -31,10 +31,20 @@ internal static class HealthEndpoints
         // those is a designed path that still serves both pages. A dependency fault shows up
         // as `"status": "degraded"` plus the check's own verdict, which is the honest signal;
         // 503 would claim the instance is dead when it is serving fine.
-        app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+        //
+        // Served from DiagSnapshotCache, the same 60 s round /api/diag reads, so polling /health
+        // never runs the checks more than once a minute. Status codes as MapHealthChecks gave them:
+        // 503 only for Unhealthy, never cached by a proxy.
+        app.MapMethods("/health", ["GET", "HEAD"], async (HttpContext http, DiagSnapshotCache cache) =>
         {
-            ResponseWriter = HealthResponseWriter.WriteAsync,
+            var snapshot = await cache.GetAsync(http.RequestAborted);
+            http.Response.StatusCode = snapshot.Health.Status == HealthStatus.Unhealthy
+                ? StatusCodes.Status503ServiceUnavailable
+                : StatusCodes.Status200OK;
+            http.Response.Headers.CacheControl = "no-store, no-cache";
+            await HealthResponseWriter.WriteAsync(http, snapshot.Health);
         })
+        .ExcludeFromDescription()
         .WithName("GetHealth")
         .WithTags("Health");
 
