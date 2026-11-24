@@ -316,6 +316,7 @@ try
     app.MapDiagEndpoints();
     app.MapPortfolioEndpoints();
     app.MapSignInEndpoints();
+    app.MapVisitEndpoints();
     app.MapHub<RefreshHub>("/hubs/refresh");
 
     // Unmatched API route. Every /api/* path is a JSON contract — the WASM client reads

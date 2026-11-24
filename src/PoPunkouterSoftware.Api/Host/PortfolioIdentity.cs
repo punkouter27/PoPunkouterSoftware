@@ -30,11 +30,16 @@ internal static class PortfolioIdentity
     /// </summary>
     /// <remarks>
     /// Entries are already in <see cref="NormalizeName"/> form (letters and digits only,
-    /// lower-cased), so both the Azure resource name "app-popunkoutersoftware2" and the
-    /// friendly name "PoPunkouterSoftware" collapse onto one entry here.
+    /// lower-cased). Normalising KEEPS digits, so the "2" spellings are listed too: since
+    /// 2026-11-23 the site lives in the PoShared resource group, where the scan names a
+    /// service from its resource name ("app-popunkoutersoftware2" → "PoPunkoutersoftware2")
+    /// instead of from its own group.
     /// </remarks>
-    private static readonly HashSet<string> SelfIdentities =
-        new(StringComparer.Ordinal) { "apppopunkoutersoftware", "popunkoutersoftware" };
+    private static readonly HashSet<string> SelfIdentities = new(StringComparer.Ordinal)
+    {
+        "apppopunkoutersoftware", "popunkoutersoftware",
+        "apppopunkoutersoftware2", "popunkoutersoftware2",
+    };
 
     /// <summary>True when any of the candidate names is this site.</summary>
     internal static bool IsSelf(params string?[] candidateNames) =>

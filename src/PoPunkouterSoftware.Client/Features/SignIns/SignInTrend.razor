@@ -7,12 +7,12 @@
    sends a dense day grid, so every line shares one category axis and a quiet week draws as a
    flat run of zeroes rather than as a segment joining the two days either side of it.
 
-   Collapsed by default, like the evidence disclosures on /azure: it is corroborating detail behind
-   the roster, and a chart is the most expensive thing on this page to draw. *@
+   Open by default (owner's call, 2026-11-23): every section of /users shows on load. It was
+   collapsed as corroborating detail behind the roster; the toggle still folds it away. *@
 @using PoPunkouterSoftware.Shared
 @using Radzen.Blazor
 
-<details class="app-disclosure">
+<details class="app-disclosure" open>
     @* The title is an <h2>, not a <strong>. A screen reader navigating by heading skipped
        straight past both disclosures on this page — they were the only two sections of the
        page with no heading, so "Sign-ins over time" and the raw feed were unreachable by the

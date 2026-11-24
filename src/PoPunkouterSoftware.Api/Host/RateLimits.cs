@@ -23,6 +23,8 @@ internal static class RateLimits
 {
     public const string SignIns = "signins";
     public const string AiRewrite = "ai-rewrite";
+    /// <summary>POST /api/visit writes one App Insights record per call — billed ingestion.</summary>
+    public const string Visits = "visits";
 
     internal static IServiceCollection AddAppRateLimits(this IServiceCollection services, IConfiguration config) =>
         services.AddRateLimiter(o =>
@@ -39,6 +41,12 @@ internal static class RateLimits
             o.AddFixedWindowLimiter(SignIns, w =>
             {
                 w.PermitLimit = config.GetValue("RateLimits:SignInsPerMinute", 30);
+                w.Window = TimeSpan.FromMinutes(1);
+                w.QueueLimit = 0;
+            });
+            o.AddFixedWindowLimiter(Visits, w =>
+            {
+                w.PermitLimit = config.GetValue("RateLimits:VisitsPerMinute", 60);
                 w.Window = TimeSpan.FromMinutes(1);
                 w.QueueLimit = 0;
             });

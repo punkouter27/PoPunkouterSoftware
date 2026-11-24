@@ -56,7 +56,7 @@
                         action: function () { window.open(repo + '/actions', '_blank', 'noopener'); } });
                 }
             });
-            // Same gate as the Rescan and Sync buttons: shown only where the server will accept it.
+            // Same gate as /azure's Rescan button: shown only where the server will accept it.
             if (res[1].managementActionsEnabled) {
                 cmds.push({ id: 'act-rescan', title: 'Rescan Azure now', icon: 'sync', category: 'Actions',
                     action: function () {

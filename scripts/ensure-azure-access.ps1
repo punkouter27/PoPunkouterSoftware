@@ -1,13 +1,18 @@
 # Makes Azure and GitHub match what PoPunkouterSoftware needs: the app identity's roles, the CI deploy identity, and the
 # repo variables the deploy workflow reads. Run by a subscription owner:  pwsh scripts/ensure-azure-access.ps1
-$Repo = 'PoPunkouterSoftware'; $Branch = 'master'; $ResourceGroup = 'PoPunkouterSoftware'; $App = 'app-popunkoutersoftware2'
+# Since 2026-11-23 the app, its plan and its storage live in PoShared (moved from the deleted
+# PoPunkouterSoftware group). So CI gets Website Contributor on the ONE site, not Contributor on a
+# group that also holds the shared vault and AI account, and no budget is written here: PoShared's
+# own po-monthly budget ($25) covers this app and must not be reset by this script.
+$Repo = 'PoPunkouterSoftware'; $Branch = 'master'; $ResourceGroup = 'PoShared'; $App = 'app-popunkoutersoftware2'
 $Identity = 'system'          # 'system', or the name of a user-assigned identity in PoShared
 $KeyVaultAccess = $true
-$DeployResourceGroups = @('PoPunkouterSoftware')
-$MonthlyBudgetUsd = 5            # resource-group budget; alerts email at 50%, 100% and a 100% forecast
+$DeployResourceGroups = @()
+$DeployRoles = @('Website Contributor|/resourceGroups/PoShared/providers/Microsoft.Web/sites/app-popunkoutersoftware2')
+$MonthlyBudgetUsd = 0            # 0 = skip the budget step (see above)
 $AppRoles = @(                  # role | scope under the subscription ('' = the subscription itself)
-    'Storage Table Data Contributor|/resourceGroups/PoPunkouterSoftware/providers/Microsoft.Storage/storageAccounts/stpopunkoutersoftware2'
-    'Storage Blob Data Contributor|/resourceGroups/PoPunkouterSoftware/providers/Microsoft.Storage/storageAccounts/stpopunkoutersoftware2'
+    'Storage Table Data Contributor|/resourceGroups/PoShared/providers/Microsoft.Storage/storageAccounts/stpopunkoutersoftware2'
+    'Storage Blob Data Contributor|/resourceGroups/PoShared/providers/Microsoft.Storage/storageAccounts/stpopunkoutersoftware2'
     'Key Vault Secrets User|/resourceGroups/PoShared/providers/Microsoft.KeyVault/vaults/kv-poshared2'
     'Reader|'
     'Monitoring Reader|'
@@ -57,11 +62,12 @@ foreach ($g in $DeployRoles) {   # only repos whose CI applies subscription-scop
 }
 
 # 3. What the workflow reads. Variables, not secrets: none of these is a secret.
-foreach ($v in @{ AZURE_CLIENT_ID = $appId; AZURE_TENANT_ID = $Tenant; AZURE_SUBSCRIPTION_ID = $Sub; AZURE_WEBAPP_NAME = $App }.GetEnumerator()) {
+foreach ($v in @{ AZURE_CLIENT_ID = $appId; AZURE_TENANT_ID = $Tenant; AZURE_SUBSCRIPTION_ID = $Sub; AZURE_WEBAPP_NAME = $App; AZURE_RESOURCE_GROUP = $ResourceGroup }.GetEnumerator()) {
     gh variable set $v.Key -R "punkouter27/$Repo" --body $v.Value; Step "github var $($v.Key)"
 }
 
 # 4. A monthly budget on the resource group that emails at 50% and 100% spent and at a 100% forecast.
+if ($MonthlyBudgetUsd -le 0) { "  skip budget (none owned by this repo)"; return }
 $notify = @{}
 foreach ($t in @('Actual', 50), @('Actual', 100), @('Forecasted', 100)) {
     $notify["$($t[0])$($t[1])"] = @{ enabled = $true; operator = 'GreaterThan'; threshold = $t[1]; thresholdType = $t[0]; contactEmails = @('punkouter27@gmail.com') }

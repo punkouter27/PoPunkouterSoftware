@@ -1,16 +1,17 @@
 // Infrastructure for PoPunkouterSoftware.
 //
 // Faithful, idempotent description of the resources that already exist in the
-// 'PoPunkouterSoftware' resource group (subscription 14d963a2-...-553bf01f8de2,
-// region West US 2). Deployed in Incremental mode from deploy.yml, so a run
-// against the live resource group is a no-op when nothing has drifted.
+// 'PoShared' resource group (subscription 14d963a2-...-553bf01f8de2,
+// region West US 2). Deploy with `az deployment group create -g PoShared`
+// in Incremental mode, so a run against the live group is a no-op when nothing
+// has drifted — and, being Incremental, never touches PoShared's other resources.
 //
-// NOTE: NET_RULES §5 mandates "PoShared (or Po{SolutionName})". The RG
-// 'PoPunkouterSoftware' uses the per-solution form — the rule explicitly
-// permits both. The Agent Service Plan stays app-local (not in PoShared) on
-// purpose: F1 isolation keeps this app's cold starts and quota pressure
-// away from any shared plan. The shared Key Vault kv-poshared2 does live in
-// PoShared and is referenced by name below.
+// NOTE: NET_RULES §5 mandates "PoShared (or Po{SolutionName})". The site, its
+// plan and its storage used the per-solution group 'PoPunkouterSoftware' until
+// 2026-11-23, when they were moved into PoShared (owner's call) and that group
+// was deleted. The plan is still this app's own F1 plan, not a shared one:
+// F1 isolation keeps this app's cold starts and quota pressure away from the
+// rest of the fleet. The shared Key Vault kv-poshared2 is referenced by name below.
 //
 // IMPORTANT: appSettings are intentionally NOT declared on the site resource.
 // The running app sources its settings (Key Vault references, the Application

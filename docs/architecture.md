@@ -116,10 +116,10 @@ percent values arrive only over the hub. **A scan already running is JOINED, nev
 `OpsSummary.RefreshInProgress` makes a page that loads mid-scan (the visitor left and came back,
 the stale-report auto-rescan, another tab) show its progress and Cancel, and a Rescan that gets 409
 follows that scan. Before, the page showed an idle Rescan button that could only answer "Already
-running". The home page's **Sync** button (owner's ask, 2026-10-19) starts the same scan and
-simply polls `/api/portfolio` until `refreshInProgress` clears — it needs no progress UI. Both
-buttons render only when `/api/config` reports `managementActionsEnabled`, so in Production
-(where the endpoint also wants a management key the browser lacks) neither is shown.
+running". Rescan is the only scan button: the home page had a **Sync** button (2026-10-19)
+that started the same scan, removed 2026-11-23 (owner's call) so /azure is the one place to
+start one. Rescan renders only when `/api/config` reports `managementActionsEnabled`, so in
+Production (where the endpoint also wants a management key the browser lacks) it is hidden.
 
 **Degradation is a designed path, not an error path.** Table Storage unavailable falls back to a
 local JSON report file (`ReportFileCache`); a corrupt cache degrades to "no report", never a 500.
@@ -188,7 +188,8 @@ silent to screen readers (`AppHint SpeakText=false`); the table's sr-only captio
 column means once instead of with every cell.
 A 1200px stacking breakpoint was tried first and took the comparison away in any window
 narrower than a desktop, VS Code's browser pane included. At 640px and below each row
-becomes a labelled block.
+becomes a labelled block, and so does any portrait window up to 1024px (2026-11-23): there the
+sideways scroll hid the AI column past the card's edge. Landscape windows keep the table.
 The data is `PortfolioApp.Stack` (`AppStack`), built by `AppStackBuilder`: Data falls back to
 "Azure Storage" when the app's resource group holds a storage account; everything else is the
 `stack` block of each `apps.json` entry, because Key Vault, AI and App Insights all live in

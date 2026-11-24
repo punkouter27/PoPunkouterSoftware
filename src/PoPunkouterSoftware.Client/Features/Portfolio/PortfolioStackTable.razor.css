@@ -1,7 +1,7 @@
 /* The stack matrix. Desktop: a real table inside one glass card (one [data-glass] rect, not
    one per row — the shader pass is per rect) that scrolls sideways with the app column pinned
-   when the columns do not fit. At 640px and below each row reflows into a stacked
-   block of label: value lines; see the media query at the end.
+   when the columns do not fit. At 640px and below — and in a portrait window up to 1024px —
+   each row reflows into a stacked block of label: value lines; see the media query at the end.
 
    RadzenBadge, RadzenIcon and Sparkline are child components, so their elements carry no
    scope attribute — every rule reaching them goes through ::deep. */
@@ -339,8 +339,12 @@
    sr-only thead still laid out a full-width row, clipped but measured past the viewport.)
    Each row becomes a
    block, and each cell a "Label  value" line from its data-label. An empty cell is dropped
-   rather than printed as a dash — on a phone it is a whole line saying nothing. */
-@media (max-width: 640px) {
+   rather than printed as a dash — on a phone it is a whole line saying nothing.
+   Also any PORTRAIT window up to 1024px (a tablet, or VS Code's browser pane stood upright):
+   the ~1150px table cannot fit there, and the sideways scroll hid the AI column past the
+   card's edge (owner's ask, 2026-11-23). Landscape windows keep the table — the 1200px
+   width-only breakpoint tried first took the comparison away from them. */
+@media (max-width: 640px), (orientation: portrait) and (max-width: 1024px) {
     .portfolio-stack__table,
     .portfolio-stack__row {
         display: block;

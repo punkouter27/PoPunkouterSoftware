@@ -122,7 +122,7 @@ for ruff; Docker Desktop for Azurite).
 | Deviation | Why | Commit sha / date | How to undo |
 | --- | --- | --- | --- |
 | Header right side is empty: no visitor sign-in, no email; settings gear removed (`/settings` still reached from Ctrl+K) | owner rule for this app; gear removed by the owner | 2026-11-18 | owner asks to re-add |
-| Azure names predate the naming rule: `app-popunkoutersoftware2` on `asp-PoPunkouterSoftware-f1`, RG `PoPunkouterSoftware` | renaming means recreating the site | — | owner-approved recreate |
+| Azure names predate the naming rule: `app-popunkoutersoftware2` on `asp-PoPunkouterSoftware-f1`, now in RG `PoShared` (moved from the deleted `PoPunkouterSoftware` group 2026-11-23; CI holds Website Contributor on the site only) | renaming means recreating the site | — | owner-approved recreate |
 | Extra `src/PoPunkouterSoftware.Infrastructure` project (Azure adapters) | keeps Api/Client/Shared as the skeleton has them | — | fold it into Api |
 | Reads other Po apps' public `/health/live`, pages and repos (`wwwroot/data/apps.json`) | that is the product; data, not shared code | — | — |
 | Radzen exceptions: only the six read-only data `<table>`s (row headers, captions, phone card layout). Drawers are Radzen side dialogs, no longer native `<dialog>` | owner decision "Radzen wins" (Profile A) overrides the 2026-10-19 native-dialog choice | `b61c8df`, `8498a04` 2026-11-21 | `git revert 8498a04` brings the `<dialog>` drawers back |

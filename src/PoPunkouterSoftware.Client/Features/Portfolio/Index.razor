@@ -5,7 +5,6 @@
 @implements IAsyncDisposable
 @inject PortfolioApiClient Api
 @inject IJSRuntime JS
-@inject DialogNotificationHelper Notify
 
 <PageTitle>Web apps · PoPunkouterSoftware</PageTitle>
 
@@ -16,10 +15,11 @@
             <h1>Web apps</h1>
             <p>Small tools and experiments built with .NET and Azure. Read across a row to see how one app is made, or down a column to compare them.</p>
         </div>
-        @* The count, freshness and Sync sit on the title row. They had a bordered bar of their
+        @* The count and freshness sit on the title row. They had a bordered bar of their
            own beside a search box; the search went (owner's call, 2026-10-19 — eleven cards,
            and Ctrl+K already finds any app by name) and the bar would have been a grey strip
-           around three words. *@
+           around three words. No Sync button here: it ran the same scan as /azure's
+           "Rescan Azure", which is now the one place to start one (owner's call, 2026-11-23). *@
         @if (data is not null && data.Apps.Count > 0)
         {
             <div class="portfolio-summary" aria-live="polite">
@@ -28,16 +28,6 @@
                 {
                     @* No tooltips on the home page (owner's call, 2026-11-23). *@
                     <span class="@(data.Stale ? "is-stale" : null)">Updated @RelativeTime.Format(updated)@(data.Stale ? " · stale" : "")</span>
-                }
-                @if (_canSync)
-                {
-                    <RadzenButton Icon="sync" Text="@(_syncing ? "Syncing…" : "Sync")" Size="ButtonSize.Small"
-                                  ButtonStyle="ButtonStyle.Base" Variant="Variant.Outlined"
-                                  Disabled="_syncing" Click="SyncAsync" class="portfolio-sync"
-                                  aria-label="@($"{(_syncing ? "Syncing…" : "Sync")}: rescan Azure and refresh app statuses")" />
-                    @* The name STARTS with the visible word (WCAG 2.5.3, label in name): a voice
-                       user says "click Sync", and a name that never contains "Sync" ignores them.
-                       axe caught it — CoreRoutes_HaveNoSeriousAxeViolations. *@
                 }
             </div>
         }
@@ -116,21 +106,13 @@
 
     // Auto-refresh: every visit reads the catalog fresh, and a tab left open re-reads it
     // weekly. There is no "Reload catalog" button (owner's call, 2026-09-26): re-reading
-    // the same stored list answers a question nobody asks. Sync below is a different
-    // thing (owner's ask, 2026-10-19): it rescans Azure, so the list has something new to show.
+    // the same stored list answers a question nobody asks. Rescanning Azure is /azure's job.
     private static readonly TimeSpan AutoRefreshEvery = TimeSpan.FromDays(7);
     private Timer? _autoRefreshTimer;
 
-    // Sync = the same subscription rescan as /azure's "Rescan Azure". Shown only when the
-    // server will accept it (/api/config): in Production the endpoint needs a management
-    // key the browser does not have, and a button that can only fail is a lie.
-    private bool _canSync;
-    private bool _syncing;
-    private static readonly TimeSpan SyncTimeout = TimeSpan.FromMinutes(2);
-
     protected override async Task OnInitializedAsync()
     {
-        await Task.WhenAll(LoadAppsAsync(), LoadSyncAvailabilityAsync());
+        await LoadAppsAsync();
         // A visitor who leaves before the first load finishes has already disposed this page;
         // a timer created after that would never be disposed and would keep the page alive.
         if (_disposed) return;
@@ -181,63 +163,6 @@
             // not keep, and a card whose app went down kept rendering as healthy until someone
             // pressed the button. Rendering here covers every caller; the redundant render on
             // the event paths is one diff of a page whose children are all ShouldRender-guarded.
-            StateHasChanged();
-        }
-    }
-
-    private async Task LoadSyncAvailabilityAsync()
-    {
-        try
-        {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-            var cfg = await Api.GetConfigAsync(cts.Token);
-            _canSync = cfg?.ManagementActionsEnabled ?? false;
-        }
-        catch
-        {
-            _canSync = false; // No answer, no button.
-        }
-    }
-
-    private async Task SyncAsync()
-    {
-        _syncing = true;
-        var baseline = data?.GeneratedAt;
-        try
-        {
-            // 409 means a scan is already running: wait for that one instead of failing.
-            using var resp = await Api.StartRefreshAsync();
-            if (!resp.IsSuccessStatusCode && resp.StatusCode != System.Net.HttpStatusCode.Conflict)
-            {
-                var detail = await ProblemDetailsParser.TryReadDetailAsync(resp);
-                Notify.Error("Sync rejected",
-                    detail ?? $"The server refused the rescan ({(int)resp.StatusCode}).");
-                return;
-            }
-
-            // The runner takes its lock before answering 202, so RefreshInProgress is
-            // already true on the first poll; poll the portfolio until it clears.
-            var deadline = DateTime.UtcNow + SyncTimeout;
-            do
-            {
-                await Task.Delay(3000);
-                await LoadAppsAsync();
-            }
-            while (data?.RefreshInProgress == true && DateTime.UtcNow < deadline);
-
-            if (data?.GeneratedAt is { } updated && updated != baseline)
-                Notify.Success("Synced", $"{data.Apps.Count} apps, statuses from Azure just now.");
-            else
-                Notify.Error("Sync failed",
-                    "The scan finished without a new report. The server log has the reason.");
-        }
-        catch (Exception ex)
-        {
-            Notify.Error("Sync failed", FriendlyError.Describe(ex));
-        }
-        finally
-        {
-            _syncing = false;
             StateHasChanged();
         }
     }

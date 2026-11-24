@@ -27,8 +27,8 @@
    sideways and the app column stays pinned (owner's call, 2026-11-03 — comparing down a
    column was the point, and the 1200px stacking breakpoint took that away in any window
    narrower than a desktop). The scroller is tabindex="0" + role="group", the uptime grid's
-   treatment, so a keyboard can scroll it. At 640px and below each row becomes a stacked
-   block of label: value lines. Explicit table roles keep the semantics a `display: block`
+   treatment, so a keyboard can scroll it. At 640px and below, and in any portrait window up
+   to 1024px (owner's ask, 2026-11-23), each row becomes a stacked block of label: value lines. Explicit table roles keep the semantics a `display: block`
    table otherwise loses in some browsers.
 
    ONE link per row: the app name, stretched over the row's app cell by `::after`. *@
