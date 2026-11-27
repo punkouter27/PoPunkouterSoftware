@@ -395,6 +395,7 @@ public sealed class GlobalDataStore
                     Key = c.Key,
                     Label = c.Label,
                     Done = entry.Checklist.TryGetValue(c.Key, out var done) && done,
+                    Value = entry.Checklist.TryGetValue(c.Key, out var value) ? value : null,
                 })
                 .ToList();
             var doneCount = checklist.Count(c => c.Done);
@@ -403,14 +404,7 @@ public sealed class GlobalDataStore
             var ci = repo.Ci.LatestRun?.Conclusion ?? "";
             var media = repo.Media.Count;
 
-            var (suggested, why) =
-                doneCount == Checks.Length ? ("ready", "all 6 checklist items ticked")
-                : doneCount >= 4 ? ("polishing", $"{doneCount}/6 checklist items ticked")
-                : live.Length > 0 && string.Equals(ci, "success", StringComparison.OrdinalIgnoreCase)
-                    ? ("playable", "deployed (live URL in README) and CI is green")
-                    : live.Length > 0 ? ("playable", "has a live URL")
-                    : media >= 5 ? ("playable", "has a capture reel")
-                    : ("prototype", "no live URL and few captures");
+            var (suggested, why) = GlobalReadinessRules.Suggest(doneCount, Checks.Length, live, ci, media);
 
             var stageIsSet = entry.Stage is not null && Stages.Contains(entry.Stage);
             var stage = stageIsSet ? entry.Stage! : suggested;
@@ -434,6 +428,7 @@ public sealed class GlobalDataStore
                 Done = doneCount,
                 Total = Checks.Length,
                 Checklist = checklist,
+                MediaCount = media,
             });
         }
 

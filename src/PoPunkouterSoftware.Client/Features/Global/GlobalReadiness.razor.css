@@ -1,0 +1,169 @@
+/* The board scrolls sideways inside itself on a phone; the page never does. */
+.rb-board {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(220px, 1fr));
+    gap: var(--po-space-2);
+    max-width: 100%;
+    overflow-x: auto;
+    padding-bottom: var(--po-space-2);
+    overscroll-behavior-x: contain;
+}
+
+.rb-board:focus-visible {
+    outline: 2px solid var(--po-accent);
+    outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+    .rb-board { grid-template-columns: repeat(5, 240px); }
+}
+
+.rb-col {
+    min-height: 200px;
+    padding: var(--po-space-2);
+    background: var(--po-surface-2);
+    border: 1px solid var(--po-border);
+    border-radius: var(--po-radius);
+}
+
+.rb-col h2 {
+    display: flex;
+    justify-content: space-between;
+    margin: 2px 2px 8px;
+    color: var(--po-text-muted);
+    font-size: var(--po-text-sm);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.rb-app {
+    margin-bottom: var(--po-space-2);
+    padding: 8px 9px;
+    background: var(--po-surface);
+    border: 1px solid var(--po-border);
+    border-radius: var(--po-radius-sm);
+    font-size: var(--po-text-sm);
+}
+
+.rb-hd {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.rb-hd strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rb-progress {
+    height: 5px;
+    margin: 6px 0;
+    overflow: hidden;
+    background: var(--po-surface-2);
+    border-radius: 3px;
+}
+
+.rb-progress span {
+    display: block;
+    height: 100%;
+    background: var(--po-success);
+}
+
+.rb-checks {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.rb-ck {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    width: 100%;
+    margin: 1px 0;
+    padding: 2px 0;
+    background: none;
+    border: 0;
+    color: var(--po-text-muted);
+    font: inherit;
+    font-size: var(--po-text-xs);
+    text-align: left;
+    cursor: pointer;
+}
+
+.rb-ck:focus-visible {
+    outline: 2px solid var(--po-accent);
+    outline-offset: 1px;
+}
+
+.rb-ck i {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    margin-top: 1px;
+    border: 1px solid var(--po-border);
+    border-radius: 4px;
+    font-size: 10px;
+    font-style: normal;
+    line-height: 13px;
+    text-align: center;
+}
+
+.rb-ck.is-yes { color: var(--po-text); }
+.rb-ck.is-yes i { background: var(--po-success); border-color: var(--po-success); color: var(--po-surface); }
+.rb-ck.is-no i { background: var(--po-danger-soft); border-color: var(--po-danger); color: var(--po-text); }
+
+.rb-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 6px 0 4px;
+}
+
+.rb-select {
+    width: 100%;
+    min-width: 0;
+    flex: none;
+    padding: 2px 6px;
+    font-size: var(--po-text-xs);
+}
+
+.rb-why {
+    margin-top: 2px;
+    color: var(--po-text-muted);
+    font-size: var(--po-text-xs);
+}
+
+.rb-notes {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    min-height: 34px;
+    margin-top: 4px;
+    flex: none;
+    font-size: var(--po-text-xs);
+    resize: vertical;
+}
+
+.rb-closest {
+    margin: 0;
+    padding: var(--po-space-2) var(--po-space-3) var(--po-space-2) 2.2em;
+    background: var(--po-surface);
+    border: 1px solid var(--po-border);
+    border-radius: var(--po-radius);
+}
+
+.rb-closest li {
+    padding: 5px 0;
+    border-bottom: 1px solid var(--po-border);
+    font-size: var(--po-text-sm);
+}
+
+.rb-closest li:last-child { border-bottom: 0; }
+
+.rb-closest li > * { margin-right: 8px; }

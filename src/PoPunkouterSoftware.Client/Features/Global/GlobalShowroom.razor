@@ -6,15 +6,21 @@
 
 <PageTitle>Showroom · PoPunkouterSoftware</PageTitle>
 
-@* Showroom: the newest GIFs and screenshots each repo produced, plus its live URL. The image
-   files stay in the repos (nothing is copied into this app), so each entry links to the file
-   on GitHub instead of serving a second copy. *@
+@* GLOBAL's showroom wall: the newest GIFs and screenshots of every repo, newest capture first,
+   each card a hero picture plus a thumbnail strip, opening into a lightbox that pages through
+   that repo's reel. The pictures load straight from the (public) repos on GitHub — nothing is
+   copied into this app — so a capture that was never pushed does not appear. A picture that
+   will not load falls back from raw.githubusercontent.com to media.githubusercontent.com (Git
+   LFS), then to a quiet placeholder. *@
 <main id="main-content" class="app-page global-page" tabindex="-1">
     <GlobalTabs />
     <header class="global-head">
         <div>
             <h1>Showroom</h1>
-            <p class="app-note">Newest captures per repo, straight from each repo's SCREENSHOTS folder.</p>
+            <p class="app-note">
+                The newest GIFs and screenshots from every repo's <code>SCREENSHOTS/</code> folder, most recent capture first.
+                Click a picture to page through that app's reel. Only captures pushed to GitHub appear.
+            </p>
         </div>
         @if (_fleet?.Generated is { } generated)
         {
@@ -30,98 +36,270 @@
     {
         <div class="global-error" role="alert">@_error</div>
     }
-    else if (_fleet is null || _fleet.Repos.Count == 0)
+    else if (_cards.Count == 0)
     {
         <p class="app-empty-state">No crawl yet.</p>
     }
     else
     {
-        <div class="global-toolbar">
-            <button type="button" class="global-chip @(_onlyWithMedia ? "is-on" : null)" @onclick="() => _onlyWithMedia = !_onlyWithMedia">
-                Only repos with captures
-            </button>
-            <span class="global-count">@Repos.Count of @_fleet.Repos.Count</span>
+        <div class="global-toolbar" role="group" aria-label="Filter the wall">
+            @foreach (var filter in Filters)
+            {
+                var key = filter.Key;
+                <button type="button" class="global-chip @(_filter == key ? "is-on" : null)" aria-pressed="@(_filter == key ? "true" : "false")"
+                        @onclick="() => _filter = key">@filter.Label</button>
+            }
+            <span class="global-count">@Visible.Count() of @_cards.Count</span>
         </div>
 
-        <div class="global-grid">
-            @foreach (var repo in Repos)
+        <div class="sr-wall">
+            @foreach (var card in Visible)
             {
-                <article class="global-tile">
-                    <h2>@repo.Name</h2>
-                    <span class="v">@repo.Media.Count captures (@repo.Media.GifCount GIFs)</span>
-                    @if (repo.Docs.LiveUrl is { Length: > 0 } live)
+                var current = card;
+                <article class="sr-card" aria-label="@card.Name">
+                    @if (card.Media.Count > 0)
                     {
-                        <a href="@live" rel="noopener noreferrer">Open the live app</a>
+                        <button type="button" class="sr-hero" aria-label="Open @card.Name's reel (@card.Media.Count captures)" @onclick="() => Open(current, 0)">
+                            <ShowroomImage Url="@card.Media[0].Url" FallbackUrl="@card.Media[0].FallbackUrl" Alt="@($"{card.Name}: {card.Media[0].File}")" />
+                        </button>
                     }
                     else
                     {
-                        <span class="n">No live URL in its README</span>
+                        <div class="sr-hero is-empty"><span>no screenshots yet</span></div>
                     }
-                    <ul class="global-list">
-                        @foreach (var item in repo.Media.Showcase.Take(4))
+                    <div class="sr-meta">
+                        <div class="sr-title">
+                            <strong>@card.Name</strong>
+                            <span class="global-tag">@card.KindLabel</span>
+                        </div>
+                        <div class="sr-badges">
+                            @if (card.Stack is { Length: > 0 })
+                            {
+                                <span class="global-tone is-info">@card.Stack</span>
+                            }
+                            @if (card.Stage is { Length: > 0 })
+                            {
+                                <span class="global-tone is-muted">@card.Stage</span>
+                            }
+                            @if (card.CiFailing)
+                            {
+                                <span class="global-tone is-bad">CI failing</span>
+                            }
+                            <span class="global-count">@card.Count capture@(card.Count == 1 ? "" : "s")@(card.Newest is { } newest ? $" · newest {GlobalFormat.Ago(newest)}" : "")</span>
+                        </div>
+                        @if (card.Live is { Length: > 0 } live)
                         {
-                            <li>
-                                @{
-                                    var href = GlobalFormat.GitHubPath(repo.Git.Remote, repo.Git.Slug, item.Rel);
-                                }
-                                @if (href is not null)
-                                {
-                                    <a href="@href" rel="noopener noreferrer">@item.Rel.Split('/').Last()</a>
-                                }
-                                else
-                                {
-                                    <span class="global-mono">@item.Rel</span>
-                                }
-                                <span class="global-count"> · @item.Kb.ToString("0") KB</span>
-                            </li>
+                            <a href="@live" target="_blank" rel="noopener noreferrer">▶ Open live app ↗</a>
                         }
-                        @if (repo.Media.Showcase.Count == 0)
-                        {
-                            <li class="global-note">No showcase captures.</li>
-                        }
-                    </ul>
-                    <span class="n">Latest: @Latest(repo)</span>
+                    </div>
+                    @if (card.Media.Count > 1)
+                    {
+                        <div class="sr-thumbs">
+                            @for (var i = 1; i < card.Media.Count; i++)
+                            {
+                                var index = i;
+                                var item = card.Media[i];
+                                <button type="button" class="sr-thumb" aria-label="Open @item.File" @onclick="() => Open(current, index)">
+                                    <ShowroomImage Url="@item.Url" FallbackUrl="@item.FallbackUrl" Alt="" />
+                                </button>
+                            }
+                        </div>
+                    }
                 </article>
             }
+        </div>
+    }
+
+    @if (_open is { } reel)
+    {
+        var item = reel.Media[_index];
+        <div class="sr-lightbox" role="dialog" aria-modal="true" aria-label="@reel.Name reel" tabindex="-1"
+             @ref="_lightbox" @onkeydown="OnKey" @onclick="Close">
+            <div class="sr-stage" @onclick:stopPropagation="true">
+                <ShowroomImage @key="item.Url" Url="@item.Url" FallbackUrl="@item.FallbackUrl" Alt="@($"{reel.Name}: {item.File}")" Large="true" />
+                <div class="sr-caption">@reel.Name — @item.File (@(_index + 1)/@reel.Media.Count, @item.Kb.ToString("0") KB)</div>
+                <div class="sr-nav">
+                    <button type="button" class="global-chip" @onclick="Prev">← Prev</button>
+                    <button type="button" class="global-chip" @onclick="Close">Close</button>
+                    <button type="button" class="global-chip" @onclick="Next">Next →</button>
+                    <a class="global-chip" href="@item.GitHub" target="_blank" rel="noopener noreferrer">On GitHub ↗</a>
+                </div>
+            </div>
         </div>
     }
 </main>
 
 @code {
+    private sealed record Filter(string Key, string Label);
+
+    private sealed record Shot(string File, string Url, string? FallbackUrl, string GitHub, double Kb, bool IsGif);
+
+    private sealed record Card(string Name, string Kind, string KindLabel, bool IsRl, string? Stack, string? Stage, bool CiFailing,
+        string? Live, int Count, DateTimeOffset? Newest, List<Shot> Media);
+
+    private static readonly Filter[] Filters =
+    [
+        new("all", "All"),
+        new("rl", "RL games"),
+        new("apps", "Apps & tools"),
+        new("unity", "Unity"),
+        new("unreal", "Unreal"),
+        new("blazor", "Blazor"),
+        new("gif", "Has GIF"),
+        new("live", "Live URL"),
+    ];
+
     private GlobalFleetDto? _fleet;
+    private List<Card> _cards = [];
     private bool _loading = true;
     private string? _error;
-    private bool _onlyWithMedia;
+    private string _filter = "all";
+    private Card? _open;
+    private int _index;
+    private ElementReference _lightbox;
+    private bool _focusLightbox;
 
-    private List<GlobalRepoDto> Repos
+    private IEnumerable<Card> Visible => _cards.Where(c => _filter switch
     {
-        get
+        "rl" => c.IsRl,
+        "apps" => !c.IsRl,
+        "unity" or "unreal" or "blazor" => c.Kind == _filter,
+        "gif" => c.Media.Any(m => m.IsGif),
+        "live" => c.Live is { Length: > 0 },
+        _ => true,
+    });
+
+    private static string KindLabel(string? kind) => kind switch
+    {
+        "unity" => "Unity",
+        "unreal" => "Unreal",
+        "blazor" => "Blazor",
+        "dotnet" => ".NET",
+        "python" => "Python",
+        "web" => "Web",
+        "folder" => "Folder",
+        _ => kind ?? "Other",
+    };
+
+    /// <summary>owner/repo from the repo's slug or its GitHub remote, or null for a repo that is not on GitHub.</summary>
+    private static string? Slug(GlobalGitDto git)
+    {
+        if (git.Slug is { Length: > 0 } slug)
+            return slug;
+        var remote = git.Remote?.Trim();
+        const string prefix = "https://github.com/";
+        if (remote is null || !remote.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            return null;
+        var path = remote[prefix.Length..].TrimEnd('/');
+        return path.EndsWith(".git", StringComparison.OrdinalIgnoreCase) ? path[..^4] : path;
+    }
+
+    /// <summary>The capture's path inside its repo, each segment URL-escaped (the crawler writes workspace-relative paths).</summary>
+    private static string PathInRepo(string repo, string rel)
+    {
+        var inRepo = rel.StartsWith(repo + "/", StringComparison.OrdinalIgnoreCase) ? rel[(repo.Length + 1)..] : rel;
+        return string.Join('/', inRepo.Split('/').Select(Uri.EscapeDataString));
+    }
+
+    private static Card ToCard(GlobalRepoDto repo, string? stage)
+    {
+        var slug = Slug(repo.Git);
+        var branch = Uri.EscapeDataString(repo.Git.Branch is { Length: > 0 } b ? b : "HEAD");
+        var shots = new List<Shot>();
+        if (slug is not null)
         {
-            if (_fleet is null)
-                return [];
+            foreach (var item in repo.Media.Showcase.OrderByDescending(m => m.Mtime))
+            {
+                var path = PathInRepo(repo.Name, item.Rel);
+                shots.Add(new Shot(
+                    item.Rel.Split('/').Last(),
+                    $"https://raw.githubusercontent.com/{slug}/{branch}/{path}",
+                    $"https://media.githubusercontent.com/media/{slug}/{branch}/{path}",
+                    $"https://github.com/{slug}/blob/{branch}/{path}",
+                    item.Kb,
+                    string.Equals(item.Ext, ".gif", StringComparison.OrdinalIgnoreCase)));
+            }
+        }
 
-            var repos = _fleet.Repos.AsEnumerable();
-            if (_onlyWithMedia)
-                repos = repos.Where(r => r.Media.Count > 0);
+        var newest = repo.Media.Showcase.Count > 0 ? repo.Media.Showcase.Max(m => m.Mtime) : (long?)null;
+        return new Card(repo.Name, repo.Kind, KindLabel(repo.Kind), repo.IsRl, repo.RlStack, stage,
+            string.Equals(repo.Ci.LatestRun?.Conclusion, "failure", StringComparison.OrdinalIgnoreCase),
+            repo.Docs.LiveUrl, repo.Media.Count, newest is { } t ? DateTimeOffset.FromUnixTimeSeconds(t) : null, shots);
+    }
 
-            return repos
-                .OrderByDescending(r => r.Media.Showcase.FirstOrDefault()?.Mtime ?? 0)
-                .ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase)
-                .ToList();
+    private void Open(Card card, int index)
+    {
+        if (card.Media.Count == 0)
+            return;
+        _open = card;
+        _index = index;
+        _focusLightbox = true;
+    }
+
+    private void Close() => _open = null;
+
+    private void Next()
+    {
+        if (_open is { } reel)
+            _index = (_index + 1) % reel.Media.Count;
+    }
+
+    private void Prev()
+    {
+        if (_open is { } reel)
+            _index = (_index - 1 + reel.Media.Count) % reel.Media.Count;
+    }
+
+    private void OnKey(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case "Escape":
+                Close();
+                break;
+            case "ArrowRight":
+                Next();
+                break;
+            case "ArrowLeft":
+                Prev();
+                break;
         }
     }
 
-    private static string Latest(GlobalRepoDto repo) =>
-        repo.Media.Newest.Count > 0
-            ? GlobalFormat.Ago(DateTimeOffset.FromUnixTimeSeconds(repo.Media.Newest[0].Mtime))
-            : "—";
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_focusLightbox && _open is not null)
+        {
+            _focusLightbox = false;
+            await _lightbox.FocusAsync();
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            _fleet = await Api.GetGlobalFleetAsync(cts.Token);
+            var fleetTask = Api.GetGlobalFleetAsync(cts.Token);
+            var boardTask = Api.GetGlobalReadinessAsync(cts.Token);
+            _fleet = await fleetTask;
+            GlobalReadinessDto? board = null;
+            try
+            {
+                board = await boardTask;
+            }
+            catch (Exception) when (!cts.IsCancellationRequested)
+            {
+                // The stage badge is decoration: a failed ship-board read must not empty the wall.
+            }
+
+            var stages = board?.Apps.ToDictionary(a => a.Name, a => a.Effective, StringComparer.OrdinalIgnoreCase) ?? [];
+            _cards = (_fleet?.Repos ?? [])
+                .Where(r => r.Git.IsGit)
+                .Select(r => ToCard(r, stages.GetValueOrDefault(r.Name)))
+                .OrderByDescending(c => c.Newest ?? DateTimeOffset.MinValue)
+                .ThenBy(c => c.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
         }
         catch (Exception ex)
         {

@@ -1,22 +1,28 @@
 @page "/global/readiness"
 @attribute [Authorize]
 @rendermode WasmRenderModes.Interactive
+@using System.Text
+@using System.Text.Json
 @using PoPunkouterSoftware.Shared
 @inject PortfolioApiClient Api
+@inject LocalHelperClient Helper
+@inject IJSRuntime JS
 
 <PageTitle>Ship board · PoPunkouterSoftware</PageTitle>
 
-@* The ship board: where every app stands, Prototype to Shipped. A stage set in
-   App_Data/global/config/readiness.json wins; otherwise the board suggests one from what the
-   crawl can see (live URL, CI, checklist, captures) and says why. *@
+@* GLOBAL's ship board: where every app stands, Prototype to Shipped. A stage set in
+   config/readiness.json wins; until then the board suggests one from what it can see (the
+   checklist, a live URL with green CI, captures) and says why. Edits are kept in this browser
+   first (like the old page); "Save to config" writes readiness.json on the PC through the local
+   helper, and "Push to the live site" commits and pushes it without a crawl. *@
 <main id="main-content" class="app-page global-page" tabindex="-1">
     <GlobalTabs />
     <header class="global-head">
         <div>
-            <h1>Ship board</h1>
+            <h1>Ship Board</h1>
             <p class="app-note">
-                Until a stage is set in <code>config/readiness.json</code>, the board suggests one and states why.
-                The six-point checklist is per app.
+                Where every app stands, from Prototype to Shipped. Until you set a stage, the board suggests one from what it can see:
+                live URL, CI, checklist and captures. Click a checklist item to cycle it through unknown, yes and no.
             </p>
         </div>
     </header>
@@ -35,74 +41,152 @@
     }
     else
     {
-        <div class="global-toolbar">
-            <button type="button" class="global-chip @(_filter == "all" ? "is-on" : null)" @onclick="SetAll">All (@_board.Apps.Count)</button>
-            <button type="button" class="global-chip @(_filter == "rl" ? "is-on" : null)" @onclick="SetRl">RL games</button>
-            <button type="button" class="global-chip @(_filter == "apps" ? "is-on" : null)" @onclick="SetApps">Apps &amp; tools</button>
+        <LocalHelperBar OnChanged="StateHasChanged" />
+
+        <div class="global-toolbar" role="group" aria-label="Filter and save">
+            <button type="button" class="global-chip @(_filter == "all" ? "is-on" : null)" aria-pressed="@Pressed("all")" @onclick='() => _filter = "all"'>All (@_board.Apps.Count)</button>
+            <button type="button" class="global-chip @(_filter == "rl" ? "is-on" : null)" aria-pressed="@Pressed("rl")" @onclick='() => _filter = "rl"'>RL games</button>
+            <button type="button" class="global-chip @(_filter == "apps" ? "is-on" : null)" aria-pressed="@Pressed("apps")" @onclick='() => _filter = "apps"'>Apps &amp; tools</button>
+            <button type="button" class="global-chip" @onclick="CopyJson">Copy JSON</button>
+            @if (Helper.IsConnected)
+            {
+                <button type="button" class="global-chip" disabled="@_busy" @onclick="Save">Save to config</button>
+                <button type="button" class="global-chip" disabled="@(_busy || !_savedOnPc)" @onclick="Push"
+                        title="@(_savedOnPc ? "Commit and push readiness.json (no crawl)" : "Save to config first")">Push to the live site</button>
+            }
+            @if (_dirty)
+            {
+                <span class="global-tone is-warn" role="status">unsaved changes</span>
+                <button type="button" class="global-chip" @onclick="Discard">Discard my edits</button>
+            }
+            else if (_savedOnPc)
+            {
+                <span class="global-tone is-good" role="status">saved on the PC</span>
+            }
         </div>
 
-        <div class="global-board">
-            @foreach (var stage in Stages)
+        @if (_output is not null)
+        {
+            <pre class="global-code global-output" role="status" aria-live="polite"><code>@_output</code></pre>
+        }
+
+        <div class="rb-board" role="region" aria-label="Ship board" tabindex="0">
+            @foreach (var stage in GlobalReadinessRules.Stages)
             {
                 var apps = AppsIn(stage).ToList();
-                <section class="global-col" aria-label="@stage">
-                    <h2>@Label(stage) <span>@apps.Count</span></h2>
+                <section class="rb-col" aria-label="@GlobalReadinessRules.Label(stage)">
+                    <h2>@GlobalReadinessRules.Label(stage) <span>@apps.Count</span></h2>
                     @foreach (var app in apps)
                     {
-                        var live = app.LiveUrl;
-                        <article class="global-app">
-                            <div class="hd">
-                                <strong>@app.Name</strong>
-                                <span class="global-tone is-@GlobalFormat.StageTone(app.Stage)">@app.Effective</span>
+                        var name = app.Name;
+                        var edit = _edits[name];
+                        var done = Done(edit);
+                        var (suggested, why) = Suggest(app, edit);
+                        <article class="rb-app">
+                            <div class="rb-hd">
+                                <strong>@name</strong>
+                                <span class="global-tag">@app.Kind</span>
                             </div>
-                            <div class="why">
-                                @app.Why@(app.StageIsSet ? "" : " (suggested)")
+                            <div class="rb-progress" role="img" aria-label="@done of @app.Total checklist items done">
+                                <span style="width:@(app.Total == 0 ? 0 : done * 100 / app.Total)%"></span>
                             </div>
-                            <div class="global-progress" role="img" aria-label="@app.Done of @app.Total checklist items done">
-                                <span style="width:@(app.Total == 0 ? 0 : app.Done * 100 / app.Total)%"></span>
-                            </div>
-                            <ul class="global-checks">
+                            <ul class="rb-checks">
                                 @foreach (var item in app.Checklist)
                                 {
-                                    <li class="@(item.Done ? "is-done" : null)">@item.Label</li>
+                                    var key = item.Key;
+                                    var value = edit.Checklist.GetValueOrDefault(key);
+                                    <li>
+                                        <button type="button" class="rb-ck @(value == true ? "is-yes" : value == false ? "is-no" : null)"
+                                                aria-label="@($"{item.Label}: {Word(value)}. Activate to change.")"
+                                                @onclick="() => Cycle(name, key)">
+                                            <i aria-hidden="true">@(value == true ? "✓" : value == false ? "✕" : "")</i>@item.Label
+                                        </button>
+                                    </li>
                                 }
                             </ul>
-                            <div class="global-count">
-                                @app.Kind@(app.IsRl ? " · RL" : "") · @(string.IsNullOrEmpty(app.Ci) ? "no CI" : "CI " + app.Ci)
-                                @if (live is { Length: > 0 })
+                            <div class="rb-line">
+                                @if (app.LiveUrl is { Length: > 0 } live)
                                 {
-                                    <a href="@live" rel="noopener noreferrer"> · live</a>
+                                    <a href="@live" target="_blank" rel="noopener noreferrer">live ↗</a>
                                 }
+                                <span class="global-tone is-@(app.Ci == "success" ? "good" : app.Ci == "failure" ? "bad" : "muted")">CI @(string.IsNullOrEmpty(app.Ci) ? "–" : app.Ci)</span>
                             </div>
+                            <label class="app-sr-only" for="@($"stage-{name}")">Stage for @name</label>
+                            <select id="@($"stage-{name}")" class="global-search rb-select" value="@(edit.Stage ?? "")" @onchange="e => SetStage(name, e.Value?.ToString())">
+                                <option value="">Auto: @GlobalReadinessRules.Label(suggested)</option>
+                                @foreach (var option in GlobalReadinessRules.Stages)
+                                {
+                                    <option value="@option">@GlobalReadinessRules.Label(option)</option>
+                                }
+                            </select>
+                            @if (edit.Stage is null)
+                            {
+                                <div class="rb-why">suggested: @why</div>
+                            }
+                            <label class="app-sr-only" for="@($"notes-{name}")">Notes for @name</label>
+                            <textarea id="@($"notes-{name}")" class="global-search rb-notes" placeholder="notes / what's left"
+                                      value="@edit.Notes" @onchange="e => SetNotes(name, e.Value?.ToString())"></textarea>
                         </article>
                     }
                 </section>
             }
         </div>
+
+        <h2>Closest to shipping</h2>
+        <ol class="rb-closest">
+            @foreach (var (app, stage, done) in Closest)
+            {
+                <li>
+                    <strong>@app.Name</strong>
+                    <span class="global-tone is-info">@GlobalReadinessRules.Label(stage)</span>
+                    <span class="global-count">@done/@app.Total checklist</span>
+                    <span class="global-note">@(_edits[app.Name].Notes is { Length: > 0 } notes ? notes : Suggest(app, _edits[app.Name]).Why)</span>
+                </li>
+            }
+        </ol>
     }
 </main>
 
 @code {
-    private static readonly string[] Stages = ["prototype", "playable", "polishing", "ready", "shipped"];
+    private const string StorageKey = "po.global.readiness";
+
+    private sealed class Edit
+    {
+        public string? Stage { get; set; }
+        public string? Notes { get; set; }
+        public Dictionary<string, bool?> Checklist { get; set; } = [];
+    }
 
     private GlobalReadinessDto? _board;
+    private Dictionary<string, Edit> _edits = new(StringComparer.Ordinal);
+    private Dictionary<string, Edit> _baseline = new(StringComparer.Ordinal);
     private bool _loading = true;
+    private bool _busy;
+    private bool _dirty;
+    private bool _savedOnPc;
     private string? _error;
+    private string? _output;
     private string _filter = "all";
 
-    private static string Label(string stage) => stage switch
+    private string Pressed(string key) => _filter == key ? "true" : "false";
+
+    private static string Word(bool? value) => value switch
     {
-        "prototype" => "Prototype",
-        "playable" => "Playable",
-        "polishing" => "Polishing",
-        "ready" => "Ready to ship",
-        "shipped" => "Shipped",
-        _ => stage,
+        true => "yes",
+        false => "no",
+        _ => "not answered",
     };
+
+    private static int Done(Edit edit) => edit.Checklist.Values.Count(v => v == true);
+
+    private static (string Stage, string Why) Suggest(GlobalReadinessAppDto app, Edit edit) =>
+        GlobalReadinessRules.Suggest(Done(edit), app.Total, app.LiveUrl, app.Ci, app.MediaCount);
+
+    private string Effective(GlobalReadinessAppDto app) => _edits[app.Name].Stage ?? Suggest(app, _edits[app.Name]).Stage;
 
     private IEnumerable<GlobalReadinessAppDto> AppsIn(string stage) =>
         (_board?.Apps ?? [])
-        .Where(a => a.Stage == stage)
+        .Where(a => Effective(a) == stage)
         .Where(a => _filter switch
         {
             "rl" => a.IsRl,
@@ -111,11 +195,181 @@
         })
         .OrderBy(a => a.Name, StringComparer.OrdinalIgnoreCase);
 
-    private void SetAll() => _filter = "all";
+    private IEnumerable<(GlobalReadinessAppDto App, string Stage, int Done)> Closest =>
+        (_board?.Apps ?? [])
+        .Select(a => (App: a, Stage: Effective(a), Done: Done(_edits[a.Name])))
+        .Where(x => x.Stage != "shipped")
+        .OrderByDescending(x => GlobalReadinessRules.Stages.ToList().IndexOf(x.Stage) * 2 + x.Done)
+        .ThenBy(x => x.App.Name, StringComparer.OrdinalIgnoreCase)
+        .Take(8);
 
-    private void SetRl() => _filter = "rl";
+    // ─── editing ───────────────────────────────────────────────────────────────
 
-    private void SetApps() => _filter = "apps";
+    private async Task Cycle(string name, string key)
+    {
+        var checklist = _edits[name].Checklist;
+        checklist[key] = checklist.GetValueOrDefault(key) switch
+        {
+            null => true,
+            true => false,
+            false => null,
+        };
+        await Persist();
+    }
+
+    private async Task SetStage(string name, string? stage)
+    {
+        _edits[name].Stage = GlobalReadinessRules.IsStage(stage) ? stage : null;
+        await Persist();
+    }
+
+    private async Task SetNotes(string name, string? notes)
+    {
+        _edits[name].Notes = string.IsNullOrWhiteSpace(notes) ? null : notes;
+        await Persist();
+    }
+
+    private async Task Persist()
+    {
+        _dirty = !Same(_edits, _baseline);
+        _savedOnPc = false;
+        try
+        {
+            var local = _edits.Where(kv => !Same(kv.Value, _baseline[kv.Key]))
+                .ToDictionary(kv => kv.Key, kv => ToEntry(kv.Value));
+            var json = JsonSerializer.Serialize(new GlobalReadinessFileDto { Apps = local }, GlobalJsonContext.Default.GlobalReadinessFileDto);
+            await JS.InvokeVoidAsync("localStorage.setItem", StorageKey, json);
+        }
+        catch (JSException)
+        {
+            // localStorage blocked: the edits still live until the tab closes.
+        }
+    }
+
+    private async Task Discard()
+    {
+        _edits = Clone(_baseline);
+        _dirty = false;
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.removeItem", StorageKey);
+        }
+        catch (JSException)
+        {
+            // Nothing stored.
+        }
+    }
+
+    private static bool Same(Edit a, Edit b) =>
+        a.Stage == b.Stage && (a.Notes ?? "") == (b.Notes ?? "")
+        && a.Checklist.Count(kv => kv.Value is not null) == b.Checklist.Count(kv => kv.Value is not null)
+        && a.Checklist.Where(kv => kv.Value is not null).All(kv => b.Checklist.GetValueOrDefault(kv.Key) == kv.Value);
+
+    private static bool Same(Dictionary<string, Edit> a, Dictionary<string, Edit> b) => a.All(kv => Same(kv.Value, b[kv.Key]));
+
+    private static GlobalReadinessEntryDto ToEntry(Edit edit) => new()
+    {
+        Stage = edit.Stage,
+        Notes = edit.Notes,
+        Checklist = edit.Checklist.Where(kv => kv.Value is not null).ToDictionary(kv => kv.Key, kv => kv.Value!.Value),
+    };
+
+    private static Dictionary<string, Edit> Clone(Dictionary<string, Edit> source) =>
+        source.ToDictionary(kv => kv.Key, kv => new Edit
+        {
+            Stage = kv.Value.Stage,
+            Notes = kv.Value.Notes,
+            Checklist = new Dictionary<string, bool?>(kv.Value.Checklist),
+        }, StringComparer.Ordinal);
+
+    /// <summary>readiness.json as the board stands: only apps with a stage, an answered item or notes.</summary>
+    private GlobalReadinessFileDto Export() => new()
+    {
+        Apps = _edits
+            .Where(kv => kv.Value.Stage is not null || kv.Value.Notes is not null || kv.Value.Checklist.Values.Any(v => v is not null))
+            .OrderBy(kv => kv.Key, StringComparer.Ordinal)
+            .ToDictionary(kv => kv.Key, kv => ToEntry(kv.Value)),
+    };
+
+    private string ExportIndented()
+    {
+        using var stream = new MemoryStream();
+        using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
+            JsonSerializer.Serialize(writer, Export(), GlobalJsonContext.Default.GlobalReadinessFileDto);
+        return Encoding.UTF8.GetString(stream.ToArray());
+    }
+
+    // ─── copy / save / push ────────────────────────────────────────────────────
+
+    private async Task CopyJson()
+    {
+        var json = ExportIndented();
+        bool copied;
+        try
+        {
+            copied = await JS.InvokeAsync<bool>("copyToClipboard", json);
+        }
+        catch (JSException)
+        {
+            copied = false;
+        }
+
+        _output = copied
+            ? "Copied readiness.json. Paste it into src/PoPunkouterSoftware.Api/App_Data/global/config/readiness.json."
+            : "The clipboard is unavailable. readiness.json:\n\n" + json;
+    }
+
+    private async Task Save()
+    {
+        _busy = true;
+        _output = "Saving…";
+        try
+        {
+            var data = JsonSerializer.SerializeToElement(Export(), GlobalJsonContext.Default.GlobalReadinessFileDto);
+            var reply = await Helper.SendAsync(new LocalHelperRequest { Action = "save_config", Arg = "readiness", Data = data });
+            _output = reply.Output;
+            if (reply.Ok)
+            {
+                _baseline = Clone(_edits);
+                _dirty = false;
+                _savedOnPc = true;
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task Push()
+    {
+        _busy = true;
+        _output = "Pushing…";
+        StateHasChanged();
+        try
+        {
+            var reply = await Helper.SendAsync(new LocalHelperRequest { Action = "refresh", Push = true, NoCrawl = true });
+            _output = reply.Output;
+            if (reply.Job is not { Length: > 0 } job)
+                return;
+
+            for (var i = 0; i < 100; i++)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(3));
+                var status = await Helper.SendAsync(new LocalHelperRequest { Action = "job_status", Job = job });
+                _output = status.Output;
+                StateHasChanged();
+                if (status.Done != false)
+                    break;
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    // ─── load ─────────────────────────────────────────────────────────────────
 
     protected override async Task OnInitializedAsync()
     {
@@ -123,6 +377,14 @@
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             _board = await Api.GetGlobalReadinessAsync(cts.Token);
+            _baseline = (_board?.Apps ?? []).ToDictionary(a => a.Name, a => new Edit
+            {
+                Stage = a.StageIsSet ? a.Stage : null,
+                Notes = string.IsNullOrWhiteSpace(a.Notes) ? null : a.Notes,
+                Checklist = a.Checklist.ToDictionary(c => c.Key, c => c.Value),
+            }, StringComparer.Ordinal);
+            _edits = Clone(_baseline);
+            await RestoreLocal();
         }
         catch (Exception ex)
         {
@@ -131,6 +393,33 @@
         finally
         {
             _loading = false;
+        }
+    }
+
+    private async Task RestoreLocal()
+    {
+        try
+        {
+            var json = await JS.InvokeAsync<string?>("localStorage.getItem", StorageKey);
+            if (string.IsNullOrWhiteSpace(json))
+                return;
+
+            var local = JsonSerializer.Deserialize(json, GlobalJsonContext.Default.GlobalReadinessFileDto);
+            foreach (var (name, entry) in local?.Apps ?? [])
+            {
+                if (!_edits.TryGetValue(name, out var edit))
+                    continue;
+                edit.Stage = GlobalReadinessRules.IsStage(entry.Stage) ? entry.Stage : null;
+                edit.Notes = string.IsNullOrWhiteSpace(entry.Notes) ? null : entry.Notes;
+                foreach (var key in edit.Checklist.Keys.ToList())
+                    edit.Checklist[key] = entry.Checklist?.TryGetValue(key, out var value) == true ? value : null;
+            }
+
+            _dirty = !Same(_edits, _baseline);
+        }
+        catch (Exception ex) when (ex is JSException or JsonException)
+        {
+            // Unreadable local edits are dropped; the snapshot stands.
         }
     }
 }

@@ -1,0 +1,47 @@
+@namespace PoPunkouterSoftware.Client
+
+@* One showroom picture that never shows a broken-image icon: it tries the raw GitHub URL, then
+   the Git LFS media URL, then gives up quietly with a placeholder. *@
+@if (_failed)
+{
+    <span class="sr-missing" role="img" aria-label="@(string.IsNullOrEmpty(Alt) ? "Capture not available" : $"{Alt} (not available)")">
+        picture not on GitHub
+    </span>
+}
+else
+{
+    <img src="@Current" alt="@Alt" loading="@(Large ? "eager" : "lazy")" decoding="async" class="@(Large ? "sr-img is-large" : "sr-img")" @onerror="OnError" />
+}
+
+@code {
+    [Parameter, EditorRequired] public string Url { get; set; } = "";
+
+    [Parameter] public string? FallbackUrl { get; set; }
+
+    [Parameter] public string Alt { get; set; } = "";
+
+    [Parameter] public bool Large { get; set; }
+
+    private bool _usingFallback;
+    private bool _failed;
+    private string? _lastUrl;
+
+    private string Current => _usingFallback && FallbackUrl is { Length: > 0 } fallback ? fallback : Url;
+
+    protected override void OnParametersSet()
+    {
+        if (_lastUrl == Url)
+            return;
+        _lastUrl = Url;
+        _usingFallback = false;
+        _failed = false;
+    }
+
+    private void OnError()
+    {
+        if (!_usingFallback && FallbackUrl is { Length: > 0 })
+            _usingFallback = true;
+        else
+            _failed = true;
+    }
+}
