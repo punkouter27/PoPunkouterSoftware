@@ -98,7 +98,7 @@
                         var alerts = Alerts(repo);
                         var run = repo.Ci.LatestRun;
                         <tr>
-                            <th scope="row">
+                            <th scope="row" class="fleet-repo">
                                 <div class="fleet-name">@repo.Name</div>
                                 <div class="global-count">
                                     @KindLabel(repo.Kind)
@@ -153,7 +153,7 @@
                                 @if (repo.Git.LastCommitIso is { } when)
                                 {
                                     <div class="global-count">@GlobalFormat.Ago(when)</div>
-                                    <div class="is-clip">@Shorten(repo.Git.LastCommitMsg, 90)</div>
+                                    <div class="fleet-commit" title="@repo.Git.LastCommitMsg">@Shorten(repo.Git.LastCommitMsg, 90)</div>
                                 }
                                 else
                                 {
@@ -161,7 +161,7 @@
                                 }
                             </td>
                             <td class="is-number">@repo.Git.Commits7d <span class="global-count">/ @repo.Git.Commits30d</span></td>
-                            <td class="is-nowrap">
+                            <td class="fleet-ci">
                                 @if (run is null)
                                 {
                                     <span class="global-tone is-muted">–</span>
