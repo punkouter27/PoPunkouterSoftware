@@ -83,3 +83,15 @@
     white-space: pre-wrap;
     overflow-wrap: anywhere;
 }
+
+/* Nine columns at desktop width: keep the long ones from pushing Disk off the edge. */
+.fleet-commit {
+    max-width: 18em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fleet-repo { min-width: 11em; }
+
+.fleet-ci { min-width: 8em; max-width: 12em; }

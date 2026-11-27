@@ -93,6 +93,19 @@ public sealed class GlobalStationPagesTests
         }
     }
 
+    // ─── Fleet ───────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void Fleet_ReadsTheCiRunFieldsGhWritesInCamelCase()
+    {
+        var runs = new GlobalDataStore(SnapshotDir()).LoadFleetView().Repos
+            .Select(r => r.Ci.LatestRun).Where(r => r is not null).ToList();
+
+        runs.Should().NotBeEmpty();
+        runs.Should().OnlyContain(r => r!.CreatedAt != null && !string.IsNullOrEmpty(r.WorkflowName),
+            "the Fleet page shows each run's workflow and age");
+    }
+
     // ─── Lessons ─────────────────────────────────────────────────────────────
 
     [Fact]

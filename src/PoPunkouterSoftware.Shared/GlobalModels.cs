@@ -87,11 +87,19 @@ public sealed class GlobalCiDto
 public sealed class GlobalCiRunDto
 {
     public string? Conclusion { get; set; }
+
+    // The crawler copies these three straight from `gh run list --json`, which is camelCase;
+    // without the explicit names the snake_case file reader left them empty.
+    [JsonPropertyName("createdAt")]
     public DateTimeOffset? CreatedAt { get; set; }
     public string? Event { get; set; }
+
+    [JsonPropertyName("headBranch")]
     public string? HeadBranch { get; set; }
     public string? Status { get; set; }
     public string? Url { get; set; }
+
+    [JsonPropertyName("workflowName")]
     public string? WorkflowName { get; set; }
     public List<string> Recent { get; set; } = [];
 }
