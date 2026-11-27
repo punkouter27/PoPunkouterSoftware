@@ -75,20 +75,24 @@ def detect_kind(repo: Path) -> dict:
     names = list(top) + [q.name for q in sub]
     uproject = [h for pat in ("*.uproject", "*/*.uproject", "*/*/*.uproject") for h in repo.glob(pat)
                 if "Intermediate" not in h.parts]
-    unity = any((repo / n / "ProjectSettings" / "ProjectVersion.txt").exists() for n in [""] + [p.name for p in repo.iterdir() if p.is_dir()])
+    unity_candidates = [""] + [p.name for p in repo.iterdir() if p.is_dir()]
+    unity = any((repo / n / "ProjectSettings" / "ProjectVersion.txt").exists() for n in unity_candidates)
     sln = [n for n in names if n.endswith((".sln", ".slnx"))]
     csproj_paths = list(repo.glob("*.csproj")) + list(repo.glob("*/*.csproj")) + list(repo.glob("src/*/*.csproj"))
     blazor = False
     for cp in csproj_paths[:30]:
         try:
             t = cp.read_text(encoding="utf-8", errors="ignore")
-            if "Microsoft.NET.Sdk.BlazorWebAssembly" in t or "Components.WebAssembly" in t or "Microsoft.NET.Sdk.Web" in t:
+            is_web_sdk = ("Microsoft.NET.Sdk.BlazorWebAssembly" in t or "Components.WebAssembly" in t
+                          or "Microsoft.NET.Sdk.Web" in t)
+            if is_web_sdk:
                 blazor = blazor or any(cp.parent.rglob("*.razor"))
         except OSError:
             pass
     kind = ("unreal" if uproject else "unity" if unity else "blazor" if blazor else
-            "dotnet" if (sln or csproj_paths) else "python" if ("pyproject.toml" in top or "requirements.txt" in top) else
-            "web" if "package.json" in top else "other")
+            "dotnet" if (sln or csproj_paths)
+            else "python" if ("pyproject.toml" in top or "requirements.txt" in top)
+            else "web" if "package.json" in top else "other")
     unity_version = ""
     if unity:
         for pv in [repo / "ProjectSettings" / "ProjectVersion.txt", *repo.glob("*/ProjectSettings/ProjectVersion.txt")]:
@@ -110,7 +114,8 @@ def detect_kind(repo: Path) -> dict:
 def git_info(repo: Path) -> dict:
     if not (repo / ".git").exists():
         return {"is_git": False}
-    g = lambda *a: run(["git", "-C", str(repo), *a])
+    def g(*a):
+        return run(["git", "-C", str(repo), *a])
     porcelain = g("status", "--porcelain")
     dirty = [ln for ln in porcelain.splitlines() if ln.strip()]
     ab = g("rev-list", "--left-right", "--count", "@{u}...HEAD")
@@ -139,7 +144,8 @@ def git_info(repo: Path) -> dict:
         "last_commit_iso": last_iso, "last_commit_msg": last_msg, "last_commit_hash": last_hash,
         "days_since_commit": days, "commits_7d": count_since(7), "commits_30d": count_since(30),
         "commits_total": int(total) if total.isdigit() else 0, "remote": remote, "slug": slug,
-        "recent_commits": [dict(zip(("iso", "hash", "msg"), ln.split("\x1f"))) for ln in recent.splitlines() if ln],
+        "recent_commits": [dict(zip(("iso", "hash", "msg"), ln.split("\x1f"), strict=False))
+                           for ln in recent.splitlines() if ln],
     }
 
 
@@ -332,7 +338,8 @@ def mjcf_inventory(repo: Path) -> list[dict]:
             continue
         wb = xr.find("worldbody")
         alljoints = list(wb.iter("joint")) if wb is not None else []
-        free = sum(1 for x in alljoints if x.get("type") == "free") + (len(list(wb.iter("freejoint"))) if wb is not None else 0)
+        free_joints = len(list(wb.iter("freejoint"))) if wb is not None else 0
+        free = sum(1 for x in alljoints if x.get("type") == "free") + free_joints
         joints = [x for x in alljoints if x.get("type") != "free"]
         act_el = xr.find("actuator")
         acts = len(list(act_el)) if act_el is not None else 0
@@ -381,7 +388,9 @@ def docs_info(repo: Path) -> dict:
     live_url = ""
     try:
         readme = (repo / "README.md").read_text(encoding="utf-8", errors="ignore")
-        m = re.search(r"https://[A-Za-z0-9.-]+\.(?:azurewebsites\.net|azurestaticapps\.net|github\.io)(?:/[A-Za-z0-9._~-]*)?", readme)
+        live_rx = (r"https://[A-Za-z0-9.-]+\.(?:azurewebsites\.net|azurestaticapps\.net|github\.io)"
+                   r"(?:/[A-Za-z0-9._~-]*)?")
+        m = re.search(live_rx, readme)
         if m:
             live_url = re.sub(r"/(diag|signin-github)?$", "", m.group(0).rstrip(".,`)/"))
     except OSError:
@@ -390,7 +399,8 @@ def docs_info(repo: Path) -> dict:
     seen, uniq = set(), []
     for t in tests:
         if t.lower() not in seen:
-            seen.add(t.lower()); uniq.append(t)
+            seen.add(t.lower())
+            uniq.append(t)
     return {"files": found, "tests": uniq, "live_url": live_url, "benchmark_ps1": benchmark,
             "benchmark_history": bench_hist.exists()}
 

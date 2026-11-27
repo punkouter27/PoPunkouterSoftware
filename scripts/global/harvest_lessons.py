@@ -145,11 +145,20 @@ def main() -> dict:
     manual = load_json(CONFIG / "lessons_manual.json", {"lessons": []}).get("lessons", [])
     for i, m in enumerate(manual):
         key = f"manual{i}"
-        merged[key] = {"id": key, "repo": m.get("repo", "fleet"), "repos": [m.get("repo", "fleet")], "file": m.get("file", ""),
-                       "line": m.get("line", 0), "heading": m.get("heading", "Manual entry"), "kind": m.get("kind", "trap"),
-                       "text": m["text"], "tags": m.get("tags") or [k for k, rx in TAG_RX.items() if rx.search(m["text"])],
-                       "sources": [{"repo": m.get("repo", "fleet"), "file": m.get("file", ""), "line": m.get("line", 0)}],
-                       "manual": True}
+        repo = m.get("repo", "fleet")
+        merged[key] = {
+            "id": key,
+            "repo": repo,
+            "repos": [repo],
+            "file": m.get("file", ""),
+            "line": m.get("line", 0),
+            "heading": m.get("heading", "Manual entry"),
+            "kind": m.get("kind", "trap"),
+            "text": m["text"],
+            "tags": m.get("tags") or [k for k, rx in TAG_RX.items() if rx.search(m["text"])],
+            "sources": [{"repo": repo, "file": m.get("file", ""), "line": m.get("line", 0)}],
+            "manual": True,
+        }
     lessons = sorted(merged.values(), key=lambda x: (x["kind"] != "trap", -len(x["repos"]), x["repo"]))
     out = {"count": len(lessons), "lessons": lessons}
     (DATA / "lessons.json").write_text(json.dumps(out, indent=0), encoding="utf-8")
@@ -159,4 +168,6 @@ def main() -> dict:
 if __name__ == "__main__":
     o = main()
     from collections import Counter
-    print(o["count"], "lessons;", Counter(x["kind"] for x in o["lessons"]), Counter(x["repo"] for x in o["lessons"]).most_common())
+    kinds = Counter(x["kind"] for x in o["lessons"])
+    repos = Counter(x["repo"] for x in o["lessons"]).most_common()
+    print(o["count"], "lessons;", kinds, repos)

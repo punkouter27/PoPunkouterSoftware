@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -28,7 +27,10 @@ REPOS = [
     "PoSumo",
 ]
 
-SKIP_DIRS = {".git", ".venv", "Library", "Intermediate", "Saved", "Temp", "obj", "bin", "node_modules", "Packages", "Builds", "Logs", "__pycache__"}
+SKIP_DIRS = {
+    ".git", ".venv", "Library", "Intermediate", "Saved", "Temp", "obj", "bin",
+    "node_modules", "Packages", "Builds", "Logs", "__pycache__",
+}
 
 
 def find_files(repo: Path, exts: tuple[str, ...], max_depth: int = 5) -> list[Path]:
@@ -47,7 +49,11 @@ def find_files(repo: Path, exts: tuple[str, ...], max_depth: int = 5) -> list[Pa
 
 
 def inspect_onnx(path: Path) -> dict:
-    info = {"rel": str(path.relative_to(ROOT)).replace("\\", "/"), "name": path.name, "kb": round(path.stat().st_size / 1024, 1)}
+    info = {
+        "rel": str(path.relative_to(ROOT)).replace("\\", "/"),
+        "name": path.name,
+        "kb": round(path.stat().st_size / 1024, 1),
+    }
     try:
         import onnxruntime as ort
         sess = ort.InferenceSession(str(path), providers=["CPUExecutionProvider"])
@@ -183,7 +189,10 @@ def main() -> None:
         all_onnx = find_files(repo, (".onnx",), max_depth=6)
         shipped_onnx = [
             p for p in all_onnx
-            if not any(part.lower() in ("runs", "checkpoints", "archive", "results", "dist", "_benchmark") for part in p.parts)
+            if not any(
+                part.lower() in ("runs", "checkpoints", "archive", "results", "dist", "_benchmark")
+                for part in p.parts
+            )
         ]
         onnx_infos = [inspect_onnx(p) for p in shipped_onnx[:35]]
 
