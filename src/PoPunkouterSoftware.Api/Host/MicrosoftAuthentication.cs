@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using PoPunkouterSoftware.Api.Platform;
 
@@ -76,7 +77,10 @@ internal static class MicrosoftAuthentication
                 options.ClientSecret = config["ClientSecret"];
                 options.SignInScheme = SessionScheme;
                 options.ResponseType = "code";
-                options.ResponseMode = "query";
+                // form_post, not query: Microsoft's code plus the encrypted state run past 2,048 characters,
+                // and IIS on the Windows App Service answers a query string that long with a bare 404 before
+                // the app ever sees /signin-oidc. A POST body has no such limit.
+                options.ResponseMode = OpenIdConnectResponseMode.FormPost;
                 options.UsePkce = true;
                 options.SaveTokens = false;
                 options.MapInboundClaims = false;
