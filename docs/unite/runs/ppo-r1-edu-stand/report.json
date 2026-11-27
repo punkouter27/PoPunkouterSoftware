@@ -1,0 +1,12 @@
+{
+  "creature": "unitree_r1_a5",
+  "n_obs": 131,
+  "n_action": 28,
+  "policy_steps": 921600,
+  "iters": 900,
+  "seed": 0,
+  "mean_reward_first": 1.7295260429382324,
+  "mean_reward_last": 1.8334652185440063,
+  "interface_sha256_16": "94377ebae772ff6c",
+  "guard_status": "conforming"
+}

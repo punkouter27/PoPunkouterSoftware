@@ -1,0 +1,12 @@
+{
+  "creature": "streetball_humanoid",
+  "n_obs": 131,
+  "n_action": 28,
+  "policy_steps": 153600,
+  "iters": 300,
+  "seed": 0,
+  "mean_reward_first": 2.2274441719055176,
+  "mean_reward_last": 1.443242073059082,
+  "interface_sha256_16": "94377ebae772ff6c",
+  "guard_status": "conforming"
+}

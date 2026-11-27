@@ -1,0 +1,17 @@
+{
+  "policy_name": "policy",
+  "creature": "streetball_humanoid",
+  "n_obs": 131,
+  "n_action": 28,
+  "opset": 17,
+  "input": "obs[1, 131]",
+  "output": "actions[1, 28]",
+  "interface_sha256": "94377ebae772ff6ce29d36bfbd90a71c86ffaba5cbc88a2639ac0bf3332650e9",
+  "interface_sha256_16": "94377ebae772ff6c",
+  "morphology_sha256": "d87e871c0ec35c9dfe26bf811a70cc98d223c26ecf7dedf920bcfb0cf0ff756a",
+  "physics_sha256": "d5324013554250626d7c77391cd4848c20ac292c20f468320bb0dd6d0c65dfca",
+  "policy_sha256": "c5f30f340afb162062231fac15cd4b81a09b610f613437ecfbeda79c71a74315",
+  "mujoco": "4.0.0",
+  "contract_path": "global/UNITE/creatures/streetball_humanoid/contract.json",
+  "status": "conforming"
+}

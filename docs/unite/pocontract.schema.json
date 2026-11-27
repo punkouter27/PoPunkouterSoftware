@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://poshared.invalid/schemas/pocontract-1.json",
+  "title": "PoContract v1 - one creature + interface + timing contract for every runtime",
+  "description": "Merges PoBasketball shared/obs_spec.json + shared/humanoid_spec.json, PoRaceUnreal <creature>_fingerprint.json, PoSlapUnreal training/constants.py, and PoRobotTrain r1_joint_map.yaml + deploy.yaml into one dialect. Every runtime (MuJoCo trainer, URLab/Unreal, Unity, browser WASM, physical robot) is a CONSUMER of this file and never a definer.",
+  "type": "object",
+  "required": ["contract_version", "name", "creature", "physics", "morphology", "observation", "action", "roles", "hashes"],
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": { "const": 1 },
+    "name": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+    "creature": { "type": "string", "description": "e.g. unitree_r1_a5, humanoid_matt, humanoid_bball, go2, stroller" },
+    "kind": { "enum": ["humanoid", "quadruped", "wheeled", "free"] },
+    "notes": { "type": "string" },
+    "generated": {
+      "type": "object",
+      "required": ["tool", "tool_version", "source", "written_at"],
+      "properties": {
+        "tool": { "const": "pocontract" },
+        "tool_version": { "type": "string" },
+        "source": { "type": "string", "description": "path of the MJCF/spec that produced this file" },
+        "written_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "physics": {
+      "type": "object",
+      "required": ["mujoco", "timestep", "decimation", "control_dt", "option"],
+      "description": "Copied from the compiled mjModel. URLab drops the MJCF <option> block when it attaches a child spec, so these must be applied by hand at bind time.",
+      "properties": {
+        "mujoco": { "type": "string" },
+        "timestep": { "type": "number", "description": "seconds per physics step" },
+        "decimation": { "type": "integer", "description": "physics steps per policy decision" },
+        "control_dt": { "type": "number", "description": "timestep * decimation; the policy rate" },
+        "option": {
+          "type": "object",
+          "description": "mjOption scalars and vectors: integrator, solver, iterations, cone, gravity, ...",
+          "additionalProperties": { "type": ["number", "integer", "string", "array"] }
+        }
+      }
+    },
+    "morphology": {
+      "type": "object",
+      "required": ["root_body", "joints", "bodies"],
+      "description": "The creature as MuJoCo sees it, by name, so Unreal rebuilds an exact twin rather than an approximation.",
+      "properties": {
+        "root_body": { "type": "string" },
+        "imu_site": { "type": ["string", "null"] },
+        "qpos_home": { "type": "array", "items": { "type": "number" } },
+        "qpos_names": { "type": "array", "items": { "type": "string" } },
+        "joints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "role", "axis", "range", "default"],
+            "properties": {
+              "name": { "type": "string" },
+              "role": {
+                "type": ["string", "null"],
+                "description": "Adapter key from roles.canonical_order, or null when this joint is held outside the brain. Suffix _l/_r where paired.",
+                "pattern": "^[a-z0-9_]+(_[lr])?$"
+              },
+              "parent": { "type": ["string", "null"] },
+              "axis": { "type": "array", "items": { "type": "number" }, "minItems": 3, "maxItems": 3 },
+              "range": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+              "default": { "type": "number" },
+              "kp": { "type": ["number", "null"] },
+              "kd": { "type": ["number", "null"] },
+              "effort": { "type": ["number", "null"], "description": "Nm" },
+              "action_scale": { "type": ["number", "null"], "description": "rad per unit action" },
+              "gear": { "type": ["number", "null"] },
+              "actuator": { "type": ["string", "null"] },
+              "motor_slot": {
+                "type": ["integer", "null"],
+                "description": "Index into the physical bus command array (Unitree LowCmd_.motor_cmd[] on the R1). Null for creatures with no hardware."
+              },
+              "hardware_sign": { "enum": [1, -1], "default": 1, "description": "Flips a joint when the real actuator turns the other way from the MJCF axis." }
+            }
+          }
+        },
+        "bodies": { "type": "object", "additionalProperties": { "type": "object" } },
+        "actuators": {
+          "type": "object",
+          "description": "Actuator name -> gainprm/biasprm/ctrlrange/forcerange/gear. URLab rebuilds these approximately, so the runtime writes these back over its rebuild.",
+          "additionalProperties": { "type": "object" }
+        },
+        "sites": { "type": "object", "additionalProperties": { "type": "object" } },
+        "geoms": { "type": "array", "items": { "type": "object" } },
+        "bone_map": {
+          "type": "object",
+          "description": "Role or joint -> engine skeleton bone(s), with a rule for rigid/slerp/blend. Copied from PoBasketball humanoid_spec.json body_bone_map; lets one retargeter drive UE, Unity and the browser.",
+          "additionalProperties": { "type": "object" }
+        },
+        "frame": {
+          "type": "object",
+          "description": "Coordinate space declarations, e.g. sim Z-up right-handed metres vs UE Z-up left-handed centimetres, with the exact transform.",
+          "additionalProperties": { "type": "string" }
+        },
+        "masses_kg": { "type": "object", "additionalProperties": { "type": "number" } }
+      }
+    },
+    "roles": {
+      "type": "object",
+      "description": "CANONICAL role order. Morphology-independent. This is what makes one brain run on many creatures: the policy sees roles, the adapter maps roles to joints, missing roles are zero-filled and masked.",
+      "required": ["canonical_order", "mask"],
+      "properties": {
+        "canonical_order": { "type": "array", "items": { "type": "string" } },
+        "mask": { "type": "array", "items": { "type": "integer", "enum": [0, 1] }, "description": "1 = this creature has the role, 0 = padded" },
+        "morphology_id": { "type": "integer", "description": "One-hot index fed to the policy so it can condition on the body it drives" },
+        "morphology_onehot_size": { "type": "integer" },
+        "held_outside_brain": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Joints the runtime PD-holds at their nominal pose instead of letting the policy drive them."
+        }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "required": ["n_obs", "slots"],
+      "properties": {
+        "n_obs": { "type": "integer" },
+        "slots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "start", "size", "scale"],
+            "properties": {
+              "name": { "type": "string" },
+              "start": { "type": "integer" },
+              "size": { "type": "integer" },
+              "scale": { "type": "number" },
+              "frame": { "type": "string", "description": "e.g. pelvis, heading, world" },
+              "rule": { "type": "string", "description": "prose definition; hashed into interface_sha256 so a text-only edit still changes the hash" }
+            }
+          }
+        },
+        "order": { "enum": ["roles", "joints"], "default": "roles" },
+        "normalizer": {
+          "type": "object",
+          "description": "If the ONNX graph carries its own normaliser, say so here; otherwise the runtime applies mean/std outside the graph. Never let a framework bake this in.",
+          "properties": {
+            "kind": { "enum": ["none", "mean_std", "empirical"] },
+            "path": { "type": ["string", "null"] }
+          }
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "required": ["n_action", "rule", "clip"],
+      "properties": {
+        "n_action": { "type": "integer" },
+        "rule": { "type": "string", "description": "e.g. 'ctrl = clip(default + a*action_scale, limit_lo, limit_hi)'" },
+        "clip": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+        "soft_limit_factor": { "type": "number" },
+        "held_joints": { "type": "array", "items": { "type": "string" } },
+        "passive_joints": { "type": "array", "items": { "type": "string" } },
+        "passive_kd": { "type": "number" }
+      }
+    },
+    "commands": {
+      "type": "object",
+      "description": "The task channel, named with explicit units, so every trainer and runtime agrees.",
+      "additionalProperties": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 }
+    },
+    "references": {
+      "type": "object",
+      "description": "Parity fixtures. Golden observations are what prove Unreal/Unity/browser/robot agree with the trainer.",
+      "properties": {
+        "golden_obs": { "type": ["string", "null"] },
+        "golden_act": { "type": ["string", "null"] },
+        "tolerance": { "type": "number", "default": 0.0001 }
+      }
+    },
+    "hardware": {
+      "type": "object",
+      "description": "Present only for a creature that is also a physical robot. Declares the bus, the motor-slot map and the deploy gate, so a sim action vector and a hardware command vector are the same thing.",
+      "properties": {
+        "robot": { "type": "string" },
+        "kind": { "const": "hardware" },
+        "owner_app": { "type": "string", "description": "The app that owns deployment and the gate (PoRobotTrain for the R1)." },
+        "num_joints": { "type": "integer" },
+        "bus": {
+          "type": "object",
+          "properties": {
+            "msg_type": { "type": "string" },
+            "lowcmd_topic": { "type": "string" },
+            "lowstate_topic": { "type": "string" },
+            "num_slots": { "type": "integer" },
+            "unused_slots": { "type": "array", "items": { "type": "integer" } },
+            "imu_body": { "type": "string" }
+          }
+        },
+        "deploy_gate": {
+          "type": "object",
+          "properties": {
+            "required": { "type": "boolean" },
+            "app": { "type": "string" },
+            "sidecar": { "type": "string" },
+            "checks": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "policy_rate_hz": { "type": "number" },
+        "motor_slot": { "type": "object", "additionalProperties": { "type": "integer" } },
+        "joints": { "type": "object", "additionalProperties": { "type": "object" } }
+      }
+    },
+    "legacy_interfaces": {
+      "type": "array",
+      "description": "Interfaces that existed before UNITE, recorded so they are never lost and can be bridged or retired deliberately.",
+      "items": {
+        "type": "object",
+        "required": ["name", "n_obs", "n_action"],
+        "properties": {
+          "name": { "type": "string" },
+          "n_obs": { "type": "integer" },
+          "n_action": { "type": "integer" },
+          "source": { "type": "string" },
+          "status": { "enum": ["live", "bridge", "retired"] }
+        }
+      }
+    },
+    "hashes": {
+      "type": "object",
+      "required": ["morphology_sha256", "interface_sha256", "physics_sha256"],
+      "description": "Policy sidecars pin these three. Unreal refuses to load a policy whose sidecar does not match the contract it was built against.",
+      "properties": {
+        "morphology_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "interface_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "physics_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "interface_sha256_16": { "type": "string", "pattern": "^[0-9a-f]{16}$" }
+      }
+    }
+  }
+}

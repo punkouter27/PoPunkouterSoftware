@@ -1,0 +1,12 @@
+{
+  "creature": "go2",
+  "n_obs": 131,
+  "n_action": 28,
+  "policy_steps": 204800,
+  "iters": 200,
+  "seed": 0,
+  "mean_reward_first": 0.3847048878669739,
+  "mean_reward_last": 0.7406967878341675,
+  "interface_sha256_16": "94377ebae772ff6c",
+  "guard_status": "conforming"
+}

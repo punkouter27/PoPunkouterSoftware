@@ -1,0 +1,18 @@
+{
+  "_comment": "joint -> canonical role. null means held outside the brain (PD-held at default). Edit this file, then rerun tools/build_creatures.py.",
+  "kind": "quadruped",
+  "roles": {
+    "FL_hip_joint": "hip_pitch_l",
+    "FL_thigh_joint": "hip_roll_l",
+    "FL_calf_joint": "hip_yaw_l",
+    "FR_hip_joint": "hip_pitch_r",
+    "FR_thigh_joint": "hip_roll_r",
+    "FR_calf_joint": "hip_yaw_r",
+    "RL_hip_joint": "knee_l",
+    "RL_thigh_joint": "ankle_pitch_l",
+    "RL_calf_joint": "ankle_roll_l",
+    "RR_hip_joint": "knee_r",
+    "RR_thigh_joint": "ankle_pitch_r",
+    "RR_calf_joint": "ankle_roll_r"
+  }
+}

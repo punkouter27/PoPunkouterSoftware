@@ -1,0 +1,1309 @@
+{
+  "contract_version": 1,
+  "name": "go2",
+  "creature": "go2",
+  "kind": "quadruped",
+  "notes": "Unitree Go2 quadruped. Legs map positionally into the humanoid limb block (hip->hip_pitch, thigh->hip_roll, calf->hip_yaw) because a quadruped has no humanoid roles; the mask and morphology one-hot tell a shared brain what it is driving.",
+  "generated": {
+    "tool": "pocontract",
+    "tool_version": "0.2.0",
+    "source": "PoRaceUnreal/training/assets/go2/go2_porace.xml",
+    "written_at": "2026-11-27T00:27:28Z"
+  },
+  "physics": {
+    "mujoco": "4.0.0",
+    "timestep": 0.002,
+    "decimation": 10,
+    "control_dt": 0.02,
+    "option": {
+      "timestep": 0.002,
+      "integrator": 0,
+      "cone": 0,
+      "solver": 2,
+      "jacobian": 2,
+      "iterations": 100,
+      "ls_iterations": 50,
+      "impratio": 1.0,
+      "tolerance": 1e-08,
+      "gravity": [
+        0.0,
+        0.0,
+        -9.81
+      ],
+      "o_solref": [
+        0.02,
+        1.0
+      ],
+      "o_solimp": [
+        0.9,
+        0.95,
+        0.001,
+        0.5,
+        2.0
+      ],
+      "o_friction": [
+        1.0,
+        1.0,
+        0.005,
+        0.0001,
+        0.0001
+      ]
+    }
+  },
+  "morphology": {
+    "root_body": "base",
+    "imu_site": null,
+    "qpos_names": [
+      "@base[0]",
+      "@base[1]",
+      "@base[2]",
+      "@base[3]",
+      "@base[4]",
+      "@base[5]",
+      "@base[6]",
+      "FL_hip_joint",
+      "FL_thigh_joint",
+      "FL_calf_joint",
+      "FR_hip_joint",
+      "FR_thigh_joint",
+      "FR_calf_joint",
+      "RL_hip_joint",
+      "RL_thigh_joint",
+      "RL_calf_joint",
+      "RR_hip_joint",
+      "RR_thigh_joint",
+      "RR_calf_joint"
+    ],
+    "joints": [
+      {
+        "name": "FL_hip_joint",
+        "role": "hip_pitch_l",
+        "parent": "FL_hip",
+        "axis": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "range": [
+          -1.0472,
+          1.0472
+        ],
+        "default": 0.0,
+        "kp": 35.0,
+        "kd": 0.5,
+        "effort": 24.0,
+        "action_scale": 0.17142857142857143,
+        "actuator": "FL_hip",
+        "gear": 1.0,
+        "motor_slot": null,
+        "hardware_sign": 1
+      },
+      {
+        "name": "FL_thigh_joint",
+        "role": "hip_roll_l",
+        "parent": "FL_thigh",
+        "axis": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "range": [
+          -1.5708,
+          3.4907
+        ],
+        "default": 0.9,
+        "kp": 35.0,
+        "kd": 0.5,
+        "effort": 24.0,
+        "action_scale": 0.17142857142857143,
+        "actuator": "FL_thigh",
+        "gear": 1.0,
+        "motor_slot": null,
+        "hardware_sign": 1
+      },
+      {
+        "name": "FL_calf_joint",
+        "role": "hip_yaw_l",
+        "parent": "FL_calf",
+        "axis": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "range": [
+          -2.7227,
+          -0.83776
+        ],
+        "default": -1.8,
+        "kp": 35.0,
+        "kd": 0.5,
+        "effort": 24.0,
+        "action_scale": 0.17142857142857143,
+        "actuator": "FL_calf",
+        "gear": 1.0,
+        "motor_slot": null,
+        "hardware_sign": 1
+      },
+      {
+        "name": "FR_hip_joint",
+        "role": "hip_pitch_r",
+        "parent": "FR_hip",
+        "axis": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "range": [
+          -1.0472,
+          1.0472
+        ],
+        "default": 0.0,
+        "kp": 35.0,
+        "kd": 0.5,
+        "effort": 24.0,
+        "action_scale": 0.17142857142857143,
+        "actuator": "FR_hip",
+        "gear": 1.0,
+        "motor_slot": null,
+        "hardware_sign": 1
+      },
+      {
+        "name": "FR_thigh_joint",
+        "role": "hip_roll_r",
+        "parent": "FR_thigh",
+        "axis": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "range": [
+          -1.5708,
+          3.4907
+        ],
+        "default": 0.9,
+        "kp": 35.0,
+        "kd": 0.5,
+        "effort": 24.0,
+        "action_scale": 0.17142857142857143,
+        "actuator": "FR_thigh",
+        "gear": 1.0,
+        "motor_slot": null,
+        "hardware_sign": 1
+      },
+      {
+        "name": "FR_calf_joint",
+        "role": "hip_yaw_r",
+        "parent": "FR_calf",
+        "axis": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "range": [
+          -2.7227,
+          -0.83776
+        ],
+        "default": -1.8,
+        "kp": 35.0,
+        "kd": 0.5,
+        "effort": 24.0,
+        "action_scale": 0.17142857142857143,
+        "actuator": "FR_calf",
+        "gear": 1.0,
+        "motor_slot": null,
+        "hardware_sign": 1
+      },
+      {
+        "name": "RL_hip_joint",
+        "role": "knee_l",
+        "parent": "RL_hip",
+        "axis": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "range": [
+          -1.0472,
+          1.0472
+        ],
+        "default": 0.0,
+        "kp": 35.0,
+        "kd": 0.5,
+        "effort": 24.0,
+        "action_scale": 0.17142857142857143,
+        "actuator": "RL_hip",
+        "gear": 1.0,
+        "motor_slot": null,
+        "hardware_sign": 1
+      },
+      {
+        "name": "RL_thigh_joint",
+        "role": "ankle_pitch_l",
+        "parent": "RL_thigh",
+        "axis": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "range": [
+          -1.5708,
+          3.4907
+        ],
+        "default": 0.9,
+        "kp": 35.0,
+        "kd": 0.5,
+        "effort": 24.0,
+        "action_scale": 0.17142857142857143,
+        "actuator": "RL_thigh",
+        "gear": 1.0,
+        "motor_slot": null,
+        "hardware_sign": 1
+      },
+      {
+        "name": "RL_calf_joint",
+        "role": "ankle_roll_l",
+        "parent": "RL_calf",
+        "axis": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "range": [
+          -2.7227,
+          -0.83776
+        ],
+        "default": -1.8,
+        "kp": 35.0,
+        "kd": 0.5,
+        "effort": 24.0,
+        "action_scale": 0.17142857142857143,
+        "actuator": "RL_calf",
+        "gear": 1.0,
+        "motor_slot": null,
+        "hardware_sign": 1
+      },
+      {
+        "name": "RR_hip_joint",
+        "role": "knee_r",
+        "parent": "RR_hip",
+        "axis": [
+          1.0,
+          0.0,
+          0.0
+        ],
+        "range": [
+          -1.0472,
+          1.0472
+        ],
+        "default": 0.0,
+        "kp": 35.0,
+        "kd": 0.5,
+        "effort": 24.0,
+        "action_scale": 0.17142857142857143,
+        "actuator": "RR_hip",
+        "gear": 1.0,
+        "motor_slot": null,
+        "hardware_sign": 1
+      },
+      {
+        "name": "RR_thigh_joint",
+        "role": "ankle_pitch_r",
+        "parent": "RR_thigh",
+        "axis": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "range": [
+          -1.5708,
+          3.4907
+        ],
+        "default": 0.9,
+        "kp": 35.0,
+        "kd": 0.5,
+        "effort": 24.0,
+        "action_scale": 0.17142857142857143,
+        "actuator": "RR_thigh",
+        "gear": 1.0,
+        "motor_slot": null,
+        "hardware_sign": 1
+      },
+      {
+        "name": "RR_calf_joint",
+        "role": "ankle_roll_r",
+        "parent": "RR_calf",
+        "axis": [
+          0.0,
+          1.0,
+          0.0
+        ],
+        "range": [
+          -2.7227,
+          -0.83776
+        ],
+        "default": -1.8,
+        "kp": 35.0,
+        "kd": 0.5,
+        "effort": 24.0,
+        "action_scale": 0.17142857142857143,
+        "actuator": "RR_calf",
+        "gear": 1.0,
+        "motor_slot": null,
+        "hardware_sign": 1
+      }
+    ],
+    "bodies": {
+      "base": {
+        "mass": 6.921,
+        "inertia": [
+          0.107027,
+          0.0980771,
+          0.0244531
+        ],
+        "pos": [
+          0.0,
+          0.0,
+          0.445
+        ],
+        "quat": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "parent": "world"
+      },
+      "FL_hip": {
+        "mass": 0.678,
+        "inertia": [
+          0.00088403,
+          0.000596003,
+          0.000479967
+        ],
+        "pos": [
+          0.1934,
+          0.0465,
+          0.0
+        ],
+        "quat": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "parent": "base"
+      },
+      "FL_thigh": {
+        "mass": 1.152,
+        "inertia": [
+          0.00594973,
+          0.00584149,
+          0.000878787
+        ],
+        "pos": [
+          0.0,
+          0.0955,
+          0.0
+        ],
+        "quat": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "parent": "FL_hip"
+      },
+      "FL_calf": {
+        "mass": 0.241352,
+        "inertia": [
+          0.0014901,
+          0.00146356,
+          5.31397e-05
+        ],
+        "pos": [
+          0.0,
+          0.0,
+          -0.213
+        ],
+        "quat": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "parent": "FL_thigh"
+      },
+      "FR_hip": {
+        "mass": 0.678,
+        "inertia": [
+          0.00088403,
+          0.000596003,
+          0.000479967
+        ],
+        "pos": [
+          0.1934,
+          -0.0465,
+          0.0
+        ],
+        "quat": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "parent": "base"
+      },
+      "FR_thigh": {
+        "mass": 1.152,
+        "inertia": [
+          0.00594973,
+          0.00584149,
+          0.000878787
+        ],
+        "pos": [
+          0.0,
+          -0.0955,
+          0.0
+        ],
+        "quat": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "parent": "FR_hip"
+      },
+      "FR_calf": {
+        "mass": 0.241352,
+        "inertia": [
+          0.0014901,
+          0.00146356,
+          5.31397e-05
+        ],
+        "pos": [
+          0.0,
+          0.0,
+          -0.213
+        ],
+        "quat": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "parent": "FR_thigh"
+      },
+      "RL_hip": {
+        "mass": 0.678,
+        "inertia": [
+          0.00088403,
+          0.000596003,
+          0.000479967
+        ],
+        "pos": [
+          -0.1934,
+          0.0465,
+          0.0
+        ],
+        "quat": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "parent": "base"
+      },
+      "RL_thigh": {
+        "mass": 1.152,
+        "inertia": [
+          0.00594973,
+          0.00584149,
+          0.000878787
+        ],
+        "pos": [
+          0.0,
+          0.0955,
+          0.0
+        ],
+        "quat": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "parent": "RL_hip"
+      },
+      "RL_calf": {
+        "mass": 0.241352,
+        "inertia": [
+          0.0014901,
+          0.00146356,
+          5.31397e-05
+        ],
+        "pos": [
+          0.0,
+          0.0,
+          -0.213
+        ],
+        "quat": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "parent": "RL_thigh"
+      },
+      "RR_hip": {
+        "mass": 0.678,
+        "inertia": [
+          0.00088403,
+          0.000596003,
+          0.000479967
+        ],
+        "pos": [
+          -0.1934,
+          -0.0465,
+          0.0
+        ],
+        "quat": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "parent": "base"
+      },
+      "RR_thigh": {
+        "mass": 1.152,
+        "inertia": [
+          0.00594973,
+          0.00584149,
+          0.000878787
+        ],
+        "pos": [
+          0.0,
+          -0.0955,
+          0.0
+        ],
+        "quat": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "parent": "RR_hip"
+      },
+      "RR_calf": {
+        "mass": 0.241352,
+        "inertia": [
+          0.0014901,
+          0.00146356,
+          5.31397e-05
+        ],
+        "pos": [
+          0.0,
+          0.0,
+          -0.213
+        ],
+        "quat": [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "parent": "RR_thigh"
+      }
+    },
+    "actuators": {
+      "FL_hip": {
+        "joint": "FL_hip_joint",
+        "gainprm": [
+          35.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "biasprm": [
+          0.0,
+          -35.0,
+          -0.5,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ctrlrange": [
+          -0.9472,
+          0.9472
+        ],
+        "forcerange": [
+          -24.0,
+          24.0
+        ],
+        "gear": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "FL_thigh": {
+        "joint": "FL_thigh_joint",
+        "gainprm": [
+          35.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "biasprm": [
+          0.0,
+          -35.0,
+          -0.5,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ctrlrange": [
+          -1.4,
+          2.5
+        ],
+        "forcerange": [
+          -24.0,
+          24.0
+        ],
+        "gear": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "FL_calf": {
+        "joint": "FL_calf_joint",
+        "gainprm": [
+          35.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "biasprm": [
+          0.0,
+          -35.0,
+          -0.5,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ctrlrange": [
+          -2.6227,
+          -0.84776
+        ],
+        "forcerange": [
+          -24.0,
+          24.0
+        ],
+        "gear": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "FR_hip": {
+        "joint": "FR_hip_joint",
+        "gainprm": [
+          35.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "biasprm": [
+          0.0,
+          -35.0,
+          -0.5,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ctrlrange": [
+          -0.9472,
+          0.9472
+        ],
+        "forcerange": [
+          -24.0,
+          24.0
+        ],
+        "gear": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "FR_thigh": {
+        "joint": "FR_thigh_joint",
+        "gainprm": [
+          35.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "biasprm": [
+          0.0,
+          -35.0,
+          -0.5,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ctrlrange": [
+          -1.4,
+          2.5
+        ],
+        "forcerange": [
+          -24.0,
+          24.0
+        ],
+        "gear": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "FR_calf": {
+        "joint": "FR_calf_joint",
+        "gainprm": [
+          35.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "biasprm": [
+          0.0,
+          -35.0,
+          -0.5,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ctrlrange": [
+          -2.6227,
+          -0.84776
+        ],
+        "forcerange": [
+          -24.0,
+          24.0
+        ],
+        "gear": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "RL_hip": {
+        "joint": "RL_hip_joint",
+        "gainprm": [
+          35.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "biasprm": [
+          0.0,
+          -35.0,
+          -0.5,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ctrlrange": [
+          -0.9472,
+          0.9472
+        ],
+        "forcerange": [
+          -24.0,
+          24.0
+        ],
+        "gear": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "RL_thigh": {
+        "joint": "RL_thigh_joint",
+        "gainprm": [
+          35.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "biasprm": [
+          0.0,
+          -35.0,
+          -0.5,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ctrlrange": [
+          -1.4,
+          2.5
+        ],
+        "forcerange": [
+          -24.0,
+          24.0
+        ],
+        "gear": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "RL_calf": {
+        "joint": "RL_calf_joint",
+        "gainprm": [
+          35.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "biasprm": [
+          0.0,
+          -35.0,
+          -0.5,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ctrlrange": [
+          -2.6227,
+          -0.84776
+        ],
+        "forcerange": [
+          -24.0,
+          24.0
+        ],
+        "gear": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "RR_hip": {
+        "joint": "RR_hip_joint",
+        "gainprm": [
+          35.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "biasprm": [
+          0.0,
+          -35.0,
+          -0.5,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ctrlrange": [
+          -0.9472,
+          0.9472
+        ],
+        "forcerange": [
+          -24.0,
+          24.0
+        ],
+        "gear": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "RR_thigh": {
+        "joint": "RR_thigh_joint",
+        "gainprm": [
+          35.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "biasprm": [
+          0.0,
+          -35.0,
+          -0.5,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ctrlrange": [
+          -1.4,
+          2.5
+        ],
+        "forcerange": [
+          -24.0,
+          24.0
+        ],
+        "gear": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      },
+      "RR_calf": {
+        "joint": "RR_calf_joint",
+        "gainprm": [
+          35.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "biasprm": [
+          0.0,
+          -35.0,
+          -0.5,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "ctrlrange": [
+          -2.6227,
+          -0.84776
+        ],
+        "forcerange": [
+          -24.0,
+          24.0
+        ],
+        "gear": [
+          1.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "sites": {
+      "imu": {},
+      "FL_foot": {},
+      "FR_foot": {},
+      "RL_foot": {},
+      "RR_foot": {}
+    },
+    "geoms": [],
+    "frame": {
+      "sim": "metres, right-handed, Z-up, creature faces +X at qpos=0"
+    }
+  },
+  "roles": {
+    "canonical_order": [
+      "hip_pitch_l",
+      "hip_roll_l",
+      "hip_yaw_l",
+      "knee_l",
+      "ankle_pitch_l",
+      "ankle_roll_l",
+      "toe_l",
+      "hip_pitch_r",
+      "hip_roll_r",
+      "hip_yaw_r",
+      "knee_r",
+      "ankle_pitch_r",
+      "ankle_roll_r",
+      "toe_r",
+      "waist_roll",
+      "waist_yaw",
+      "shoulder_pitch_l",
+      "shoulder_roll_l",
+      "shoulder_yaw_l",
+      "elbow_l",
+      "wrist_l",
+      "shoulder_pitch_r",
+      "shoulder_roll_r",
+      "shoulder_yaw_r",
+      "elbow_r",
+      "wrist_r",
+      "head_pitch",
+      "head_yaw"
+    ],
+    "mask": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ],
+    "morphology_id": 1,
+    "morphology_onehot_size": 8,
+    "held_outside_brain": []
+  },
+  "observation": {
+    "n_obs": 131,
+    "order": "roles",
+    "slots": [
+      {
+        "name": "joint_pos_rel",
+        "start": 0,
+        "size": 28,
+        "scale": 1.0,
+        "frame": "pelvis",
+        "rule": "q - default, role order, 0 for masked roles"
+      },
+      {
+        "name": "joint_vel",
+        "start": 28,
+        "size": 28,
+        "scale": 0.1,
+        "frame": "pelvis",
+        "rule": "qd, role order, 0 for masked roles"
+      },
+      {
+        "name": "prev_action",
+        "start": 56,
+        "size": 28,
+        "scale": 1.0,
+        "frame": "none",
+        "rule": "raw policy output, role order, 0 after reset"
+      },
+      {
+        "name": "base_ang_vel",
+        "start": 84,
+        "size": 3,
+        "scale": 0.25,
+        "frame": "pelvis",
+        "rule": "free-joint angular velocity, used directly (already body frame)"
+      },
+      {
+        "name": "projected_gravity",
+        "start": 87,
+        "size": 3,
+        "scale": 1.0,
+        "frame": "pelvis",
+        "rule": "(0,0,-1) rotated into the pelvis frame"
+      },
+      {
+        "name": "velocity_commands",
+        "start": 90,
+        "size": 3,
+        "scale": 1.0,
+        "frame": "heading",
+        "rule": "vx, vy m/s and wz rad/s; ranges live in the policy sidecar"
+      },
+      {
+        "name": "gait_phase",
+        "start": 93,
+        "size": 2,
+        "scale": 1.0,
+        "frame": "none",
+        "rule": "[sin 2*pi*p, cos 2*pi*p]; both 0 while |command| < 0.1"
+      },
+      {
+        "name": "role_mask",
+        "start": 95,
+        "size": 28,
+        "scale": 1.0,
+        "frame": "none",
+        "rule": "1 where this creature has the role, 0 where padded"
+      },
+      {
+        "name": "morphology_onehot",
+        "start": 123,
+        "size": 8,
+        "scale": 1.0,
+        "frame": "none",
+        "rule": "one-hot index of this creature in the family registry"
+      }
+    ],
+    "normalizer": {
+      "kind": "none",
+      "path": null
+    }
+  },
+  "action": {
+    "n_action": 28,
+    "rule": "ctrl = clip(default + a * action_scale, soft_limit_lo, soft_limit_hi); masked roles are PD-held at default",
+    "clip": [
+      -5.0,
+      5.0
+    ],
+    "soft_limit_factor": 0.9
+  },
+  "hashes": {
+    "morphology_sha256": "a0a6c46d0be178ede7946d0469ef83f6e63b72eae8c19d0caa9e438de488e431",
+    "interface_sha256": "94377ebae772ff6ce29d36bfbd90a71c86ffaba5cbc88a2639ac0bf3332650e9",
+    "physics_sha256": "a41b6a8035fc8e0b6bbac170367fc8b1f4356aeb7e6f230bd0064f90470c6d2b",
+    "interface_sha256_16": "94377ebae772ff6c"
+  }
+}

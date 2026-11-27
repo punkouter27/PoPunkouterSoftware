@@ -1,0 +1,148 @@
+{
+  "_comment": "Proof that one brain can drive three bodies. Identical canonical role order for every creature. Each creature maps roles -> its own joints; absent roles are masked to 0 and PD-held at nominal. n_obs and n_action are derived by the generator, never hand-written.",
+
+  "canonical_roles": [
+    "hip_pitch_l", "hip_roll_l", "hip_yaw_l", "knee_l", "ankle_pitch_l", "ankle_roll_l", "toe_l",
+    "hip_pitch_r", "hip_roll_r", "hip_yaw_r", "knee_r", "ankle_pitch_r", "ankle_roll_r", "toe_r",
+    "waist_roll", "waist_yaw",
+    "shoulder_pitch_l", "shoulder_roll_l", "shoulder_yaw_l", "elbow_l", "wrist_l",
+    "shoulder_pitch_r", "shoulder_roll_r", "shoulder_yaw_r", "elbow_r", "wrist_r",
+    "head_pitch", "head_yaw"
+  ],
+  "canonical_len": 28,
+
+  "obs_block_per_role": [
+    { "name": "joint_pos_rel", "size_per_role": 1, "scale": 1.0 },
+    { "name": "joint_vel", "size_per_role": 1, "scale": 0.1 },
+    { "name": "prev_action", "size_per_role": 1, "scale": 1.0 }
+  ],
+  "obs_common_blocks": [
+    { "name": "base_ang_vel", "size": 3, "frame": "pelvis", "scale": 0.25 },
+    { "name": "projected_gravity", "size": 3, "frame": "pelvis", "scale": 1.0 },
+    { "name": "velocity_commands", "size": 3, "frame": "heading", "scale": 1.0 },
+    { "name": "gait_phase", "size": 2, "scale": 1.0 },
+    { "name": "role_mask", "size": 28, "scale": 1.0 },
+    { "name": "morphology_onehot", "size": 8, "scale": 1.0 }
+  ],
+  "_obs_formula": "n_obs = 3 slots x 28 roles (=84) + 3+3+3+2+28+8 (=47) = 131, identical for every creature",
+
+  "creatures": {
+    "unitree_r1_a5": {
+      "source": "PoRobotTrain/RobotControl/configs/r1_joint_map.yaml",
+      "kind": "humanoid",
+      "hardware": true,
+      "control_dt": 0.02,
+      "role_map": {
+        "hip_pitch_l": { "joint": "left_hip_pitch_joint", "motor_slot": 0 },
+        "hip_roll_l": { "joint": "left_hip_roll_joint", "motor_slot": 1 },
+        "hip_yaw_l": { "joint": "left_hip_yaw_joint", "motor_slot": 2 },
+        "knee_l": { "joint": "left_knee_joint", "motor_slot": 3 },
+        "ankle_pitch_l": { "joint": "left_ankle_pitch_joint", "motor_slot": 4 },
+        "ankle_roll_l": { "joint": "left_ankle_roll_joint", "motor_slot": 5 },
+        "toe_l": null,
+        "hip_pitch_r": { "joint": "right_hip_pitch_joint", "motor_slot": 6 },
+        "hip_roll_r": { "joint": "right_hip_roll_joint", "motor_slot": 7 },
+        "hip_yaw_r": { "joint": "right_hip_yaw_joint", "motor_slot": 8 },
+        "knee_r": { "joint": "right_knee_joint", "motor_slot": 9 },
+        "ankle_pitch_r": { "joint": "right_ankle_pitch_joint", "motor_slot": 10 },
+        "ankle_roll_r": { "joint": "right_ankle_roll_joint", "motor_slot": 11 },
+        "toe_r": null,
+        "waist_roll": { "joint": "waist_roll_joint", "motor_slot": 12 },
+        "waist_yaw": { "joint": "waist_yaw_joint", "motor_slot": 13 },
+        "shoulder_pitch_l": { "joint": "left_shoulder_pitch_joint", "motor_slot": 15 },
+        "shoulder_roll_l": { "joint": "left_shoulder_roll_joint", "motor_slot": 16 },
+        "shoulder_yaw_l": { "joint": "left_shoulder_yaw_joint", "motor_slot": 17 },
+        "elbow_l": { "joint": "left_elbow_joint", "motor_slot": 18 },
+        "wrist_l": { "joint": "left_wrist_roll_joint", "motor_slot": 19 },
+        "shoulder_pitch_r": { "joint": "right_shoulder_pitch_joint", "motor_slot": 22 },
+        "shoulder_roll_r": { "joint": "right_shoulder_roll_joint", "motor_slot": 23 },
+        "shoulder_yaw_r": { "joint": "right_shoulder_yaw_joint", "motor_slot": 24 },
+        "elbow_r": { "joint": "right_elbow_joint", "motor_slot": 25 },
+        "wrist_r": { "joint": "right_wrist_roll_joint", "motor_slot": 26 },
+        "head_pitch": { "joint": "head_pitch_joint", "motor_slot": 29 },
+        "head_yaw": { "joint": "head_yaw_joint", "motor_slot": 30 }
+      },
+      "mapped_roles": 26,
+      "masked_roles": ["toe_l", "toe_r"],
+      "n_obs": 131,
+      "n_action": 28
+    },
+
+    "humanoid_bball": {
+      "source": "PoBasketball/shared/humanoid_spec.json",
+      "kind": "humanoid",
+      "hardware": false,
+      "control_dt": 0.02,
+      "note": "Lumbar (3 joints) has no canonical role and the wrist is split into flex/dev. Lumbar is PD-held at nominal, wrist_dev is passive, wrist_flex maps to the single wrist role. Toes exist here and are driven, unlike the R1.",
+      "role_map": {
+        "hip_pitch_l": { "joint": "hip_flex_l" },
+        "hip_roll_l": { "joint": "hip_abd_l" },
+        "hip_yaw_l": { "joint": "hip_rot_l" },
+        "knee_l": { "joint": "knee_l" },
+        "ankle_pitch_l": { "joint": "ankle_pitch_l" },
+        "ankle_roll_l": { "joint": "ankle_roll_l" },
+        "toe_l": { "joint": "toe_l" },
+        "hip_pitch_r": { "joint": "hip_flex_r" },
+        "hip_roll_r": { "joint": "hip_abd_r" },
+        "hip_yaw_r": { "joint": "hip_rot_r" },
+        "knee_r": { "joint": "knee_r" },
+        "ankle_pitch_r": { "joint": "ankle_pitch_r" },
+        "ankle_roll_r": { "joint": "ankle_roll_r" },
+        "toe_r": { "joint": "toe_r" },
+        "waist_roll": { "joint": "lumbar_lat" },
+        "waist_yaw": { "joint": "lumbar_twist" },
+        "shoulder_pitch_l": { "joint": "shoulder_pitch_l" },
+        "shoulder_roll_l": { "joint": "shoulder_abd_l" },
+        "shoulder_yaw_l": { "joint": "shoulder_rot_l" },
+        "elbow_l": { "joint": "elbow_l" },
+        "wrist_l": { "joint": "wrist_flex_l" },
+        "shoulder_pitch_r": { "joint": "shoulder_pitch_r" },
+        "shoulder_roll_r": { "joint": "shoulder_abd_r" },
+        "shoulder_yaw_r": { "joint": "shoulder_rot_r" },
+        "elbow_r": { "joint": "elbow_r" },
+        "wrist_r": { "joint": "wrist_flex_r" },
+        "head_pitch": null,
+        "head_yaw": null
+      },
+      "held_outside_brain": ["lumbar_flex", "wrist_dev_l", "wrist_dev_r"],
+      "mapped_roles": 26,
+      "masked_roles": ["head_pitch", "head_yaw"],
+      "n_obs": 131,
+      "n_action": 28
+    },
+
+    "go2": {
+      "source": "PoRaceUnreal/training/assets/go2/scene_porace.xml",
+      "kind": "quadruped",
+      "hardware": false,
+      "control_dt": 0.02,
+      "note": "All 12 joints map, positionally: front legs fill the hip roles, rear legs fill the knee/ankle roles. A quadruped has no humanoid anatomy, so this is a positional fill of the leg block, never an anatomical claim. The mask and morphology one-hot tell a shared brain what it is driving.",
+      "role_map": {
+        "hip_pitch_l": { "joint": "FL_hip_joint" },
+        "hip_roll_l": { "joint": "FL_thigh_joint" },
+        "hip_yaw_l": { "joint": "FL_calf_joint" },
+        "hip_pitch_r": { "joint": "FR_hip_joint" },
+        "hip_roll_r": { "joint": "FR_thigh_joint" },
+        "hip_yaw_r": { "joint": "FR_calf_joint" },
+        "knee_l": { "joint": "RL_hip_joint" },
+        "ankle_pitch_l": { "joint": "RL_thigh_joint" },
+        "ankle_roll_l": { "joint": "RL_calf_joint" },
+        "knee_r": { "joint": "RR_hip_joint" },
+        "ankle_pitch_r": { "joint": "RR_thigh_joint" },
+        "ankle_roll_r": { "joint": "RR_calf_joint" }
+      },
+      "held_outside_brain": [],
+      "mapped_roles": 12,
+      "masked_roles": [
+        "toe_l", "toe_r", "waist_roll", "waist_yaw",
+        "shoulder_pitch_l", "shoulder_roll_l", "shoulder_yaw_l", "elbow_l", "wrist_l",
+        "shoulder_pitch_r", "shoulder_roll_r", "shoulder_yaw_r", "elbow_r", "wrist_r",
+        "head_pitch", "head_yaw"
+      ],
+      "n_obs": 131,
+      "n_action": 28
+    }
+  },
+
+  "why_n_action_is_28_everywhere": "The action vector is role-ordered and always 28 wide. Masked roles are ignored by the runtime; the joint is PD-held at nominal. A few wasted floats buy a bit-identical interface_sha256 across every creature, which is what lets one ONNX be loaded unchanged by every engine and by the physical robot."
+}

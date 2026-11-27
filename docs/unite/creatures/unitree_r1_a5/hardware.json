@@ -1,0 +1,400 @@
+{
+  "_comment": "Physical bus contract for the Unitree R1 A5. Generated from PoRobotTrain/RobotControl/configs/r1_joint_map.yaml, which stays the source of truth.",
+  "robot": "unitree_r1_a5",
+  "kind": "hardware",
+  "owner_app": "PoRobotTrain",
+  "num_joints": 26,
+  "bus": {
+    "msg_type": "unitree_hg",
+    "lowcmd_topic": "rt/lowcmd",
+    "lowstate_topic": "rt/lowstate",
+    "num_slots": 31,
+    "unused_slots": [
+      14,
+      20,
+      21,
+      27,
+      28
+    ],
+    "imu_body": "pelvis"
+  },
+  "deploy_gate": {
+    "required": true,
+    "app": "PoRobotTrain",
+    "sidecar": "RobotControl/models/<skill>/deploy.json",
+    "checks": [
+      "policy_sha256 matches the ONNX",
+      "validation.passed is true",
+      "joint_map_sha256 matches this creature's role map"
+    ]
+  },
+  "policy_rate_hz": 50.0,
+  "motor_slot": {
+    "left_hip_pitch_joint": 0,
+    "left_hip_roll_joint": 1,
+    "left_hip_yaw_joint": 2,
+    "left_knee_joint": 3,
+    "left_ankle_pitch_joint": 4,
+    "left_ankle_roll_joint": 5,
+    "right_hip_pitch_joint": 6,
+    "right_hip_roll_joint": 7,
+    "right_hip_yaw_joint": 8,
+    "right_knee_joint": 9,
+    "right_ankle_pitch_joint": 10,
+    "right_ankle_roll_joint": 11,
+    "waist_roll_joint": 12,
+    "waist_yaw_joint": 13,
+    "left_shoulder_pitch_joint": 15,
+    "left_shoulder_roll_joint": 16,
+    "left_shoulder_yaw_joint": 17,
+    "left_elbow_joint": 18,
+    "left_wrist_roll_joint": 19,
+    "right_shoulder_pitch_joint": 22,
+    "right_shoulder_roll_joint": 23,
+    "right_shoulder_yaw_joint": 24,
+    "right_elbow_joint": 25,
+    "right_wrist_roll_joint": 26,
+    "head_pitch_joint": 29,
+    "head_yaw_joint": 30
+  },
+  "joints": {
+    "left_hip_pitch_joint": {
+      "default": -0.1,
+      "kp": 100.0,
+      "kd": 2.0,
+      "effort": 60.0,
+      "action_scale": 0.15,
+      "limits": [
+        -2.93215,
+        2.54818
+      ],
+      "motor_slot": 0,
+      "policy_index": 0
+    },
+    "left_hip_roll_joint": {
+      "default": 0.0,
+      "kp": 100.0,
+      "kd": 2.0,
+      "effort": 60.0,
+      "action_scale": 0.15,
+      "limits": [
+        -1.0472,
+        1.74533
+      ],
+      "motor_slot": 1,
+      "policy_index": 1
+    },
+    "left_hip_yaw_joint": {
+      "default": 0.0,
+      "kp": 100.0,
+      "kd": 2.0,
+      "effort": 60.0,
+      "action_scale": 0.15,
+      "limits": [
+        -2.7402,
+        2.7402
+      ],
+      "motor_slot": 2,
+      "policy_index": 2
+    },
+    "left_knee_joint": {
+      "default": 0.3,
+      "kp": 100.0,
+      "kd": 2.0,
+      "effort": 60.0,
+      "action_scale": 0.15,
+      "limits": [
+        -0.174533,
+        2.42601
+      ],
+      "motor_slot": 3,
+      "policy_index": 3
+    },
+    "left_ankle_pitch_joint": {
+      "default": -0.2,
+      "kp": 40.0,
+      "kd": 2.0,
+      "effort": 50.0,
+      "action_scale": 0.3125,
+      "limits": [
+        -0.87266,
+        0.57596
+      ],
+      "motor_slot": 4,
+      "policy_index": 4
+    },
+    "left_ankle_roll_joint": {
+      "default": 0.0,
+      "kp": 40.0,
+      "kd": 2.0,
+      "effort": 50.0,
+      "action_scale": 0.3125,
+      "limits": [
+        -0.2618,
+        0.2618
+      ],
+      "motor_slot": 5,
+      "policy_index": 5
+    },
+    "right_hip_pitch_joint": {
+      "default": -0.1,
+      "kp": 100.0,
+      "kd": 2.0,
+      "effort": 60.0,
+      "action_scale": 0.15,
+      "limits": [
+        -2.93215,
+        2.54818
+      ],
+      "motor_slot": 6,
+      "policy_index": 6
+    },
+    "right_hip_roll_joint": {
+      "default": 0.0,
+      "kp": 100.0,
+      "kd": 2.0,
+      "effort": 60.0,
+      "action_scale": 0.15,
+      "limits": [
+        -1.74533,
+        1.0472
+      ],
+      "motor_slot": 7,
+      "policy_index": 7
+    },
+    "right_hip_yaw_joint": {
+      "default": 0.0,
+      "kp": 100.0,
+      "kd": 2.0,
+      "effort": 60.0,
+      "action_scale": 0.15,
+      "limits": [
+        -2.7402,
+        2.7402
+      ],
+      "motor_slot": 8,
+      "policy_index": 8
+    },
+    "right_knee_joint": {
+      "default": 0.3,
+      "kp": 100.0,
+      "kd": 2.0,
+      "effort": 60.0,
+      "action_scale": 0.15,
+      "limits": [
+        -0.17453,
+        2.42601
+      ],
+      "motor_slot": 9,
+      "policy_index": 9
+    },
+    "right_ankle_pitch_joint": {
+      "default": -0.2,
+      "kp": 40.0,
+      "kd": 2.0,
+      "effort": 50.0,
+      "action_scale": 0.3125,
+      "limits": [
+        -0.87266,
+        0.57596
+      ],
+      "motor_slot": 10,
+      "policy_index": 10
+    },
+    "right_ankle_roll_joint": {
+      "default": 0.0,
+      "kp": 40.0,
+      "kd": 2.0,
+      "effort": 50.0,
+      "action_scale": 0.3125,
+      "limits": [
+        -0.261799,
+        0.261799
+      ],
+      "motor_slot": 11,
+      "policy_index": 11
+    },
+    "waist_roll_joint": {
+      "default": 0.0,
+      "kp": 100.0,
+      "kd": 2.0,
+      "effort": 60.0,
+      "action_scale": 0.15,
+      "limits": [
+        -0.5236,
+        0.5236
+      ],
+      "motor_slot": 12,
+      "policy_index": 12
+    },
+    "waist_yaw_joint": {
+      "default": 0.0,
+      "kp": 100.0,
+      "kd": 2.0,
+      "effort": 60.0,
+      "action_scale": 0.15,
+      "limits": [
+        -2.618,
+        2.618
+      ],
+      "motor_slot": 13,
+      "policy_index": 13
+    },
+    "left_shoulder_pitch_joint": {
+      "default": 0.35,
+      "kp": 40.0,
+      "kd": 2.0,
+      "effort": 60.0,
+      "action_scale": 0.375,
+      "limits": [
+        -3.1416,
+        2.0944
+      ],
+      "motor_slot": 15,
+      "policy_index": 14
+    },
+    "left_shoulder_roll_joint": {
+      "default": 0.18,
+      "kp": 40.0,
+      "kd": 2.0,
+      "effort": 60.0,
+      "action_scale": 0.375,
+      "limits": [
+        -0.22689,
+        2.4784
+      ],
+      "motor_slot": 16,
+      "policy_index": 15
+    },
+    "left_shoulder_yaw_joint": {
+      "default": 0.0,
+      "kp": 20.0,
+      "kd": 1.0,
+      "effort": 33.0,
+      "action_scale": 0.4125,
+      "limits": [
+        -1.9199,
+        1.9199
+      ],
+      "motor_slot": 17,
+      "policy_index": 16
+    },
+    "left_elbow_joint": {
+      "default": 0.87,
+      "kp": 20.0,
+      "kd": 1.0,
+      "effort": 33.0,
+      "action_scale": 0.4125,
+      "limits": [
+        -0.97564,
+        2.1852
+      ],
+      "motor_slot": 18,
+      "policy_index": 17
+    },
+    "left_wrist_roll_joint": {
+      "default": 0.0,
+      "kp": 20.0,
+      "kd": 1.0,
+      "effort": 33.0,
+      "action_scale": 0.4125,
+      "limits": [
+        -1.9199,
+        1.9199
+      ],
+      "motor_slot": 19,
+      "policy_index": 18
+    },
+    "right_shoulder_pitch_joint": {
+      "default": 0.35,
+      "kp": 40.0,
+      "kd": 2.0,
+      "effort": 60.0,
+      "action_scale": 0.375,
+      "limits": [
+        -3.1416,
+        2.0944
+      ],
+      "motor_slot": 22,
+      "policy_index": 19
+    },
+    "right_shoulder_roll_joint": {
+      "default": -0.18,
+      "kp": 40.0,
+      "kd": 2.0,
+      "effort": 60.0,
+      "action_scale": 0.375,
+      "limits": [
+        -2.47849,
+        0.2268
+      ],
+      "motor_slot": 23,
+      "policy_index": 20
+    },
+    "right_shoulder_yaw_joint": {
+      "default": 0.0,
+      "kp": 20.0,
+      "kd": 1.0,
+      "effort": 33.0,
+      "action_scale": 0.4125,
+      "limits": [
+        -1.9199,
+        1.9199
+      ],
+      "motor_slot": 24,
+      "policy_index": 21
+    },
+    "right_elbow_joint": {
+      "default": 0.87,
+      "kp": 20.0,
+      "kd": 1.0,
+      "effort": 33.0,
+      "action_scale": 0.4125,
+      "limits": [
+        -0.97564,
+        2.1852
+      ],
+      "motor_slot": 25,
+      "policy_index": 22
+    },
+    "right_wrist_roll_joint": {
+      "default": 0.0,
+      "kp": 20.0,
+      "kd": 1.0,
+      "effort": 33.0,
+      "action_scale": 0.4125,
+      "limits": [
+        -1.9199,
+        1.9199
+      ],
+      "motor_slot": 26,
+      "policy_index": 23
+    },
+    "head_pitch_joint": {
+      "default": 0.0,
+      "kp": 50.0,
+      "kd": 2.0,
+      "effort": 33.0,
+      "action_scale": 0.3,
+      "limits": [
+        -0.62832,
+        0.62832
+      ],
+      "motor_slot": 29,
+      "policy_index": 24
+    },
+    "head_yaw_joint": {
+      "default": 0.0,
+      "kp": 10.0,
+      "kd": 0.1,
+      "effort": 0.86,
+      "action_scale": 0.25,
+      "limits": [
+        -2.0071,
+        2.0071
+      ],
+      "motor_slot": 30,
+      "policy_index": 25
+    }
+  }
+}

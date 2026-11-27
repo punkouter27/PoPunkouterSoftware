@@ -1,0 +1,17 @@
+{
+  "policy_name": "policy",
+  "creature": "go2",
+  "n_obs": 131,
+  "n_action": 28,
+  "opset": 17,
+  "input": "obs[1, 131]",
+  "output": "actions[1, 28]",
+  "interface_sha256": "94377ebae772ff6ce29d36bfbd90a71c86ffaba5cbc88a2639ac0bf3332650e9",
+  "interface_sha256_16": "94377ebae772ff6c",
+  "morphology_sha256": "a0a6c46d0be178ede7946d0469ef83f6e63b72eae8c19d0caa9e438de488e431",
+  "physics_sha256": "a41b6a8035fc8e0b6bbac170367fc8b1f4356aeb7e6f230bd0064f90470c6d2b",
+  "policy_sha256": "6ed0348dfdedcf7044b1bfa164d1dac262efb661949958f6bbaee649205d8b93",
+  "mujoco": "4.0.0",
+  "contract_path": "global/UNITE/creatures/go2/contract.json",
+  "status": "conforming"
+}

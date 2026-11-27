@@ -1,0 +1,17 @@
+{
+  "policy_name": "policy",
+  "creature": "unitree_r1_a5",
+  "n_obs": 131,
+  "n_action": 28,
+  "opset": 17,
+  "input": "obs[1, 131]",
+  "output": "actions[1, 28]",
+  "interface_sha256": "94377ebae772ff6ce29d36bfbd90a71c86ffaba5cbc88a2639ac0bf3332650e9",
+  "interface_sha256_16": "94377ebae772ff6c",
+  "morphology_sha256": "011b3ffb8e776ff96716dac2080c6a1b7201e90cccff411d3ade03810d23992c",
+  "physics_sha256": "7072afd507e5c21da2ac81a72a2bf7fba5bd8f3b9130ae23f14c0c9b58df9c4a",
+  "policy_sha256": "69bc0b4f1dcd8f1f4ab6dd815a6d8c303b41b72d74be942968c2c718b4d42dfa",
+  "mujoco": "4.0.0",
+  "contract_path": "global/UNITE/creatures/unitree_r1_a5/contract.json",
+  "status": "conforming"
+}
