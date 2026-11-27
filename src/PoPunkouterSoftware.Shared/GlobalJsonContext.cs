@@ -33,5 +33,7 @@ namespace PoPunkouterSoftware.Shared;
 [JsonSerializable(typeof(GlobalVaultDto))]
 [JsonSerializable(typeof(GlobalReadinessDto))]
 [JsonSerializable(typeof(GlobalBriefingDto))]
+[JsonSerializable(typeof(GlobalLessonSourceDto))]
+[JsonSerializable(typeof(GlobalBriefingBrainDto))]
 [JsonSerializable(typeof(GlobalRlDto))]
 public sealed partial class GlobalJsonContext : JsonSerializerContext;

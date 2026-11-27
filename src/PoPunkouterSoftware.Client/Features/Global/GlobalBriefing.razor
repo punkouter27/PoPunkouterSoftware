@@ -1,19 +1,22 @@
 @page "/global/briefing"
 @attribute [Authorize]
 @rendermode WasmRenderModes.Interactive
+@using System.Globalization
 @using PoPunkouterSoftware.Shared
 @inject PortfolioApiClient Api
 
 <PageTitle>Morning briefing · PoPunkouterSoftware</PageTitle>
 
-@* What changed since the previous crawl: commits, new or changed brains, CI flips, disk
-   movement and working-tree churn — computed from the last two entries of
-   history/station_timeline.jsonl, not from a generated page. *@
+@* GLOBAL's Morning Briefing ("What changed?"): commits, new or changed brains, RL totals,
+   CI flips, disk and working-tree movement since the previous crawl, plus the overnight
+   queue reports. The deltas come from the last two entries of
+   history/station_timeline.jsonl (/api/global/briefing); RL totals from the RL timeline;
+   queue runs from queue.json. *@
 <main id="main-content" class="app-page global-page" tabindex="-1">
     <GlobalTabs />
     <header class="global-head">
         <div>
-            <h1>Morning briefing</h1>
+            <h1>What changed?</h1>
             <p class="app-note">
                 @if (_briefing is null)
                 {
@@ -21,17 +24,18 @@
                 }
                 else if (_briefing.IsBaseline)
                 {
-                    <span>First snapshot — the next crawl will show the deltas.</span>
+                    <span>Changes in the last 24 hours (first snapshot: the next crawl will show deltas).</span>
                 }
                 else
                 {
-                    <span>Changes since @(_briefing.Since?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "the previous crawl").</span>
+                    <span>Changes since the last refresh (@Stamp(_briefing.Since)).</span>
                 }
+                Rebuilt on every crawl, including the 07:00 scheduled one.
             </p>
         </div>
         @if (_briefing?.Generated is { } generated)
         {
-            <span class="global-stamp">Crawled @generated.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+            <span class="global-stamp">Crawled @Stamp(generated)</span>
         }
     </header>
 
@@ -50,105 +54,281 @@
     else
     {
         <section class="global-kpis" aria-label="What changed">
-            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_briefing.Commits)</div><div class="l">commits</div></div>
-            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_briefing.NewBrains)</div><div class="l">new or changed brains</div></div>
-            <div class="global-kpi"><div class="v">@_briefing.CiFailing.Count</div><div class="l">CI failing now</div></div>
-            <div class="global-kpi"><div class="v">@GlobalFormat.Bytes(_briefing.MovedBytes)</div><div class="l">disk moved (repos over 200 MB)</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_briefing.Commits)</div><div class="l">new commits</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_briefing.NewBrains)</div><div class="l">new or changed .onnx brains</div></div>
+            <div class="global-kpi">
+                <div class="v">@_briefing.CiFailing.Count</div>
+                <div class="l">CI failing now@(_briefing.CiFailing.Count > 0 ? ": " + string.Join(", ", _briefing.CiFailing) : "")</div>
+            </div>
+            <div class="global-kpi"><div class="v">@PastRuns.Count</div><div class="l">overnight queue reports</div></div>
         </section>
 
-        @if (_briefing.CiFailing.Count > 0)
-        {
-            <p>
-                <strong>CI failing now:</strong>
-                @string.Join(", ", _briefing.CiFailing)
-            </p>
-        }
+        <div class="brief-grid">
+            <div>
+                <h2>New brains</h2>
+                @if (BrainRepos.Count == 0)
+                {
+                    <p class="global-note">No new brains in this period.</p>
+                }
+                else
+                {
+                    <div class="global-table-wrap">
+                        <table class="global-table">
+                            <caption class="app-sr-only">New or changed brains per repository</caption>
+                            <thead><tr><th scope="col">Repo</th><th scope="col" class="is-number">Count</th><th scope="col">Files</th></tr></thead>
+                            <tbody>
+                                @foreach (var repo in BrainRepos)
+                                {
+                                    <tr>
+                                        <th scope="row">@repo.Repo</th>
+                                        <td class="is-number">@repo.NewBrains</td>
+                                        <td>
+                                            @foreach (var brain in repo.BrainFiles.Take(10))
+                                            {
+                                                var url = FileUrl(repo.GitHubSlug, brain.Rel);
+                                                if (url is null)
+                                                {
+                                                    <span class="brief-file">@brain.Name</span>
+                                                }
+                                                else
+                                                {
+                                                    <a class="brief-file" href="@url" target="_blank" rel="noopener noreferrer" title="@brain.Rel">@brain.Name</a>
+                                                }
+                                            }
+                                            @if (repo.BrainFiles.Count > 10)
+                                            {
+                                                <span class="global-note">…and @(repo.BrainFiles.Count - 10) more</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
 
-        @if (_briefing.Repos.Count == 0)
-        {
-            <p class="app-empty-state">Nothing changed since the previous crawl.</p>
-        }
-        else
-        {
-            <div class="global-table-wrap">
-                <table class="global-table">
-                    <caption class="app-sr-only">Repositories that changed since the previous crawl</caption>
-                    <thead>
-                        <tr>
-                            <th scope="col">Repo</th>
-                            <th scope="col" class="is-number">Commits</th>
-                            <th scope="col" class="is-number">New brains</th>
-                            <th scope="col" class="is-number">Disk</th>
-                            <th scope="col">CI</th>
-                            <th scope="col">Working tree</th>
-                            <th scope="col">Latest commits</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var repo in _briefing.Repos)
-                        {
-                            <tr>
-                                <th scope="row">@repo.Repo</th>
-                                <td class="is-number">@repo.Commits</td>
-                                <td class="is-number">@repo.NewBrains</td>
-                                <td class="is-number">
-                                    @if (repo.DiskDelta == 0)
+                <h2>RL training totals</h2>
+                <div class="global-item">
+                    @if (_rlPrev is not null && _rlNow is not null)
+                    {
+                        <p class="global-note">RL snapshots @_rlPrev.Timestamp → @_rlNow.Timestamp</p>
+                        <ul class="brief-list">
+                            <li>Shipped brains: <strong>@GlobalFormat.Number(_rlNow.TotalShippedOnnx)</strong> (@Signed(_rlNow.TotalShippedOnnx - _rlPrev.TotalShippedOnnx))</li>
+                            <li>Estimated training hours: <strong>@GlobalFormat.Number(_rlNow.EstTotalHours)</strong> (@Signed(_rlNow.EstTotalHours - _rlPrev.EstTotalHours))</li>
+                            <li>Peak env-steps/s: <strong>@GlobalFormat.Number(_rlNow.PeakSps)</strong> (@Signed(_rlNow.PeakSps - _rlPrev.PeakSps))</li>
+                            @foreach (var (repo, delta) in RlRepoDeltas)
+                            {
+                                <li>@repo: @Signed(delta) brains</li>
+                            }
+                        </ul>
+                    }
+                    else if (_rlNow is not null)
+                    {
+                        <p class="global-note">One RL snapshot so far (@_rlNow.Timestamp). Deltas appear after the next refresh.</p>
+                    }
+                    else
+                    {
+                        <p class="global-note">No RL history yet.</p>
+                    }
+                </div>
+
+                <h2>Other changes</h2>
+                <div class="global-item">
+                    @if (OtherChanges.Count == 0)
+                    {
+                        <p class="global-note">
+                            @(_briefing.IsBaseline ? "Deltas start with the next refresh." : "No disk, CI or working-tree changes since the last refresh.")
+                        </p>
+                    }
+                    else
+                    {
+                        <ul class="brief-list">
+                            @foreach (var item in OtherChanges)
+                            {
+                                <li>
+                                    <strong>@item.Repo</strong>
+                                    @if (item.Kind == "ci")
                                     {
-                                        <span>—</span>
+                                        var after = _briefing.Repos.FirstOrDefault(r => r.Repo == item.Repo)?.CiAfter;
+                                        <span>CI @(_briefing.Repos.FirstOrDefault(r => r.Repo == item.Repo)?.CiBefore ?? "–") →</span>
+                                        <span class="global-tone is-@GlobalFormat.CiTone(after)">@after</span>
                                     }
                                     else
                                     {
-                                        <span>@(repo.DiskDelta > 0 ? "+" : "−")@GlobalFormat.Bytes(Math.Abs(repo.DiskDelta))</span>
+                                        <span>@item.Text</span>
                                     }
-                                </td>
-                                <td class="is-nowrap">
-                                    @if (!string.IsNullOrEmpty(repo.CiAfter) && !string.Equals(repo.CiBefore, repo.CiAfter, StringComparison.OrdinalIgnoreCase))
-                                    {
-                                        <span class="global-tone is-@GlobalFormat.CiTone(repo.CiBefore)">@(repo.CiBefore ?? "—")</span>
-                                        <span>→</span>
-                                        <span class="global-tone is-@GlobalFormat.CiTone(repo.CiAfter)">@repo.CiAfter</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="global-tone is-muted">no change</span>
-                                    }
-                                </td>
-                                <td class="is-nowrap">
-                                    @if (repo.DirtyBefore != repo.DirtyAfter)
-                                    {
-                                        <span>@repo.DirtyBefore → @repo.DirtyAfter uncommitted</span>
-                                    }
-                                    else
-                                    {
-                                        <span>@repo.DirtyAfter uncommitted</span>
-                                    }
-                                </td>
-                                <td>
-                                    @foreach (var message in repo.LatestCommitMessages)
-                                    {
-                                        <div class="global-count">@message</div>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
             </div>
+
+            <div>
+                <h2>Commits</h2>
+                @if (CommitRepos.Count == 0)
+                {
+                    <p class="global-note">No commits in this period.</p>
+                }
+                @foreach (var repo in CommitRepos)
+                {
+                    var total = Math.Max(repo.Commits, repo.CommitList.Count);
+                    var shown = repo.CommitList.Take(12).ToList();
+                    <section class="global-item brief-commits" aria-label="@($"Commits in {repo.Repo}")">
+                        <div class="text"><strong>@repo.Repo</strong> <span class="global-tone is-info">@total commit@(total == 1 ? "" : "s")</span></div>
+                        <ul class="brief-list">
+                            @foreach (var commit in shown)
+                            {
+                                <li>
+                                    @if (CommitUrl(repo.GitHubSlug, commit.Hash) is { } url)
+                                    {
+                                        <a class="global-mono" href="@url" target="_blank" rel="noopener noreferrer">@commit.Hash</a>
+                                    }
+                                    else
+                                    {
+                                        <code>@commit.Hash</code>
+                                    }
+                                    @Shorten(commit.Msg, 140)
+                                    <span class="global-note">@GlobalFormat.Ago(commit.Iso)</span>
+                                </li>
+                            }
+                            @if (total > shown.Count)
+                            {
+                                <li class="global-note">…and @(total - shown.Count) more</li>
+                            }
+                        </ul>
+                    </section>
+                }
+            </div>
+        </div>
+
+        <h2>Overnight queue runs</h2>
+        @if (PastRuns.Count == 0)
+        {
+            <p class="global-note">No queue has run yet. Plan one on the <a href="/global/queue">GPU Queue</a> page.</p>
+        }
+        @foreach (var run in PastRuns.Take(5))
+        {
+            <section class="global-item" aria-label="@($"Queue run {run.Stamp}")">
+                <div class="text">
+                    <strong>Queue @run.Stamp</strong>
+                    @if (!string.IsNullOrEmpty(run.Queue))
+                    {
+                        <span class="global-note">· @run.Queue</span>
+                    }
+                    @if (InPeriod(run))
+                    {
+                        <span class="global-tone is-info">this period</span>
+                    }
+                    @if (!run.HasSummary)
+                    {
+                        <span class="global-tone is-warn">no summary: still running, or stopped early</span>
+                    }
+                </div>
+                @if (run.Jobs.Count > 0)
+                {
+                    <div class="global-table-wrap">
+                        <table class="global-table">
+                            <caption class="app-sr-only">Jobs in queue run @run.Stamp</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col">Job</th>
+                                    <th scope="col">Repo</th>
+                                    <th scope="col">Outcome</th>
+                                    <th scope="col" class="is-number">Ran</th>
+                                    <th scope="col" class="is-number">New brains</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var job in run.Jobs)
+                                {
+                                    <tr>
+                                        <th scope="row">@job.Id</th>
+                                        <td>@job.Repo</td>
+                                        <td>@job.Outcome</td>
+                                        <td class="is-number">@job.Minutes min</td>
+                                        <td class="is-number">@job.NewOnnx.Count</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                @if (!run.HasSummary && run.Log.Count > 0)
+                {
+                    <pre class="global-code brief-log"><code>@string.Join("\n", run.Log)</code></pre>
+                }
+            </section>
         }
     }
 </main>
 
 @code {
     private GlobalBriefingDto? _briefing;
+    private GlobalRlTimelineEntryDto? _rlNow;
+    private GlobalRlTimelineEntryDto? _rlPrev;
+    private List<GlobalQueueRunDto> _runs = [];
     private bool _loading = true;
     private string? _error;
+
+    private List<GlobalQueueRunDto> PastRuns => _runs;
+
+    private List<GlobalBriefingRepoDto> BrainRepos =>
+        _briefing?.Repos.Where(r => r.NewBrains > 0).OrderByDescending(r => r.NewBrains).ToList() ?? [];
+
+    private List<GlobalBriefingRepoDto> CommitRepos =>
+        _briefing?.Repos.Where(r => r.Commits > 0 || r.CommitList.Count > 0)
+            .OrderByDescending(r => Math.Max(r.Commits, r.CommitList.Count)).ToList() ?? [];
+
+    private List<GlobalBriefingItemDto> OtherChanges =>
+        _briefing?.Items.Where(i => i.Kind is "disk" or "ci" or "dirty").ToList() ?? [];
+
+    private IEnumerable<(string Repo, int Delta)> RlRepoDeltas =>
+        _rlNow is null || _rlPrev is null
+            ? []
+            : _rlNow.PerRepoOnnx
+                .Select(kv => (kv.Key, kv.Value - _rlPrev.PerRepoOnnx.GetValueOrDefault(kv.Key)))
+                .Where(x => x.Item2 != 0)
+                .OrderBy(x => x.Key, StringComparer.OrdinalIgnoreCase);
+
+    private static string Signed(int value) => value.ToString("+0;-0;0", CultureInfo.InvariantCulture);
+
+    private static string Stamp(DateTimeOffset? when) =>
+        when is { } value ? value.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) : "never";
+
+    private static string Shorten(string? text, int max) =>
+        string.IsNullOrEmpty(text) ? "" : text.Length <= max ? text : string.Concat(text.AsSpan(0, max), "…");
+
+    private static string? FileUrl(string? slug, string rel)
+    {
+        if (string.IsNullOrEmpty(slug))
+            return null;
+        var slash = rel.IndexOf('/');
+        return slash < 0 ? null : $"https://github.com/{slug}/blob/HEAD/{rel[(slash + 1)..]}";
+    }
+
+    private static string? CommitUrl(string? slug, string? hash) =>
+        string.IsNullOrEmpty(slug) || string.IsNullOrEmpty(hash) ? null : $"https://github.com/{slug}/commit/{hash}";
+
+    /// <summary>A queue run started in (or up to 12 hours before) the briefing period.</summary>
+    private bool InPeriod(GlobalQueueRunDto run) =>
+        _briefing?.Since is { } since
+        && DateTime.TryParseExact(run.Stamp, "yyyyMMdd_HHmmss", CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var started)
+        && new DateTimeOffset(started) >= since.AddHours(-12);
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            _briefing = await Api.GetGlobalBriefingAsync(cts.Token);
+            var briefing = Api.GetGlobalBriefingAsync(cts.Token);
+            var rl = Api.GetGlobalRlAsync(cts.Token);
+            var queue = Api.GetGlobalQueueAsync(cts.Token);
+            _briefing = await briefing;
+            var history = (await rl)?.History ?? [];
+            _rlNow = history.Count > 0 ? history[^1] : null;
+            _rlPrev = history.Count > 1 ? history[^2] : null;
+            _runs = (await queue)?.PastRuns ?? [];
         }
         catch (Exception ex)
         {

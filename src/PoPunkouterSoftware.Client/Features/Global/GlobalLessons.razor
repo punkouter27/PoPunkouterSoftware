@@ -1,27 +1,31 @@
 @page "/global/lessons"
 @attribute [Authorize]
 @rendermode WasmRenderModes.Interactive
+@using System.Text.RegularExpressions
 @using PoPunkouterSoftware.Shared
 @inject PortfolioApiClient Api
+@inject NavigationManager Nav
 
 <PageTitle>Lessons &amp; gotchas · PoPunkouterSoftware</PageTitle>
 
-@* Harvested from every repo's AGENTS.md, CLAUDE.md, README and docs: each bullet under a
-   heading about traps, landmines, known issues or "things that bite" (traps), plus house
-   rules and contracts (rules). A bullet found in several repos is stored once. *@
+@* GLOBAL's Lessons & Gotchas: every bullet under a heading about traps, landmines, known
+   issues or "things that bite" in any repo's AGENTS.md, CLAUDE.md, README or docs (traps),
+   plus house rules and contracts (rules). A bullet found in several repos is stored once,
+   with every place it was found. #repo=PoBox&q=onnx in the URL pre-fills the filters. *@
 <main id="main-content" class="app-page global-page" tabindex="-1">
     <GlobalTabs />
     <header class="global-head">
         <div>
             <h1>Lessons &amp; gotchas</h1>
             <p class="app-note">
-                Traps and rules harvested from every repo's docs. Add your own in
+                Harvested from every repo's AGENTS.md, CLAUDE.md, README and docs: bullets under headings about traps, landmines and
+                known issues (<strong>traps</strong>), plus house rules and contracts (<strong>rules</strong>). Add your own in
                 <code>App_Data/global/config/lessons_manual.json</code>.
             </p>
         </div>
         @if (_file is not null)
         {
-            <span class="global-stamp">@GlobalFormat.Number(_file.Count) lessons</span>
+            <span class="global-stamp">@GlobalFormat.Number(_file.Lessons.Count) lessons</span>
         }
     </header>
 
@@ -44,30 +48,42 @@
             <div class="global-kpi"><div class="v">@GlobalFormat.Number(_file.Lessons.Count(l => l.Kind == "trap"))</div><div class="l">traps</div></div>
             <div class="global-kpi"><div class="v">@GlobalFormat.Number(_file.Lessons.Count(l => l.Kind == "rule"))</div><div class="l">rules</div></div>
             <div class="global-kpi"><div class="v">@GlobalFormat.Number(_file.Lessons.Count(l => l.Repos.Count > 1))</div><div class="l">shared by 2+ repos</div></div>
+            <div class="global-kpi"><div class="v">@_repos.Count</div><div class="l">repos</div></div>
         </section>
 
         <div class="global-toolbar">
             <input class="global-search" type="search"
                    placeholder="Search e.g. onnx export, --force, CRLF, normalizer…"
                    value="@_search" @oninput="OnSearch" aria-label="Search lessons" />
-            <button type="button" class="global-chip @(_traps ? "is-on" : null)" @onclick="() => _traps = !_traps">Traps</button>
-            <button type="button" class="global-chip @(_rules ? "is-on" : null)" @onclick="() => _rules = !_rules">Rules</button>
-            <button type="button" class="global-chip @(_sharedOnly ? "is-on" : null)" @onclick="() => _sharedOnly = !_sharedOnly">Shared by 2+</button>
+            <button type="button" class="global-chip @(_traps ? "is-on" : null)" aria-pressed="@(_traps ? "true" : "false")" @onclick="() => _traps = !_traps">Traps</button>
+            <button type="button" class="global-chip @(_rules ? "is-on" : null)" aria-pressed="@(_rules ? "true" : "false")" @onclick="() => _rules = !_rules">Rules</button>
             <select class="global-search" value="@_repo" @onchange="OnRepo" aria-label="Filter by repo">
                 <option value="">All repos</option>
-                @foreach (var repo in _repos)
+                @foreach (var (repo, count) in _repos)
                 {
-                    <option value="@repo">@repo</option>
+                    <option value="@repo">@repo (@count)</option>
                 }
             </select>
+            <label class="global-field"><input type="checkbox" checked="@_sharedOnly" @onchange="e => _sharedOnly = e.Value is true" /> shared by 2+ repos</label>
             <span class="global-count">@Visible.Count shown</span>
+        </div>
+
+        <div class="global-toolbar lessons-tags" role="group" aria-label="Tags (all selected tags must match)">
+            <span class="global-count">Tags:</span>
+            @foreach (var (tag, count) in _tags)
+            {
+                var t = tag;
+                var on = _selectedTags.Contains(t);
+                <button type="button" class="global-chip lessons-tag @(on ? "is-on" : null)" aria-pressed="@(on ? "true" : "false")"
+                        @onclick="() => ToggleTag(t)">@tag <span class="global-count">@count</span></button>
+            }
         </div>
 
         <ul class="global-list">
             @foreach (var lesson in Visible.Take(400))
             {
                 <li class="global-item is-@lesson.Kind">
-                    <div class="text">@lesson.Text</div>
+                    <div class="text">@((MarkupString)Inline(lesson.Text))</div>
                     <div class="meta">
                         @foreach (var repo in lesson.Repos)
                         {
@@ -77,9 +93,22 @@
                         {
                             <span> · @lesson.Heading</span>
                         }
-                        @if (lesson.File is { Length: > 0 })
+                        @foreach (var source in Sources(lesson).Take(3))
                         {
-                            <span class="global-mono"> · @lesson.File@(lesson.Line > 0 ? ":" + lesson.Line : "")</span>
+                            var label = $"{InRepo(source.File!)}:{source.Line}";
+                            <span> · </span>
+                            @if (FileUrl(source) is { } url)
+                            {
+                                <a class="global-mono" href="@url" target="_blank" rel="noopener noreferrer">@label</a>
+                            }
+                            else
+                            {
+                                <span class="global-mono">@label</span>
+                            }
+                        }
+                        @if (Sources(lesson).Count > 3)
+                        {
+                            <span class="global-count"> · +@(Sources(lesson).Count - 3) more</span>
                         }
                         @if (lesson.Tags.Count > 0)
                         {
@@ -103,15 +132,18 @@
 
 @code {
     private GlobalLessonsFileDto? _file;
+    private Dictionary<string, string> _slugs = new(StringComparer.OrdinalIgnoreCase);
     private bool _loading = true;
     private string? _error;
     private string _search = "";
     private string _repo = "";
     private bool _traps = true;
-    private bool _rules = true;
+    private bool _rules;
     private bool _sharedOnly;
+    private readonly HashSet<string> _selectedTags = new(StringComparer.Ordinal);
 
-    private List<string> _repos = [];
+    private List<(string Repo, int Count)> _repos = [];
+    private List<(string Tag, int Count)> _tags = [];
 
     private List<GlobalLessonDto> Visible
     {
@@ -120,13 +152,14 @@
             if (_file is null)
                 return [];
 
-            IEnumerable<GlobalLessonDto> lessons = _file.Lessons;
-            if (_traps != _rules)
-                lessons = lessons.Where(l => l.Kind == (_traps ? "trap" : "rule"));
+            IEnumerable<GlobalLessonDto> lessons = _file.Lessons
+                .Where(l => (l.Kind == "trap" && _traps) || (l.Kind == "rule" && _rules) || (l.Kind is not ("trap" or "rule") && (_traps || _rules)));
             if (_sharedOnly)
                 lessons = lessons.Where(l => l.Repos.Count > 1);
             if (_repo.Length > 0)
                 lessons = lessons.Where(l => l.Repos.Contains(_repo));
+            if (_selectedTags.Count > 0)
+                lessons = lessons.Where(l => _selectedTags.All(t => l.Tags.Contains(t)));
 
             if (!string.IsNullOrWhiteSpace(_search))
             {
@@ -141,21 +174,101 @@
         }
     }
 
+    /// <summary>The lesson's sources, or its own file and line for manual entries and older snapshots.</summary>
+    private static List<GlobalLessonSourceDto> Sources(GlobalLessonDto lesson) =>
+        lesson.Sources.Count > 0
+            ? lesson.Sources.Where(s => !string.IsNullOrEmpty(s.File)).ToList()
+            : string.IsNullOrEmpty(lesson.File) ? [] : [new GlobalLessonSourceDto { Repo = lesson.Repo, File = lesson.File, Line = lesson.Line }];
+
+    private static string InRepo(string file)
+    {
+        var slash = file.IndexOf('/');
+        return slash < 0 ? file : file[(slash + 1)..];
+    }
+
+    private string? FileUrl(GlobalLessonSourceDto source)
+    {
+        var repo = source.Repo.Length > 0 ? source.Repo : GlobalFormat.RepoOf(source.File!);
+        if (!_slugs.TryGetValue(repo, out var slug))
+            return null;
+        var line = source.Line > 0 ? $"#L{source.Line}" : "";
+        return $"https://github.com/{slug}/blob/HEAD/{InRepo(source.File!)}{line}";
+    }
+
+    /// <summary>GLOBAL's inline markdown: `code` and **bold**; links keep only their text. Escaped first.</summary>
+    public static string Inline(string text)
+    {
+        var html = System.Net.WebUtility.HtmlEncode(text);
+        html = Regex.Replace(html, @"`([^`]+)`", "<code>$1</code>");
+        html = Regex.Replace(html, @"\*\*([^*]+)\*\*", "<strong>$1</strong>");
+        html = Regex.Replace(html, @"\[([^\]]+)\]\([^)]+\)", "$1");
+        return html;
+    }
+
+    private void ToggleTag(string tag)
+    {
+        if (!_selectedTags.Add(tag))
+            _selectedTags.Remove(tag);
+    }
+
     private void OnSearch(ChangeEventArgs e) => _search = e.Value?.ToString() ?? "";
 
     private void OnRepo(ChangeEventArgs e) => _repo = e.Value?.ToString() ?? "";
 
+    private void ReadHash()
+    {
+        var fragment = new Uri(Nav.Uri).Fragment.TrimStart('#');
+        foreach (var part in fragment.Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var eq = part.IndexOf('=');
+            if (eq <= 0)
+                continue;
+            var value = Uri.UnescapeDataString(part[(eq + 1)..].Replace('+', ' '));
+            switch (part[..eq])
+            {
+                case "repo":
+                    _repo = value;
+                    break;
+                case "q":
+                    _search = value;
+                    break;
+            }
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
+        ReadHash();
         try
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            _file = await Api.GetGlobalLessonsAsync(cts.Token);
-            _repos = _file?.Lessons
+            var lessons = Api.GetGlobalLessonsAsync(cts.Token);
+            var fleet = Api.GetGlobalFleetAsync(cts.Token);
+            _file = await lessons;
+            foreach (var repo in (await fleet)?.Repos ?? [])
+            {
+                var slug = repo.Git.Slug is { Length: > 0 } s
+                    ? s
+                    : repo.Git.Remote?.Trim().TrimEnd('/')
+                        .Replace("https://github.com/", "", StringComparison.OrdinalIgnoreCase)
+                        .Replace(".git", "", StringComparison.OrdinalIgnoreCase);
+                if (!string.IsNullOrEmpty(slug) && !slug.Contains("://", StringComparison.Ordinal))
+                    _slugs[repo.Name] = slug;
+            }
+
+            var lessonsList = _file?.Lessons ?? [];
+            _repos = lessonsList
                 .SelectMany(l => l.Repos)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .OrderBy(r => r, StringComparer.OrdinalIgnoreCase)
-                .ToList() ?? [];
+                .GroupBy(r => r, StringComparer.OrdinalIgnoreCase)
+                .Select(g => (g.Key, g.Count()))
+                .OrderBy(x => x.Key, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            _tags = lessonsList
+                .SelectMany(l => l.Tags)
+                .GroupBy(t => t, StringComparer.Ordinal)
+                .Select(g => (g.Key, g.Count()))
+                .OrderBy(x => x.Key, StringComparer.Ordinal)
+                .ToList();
         }
         catch (Exception ex)
         {

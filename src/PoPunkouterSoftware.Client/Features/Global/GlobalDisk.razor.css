@@ -1,0 +1,102 @@
+/* Categorical slots 1-7 of the dataviz reference palette, in its validated order, with a
+   neutral grey for "everything else". Light steps are sub-3:1 for four slots, so the bars
+   carry relief: tooltips per segment, a legend, and the table view. Dark steps are the
+   palette's own dark column (validated against --po-surface #171a23). */
+.disk-root {
+    --disk-1: #257de0;
+    --disk-2: #f47230;
+    --disk-3: #00b894;
+    --disk-4: #f2a600;
+    --disk-5: #ee7fac;
+    --disk-6: #008a17;
+    --disk-7: #6a4ce2;
+    --disk-0: #9aa1b2;
+}
+
+@media (prefers-color-scheme: dark) {
+    .disk-root {
+        --disk-1: #338ced;
+        --disk-2: #e76624;
+        --disk-3: #00a888;
+        --disk-4: #d28e05;
+        --disk-5: #e24d8b;
+        --disk-6: #0aac23;
+        --disk-7: #9887ef;
+        --disk-0: #5c6274;
+    }
+}
+
+.disk-kpi.is-good { box-shadow: inset 3px 0 0 var(--po-success); }
+.disk-kpi.is-warn { box-shadow: inset 3px 0 0 var(--po-warning); }
+.disk-kpi.is-bad { box-shadow: inset 3px 0 0 var(--po-danger); }
+
+.disk-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin: 0 0 var(--po-space-2);
+    padding: 0;
+    list-style: none;
+    color: var(--po-text-muted);
+    font-size: var(--po-text-xs);
+}
+
+.disk-legend li { display: inline-flex; align-items: center; gap: 6px; }
+
+.disk-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+}
+
+.disk-row {
+    display: grid;
+    grid-template-columns: 12em minmax(0, 1fr) 6em;
+    gap: 10px;
+    align-items: center;
+    margin: 4px 0;
+}
+
+@media (max-width: 520px) {
+    .disk-row { grid-template-columns: 7.5em minmax(0, 1fr) 4.5em; gap: 6px; }
+}
+
+.disk-name {
+    overflow: hidden;
+    font-size: var(--po-text-sm);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.disk-bar { height: 16px; }
+
+.disk-fill {
+    display: flex;
+    height: 100%;
+    gap: 2px;
+    overflow: hidden;
+    border-radius: 4px;
+}
+
+.disk-seg {
+    flex-basis: 0;
+    min-width: 2px;
+    height: 100%;
+}
+
+.disk-value {
+    color: var(--po-text-muted);
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: var(--po-text-xs);
+    text-align: right;
+}
+
+.disk-details { margin-top: var(--po-space-2); }
+.disk-details summary { cursor: pointer; font-size: var(--po-text-sm); }
+
+.disk-hit { fill: transparent; }
+
+.disk-folder { overflow-wrap: anywhere; }
+
+.disk-copy { white-space: nowrap; }
