@@ -11,6 +11,7 @@ PoPunkouterSoftware (Blazor, behind Microsoft sign-in), so this script produces 
   App_Data/global/unite.json                  UNITE prefab catalogue (this file)
   App_Data/global/queue.json                  training jobs + missing requirements (this file)
   App_Data/global/standards.json              docs/global-standards prose (this file)
+  App_Data/global/reports/rl-*.html           GLOBAL's RL reports (build_rl_reports.py)
 
 Usage (from the repo root):
   python scripts/global/build_global_data.py              # everything
@@ -221,7 +222,7 @@ def build_benchmark() -> Path | None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Refresh the GLOBAL data snapshot the app serves.")
-    steps = ["fleet", "lessons", "rl", "unite", "queue", "standards", "benchmark"]
+    steps = ["fleet", "lessons", "rl", "unite", "queue", "standards", "benchmark", "reports"]
     parser.add_argument("--only", choices=steps, help="run a single step")
     parser.add_argument("--no-gh", action="store_true", help="skip GitHub CI lookups (offline / rate limited)")
     args = parser.parse_args()
@@ -244,6 +245,8 @@ def main() -> int:
         build_standards()
     if only in (None, "benchmark"):
         build_benchmark()
+    if only in (None, "reports"):
+        _run("build_rl_reports.py")
 
     print("\nDone. Restart the app (or reload /global) to see the new snapshot.")
     return 0

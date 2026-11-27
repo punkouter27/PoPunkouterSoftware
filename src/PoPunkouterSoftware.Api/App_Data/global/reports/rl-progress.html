@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RL Training Progress Over Time — GLOBAL History</title>
+<style>
+  :root {
+    --bg: #0a0f17; --panel: #111926; --panel2: #172233; --border: #243247;
+    --text: #e6edf7; --muted: #93a4bc; --gold: #f5c242; --cyan: #60c6ff;
+    --green: #4ade80; --purple: #c084fc; --red: #f87171;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; }
+  a { color: var(--cyan); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1340px; margin: 0 auto; padding: 26px 22px 72px; }
+  header { border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 18px; }
+  .eyebrow { display: inline-block; font-size: 11.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--green); background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.35); padding: 3px 10px; border-radius: 999px; margin-bottom: 8px; }
+  h1 { margin: 0 0 6px; font-size: 28px; }
+  h2 { margin: 30px 0 12px; font-size: 19px; border-left: 4px solid var(--green); padding-left: 12px; }
+  .subtitle { margin: 0; color: var(--muted); font-size: 14px; max-width: 860px; }
+  .top-nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .top-nav a { background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 6px 13px; border-radius: 999px; font-size: 12.5px; font-weight: 600; }
+  .top-nav a:hover { border-color: var(--gold); color: var(--gold); text-decoration: none; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 22px; }
+  .kpi { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 15px 17px; }
+  .kpi .val { font-size: 25px; font-weight: 700; color: var(--gold); }
+  .kpi.cyan .val { color: var(--cyan); }
+  .kpi.green .val { color: var(--green); }
+  .kpi.purple .val { color: var(--purple); }
+  .kpi .lbl { font-size: 12.5px; color: var(--muted); margin: 3px 0 6px; }
+  .delta { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 6px; }
+  .delta.up { background: rgba(74,222,128,0.16); color: var(--green); }
+  .delta.down { background: rgba(248,113,113,0.16); color: var(--red); }
+  .delta.flat { background: rgba(147,164,188,0.14); color: var(--muted); }
+  .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .chart-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+  .chart-card.full { grid-column: 1 / -1; }
+  .chart-card h3 { margin: 0 0 4px; font-size: 15.5px; }
+  .chart-sub { margin: 0 0 10px; font-size: 12.5px; color: var(--muted); }
+  .chart-svg { width: 100%; height: auto; display: block; }
+  .lg-row { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 8px; font-size: 12px; color: var(--muted); }
+  .lg-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+  .table-wrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 24px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 10px 12px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: middle; }
+  th { background: #162132; color: var(--text); font-weight: 600; white-space: nowrap; }
+  tr:hover { background: rgba(96,198,255,0.04); }
+  .sub { font-size: 11.5px; color: var(--muted); }
+  .stack-pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; }
+  .stack-pill.unreal_mujoco { background: rgba(96,198,255,0.15); color: var(--cyan); }
+  .stack-pill.unity_mujoco { background: rgba(245,194,66,0.15); color: var(--gold); }
+  .stack-pill.unity_mlagents { background: rgba(192,132,252,0.16); color: var(--purple); }
+  code { font-family: Consolas, monospace; font-size: 12px; background: rgba(255,255,255,0.06); padding: 1.5px 5px; border-radius: 4px; color: #dbeafe; }
+  footer { margin-top: 32px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Time-Series Training Log · Auto-Updated Every Run · Last Snapshot 2026-11-27 13:33</div>
+    <h1>RL Agent Progress Over Time</h1>
+    <p class="subtitle">
+      Tracks how your agents grow across every training session: newly learned <code>.onnx</code> skills, training speed gains,
+      cumulative hours &amp; simulated steps, and run-by-run deltas. Run <code>GLOBAL/update_all.ps1</code> after any training session to add a new point to every graph.
+    </p>
+  </header>
+
+  <nav class="top-nav">
+    <a href="/global" target="_top">← Global Hub</a>
+    <a href="/global/rl?view=overview" target="_top">🤖 RL Comparison &amp; Portability</a>
+    <a href="/global/standards" target="_top">🧩 Unity ↔ Unreal Standards</a>
+    <a href="#graphs">📈 Progress Graphs</a>
+    <a href="#repoProgress">📊 Per-Repo Activity</a>
+    <a href="#recentBrains">🧠 Recently Trained Brains</a>
+    <a href="#runLog">🗂️ Snapshot Log (16 runs)</a>
+  </nav>
+
+  <section class="kpis">
+    <div class="kpi green">
+      <div class="val">317</div>
+      <div class="lbl">Shipped <code>.onnx</code> Brains (335 total on disk)</div>
+      <span class="delta up">+8 vs last run</span>
+    </div>
+    <div class="kpi cyan">
+      <div class="val">189</div>
+      <div class="lbl">Brains Trained or Updated in Last 7 Days</div>
+      <span class="delta up">Active training velocity</span>
+    </div>
+    <div class="kpi">
+      <div class="val">60,973 sps</div>
+      <div class="lbl">Peak Fleet Training Speed (Avg 28,940 sps)</div>
+      <span class="delta flat">No change vs last run</span>
+    </div>
+    <div class="kpi purple">
+      <div class="val">~189 h · ~13.9B</div>
+      <div class="lbl">Estimated Cumulative Training Time &amp; Steps</div>
+      <span class="delta flat">No change vs last run</span>
+    </div>
+    <div class="kpi">
+      <div class="val">16</div>
+      <div class="lbl">Recorded Progress Snapshots in <code>timeline.jsonl</code></div>
+      <span class="delta flat">Appends on every update_all.ps1</span>
+    </div>
+  </section>
+
+  <section class="charts-grid" id="graphs">
+    <div class="chart-card">
+      <h3>1. Brains &amp; Learned Skills Growing Over Time</h3>
+      <p class="chart-sub">Cumulative <code>.onnx</code> brains across your fleet by modification date (hover dots for exact counts).</p>
+      <div class="lg-row"><span><i class="lg-dot" style="background:#f5c242"></i>Total Fleet</span><span><i class="lg-dot" style="background:#4ade80"></i>Unity + MuJoCo</span><span><i class="lg-dot" style="background:#60c6ff"></i>Unreal + MuJoCo</span><span><i class="lg-dot" style="background:#c084fc"></i>Unity ML-Agents</span></div><svg viewBox="0 0 760 270" class="chart-svg"><line x1="54" y1="226.0" x2="736" y2="226.0" stroke="#223044" stroke-dasharray="3,3"/><text x="46" y="230.0" text-anchor="end" fill="#93a4bc" font-size="11">0</text><line x1="54" y1="196.6" x2="736" y2="196.6" stroke="#223044" stroke-dasharray="3,3"/><text x="46" y="200.6" text-anchor="end" fill="#93a4bc" font-size="11">50</text><line x1="54" y1="167.1" x2="736" y2="167.1" stroke="#223044" stroke-dasharray="3,3"/><text x="46" y="171.1" text-anchor="end" fill="#93a4bc" font-size="11">100</text><line x1="54" y1="137.7" x2="736" y2="137.7" stroke="#223044" stroke-dasharray="3,3"/><text x="46" y="141.7" text-anchor="end" fill="#93a4bc" font-size="11">150</text><line x1="54" y1="108.3" x2="736" y2="108.3" stroke="#223044" stroke-dasharray="3,3"/><text x="46" y="112.3" text-anchor="end" fill="#93a4bc" font-size="11">200</text><line x1="54" y1="78.9" x2="736" y2="78.9" stroke="#223044" stroke-dasharray="3,3"/><text x="46" y="82.9" text-anchor="end" fill="#93a4bc" font-size="11">250</text><line x1="54" y1="49.4" x2="736" y2="49.4" stroke="#223044" stroke-dasharray="3,3"/><text x="46" y="53.4" text-anchor="end" fill="#93a4bc" font-size="11">300</text><line x1="54" y1="20.0" x2="736" y2="20.0" stroke="#223044" stroke-dasharray="3,3"/><text x="46" y="24.0" text-anchor="end" fill="#93a4bc" font-size="11">350</text><text x="54.0" y="254" text-anchor="middle" fill="#93a4bc" font-size="11">11-15</text><text x="122.2" y="254" text-anchor="middle" fill="#93a4bc" font-size="11">11-17</text><text x="190.4" y="254" text-anchor="middle" fill="#93a4bc" font-size="11">11-19</text><text x="258.6" y="254" text-anchor="middle" fill="#93a4bc" font-size="11">11-20</text><text x="326.8" y="254" text-anchor="middle" fill="#93a4bc" font-size="11">11-21</text><text x="395.0" y="254" text-anchor="middle" fill="#93a4bc" font-size="11">11-22</text><text x="463.2" y="254" text-anchor="middle" fill="#93a4bc" font-size="11">11-23</text><text x="531.4" y="254" text-anchor="middle" fill="#93a4bc" font-size="11">11-24</text><text x="599.6" y="254" text-anchor="middle" fill="#93a4bc" font-size="11">11-25</text><text x="667.8" y="254" text-anchor="middle" fill="#93a4bc" font-size="11">11-26</text><text x="736.0" y="254" text-anchor="middle" fill="#93a4bc" font-size="11">11-27</text><polyline fill="none" stroke="#f5c242" stroke-width="3.0" points="54.0,154.2 122.2,151.3 190.4,141.2 258.6,140.1 326.8,137.1 395.0,48.3 463.2,47.1 531.4,40.6 599.6,35.9 667.8,34.7 736.0,28.8"/><circle cx="54.0" cy="154.2" r="3.5" fill="#f5c242"><title>Total Fleet on 2026-11-15: 122 brains</title></circle><circle cx="122.2" cy="151.3" r="3.5" fill="#f5c242"><title>Total Fleet on 2026-11-17: 127 brains</title></circle><circle cx="190.4" cy="141.2" r="3.5" fill="#f5c242"><title>Total Fleet on 2026-11-19: 144 brains</title></circle><circle cx="258.6" cy="140.1" r="3.5" fill="#f5c242"><title>Total Fleet on 2026-11-20: 146 brains</title></circle><circle cx="326.8" cy="137.1" r="3.5" fill="#f5c242"><title>Total Fleet on 2026-11-21: 151 brains</title></circle><circle cx="395.0" cy="48.3" r="3.5" fill="#f5c242"><title>Total Fleet on 2026-11-22: 302 brains</title></circle><circle cx="463.2" cy="47.1" r="3.5" fill="#f5c242"><title>Total Fleet on 2026-11-23: 304 brains</title></circle><circle cx="531.4" cy="40.6" r="3.5" fill="#f5c242"><title>Total Fleet on 2026-11-24: 315 brains</title></circle><circle cx="599.6" cy="35.9" r="3.5" fill="#f5c242"><title>Total Fleet on 2026-11-25: 323 brains</title></circle><circle cx="667.8" cy="34.7" r="3.5" fill="#f5c242"><title>Total Fleet on 2026-11-26: 325 brains</title></circle><circle cx="736.0" cy="28.8" r="3.5" fill="#f5c242"><title>Total Fleet on 2026-11-27: 335 brains</title></circle><polyline fill="none" stroke="#4ade80" stroke-width="2.2" points="54.0,178.3 122.2,178.3 190.4,177.1 258.6,176.6 326.8,176.6 395.0,116.5 463.2,115.3 531.4,110.6 599.6,105.9 667.8,105.3 736.0,104.8"/><circle cx="54.0" cy="178.3" r="3.5" fill="#4ade80"><title>Unity + MuJoCo on 2026-11-15: 81 brains</title></circle><circle cx="122.2" cy="178.3" r="3.5" fill="#4ade80"><title>Unity + MuJoCo on 2026-11-17: 81 brains</title></circle><circle cx="190.4" cy="177.1" r="3.5" fill="#4ade80"><title>Unity + MuJoCo on 2026-11-19: 83 brains</title></circle><circle cx="258.6" cy="176.6" r="3.5" fill="#4ade80"><title>Unity + MuJoCo on 2026-11-20: 84 brains</title></circle><circle cx="326.8" cy="176.6" r="3.5" fill="#4ade80"><title>Unity + MuJoCo on 2026-11-21: 84 brains</title></circle><circle cx="395.0" cy="116.5" r="3.5" fill="#4ade80"><title>Unity + MuJoCo on 2026-11-22: 186 brains</title></circle><circle cx="463.2" cy="115.3" r="3.5" fill="#4ade80"><title>Unity + MuJoCo on 2026-11-23: 188 brains</title></circle><circle cx="531.4" cy="110.6" r="3.5" fill="#4ade80"><title>Unity + MuJoCo on 2026-11-24: 196 brains</title></circle><circle cx="599.6" cy="105.9" r="3.5" fill="#4ade80"><title>Unity + MuJoCo on 2026-11-25: 204 brains</title></circle><circle cx="667.8" cy="105.3" r="3.5" fill="#4ade80"><title>Unity + MuJoCo on 2026-11-26: 205 brains</title></circle><circle cx="736.0" cy="104.8" r="3.5" fill="#4ade80"><title>Unity + MuJoCo on 2026-11-27: 206 brains</title></circle><polyline fill="none" stroke="#60c6ff" stroke-width="2.2" points="54.0,201.9 122.2,198.9 190.4,190.1 258.6,189.5 326.8,186.6 395.0,180.1 463.2,180.1 531.4,178.3 599.6,178.3 667.8,177.7 736.0,172.4"/><circle cx="54.0" cy="201.9" r="3.5" fill="#60c6ff"><title>Unreal + MuJoCo on 2026-11-15: 41 brains</title></circle><circle cx="122.2" cy="198.9" r="3.5" fill="#60c6ff"><title>Unreal + MuJoCo on 2026-11-17: 46 brains</title></circle><circle cx="190.4" cy="190.1" r="3.5" fill="#60c6ff"><title>Unreal + MuJoCo on 2026-11-19: 61 brains</title></circle><circle cx="258.6" cy="189.5" r="3.5" fill="#60c6ff"><title>Unreal + MuJoCo on 2026-11-20: 62 brains</title></circle><circle cx="326.8" cy="186.6" r="3.5" fill="#60c6ff"><title>Unreal + MuJoCo on 2026-11-21: 67 brains</title></circle><circle cx="395.0" cy="180.1" r="3.5" fill="#60c6ff"><title>Unreal + MuJoCo on 2026-11-22: 78 brains</title></circle><circle cx="463.2" cy="180.1" r="3.5" fill="#60c6ff"><title>Unreal + MuJoCo on 2026-11-23: 78 brains</title></circle><circle cx="531.4" cy="178.3" r="3.5" fill="#60c6ff"><title>Unreal + MuJoCo on 2026-11-24: 81 brains</title></circle><circle cx="599.6" cy="178.3" r="3.5" fill="#60c6ff"><title>Unreal + MuJoCo on 2026-11-25: 81 brains</title></circle><circle cx="667.8" cy="177.7" r="3.5" fill="#60c6ff"><title>Unreal + MuJoCo on 2026-11-26: 82 brains</title></circle><circle cx="736.0" cy="172.4" r="3.5" fill="#60c6ff"><title>Unreal + MuJoCo on 2026-11-27: 91 brains</title></circle><polyline fill="none" stroke="#c084fc" stroke-width="2.0" points="54.0,226.0 122.2,226.0 190.4,226.0 258.6,226.0 326.8,226.0 395.0,203.6 463.2,203.6 531.4,203.6 599.6,203.6 667.8,203.6 736.0,203.6"/><circle cx="54.0" cy="226.0" r="3.5" fill="#c084fc"><title>Unity ML-Agents on 2026-11-15: 0 brains</title></circle><circle cx="122.2" cy="226.0" r="3.5" fill="#c084fc"><title>Unity ML-Agents on 2026-11-17: 0 brains</title></circle><circle cx="190.4" cy="226.0" r="3.5" fill="#c084fc"><title>Unity ML-Agents on 2026-11-19: 0 brains</title></circle><circle cx="258.6" cy="226.0" r="3.5" fill="#c084fc"><title>Unity ML-Agents on 2026-11-20: 0 brains</title></circle><circle cx="326.8" cy="226.0" r="3.5" fill="#c084fc"><title>Unity ML-Agents on 2026-11-21: 0 brains</title></circle><circle cx="395.0" cy="203.6" r="3.5" fill="#c084fc"><title>Unity ML-Agents on 2026-11-22: 38 brains</title></circle><circle cx="463.2" cy="203.6" r="3.5" fill="#c084fc"><title>Unity ML-Agents on 2026-11-23: 38 brains</title></circle><circle cx="531.4" cy="203.6" r="3.5" fill="#c084fc"><title>Unity ML-Agents on 2026-11-24: 38 brains</title></circle><circle cx="599.6" cy="203.6" r="3.5" fill="#c084fc"><title>Unity ML-Agents on 2026-11-25: 38 brains</title></circle><circle cx="667.8" cy="203.6" r="3.5" fill="#c084fc"><title>Unity ML-Agents on 2026-11-26: 38 brains</title></circle><circle cx="736.0" cy="203.6" r="3.5" fill="#c084fc"><title>Unity ML-Agents on 2026-11-27: 38 brains</title></circle></svg>
+    </div>
+    <div class="chart-card">
+      <h3>2. Training Speed Improvement Over Time (<code>PoBox</code> 17 Benchmark Runs)</h3>
+      <p class="chart-sub">Real <code>benchmark/history.json</code> progression showing how simulator &amp; GPU tuning boosted <code>env-steps/s</code>.</p>
+      <p style='color:var(--muted)'>No multi-run benchmark history found yet.</p>
+    </div>
+    <div class="chart-card full">
+      <h3>3. Run-by-Run Snapshot History (<code>GLOBAL/history/timeline.jsonl</code>)</h3>
+      <p class="chart-sub">Each bar is a snapshot recorded by <code>GLOBAL/update_all.ps1</code>. Re-run after overnight training to watch your fleet grow over weeks and months.</p>
+      <svg viewBox="0 0 760 230" class="chart-svg"><line x1="54" y1="184.0" x2="736" y2="184.0" stroke="#223044" stroke-dasharray="3,3"/><text x="46" y="188.0" text-anchor="end" fill="#93a4bc" font-size="11">0</text><line x1="54" y1="104.0" x2="736" y2="104.0" stroke="#223044" stroke-dasharray="3,3"/><text x="46" y="108.0" text-anchor="end" fill="#93a4bc" font-size="11">175</text><line x1="54" y1="24.0" x2="736" y2="24.0" stroke="#223044" stroke-dasharray="3,3"/><text x="46" y="28.0" text-anchor="end" fill="#93a4bc" font-size="11">350</text><rect x="63.6" y="42.3" width="23.4" height="141.7" rx="5" fill="#4ade80"><title>2026-11-25 10:58: 310 shipped brains · ~189h · ~13.9B steps</title></rect><text x="75.3" y="36.3" text-anchor="middle" fill="#e6edf7" font-size="11" font-weight="700">310</text><text x="75.3" y="214" text-anchor="middle" fill="#93a4bc" font-size="10">11-25 10:58</text><rect x="106.2" y="42.3" width="23.4" height="141.7" rx="5" fill="#4ade80"><title>2026-11-25 11:00: 310 shipped brains · ~189h · ~13.9B steps</title></rect><text x="117.9" y="36.3" text-anchor="middle" fill="#e6edf7" font-size="11" font-weight="700">310</text><text x="117.9" y="214" text-anchor="middle" fill="#93a4bc" font-size="10">11-25 11:00</text><rect x="148.8" y="42.3" width="23.4" height="141.7" rx="5" fill="#4ade80"><title>2026-11-25 11:48: 310 shipped brains · ~189h · ~13.9B steps</title></rect><text x="160.6" y="36.3" text-anchor="middle" fill="#e6edf7" font-size="11" font-weight="700">310</text><text x="160.6" y="214" text-anchor="middle" fill="#93a4bc" font-size="10">11-25 11:48</text><rect x="191.5" y="42.3" width="23.4" height="141.7" rx="5" fill="#4ade80"><title>2026-11-25 13:24: 310 shipped brains · ~189h · ~13.9B steps</title></rect><text x="203.2" y="36.3" text-anchor="middle" fill="#e6edf7" font-size="11" font-weight="700">310</text><text x="203.2" y="214" text-anchor="middle" fill="#93a4bc" font-size="10">11-25 13:24</text><rect x="234.1" y="45.5" width="23.4" height="138.5" rx="5" fill="#4ade80"><title>2026-11-25 16:10: 303 shipped brains · ~189h · ~13.9B steps</title></rect><text x="245.8" y="39.5" text-anchor="middle" fill="#e6edf7" font-size="11" font-weight="700">303</text><text x="245.8" y="214" text-anchor="middle" fill="#93a4bc" font-size="10">11-25 16:10</text><rect x="276.7" y="45.5" width="23.4" height="138.5" rx="5" fill="#4ade80"><title>2026-11-25 19:49: 303 shipped brains · ~189h · ~13.9B steps</title></rect><text x="288.4" y="39.5" text-anchor="middle" fill="#e6edf7" font-size="11" font-weight="700">303</text><text x="288.4" y="214" text-anchor="middle" fill="#93a4bc" font-size="10">11-25 19:49</text><rect x="319.3" y="42.3" width="23.4" height="141.7" rx="5" fill="#4ade80"><title>2026-11-26 07:00: 310 shipped brains · ~189h · ~13.9B steps</title></rect><text x="331.1" y="36.3" text-anchor="middle" fill="#e6edf7" font-size="11" font-weight="700">310</text><text x="331.1" y="214" text-anchor="middle" fill="#93a4bc" font-size="10">11-26 07:00</text><rect x="362.0" y="42.3" width="23.4" height="141.7" rx="5" fill="#4ade80"><title>2026-11-26 11:50: 310 shipped brains · ~189h · ~13.9B steps</title></rect><text x="373.7" y="36.3" text-anchor="middle" fill="#e6edf7" font-size="11" font-weight="700">310</text><text x="373.7" y="214" text-anchor="middle" fill="#93a4bc" font-size="10">11-26 11:50</text><rect x="404.6" y="45.5" width="23.4" height="138.5" rx="5" fill="#4ade80"><title>2026-11-26 12:06: 303 shipped brains · ~189h · ~13.9B steps</title></rect><text x="416.3" y="39.5" text-anchor="middle" fill="#e6edf7" font-size="11" font-weight="700">303</text><text x="416.3" y="214" text-anchor="middle" fill="#93a4bc" font-size="10">11-26 12:06</text><rect x="447.2" y="41.8" width="23.4" height="142.2" rx="5" fill="#4ade80"><title>2026-11-26 12:30: 311 shipped brains · ~189h · ~13.9B steps</title></rect><text x="458.9" y="35.8" text-anchor="middle" fill="#e6edf7" font-size="11" font-weight="700">311</text><text x="458.9" y="214" text-anchor="middle" fill="#93a4bc" font-size="10">11-26 12:30</text><rect x="489.8" y="41.8" width="23.4" height="142.2" rx="5" fill="#4ade80"><title>2026-11-26 12:34: 311 shipped brains · ~189h · ~13.9B steps</title></rect><text x="501.6" y="35.8" text-anchor="middle" fill="#e6edf7" font-size="11" font-weight="700">311</text><text x="501.6" y="214" text-anchor="middle" fill="#93a4bc" font-size="10">11-26 12:34</text><rect x="532.5" y="41.8" width="23.4" height="142.2" rx="5" fill="#4ade80"><title>2026-11-26 13:42: 311 shipped brains · ~189h · ~13.9B steps</title></rect><text x="544.2" y="35.8" text-anchor="middle" fill="#e6edf7" font-size="11" font-weight="700">311</text><text x="544.2" y="214" text-anchor="middle" fill="#93a4bc" font-size="10">11-26 13:42</text><rect x="575.1" y="41.8" width="23.4" height="142.2" rx="5" fill="#4ade80"><title>2026-11-27 07:00: 311 shipped brains · ~189h · ~13.9B steps</title></rect><text x="586.8" y="35.8" text-anchor="middle" fill="#e6edf7" font-size="11" font-weight="700">311</text><text x="586.8" y="214" text-anchor="middle" fill="#93a4bc" font-size="10">11-27 07:00</text><rect x="617.7" y="41.8" width="23.4" height="142.2" rx="5" fill="#4ade80"><title>2026-11-27 08:07: 311 shipped brains · ~189h · ~13.9B steps</title></rect><text x="629.4" y="35.8" text-anchor="middle" fill="#e6edf7" font-size="11" font-weight="700">311</text><text x="629.4" y="214" text-anchor="middle" fill="#93a4bc" font-size="10">11-27 08:07</text><rect x="660.3" y="42.7" width="23.4" height="141.3" rx="5" fill="#4ade80"><title>2026-11-27 09:49: 309 shipped brains · ~189h · ~13.9B steps</title></rect><text x="672.1" y="36.7" text-anchor="middle" fill="#e6edf7" font-size="11" font-weight="700">309</text><text x="672.1" y="214" text-anchor="middle" fill="#93a4bc" font-size="10">11-27 09:49</text><rect x="703.0" y="39.1" width="23.4" height="144.9" rx="5" fill="#4ade80"><title>2026-11-27 13:33: 317 shipped brains · ~189h · ~13.9B steps</title></rect><text x="714.7" y="33.1" text-anchor="middle" fill="#e6edf7" font-size="11" font-weight="700">317</text><text x="714.7" y="214" text-anchor="middle" fill="#93a4bc" font-size="10">11-27 13:33</text></svg>
+    </div>
+  </section>
+
+  <h2 id="repoProgress">Per-Repository Activity &amp; Growth</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Repository</th><th>Stack</th><th>Shipped Brains</th><th>Since Last Run</th>
+          <th>Updated (7d)</th><th>Active Brain Dates</th><th>Current Speed</th><th>Est. Cumulative</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>PoBasketball</strong></td>
+          <td><span class="stack-pill unreal_mujoco">unreal mujoco</span></td>
+          <td><strong>23</strong> <span class="sub">(24 total)</span></td>
+          <td><span class="delta up">+5 vs last run</span></td>
+          <td><strong>3</strong> <span class="sub">in last 7d</span></td>
+          <td><code>2026-11-15</code> → <code>2026-11-22</code></td>
+          <td><strong>60,973 sps</strong></td>
+          <td>~18 h · ~2.0B</td>
+        </tr>
+        <tr>
+          <td><strong>PoBox</strong></td>
+          <td><span class="stack-pill unity_mujoco">unity mujoco</span></td>
+          <td><strong>34</strong> <span class="sub">(39 total)</span></td>
+          <td><span class="delta flat">No change vs last run</span></td>
+          <td><strong>39</strong> <span class="sub">in last 7d</span></td>
+          <td><code>2026-11-22</code> → <code>2026-11-26</code></td>
+          <td><strong>38,206 sps</strong></td>
+          <td>~30 h · ~3.0B</td>
+        </tr>
+        <tr>
+          <td><strong>PoFootball</strong></td>
+          <td><span class="stack-pill unity_mlagents">unity mlagents</span></td>
+          <td><strong>12</strong> <span class="sub">(12 total)</span></td>
+          <td><span class="delta flat">No change vs last run</span></td>
+          <td><strong>12</strong> <span class="sub">in last 7d</span></td>
+          <td><code>2026-11-22</code> → <code>2026-11-22</code></td>
+          <td><strong>9 sps</strong></td>
+          <td>~20 h · ~0.1B</td>
+        </tr>
+        <tr>
+          <td><strong>PoHillKing</strong></td>
+          <td><span class="stack-pill unity_mujoco">unity mujoco</span></td>
+          <td><strong>25</strong> <span class="sub">(30 total)</span></td>
+          <td><span class="delta flat">No change vs last run</span></td>
+          <td><strong>30</strong> <span class="sub">in last 7d</span></td>
+          <td><code>2026-11-22</code> → <code>2026-11-27</code></td>
+          <td><strong>39,690 sps</strong></td>
+          <td>~22 h · ~2.5B</td>
+        </tr>
+        <tr>
+          <td><strong>PoOlympic</strong></td>
+          <td><span class="stack-pill unity_mujoco">unity mujoco</span></td>
+          <td><strong>137</strong> <span class="sub">(137 total)</span></td>
+          <td><span class="delta flat">No change vs last run</span></td>
+          <td><strong>53</strong> <span class="sub">in last 7d</span></td>
+          <td><code>2026-11-15</code> → <code>2026-11-22</code></td>
+          <td><strong>37,109 sps</strong></td>
+          <td>~40 h · ~4.0B</td>
+        </tr>
+        <tr>
+          <td><strong>PoRaceUnreal</strong></td>
+          <td><span class="stack-pill unreal_mujoco">unreal mujoco</span></td>
+          <td><strong>10</strong> <span class="sub">(10 total)</span></td>
+          <td><span class="delta flat">No change vs last run</span></td>
+          <td><strong>0</strong> <span class="sub">in last 7d</span></td>
+          <td><code>2026-11-15</code> → <code>2026-11-15</code></td>
+          <td><strong>25,990 sps</strong></td>
+          <td>~12 h · ~0.5B</td>
+        </tr>
+        <tr>
+          <td><strong>PoRobotTrain</strong></td>
+          <td><span class="stack-pill unreal_mujoco">unreal mujoco</span></td>
+          <td><strong>20</strong> <span class="sub">(23 total)</span></td>
+          <td><span class="delta up">+3 vs last run</span></td>
+          <td><strong>22</strong> <span class="sub">in last 7d</span></td>
+          <td><code>2026-11-15</code> → <code>2026-11-27</code></td>
+          <td><strong>34,993 sps</strong></td>
+          <td>~5 h · ~0.2B</td>
+        </tr>
+        <tr>
+          <td><strong>PoSlapUnreal</strong></td>
+          <td><span class="stack-pill unreal_mujoco">unreal mujoco</span></td>
+          <td><strong>30</strong> <span class="sub">(34 total)</span></td>
+          <td><span class="delta flat">No change vs last run</span></td>
+          <td><strong>4</strong> <span class="sub">in last 7d</span></td>
+          <td><code>2026-11-15</code> → <code>2026-11-26</code></td>
+          <td><strong>51,962 sps</strong></td>
+          <td>~18 h · ~1.5B</td>
+        </tr>
+        <tr>
+          <td><strong>PoSoccer</strong></td>
+          <td><span class="stack-pill unity_mlagents">unity mlagents</span></td>
+          <td><strong>10</strong> <span class="sub">(10 total)</span></td>
+          <td><span class="delta flat">No change vs last run</span></td>
+          <td><strong>10</strong> <span class="sub">in last 7d</span></td>
+          <td><code>2026-11-22</code> → <code>2026-11-22</code></td>
+          <td><strong>174 sps</strong></td>
+          <td>~14 h · ~0.05B</td>
+        </tr>
+        <tr>
+          <td><strong>PoSumo</strong></td>
+          <td><span class="stack-pill unity_mlagents">unity mlagents</span></td>
+          <td><strong>16</strong> <span class="sub">(16 total)</span></td>
+          <td><span class="delta flat">No change vs last run</span></td>
+          <td><strong>16</strong> <span class="sub">in last 7d</span></td>
+          <td><code>2026-11-22</code> → <code>2026-11-22</code></td>
+          <td><strong>294 sps</strong></td>
+          <td>~10 h · ~0.05B</td>
+        </tr></tbody>
+    </table>
+  </div>
+
+  <h2 id="recentBrains">Recently Trained / Updated Brains (Newest 25)</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Last Updated</th><th>Repo</th><th>Brain File</th><th>Size</th><th>Path</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>2026-11-27 10:50</code></td>
+          <td><strong>PoRobotTrain</strong></td>
+          <td><code>policy.onnx</code></td>
+          <td>188.4 KB</td>
+          <td class="sub"><code>PoRobotTrain/RobotControl/models/r1_level0_upperbody/policy.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-27 09:39</code></td>
+          <td><strong>PoRobotTrain</strong></td>
+          <td><code>policy.onnx</code></td>
+          <td>39.2 KB</td>
+          <td class="sub"><code>PoRobotTrain/logs/head_skills/staging/hold_centre_ndfcejs_/policy.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-27 09:10</code></td>
+          <td><strong>PoRobotTrain</strong></td>
+          <td><code>policy.onnx</code></td>
+          <td>106.5 KB</td>
+          <td class="sub"><code>PoRobotTrain/RobotControl/models/head_skills/glance_around/versions/v2/policy.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-27 09:03</code></td>
+          <td><strong>PoRobotTrain</strong></td>
+          <td><code>policy.onnx</code></td>
+          <td>106.5 KB</td>
+          <td class="sub"><code>PoRobotTrain/RobotControl/models/head_skills/look_at/versions/v2/policy.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-27 08:56</code></td>
+          <td><strong>PoRobotTrain</strong></td>
+          <td><code>policy.onnx</code></td>
+          <td>106.5 KB</td>
+          <td class="sub"><code>PoRobotTrain/RobotControl/models/head_skills/shake_no/versions/v2/policy.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-27 08:51</code></td>
+          <td><strong>PoRobotTrain</strong></td>
+          <td><code>policy.onnx</code></td>
+          <td>106.5 KB</td>
+          <td class="sub"><code>PoRobotTrain/RobotControl/models/head_skills/nod_yes/policy.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-27 08:51</code></td>
+          <td><strong>PoRobotTrain</strong></td>
+          <td><code>policy.onnx</code></td>
+          <td>106.5 KB</td>
+          <td class="sub"><code>PoRobotTrain/RobotControl/models/head_skills/nod_yes/versions/v2/policy.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-27 08:30</code></td>
+          <td><strong>PoRobotTrain</strong></td>
+          <td><code>policy.onnx</code></td>
+          <td>106.5 KB</td>
+          <td class="sub"><code>PoRobotTrain/RobotControl/models/head_skills/hold_centre/policy.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-27 08:30</code></td>
+          <td><strong>PoRobotTrain</strong></td>
+          <td><code>policy.onnx</code></td>
+          <td>106.5 KB</td>
+          <td class="sub"><code>PoRobotTrain/RobotControl/models/head_skills/hold_centre/versions/v2/policy.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-27 07:34</code></td>
+          <td><strong>PoHillKing</strong></td>
+          <td><code>policy.onnx</code></td>
+          <td>13.9 KB</td>
+          <td class="sub"><code>PoHillKing/training/runs/kim_hill/kim_hill2/policy.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-26 12:25</code></td>
+          <td><strong>PoSlapUnreal</strong></td>
+          <td><code>mom_L1_v4.onnx</code></td>
+          <td>1874.6 KB</td>
+          <td class="sub"><code>PoSlapUnreal/training/models/brains/mom_L1_v4.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-26 11:40</code></td>
+          <td><strong>PoBox</strong></td>
+          <td><code>match.onnx</code></td>
+          <td>1713.7 KB</td>
+          <td class="sub"><code>PoBox/Assets/_Project/RL_Models/Matt/match.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-25 09:18</code></td>
+          <td><strong>PoBox</strong></td>
+          <td><code>match.onnx</code></td>
+          <td>1713.7 KB</td>
+          <td class="sub"><code>PoBox/Assets/_Project/RL_Models/Trump/match.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-25 09:18</code></td>
+          <td><strong>PoBox</strong></td>
+          <td><code>match.onnx</code></td>
+          <td>1713.7 KB</td>
+          <td class="sub"><code>PoBox/Assets/_Project/RL_Models/Timmy/match.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-25 09:18</code></td>
+          <td><strong>PoBox</strong></td>
+          <td><code>match.onnx</code></td>
+          <td>1713.7 KB</td>
+          <td class="sub"><code>PoBox/Assets/_Project/RL_Models/Zombie/match.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-25 09:18</code></td>
+          <td><strong>PoBox</strong></td>
+          <td><code>match.onnx</code></td>
+          <td>1713.7 KB</td>
+          <td class="sub"><code>PoBox/Assets/_Project/RL_Models/Nick/match.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-25 09:18</code></td>
+          <td><strong>PoBox</strong></td>
+          <td><code>latest_trump.onnx</code></td>
+          <td>1713.7 KB</td>
+          <td class="sub"><code>PoBox/training/checkpoints/v4r2_trump/latest_trump.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-25 09:18</code></td>
+          <td><strong>PoBox</strong></td>
+          <td><code>latest_timmy.onnx</code></td>
+          <td>1713.7 KB</td>
+          <td class="sub"><code>PoBox/training/checkpoints/v4r3_timmy/latest_timmy.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-25 09:18</code></td>
+          <td><strong>PoBox</strong></td>
+          <td><code>latest_zombie.onnx</code></td>
+          <td>1713.7 KB</td>
+          <td class="sub"><code>PoBox/training/checkpoints/v4r3_zombie/latest_zombie.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-25 09:18</code></td>
+          <td><strong>PoBox</strong></td>
+          <td><code>latest_nick.onnx</code></td>
+          <td>1713.7 KB</td>
+          <td class="sub"><code>PoBox/training/checkpoints/v4r2_nick/latest_nick.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-24 09:11</code></td>
+          <td><strong>PoHillKing</strong></td>
+          <td><code>fighter_value.onnx</code></td>
+          <td>888.2 KB</td>
+          <td class="sub"><code>PoHillKing/Assets/_Project/RL_Models/trump/fighter_value.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-24 09:11</code></td>
+          <td><strong>PoHillKing</strong></td>
+          <td><code>fighter_policy.onnx</code></td>
+          <td>884.2 KB</td>
+          <td class="sub"><code>PoHillKing/Assets/_Project/RL_Models/trump/fighter_policy.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-24 09:11</code></td>
+          <td><strong>PoHillKing</strong></td>
+          <td><code>fighter_value.onnx</code></td>
+          <td>888.2 KB</td>
+          <td class="sub"><code>PoHillKing/Assets/_Project/RL_Models/kim/fighter_value.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-24 09:11</code></td>
+          <td><strong>PoHillKing</strong></td>
+          <td><code>fighter_policy.onnx</code></td>
+          <td>884.2 KB</td>
+          <td class="sub"><code>PoHillKing/Assets/_Project/RL_Models/kim/fighter_policy.onnx</code></td>
+        </tr>
+        <tr>
+          <td><code>2026-11-24 08:53</code></td>
+          <td><strong>PoSlapUnreal</strong></td>
+          <td><code>matt_L4_v4_261124.onnx</code></td>
+          <td>1874.5 KB</td>
+          <td class="sub"><code>PoSlapUnreal/training/models/brains/matt_L4_v4_261124.onnx</code></td>
+        </tr></tbody>
+    </table>
+  </div>
+
+  <h2 id="runLog">Snapshot Run History (<code>GLOBAL/history/timeline.jsonl</code>)</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Run #</th><th>Timestamp</th><th>Shipped Brains</th><th>Updated (7d)</th><th>Peak Speed</th><th>Est. Scale</th><th>Raw JSON Snapshot</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>#16</td>
+          <td><code>2026-11-27 13:33</code></td>
+          <td><strong>317</strong> <span class="delta up">+8 vs last run</span></td>
+          <td>189</td>
+          <td>60,973 sps</td>
+          <td>~189 h · ~13.9B</td>
+          <td><a ><code>2026-11-27_133349.json</code></a></td>
+        </tr>
+        <tr>
+          <td>#15</td>
+          <td><code>2026-11-27 09:49</code></td>
+          <td><strong>309</strong> <span class="delta down">-2 vs last run</span></td>
+          <td>316</td>
+          <td>60,973 sps</td>
+          <td>~189 h · ~13.9B</td>
+          <td><a ><code>2026-11-27_094955.json</code></a></td>
+        </tr>
+        <tr>
+          <td>#14</td>
+          <td><code>2026-11-27 08:07</code></td>
+          <td><strong>311</strong> <span class="delta flat">No change vs last run</span></td>
+          <td>183</td>
+          <td>60,973 sps</td>
+          <td>~189 h · ~13.9B</td>
+          <td><a ><code>2026-11-27_080754.json</code></a></td>
+        </tr>
+        <tr>
+          <td>#13</td>
+          <td><code>2026-11-27 07:00</code></td>
+          <td><strong>311</strong> <span class="delta flat">No change vs last run</span></td>
+          <td>182</td>
+          <td>60,973 sps</td>
+          <td>~189 h · ~13.9B</td>
+          <td><a ><code>2026-11-27_070034.json</code></a></td>
+        </tr>
+        <tr>
+          <td>#12</td>
+          <td><code>2026-11-26 13:42</code></td>
+          <td><strong>311</strong> <span class="delta flat">No change vs last run</span></td>
+          <td>192</td>
+          <td>60,973 sps</td>
+          <td>~189 h · ~13.9B</td>
+          <td><a ><code>2026-11-26_134220.json</code></a></td>
+        </tr>
+        <tr>
+          <td>#11</td>
+          <td><code>2026-11-26 12:34</code></td>
+          <td><strong>311</strong> <span class="delta flat">No change vs last run</span></td>
+          <td>195</td>
+          <td>60,973 sps</td>
+          <td>~189 h · ~13.9B</td>
+          <td><a ><code>2026-11-26_123413.json</code></a></td>
+        </tr>
+        <tr>
+          <td>#10</td>
+          <td><code>2026-11-26 12:30</code></td>
+          <td><strong>311</strong> <span class="delta up">+8 vs last run</span></td>
+          <td>195</td>
+          <td>60,973 sps</td>
+          <td>~189 h · ~13.9B</td>
+          <td><a ><code>2026-11-26_123019.json</code></a></td>
+        </tr>
+        <tr>
+          <td>#9</td>
+          <td><code>2026-11-26 12:06</code></td>
+          <td><strong>303</strong> <span class="delta down">-7 vs last run</span></td>
+          <td>303</td>
+          <td>56,035 sps</td>
+          <td>~189 h · ~13.9B</td>
+          <td><a ><code>2026-11-26_120649.json</code></a></td>
+        </tr>
+        <tr>
+          <td>#8</td>
+          <td><code>2026-11-26 11:50</code></td>
+          <td><strong>310</strong> <span class="delta flat">No change vs last run</span></td>
+          <td>194</td>
+          <td>65,024 sps</td>
+          <td>~189 h · ~13.9B</td>
+          <td><a ><code>2026-11-26_115017.json</code></a></td>
+        </tr>
+        <tr>
+          <td>#7</td>
+          <td><code>2026-11-26 07:00</code></td>
+          <td><strong>310</strong> <span class="delta up">+7 vs last run</span></td>
+          <td>195</td>
+          <td>65,024 sps</td>
+          <td>~189 h · ~13.9B</td>
+          <td><a ><code>2026-11-26_070031.json</code></a></td>
+        </tr>
+        <tr>
+          <td>#6</td>
+          <td><code>2026-11-25 19:49</code></td>
+          <td><strong>303</strong> <span class="delta flat">No change vs last run</span></td>
+          <td>303</td>
+          <td>58,583 sps</td>
+          <td>~189 h · ~13.9B</td>
+          <td><a ><code>2026-11-25_194954.json</code></a></td>
+        </tr>
+        <tr>
+          <td>#5</td>
+          <td><code>2026-11-25 16:10</code></td>
+          <td><strong>303</strong> <span class="delta down">-7 vs last run</span></td>
+          <td>303</td>
+          <td>32,540 sps</td>
+          <td>~189 h · ~13.9B</td>
+          <td><a ><code>2026-11-25_161021.json</code></a></td>
+        </tr>
+        <tr>
+          <td>#4</td>
+          <td><code>2026-11-25 13:24</code></td>
+          <td><strong>310</strong> <span class="delta flat">No change vs last run</span></td>
+          <td>199</td>
+          <td>32,540 sps</td>
+          <td>~189 h · ~13.9B</td>
+          <td><a ><code>2026-11-25_132423.json</code></a></td>
+        </tr>
+        <tr>
+          <td>#3</td>
+          <td><code>2026-11-25 11:48</code></td>
+          <td><strong>310</strong> <span class="delta flat">No change vs last run</span></td>
+          <td>199</td>
+          <td>32,540 sps</td>
+          <td>~189 h · ~13.9B</td>
+          <td><a ><code>2026-11-25_114838.json</code></a></td>
+        </tr>
+        <tr>
+          <td>#2</td>
+          <td><code>2026-11-25 11:00</code></td>
+          <td><strong>310</strong> <span class="delta flat">No change vs last run</span></td>
+          <td>199</td>
+          <td>32,540 sps</td>
+          <td>~189 h · ~13.9B</td>
+          <td><a ><code>2026-11-25_110025.json</code></a></td>
+        </tr>
+        <tr>
+          <td>#1</td>
+          <td><code>2026-11-25 10:58</code></td>
+          <td><strong>310</strong> <span class="delta flat">Baseline run</span></td>
+          <td>199</td>
+          <td>32,540 sps</td>
+          <td>~189 h · ~13.9B</td>
+          <td><a ><code>2026-11-25_105826.json</code></a></td>
+        </tr></tbody>
+    </table>
+  </div>
+
+  <footer>
+    Auto-generated by <code>GLOBAL/rl_training/scripts/record_and_build_history.py</code>. Data stored in <code>GLOBAL/rl_training/history/timeline.jsonl</code> and <code>GLOBAL/rl_training/history/snapshots/</code>.
+  </footer>
+</div>
+</body>
+</html>

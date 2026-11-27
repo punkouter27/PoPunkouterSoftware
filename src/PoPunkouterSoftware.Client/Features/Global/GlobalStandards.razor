@@ -3,6 +3,7 @@
 @rendermode WasmRenderModes.Interactive
 @using PoPunkouterSoftware.Shared
 @inject PortfolioApiClient Api
+@inject NavigationManager Nav
 
 <PageTitle>Standards · PoPunkouterSoftware</PageTitle>
 
@@ -43,7 +44,7 @@
             <h2>@group.Key</h2>
             @foreach (var doc in group)
             {
-                <details class="global-item">
+                <details class="global-item" id="@Key(doc)" open="@(_open is { } open && Key(doc) == open)">
                     <summary><strong>@doc.Title</strong> <span class="global-note global-mono">@doc.Path</span></summary>
                     <div class="global-doc">
                         @((MarkupString)GlobalMarkdown.ToHtml(doc.Markdown))
@@ -58,9 +59,20 @@
     private GlobalStandardsDto? _standards;
     private bool _loading = true;
     private string? _error;
+    private string? _open;
+
+    /// <summary>"blazor-standards", "rl-portability-contract", … — what ?open= takes.</summary>
+    private static string Key(GlobalStandardDocDto doc)
+    {
+        var parts = doc.Path.Split('/');
+        var stem = Path.GetFileNameWithoutExtension(parts[^1]);
+        return $"{(parts.Length > 1 ? parts[^2] : "")}-{stem}".Replace("rl-portability", "portability", StringComparison.Ordinal);
+    }
 
     protected override async Task OnInitializedAsync()
     {
+        var match = System.Text.RegularExpressions.Regex.Match(new Uri(Nav.Uri).Query, @"[?&]open=([a-z-]+)");
+        _open = match.Success ? match.Groups[1].Value : null;
         try
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));

@@ -154,6 +154,19 @@ public sealed class GlobalDataStore
         return queue;
     }
 
+    /// <summary>The generated RL reports, by the name the API takes. Nothing else is ever served.</summary>
+    public static IReadOnlyList<string> ReportNames { get; } = ["rl-overview", "rl-progress"];
+
+    /// <summary>The path of a generated report, or null for an unknown name or a missing file.</summary>
+    public string? ReportPath(string name)
+    {
+        if (!ReportNames.Contains(name, StringComparer.Ordinal))
+            return null;
+
+        var path = Path.Combine(_dir, "reports", name + ".html");
+        return File.Exists(path) ? path : null;
+    }
+
     /// <summary>The standards prose the crawl copied from <c>docs/global-standards</c>.</summary>
     public GlobalStandardsDto LoadStandards()
     {

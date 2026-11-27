@@ -2,7 +2,9 @@
 # CI runs `ruff check .` when this file exists; locally: `uvx ruff check .`.
 target-version = "py310"
 line-length = 120
-extend-exclude = ["**/bin", "**/obj", "**/node_modules"]
+# scripts/global/rl_reports is GLOBAL's RL report generators, vendored with only their path
+# constants changed; they are kept as written so they can be diffed against the originals.
+extend-exclude = ["**/bin", "**/obj", "**/node_modules", "scripts/global/rl_reports"]
 
 [lint]
 select = ["E", "F", "W", "I", "B", "UP"]

@@ -292,6 +292,38 @@
                 </a>
             }
         </div>
+
+        <h2>Project groups &amp; reports</h2>
+        <div class="global-tracks">
+            <section class="global-item" aria-label="RL training games">
+                <div class="text"><strong>🤖 RL training — @_summary.RlCount games</strong></div>
+                <ul class="global-track">
+                    <li><a href="/global/rl?view=overview"><strong>RL Comparison, Triage &amp; Portability</strong></a><span>3 depth levels, what to train next, 0–10 skill scores</span></li>
+                    <li><a href="/global/rl?view=progress"><strong>RL Progress Over Time</strong></a><span>brains and speed over time, run-over-run deltas</span></li>
+                    <li><a href="/global/standards?open=portability-contract"><strong>Cross-Platform Standards (Unity ↔ Unreal)</strong></a><span>MJCF body rules, obs→act sockets, ONNX opset 17 &amp; parity gates</span></li>
+                    <li><a href="/global/standards?open=rl-prompt"><strong>RL audit prompt</strong></a><span>saved prompt</span></li>
+                </ul>
+            </section>
+            <section class="global-item" aria-label="Blazor apps and tools">
+                <div class="text"><strong>🌐 Blazor apps — @(_summary.RepoCount - _summary.RlCount) .NET apps &amp; tools</strong></div>
+                <ul class="global-track">
+                    <li><a href="/global/fleet"><strong>App health (in Fleet Health)</strong></a><span>CI, tests and live URLs for every app — filter "Apps &amp; tools"</span></li>
+                    <li><a href="/global/standards?open=blazor-standards"><strong>Blazor &amp; .NET Standards</strong></a><span>shared architecture, UI, and CI conventions</span></li>
+                    <li><a href="/global/standards?open=blazor-prompt"><strong>Blazor audit prompt</strong></a><span>ready to run for a deeper Blazor dashboard</span></li>
+                </ul>
+            </section>
+        </div>
+
+        <details class="global-item">
+            <summary><strong>Glossary</strong></summary>
+            <dl class="global-glossary">
+                @foreach (var (term, meaning) in Glossary)
+                {
+                    <dt>@term</dt>
+                    <dd>@meaning</dd>
+                }
+            </dl>
+        </details>
     }
 </main>
 
@@ -307,6 +339,17 @@
     private sealed record Tile(string Href, string Title, string Value, string Note);
 
     private sealed record Metric(string Key, string Label);
+
+    private static readonly (string Term, string Meaning)[] Glossary =
+    [
+        ("brain / .onnx", "A trained AI model saved as a file the game can load."),
+        ("MJCF body", "The XML description of a robot or character used by the MuJoCo physics simulator."),
+        ("socket", "The inputs (observations) and outputs (actions) of a brain. Only brains with matching sockets can be swapped."),
+        ("envs", "How many copies of the game run in parallel while training. More = faster learning."),
+        ("sps", "Steps per second: how fast training runs. Only comparable between runs with similar envs."),
+        ("CI", "Automatic build and test run on GitHub after each push."),
+        ("dirty / uncommitted", "Files changed on this PC that are not saved to git yet."),
+    ];
 
     private sealed record Dot(double X, double Y, string Title);
 

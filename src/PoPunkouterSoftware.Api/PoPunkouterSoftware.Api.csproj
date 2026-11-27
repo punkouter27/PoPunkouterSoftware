@@ -59,6 +59,8 @@
          Update, not Include: the web SDK already lists every *.json as Content. -->
     <Content Update="App_Data\global\**\*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="App_Data\global\**\*.jsonl" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <!-- The RL reports (scripts/global/build_rl_reports.py), served by /api/global/reports/{name}. -->
+    <Content Include="App_Data\global\reports\*.html" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
