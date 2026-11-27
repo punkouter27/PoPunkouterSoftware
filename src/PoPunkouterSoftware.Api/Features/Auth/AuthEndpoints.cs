@@ -9,7 +9,7 @@ internal static class AuthEndpoints
     internal static void MapAuthEndpoints(this WebApplication app)
     {
         app.MapGet("/auth/error", () => Results.Problem(
-            detail: "Microsoft sign-in failed. Return to the portfolio and try signing in again.", statusCode: 401))
+            detail: "Microsoft sign-in failed. Only the site owner's account can sign in; the portfolio stays open to everyone.", statusCode: 401))
             .AllowAnonymous().WithTags("Auth");
 
         app.MapGet("/auth/login/microsoft", (string? returnUrl, IConfiguration config) =>

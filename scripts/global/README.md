@@ -18,7 +18,7 @@ Then reload `/global` — the API re-reads a file when its timestamp changes, so
 | --- | --- | --- | --- |
 | `fleet` | `collect_fleet.py` | `fleet.json`, `history/station_timeline.jsonl` | `/api/global/fleet`, `/api/global/briefing`, `/api/global/vault`, `/api/global/readiness`, `/api/global/showroom`, `/api/global/disk` |
 | `lessons` | `harvest_lessons.py` | `lessons.json` | `/api/global/lessons` |
-| `rl` | `collect_rl_facts.py`, `record_rl_history.py` | `rl_facts.json`, `rl/timeline.jsonl` | `/api/global/rl` |
+| `rl` | `collect_rl_facts.py`, `record_rl_history.py` | `rl_facts.json`, `rl/rl_timeline.jsonl` | `/api/global/rl` |
 | `unite` | `build_global_data.py` (inline) | `unite.json` | `/api/global/unite` |
 
 `config/` holds the hand-edited inputs the previous station kept: `train_jobs.json`,

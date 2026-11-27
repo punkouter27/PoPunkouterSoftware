@@ -22,6 +22,7 @@ public class GlobalEndpointsTests(TestWebApp app) : IClassFixture<TestWebApp>
         "/api/global/readiness",
         "/api/global/briefing",
         "/api/global/rl",
+        "/api/global/queue",
         "/api/global/unite",
     ];
 
@@ -40,6 +41,7 @@ public class GlobalEndpointsTests(TestWebApp app) : IClassFixture<TestWebApp>
     [InlineData("/api/global/readiness")]
     [InlineData("/api/global/briefing")]
     [InlineData("/api/global/rl")]
+    [InlineData("/api/global/queue")]
     [InlineData("/api/global/unite")]
     public async Task GlobalEndpoints_RejectAnonymousRequests(string path)
     {
@@ -120,6 +122,20 @@ public class GlobalEndpointsTests(TestWebApp app) : IClassFixture<TestWebApp>
 
         unite.Should().NotBeNull();
         unite!.Creatures.Should().HaveCount(6);
+    }
+
+    [Fact]
+    public async Task Queue_ListsTheTrainingJobsWithTheirCrawlCheck()
+    {
+        using var client = SignedIn(app);
+
+        var queue = await client.GetFromJsonAsync("/api/global/queue", GlobalJsonContext.Default.GlobalQueueDto);
+
+        queue.Should().NotBeNull();
+        queue!.Generated.Should().NotBeNull();
+        queue.Jobs.Should().NotBeEmpty();
+        queue.Jobs.Should().OnlyContain(j => !string.IsNullOrEmpty(j.Id) && !string.IsNullOrEmpty(j.Command));
+        queue.Jobs.Should().OnlyContain(j => j.Missing != null, "the crawl checks every job's requirements");
     }
 
     [Fact]

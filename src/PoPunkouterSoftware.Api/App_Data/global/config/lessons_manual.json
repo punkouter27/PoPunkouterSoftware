@@ -1,0 +1,4 @@
+{
+  "_readme": "Your own lessons, shown on lessons.html beside the harvested ones. Fields: text (required), repo, kind (trap|rule), tags, file, line.",
+  "lessons": []
+}

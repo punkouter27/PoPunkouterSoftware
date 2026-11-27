@@ -163,6 +163,42 @@ public sealed class GlobalDataStoreTests
     }
 
     [Fact]
+    public void Queue_ReadsTheCommittedJobsAndTheirMissingPaths()
+    {
+        var queue = Store().LoadQueue();
+
+        queue.Generated.Should().NotBeNull();
+        queue.Jobs.Should().NotBeEmpty();
+        queue.Jobs.Select(j => j.Id).Should().OnlyHaveUniqueItems();
+        queue.Jobs.Should().OnlyContain(j => j.Missing != null && j.Missing.All(m => j.Requires.Contains(m)));
+    }
+
+    [Fact]
+    public void Queue_WithoutACrawl_FallsBackToTheJobListUnchecked()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "po-global-queue", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(dir, "config"));
+        try
+        {
+            File.WriteAllText(Path.Combine(dir, "config", "train_jobs.json"),
+                """{"jobs":[{"id":"a","repo":"PoBox","command":"train --hours {hours}","default_hours":6,"self_limiting":true}]}""");
+
+            var queue = new GlobalDataStore(dir).LoadQueue();
+
+            var job = queue.Jobs.Should().ContainSingle().Subject;
+            job.Command.Should().Be("train --hours {hours}");
+            job.DefaultHours.Should().Be(6);
+            job.SelfLimiting.Should().BeTrue();
+            job.Missing.Should().BeNull("nothing has checked the PC for this job yet");
+            queue.Generated.Should().BeNull();
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
     public void MissingSnapshot_DegradesToEmptyInsteadOfThrowing()
     {
         var store = new GlobalDataStore(Path.Combine(Path.GetTempPath(), "po-global-missing", Guid.NewGuid().ToString("N")));

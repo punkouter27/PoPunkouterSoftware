@@ -43,6 +43,9 @@ internal static class GlobalEndpoints
         global.MapGet("/rl", (GlobalDataStore store) => Results.Ok(store.LoadRl()))
             .WithName("GetGlobalRl");
 
+        global.MapGet("/queue", (GlobalDataStore store) => Results.Ok(store.LoadQueue()))
+            .WithName("GetGlobalQueue");
+
         global.MapGet("/unite", (GlobalDataStore store) => Results.Ok(store.LoadUnite()))
             .WithName("GetGlobalUnite");
 

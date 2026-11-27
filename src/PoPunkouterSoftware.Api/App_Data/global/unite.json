@@ -1,0 +1,225 @@
+{
+ "generated": "2026-11-27T13:33:56-05:00",
+ "rules": {
+  "path": "docs/unite/RULES.md",
+  "sha256": "b7d81381b1b36b10",
+  "markdown": "# RULES.md — the universal RL training prompt\n\nPaste this whole file at the start of a session **inside one RL training repo**. It does two jobs:\nit aligns the session with the universal training concept, and it tells the session exactly what to\nchange so that every agent trained from now on is cross-compatible with every other Po app.\n\n**Use in:** `PoRobotTrain`, `PoBasketball`, `PoRaceUnreal`, `PoSlapUnreal`, or any new MuJoCo RL app.\n**Do not use in:** `PoFootball`, `PoSoccer`, `PoSumo` — Unity ML-Agents, consumer-only (§5).\n\nExisting checkpoints are **grandfathered**. They may stay incompatible. Everything trained from now on\nmust conform, and the repo must make non-conformance impossible rather than merely discouraged.\n\n---\n\n## 0. Mission\n\nTrain in MuJoCo. Let any creature load into any Po game. Let any policy trained against the shared\ninterface run in any app. Let the R1's policies reach the physical robot.\n\n---\n\n## 1. How to behave in this session\n\n1. Read the repo's `AGENTS.md` and `CLAUDE.md` first. Their rules win over this file except on the\n   contract itself.\n2. Say which rule number each change satisfies, and cite evidence (`file:line`, a command and its\n   output). A claim without evidence is not a change.\n3. Do not commit, push, deploy, or start a training run unless explicitly asked.\n4. If a creature you need has no contract, **stop and report it**. Do not invent one, and do not\n   hand-write interface constants to get unstuck.\n5. Report what you grandfathered, what you did not do, and why. A partial result written down beats a\n   claim.\n\n---\n\n## 2. Definitions\n\n- **Contract** — `global/UNITE/creatures/<id>/contract.json`, schema `global/UNITE/pocontract.schema.json`.\n- **Interface** — `contract.observation` + `contract.action` + `contract.roles`.\n- **Role-ordered** — indexed by `contract.roles.canonical_order`, **never** by MuJoCo joint order.\n- **Sidecar** — the JSON beside an `.onnx` that pins the hashes.\n- **Lock** — `contracts.lock.json` at the repo root: the contract path plus its three hashes.\n- **Legacy** — a policy trained before these rules. It stays, it is fenced, it is never promoted.\n\n---\n\n## 3. The concept in one page\n\n**Two kinds of compatibility, never conflated:**\n\n| | Creature compatibility | Brain compatibility |\n|---|---|---|\n| Means | the body loads and runs in any MuJoCo app | the policy produces correct actions in any app |\n| Requires | portable prefab + contract | trained **against the role interface** |\n| Status | done — 6 prefabs verified | per-policy; legacy ones are not |\n\nDropping a **creature** into another app works today. Dropping a **brain** in is a migration.\n\n**Six layers that must match:**\n\n| # | Layer | Must match | May differ |\n|---|---|---|---|\n| 1 | World | recorded contact block and solver `cone` | the environment, within the trained distribution |\n| 2 | Solver | `timestep`, `integrator`, `solver`, `iterations`, `cone`, `jacobian`, `impratio` | — |\n| 3 | Body | masses, inertias, joint axes/ranges/damping/armature, actuator gains | — |\n| 4 | Timing | physics dt, decimation, policy rate, latency | — |\n| 5 | Interface | slot order/size/scale/frame, action rule, clip, normalisation placement | — |\n| 6 | Mapping | which actuator drives which joint, PD law, `motor_slot` | — |\n\n> **Contracts must be identical. Worlds must sit inside the trained distribution.**\n\nIdentical worlds are **not** a goal; forcing every game onto one floor collapses them into one game.\nThe transfer mechanism is randomisation during training — friction, terrain, payload, encoder bias,\npushes — not cloning a floor.\n\n**Compatibility ≠ fidelity.** Compatibility makes a brain *loadable*; fidelity makes it *correct*.\nThe R1 is compatible and not yet fidelity-verified (§9).\n\n---\n\n## 4. The rules — R1 to R28\n\n### Creature\n\n- **R1.** A creature comes from `global/UNITE/creatures/<id>/contract.json`. Never a hand-written copy.\n- **R2.** A creature is a portable prefab: no `meshdir`, meshes referenced as `meshes/<name>`,\n  `angle=\"radian\"`, no floor/lights/ground textures. The host supplies `<geom name=\"floor\">`.\n  Verified behaviour, not style: `<include>` discards `meshdir`, and the host's `<compiler>` wins over\n  an included file's.\n- **R3.** The mount snippet is exactly `<compiler angle=\"radian\" autolimits=\"true\"/>` +\n  `<include file=\"…/creature.xml\"/>` + a `floor` geom.\n- **R4.** New creatures go through `global/UNITE/tools/build_creatures.py` and must pass\n  `check_creatures.py` — identical joint tables standalone and through a foreign `<include>`, and no\n  joint axis, range or mass changed by the split.\n- **R5.** Never invent a role or reorder `canonical_order`. A new role is a `roles_version` bump and a\n  retrain for every policy.\n\n### Brain\n\n- **R6.** Observation is role-ordered: **131 floats**, canonical **28 roles**, `role_mask`,\n  `morphology_onehot`; roles absent on the creature are zero-filled and PD-held at nominal.\n- **R7.** Action is **28 wide**: `clip(default + a*action_scale, soft_limit_lo, hi)`.\n- **R8.** Frames, scales and per-slot meaning are exactly `contract.observation.slots[*].rule`.\n- **R9.** No normalisation inside the ONNX graph. Plain MLP, pinned opset. Normalisation lives in the\n  runtime and is declared in `contract.observation.normalizer`. An ML-Agents export violates this by\n  construction.\n- **R10.** Every `.onnx` ships a sidecar: `policy_name`, `n_obs`, `n_action`, `opset`, `input`,\n  `output`, `interface_sha256`, `morphology_sha256`, `physics_sha256`, `policy_sha256`, `mujoco`,\n  `ort_vs_torch_max_abs_diff`, and training provenance.\n- **R11.** **The export entrypoint aborts** when the layout it would produce differs from\n  `contract.hashes.interface_sha256`, printing both and the first differing slot. This guard — not a\n  comment — is what makes every future agent conform.\n- **R12.** Parity before shipping: observations against the contract goldens within\n  `contract.references.tolerance`; ONNX vs trainer actions ≤ 1e-5. A screenshot of the creature moving\n  is not evidence.\n- **R13.** A policy may be adopted by another app only if its sidecar `interface_sha256` matches a\n  creature contract. Otherwise: re-export (no retrain), add an explicit translator, or retrain. Never\n  hand-patch an observation order to make a brain load.\n\n### Runtime\n\n- **R14.** The loader compares sidecar against contract and lock. On mismatch it **refuses**, logs the\n  three hashes, and reports \"policy incompatible\". It never reorders, pads or rescales to fit.\n- **R15.** If the app rebuilds the MJCF in-engine (URLab, a Unity plugin, a browser port), it reapplies\n  `physics.option`, free-joint damping/armature and site positions from the contract at bind time, then\n  asserts the fingerprint. Known losses: the `<option>` block, free-joint defaults, site positions,\n  single precision.\n- **R16.** MuJoCo steps the creature; the engine renders and observes. Contact physics never moves into\n  the engine.\n\n### Physics and hardware\n\n- **R17.** One MuJoCo version per contract. Two versions are two contracts. Never average them.\n- **R18.** Record the world contact block actually used: `friction` (3-vector), `solref`, `solimp`,\n  `priority`, `condim`, plus solver `cone`. \"Same friction\" is not a specification.\n- **R19.** Earth parameters are asserted, not assumed: gravity `[0, 0, -9.81]`, SI metres/radians/kg,\n  and `timestep × decimation == control_dt`.\n- **R20.** Compatibility ≠ fidelity. State which one you have actually established.\n- **R21.** Only `unitree_r1_a5` may carry `hardware` and `motor_slot`. Its policies additionally need\n  the PoRobotTrain deploy gate and a matching `policy_sha256`. No other app may promote one.\n\n### Legacy\n\n- **R22.** Existing policies are grandfathered: registered as `legacy` with a note, left in place,\n  never migrated and never promoted.\n- **R23.** A test fails when a new `.onnx` appears without a sidecar, or with a sidecar whose interface\n  hash matches no contract. This closes the leak without rewriting history.\n- **R24.** The training entrypoint prints one line naming the contract and interface hash it is about to\n  train against, so a log proves conformance.\n\n### Governance\n\n- **R25.** `global/UNITE` is a registry and generator, **not a monorepo**. No app code, builds, or\n  per-game configuration lives there.\n- **R26.** No shared code between repos. Referencing `global/UNITE` does not violate this — it is not a\n  repo — but every reference is pinned by hash in `contracts.lock.json` so drift shows in the diff.\n- **R27.** Never copy `global/UNITE` files into a repo. Never hand-edit a `contract.json`. To change a\n  contract, change the source and regenerate.\n- **R28.** If a repo needs a creature `global/UNITE` does not have, stop and report it. Do not invent\n  one.\n\n---\n\n## 5. What to change in this repo\n\n### Part 1 — Adopt the contract (no behaviour change)\n\n1. List every creature this repo renders or trains.\n2. Resolve each to `global/UNITE/creatures/<id>/contract.json`. If one does not exist, stop that\n   creature and report it.\n3. Add `contracts.lock.json` at the repo root: per creature `{id, path, interface_sha256,\n   morphology_sha256, physics_sha256}`.\n4. Add one loader module (`.py` / `.cs` / `.h`) that reads the contract. It must be the **only** source\n   of `n_obs`, `n_action`, joint order, roles, gains, `action_scale`, `control_dt`, `decimation`,\n   `timestep` and the solver `option`.\n5. Remove or neutralise hand-copied duplicates. Where a compile-time constant is required, generate it\n   from the contract and add a `--check` mode that exits 1 when stale — follow\n   `PoRaceUnreal/training/contract.py` and `PoSlapUnreal/training/gen_constants.py`.\n6. Test: contract loads, hashes equal the lock, generated file is current. **No render or physics\n   change is acceptable here** — if existing tests move, you changed behaviour.\n\n### Part 2 — Enforce the interface for new training only\n\nDo not migrate old checkpoints. Make non-conforming training impossible.\n\n1. Observation builder: 131 floats in `contract.roles.canonical_order`, zero-filled where `roles.mask`\n   is 0, plus `role_mask` and `morphology_onehot`; per-slot meaning from\n   `contract.observation.slots[*].rule`.\n2. Action mapping: 28 wide, `clip(default + a*action_scale, soft_limit_lo, hi)`, masked roles PD-held\n   at `default`.\n3. Export a plain MLP, pinned opset, no normalisation in the graph.\n4. Write a sidecar beside every `.onnx` (fields in R10).\n5. **Hard guard:** the export entrypoint aborts when the layout hash it would produce differs from\n   `contract.hashes.interface_sha256` (R11).\n6. Tests: observation parity against the contract goldens; ONNX vs trainer actions ≤ 1e-5.\n\n### Part 3 — The runtime refuses, not degrades\n\n1. Compare sidecar against contract and lock before a policy runs. On mismatch: do not load, log the\n   three hashes, surface \"policy incompatible\" where the app already shows status (HUD, `/diag`,\n   health). Never reshape inputs to make an old brain fit.\n2. If this app rebuilds the MJCF in-engine, reapply the contract's `physics.option`, free-joint\n   damping/armature and site positions at bind time, then assert the fingerprint (R15).\n3. Add a test that corrupts a sidecar hash and asserts the loader refuses.\n\n### Part 4 — Physics and world\n\n1. MuJoCo steps; the engine renders and observes.\n2. One MuJoCo version per contract; do not upgrade the pin without emitting a new contract.\n3. Record the contact block actually used: `friction` (3-vector), `solref`, `solimp`, `priority`,\n   `condim`, and the solver `cone`.\n4. Domain randomisation must be on and recorded for anything meant to transfer — friction, terrain,\n   payload, encoder bias, pushes.\n\n### Part 5 — Contain the legacy and stop the leak\n\n1. Add `agents/registry.json`: every existing `.onnx` with `{name, path, tier, n_obs, n_action,\n   interface_sha256_16 (or null), status: \"legacy\", note: \"not cross-compatible; do not reuse\"}`.\n   Do not delete them; do not promote them.\n2. Add a test that fails on a new `.onnx` without a sidecar, or with a sidecar matching no contract.\n3. Make the training entrypoint print one line naming the contract and interface hash it is training\n   against.\n\n### Part 6 — Report\n\nA table: rule → before → after → evidence. Then:\n- **Grandfathered:** policies left alone, with their interface hashes or `null`.\n- **Not done:** anything you could not do, and why.\n- **Contract gaps:** creatures this repo needs that `global/UNITE` does not have.\n\n### If this repo trains with Unity ML-Agents\n\nDo not pretend. It is a **consumer only**: it may load contract-conforming ONNX through Sentis via the\ncontract-driven loader, and it must mark everything its own trainer produces as `legacy`, because an\nML-Agents graph bakes observation normalisation and its own vector layout into the network. Portable\nbrains for that game must come from a MuJoCo trainer. Say so in the report instead of attempting\nPart 2.\n\n---\n\n## 6. Evidence — what counts as proof\n\n`file:line`, a command and its output, a run URL, or a screenshot the session opened.\nStatus is PASS / FAIL / N/A / NOT VERIFIED. Flaky is FAIL.\n\n| Claim | Command |\n|---|---|\n| Contracts current | `build_creatures.py --check` → `OK` |\n| Creatures portable | `check_creatures.py` → `OK` |\n| Contracts valid | `validate.py` → `OK` |\n| Interface unchanged | `interface_sha256_16` is `94377ebae772ff6c` for every creature |\n| Policy conforms | sidecar `interface_sha256` equals the contract's |\n| Runtime refuses | the corrupt-sidecar test passes |\n| Parity | parity output with max deviation and the tolerance |\n| An app can consume 131 | `check_cross_app.py` → `PoRobotTrain`, `PoBasketball`, `PoRaceUnreal` `131 builder (9/9)` |\n\nApplicability: MuJoCo-trained work is in scope. Unity ML-Agents repos are **N/A** on the interface,\nparity and portability rows until re-exported — record N/A, not FAIL.\n\n---\n\n## 7. Do not\n\n- Invent a role, or extend/reorder `canonical_order`.\n- Hand-edit a `contract.json`.\n- Copy `global/UNITE` files into a repo.\n- Bake normalisation into a graph.\n- \"Fix\" compatibility by reordering observations at load time.\n- Upgrade a MuJoCo pin to make a test pass.\n- Train against joint order instead of roles.\n- Force apps onto identical worlds to fake compatibility.\n- Claim sim-to-real fidelity without `sim_real_diff`.\n- Reformat untouched files or add a second workflow.\n\n---\n\n## 8. Done means\n\n`contracts.lock.json` exists and matches. The contract loader is the only source of interface values.\nThe export guard aborts on a non-conforming layout. The refusal test passes. A new `.onnx` without a\nsidecar fails CI. Legacy policies are registered and untouched. Existing tests are green, and no\nrender or physics behaviour changed.\n\n---\n\n## 9. Known gaps — state them, do not paper over them\n\n1. **R1 mass.** Twin is **30.150 kg**; training model and real A5 are **28.93 kg** — +1.2 kg above the\n   pelvis. Fix by rebuilding from the mjlab model or setting `mass.torso_extra_mass_kg: -1.22`, then\n   re-gate.\n2. **Contacts.** Twin `condim 6` / foot friction 1.0 / floor 0.9 vs training `condim 3` / 0.6\n   randomised 0.3–1.6. The real floor is unmeasured.\n3. **Never calibrated.** `sim_calibration.yaml` has `last_calibrated_at: null`,\n   `parity_rms_deg: null`. Every gain is an estimate.\n4. **No randomisation in the twin**, while training randomises encoder bias, CoM and pushes. The twin\n   is the easier test.\n5. **Training model not vendored.** mjlab's `r1.xml` (28.93 kg) exists only inside the level-2 image.\n\n6. **Three contracts carry no `kd`.** `matthew`, `grandma` and `g1` have `\"kd\": null` on every joint, because\n   their MJCF actuators are `biasprm=\"0 -kp\"` — the source models have no velocity damping. A runtime must read\n   that as `0`, not as \"missing\". Writing `0.0` into the contracts would change `morphology_sha256` and invalidate\n   every policy trained against them, so it is recorded here instead. `unitree_r1_a5` and `streetball_humanoid`\n   carry real gains.\n\n7. **PoSlapUnreal has no creature to adopt.** Its five bodies (`grandpa`, `kim`, `matt`, `mom`, `tong`) use their\n   own rig — `waist_twist` / `waist_flex` / `waist_side` / `neck_turn`, 30 joints — and share no joint name with\n   the six creatures, so not even its `matt` is `matthew`. R28: this is reported, not invented. Giving it a\n   portable brain means building contracts for those bodies through `tools/build_creatures.py` (a new creature\n   per body, each needing a `role_map.json` and a golden), which is an owner decision.\n   `PoRaceUnreal`'s stroller is the same kind of gap: 4 joints, no contract, named in its test.\n\nThe only sim-to-real evidence that counts: `sim_real_diff` at **<5° max per-joint at every 20 ms tick**.\n\n---\n\n## 10. Current state of the family\n\n| Creature | kind | joints | roles | hardware |\n|---|---|---|---|---|\n| `unitree_r1_a5` | humanoid | 26 | 26/28 | **yes** |\n| `streetball_humanoid` | humanoid | 29 | 26/28 | no |\n| `matthew` | humanoid | 29 | 24/28 | no |\n| `grandma` | humanoid | 29 | 24/28 | no |\n| `g1` | humanoid | 29 | 24/28 | no |\n| `go2` | quadruped | 12 | 12/28 | no |\n\nAll six: `n_obs` 131, `n_action` 28, `interface_sha256_16` `94377ebae772ff6c`, gravity `[0,0,-9.81]`.\nCreature compatibility is done and verified; brain compatibility applies to new training only.\n\n---\n\n## 11. Where things live\n\nAll under `global/UNITE/` unless marked otherwise:\n\n| Path | What it is |\n|---|---|\n| `RULES.md` (this file) | the prompt: rules + what to change |\n| [`docs/VISION.md`](docs/VISION.md) | the goal, the two compatibilities, scope boundaries |\n| [`docs/PORTABILITY.md`](docs/PORTABILITY.md) | the six layers; why gravity + friction is not enough |\n| [`docs/GOVERNANCE.md`](docs/GOVERNANCE.md) | versioning, vendoring, adding a creature, drift detection |\n| [`docs/ROADMAP.md`](docs/ROADMAP.md) | phases, exit criteria, risks |\n| [`docs/AGENTS-SECTION.md`](docs/AGENTS-SECTION.md) | the section to paste into any repo's `AGENTS.md` (and the `CLAUDE.md` pointer) |\n| [`pocontract.schema.json`](pocontract.schema.json) | the contract schema |\n| [`creatures/INDEX.md`](creatures/INDEX.md) | the creature library and mount snippet |\n| [`creatures/unitree_r1_a5/README.md`](creatures/unitree_r1_a5/README.md) | the hardware creature and its fidelity gaps |\n| [`tools/verify_policy.py`](tools/verify_policy.py) | the export guard + sidecar writer (R10/R11); `--check` aborts, `--write` writes, `--selftest` tests itself |\n| [`tools/role_obs.py`](tools/role_obs.py) | **the reference 131-float builder** (R6/R8) and the per-creature goldens every other runtime must reproduce |\n| [`tools/role_env.py`](tools/role_env.py) | one virtual env for every creature: 28 actions in, 131 observations out, masked roles PD-held |\n| [`tools/role_agent.py`](tools/role_agent.py) | **the runtime**: sidecar refusal, any creature in MuJoCo, and the R1's 31-slot `unitree_hg` command vector (`--hardware`) |\n| [`prompts/PROMPT-ProfileC.md`](prompts/PROMPT-ProfileC.md) | the *fleet-wide* CODECONSISTANT Profile C: scope gate (C0/C1/C2/N/A) + the fix pass (different job) |\n| [`../station/README.md`](../station/README.md) | the 10 cross-repo tools; `vault.html` lists every `.onnx` by socket |\n| [`../README.md`](../README.md) | the map of the whole `global/` area |\n\n---\n\n## 12. Commands\n\nFrom the `_CODEMATT` root:\n\n```powershell\n$py = 'PoRobotTrain\\.venv\\Scripts\\python.exe'\n\n& $py global\\UNITE\\tools\\build_creatures.py            # rebuild creatures + contracts + INDEX\n& $py global\\UNITE\\tools\\build_creatures.py --check    # fail if anything on disk is stale\n& $py global\\UNITE\\tools\\check_creatures.py            # portability + split fidelity + Earth asserts\n& $py global\\UNITE\\tools\\verify_policy.py --selftest   # test the export guard itself\n& $py global\\UNITE\\tools\\role_obs.py --selftest        # test the universal 131-float builder\n& $py global\\UNITE\\tools\\role_obs.py --verify          # every creature reproduces its golden\n& $py global\\UNITE\\tools\\role_env.py --smoke           # step every creature through one 28/131 interface\n& $py global\\UNITE\\tools\\role_ppo.py --smoke           # 2 tiny iterations, then export + guard (~5 s)\n& $py global\\UNITE\\tools\\role_agent.py --selftest      # test the runtime: bus map, sim/bus agreement, refusal\n& $py global\\UNITE\\tools\\role_agent.py global\\UNITE\\runs\\ppo-r1-edu-stand --hardware   # twin + motor bus\n& $py global\\UNITE\\tools\\role_agent.py global\\UNITE\\runs\\ppo-r1-edu-stand --all-creatures\n& $py global\\UNITE\\tools\\check_cross_app.py            # is a new agent actually usable in every app?\ncd global\\UNITE; uv run --no-project --with jsonschema python tools\\validate.py\n\n# the export guard for one policy (R10 + R11). Put this in the repo's export entrypoint.\n& $py global\\UNITE\\tools\\verify_policy.py <policy.onnx> --creature <id> --check     # exit 1 = abort\n& $py global\\UNITE\\tools\\verify_policy.py <policy.onnx> --creature <id> --write     # write sidecar\n& $py global\\UNITE\\tools\\verify_policy.py <policy.onnx> --creature <id> --verify-sidecar   # runtime check\n```\n\nThis file is the per-repo prompt. For the whole-fleet audit, use `prompts/PROMPT-ProfileC.md`.\n"
+ },
+ "documents": [
+  {
+   "path": "docs/unite/creatures/INDEX.md",
+   "name": "INDEX.md",
+   "bytes": 2953
+  },
+  {
+   "path": "docs/unite/creatures/unitree_r1_a5/README.md",
+   "name": "README.md",
+   "bytes": 8029
+  },
+  {
+   "path": "docs/unite/docs/AGENTS-SECTION.md",
+   "name": "AGENTS-SECTION.md",
+   "bytes": 4541
+  },
+  {
+   "path": "docs/unite/docs/GOVERNANCE.md",
+   "name": "GOVERNANCE.md",
+   "bytes": 5244
+  },
+  {
+   "path": "docs/unite/docs/PORTABILITY.md",
+   "name": "PORTABILITY.md",
+   "bytes": 5761
+  },
+  {
+   "path": "docs/unite/docs/ROADMAP.md",
+   "name": "ROADMAP.md",
+   "bytes": 9740
+  },
+  {
+   "path": "docs/unite/docs/VISION.md",
+   "name": "VISION.md",
+   "bytes": 4699
+  },
+  {
+   "path": "docs/unite/prompts/CODECONSISTANT-v5.md",
+   "name": "CODECONSISTANT-v5.md",
+   "bytes": 10291
+  },
+  {
+   "path": "docs/unite/prompts/PROMPT-ProfileC.md",
+   "name": "PROMPT-ProfileC.md",
+   "bytes": 8020
+  },
+  {
+   "path": "docs/unite/README.md",
+   "name": "README.md",
+   "bytes": 17469
+  },
+  {
+   "path": "docs/unite/RULES.md",
+   "name": "RULES.md",
+   "bytes": 21285
+  }
+ ],
+ "creatures": [
+  {
+   "id": "g1",
+   "kind": "humanoid",
+   "morphologyId": 0,
+   "joints": 29,
+   "rolesTotal": 28,
+   "rolesMapped": 24,
+   "heldOutside": [],
+   "obs": 131,
+   "action": 28,
+   "timestep": 0.002,
+   "controlDt": 0.02,
+   "hardware": false,
+   "source": "PoRaceUnreal/training/g1/assets/g1_porace.xml",
+   "generatedAt": "2026-11-27T00:27:27Z",
+   "notes": "KNOWN DEFECT: only 2 of 13 geoms collide (left_foot, right_foot, both thin meshes), so the creature sinks through the floor within ~6 s of falling (pelvis z +0.43 -> -0.74). It is usable for kinematic/render work but not for physics training until collision geoms are added to the body links.",
+   "interfaceSha": "94377ebae772ff6c",
+   "meshes": 0,
+   "files": {
+    "contract.json": 53123,
+    "creature.xml": 21223,
+    "golden_role_obs.npz": 145388,
+    "role_map.json": 1403,
+    "scene.xml": 3246
+   }
+  },
+  {
+   "id": "go2",
+   "kind": "quadruped",
+   "morphologyId": 1,
+   "joints": 12,
+   "rolesTotal": 28,
+   "rolesMapped": 12,
+   "heldOutside": [],
+   "obs": 131,
+   "action": 28,
+   "timestep": 0.002,
+   "controlDt": 0.02,
+   "hardware": false,
+   "source": "PoRaceUnreal/training/assets/go2/go2_porace.xml",
+   "generatedAt": "2026-11-27T00:27:28Z",
+   "notes": "Unitree Go2 quadruped. Legs map positionally into the humanoid limb block (hip->hip_pitch, thigh->hip_roll, calf->hip_yaw) because a quadruped has no humanoid roles; the mask and morphology one-hot tell a shared brain what it is driving.",
+   "interfaceSha": "94377ebae772ff6c",
+   "meshes": 16,
+   "files": {
+    "contract.json": 23990,
+    "creature.xml": 12073,
+    "golden_role_obs.npz": 72590,
+    "role_map.json": 616,
+    "scene.xml": 2226
+   }
+  },
+  {
+   "id": "grandma",
+   "kind": "humanoid",
+   "morphologyId": 2,
+   "joints": 29,
+   "rolesTotal": 28,
+   "rolesMapped": 24,
+   "heldOutside": [],
+   "obs": 131,
+   "action": 28,
+   "timestep": 0.004,
+   "controlDt": 0.02,
+   "hardware": false,
+   "source": "PoRaceUnreal/training/grandma/assets/grandma_porace.xml",
+   "generatedAt": "2026-11-27T00:27:28Z",
+   "notes": "",
+   "interfaceSha": "94377ebae772ff6c",
+   "meshes": 0,
+   "files": {
+    "contract.json": 52278,
+    "creature.xml": 17330,
+    "golden_role_obs.npz": 144989,
+    "role_map.json": 1403,
+    "scene.xml": 3267
+   }
+  },
+  {
+   "id": "matthew",
+   "kind": "humanoid",
+   "morphologyId": 3,
+   "joints": 29,
+   "rolesTotal": 28,
+   "rolesMapped": 24,
+   "heldOutside": [],
+   "obs": 131,
+   "action": 28,
+   "timestep": 0.004,
+   "controlDt": 0.02,
+   "hardware": false,
+   "source": "PoRaceUnreal/training/matt/assets/matt_porace.xml",
+   "generatedAt": "2026-11-27T00:27:28Z",
+   "notes": "The Matt human racer (G1 joint layout). Source is a full scene; the floor, light, option and keyframe are split out into scene.xml.",
+   "interfaceSha": "94377ebae772ff6c",
+   "meshes": 0,
+   "files": {
+    "contract.json": 52360,
+    "creature.xml": 17259,
+    "golden_role_obs.npz": 145052,
+    "role_map.json": 1403,
+    "scene.xml": 3267
+   }
+  },
+  {
+   "id": "streetball_humanoid",
+   "kind": "humanoid",
+   "morphologyId": 4,
+   "joints": 29,
+   "rolesTotal": 28,
+   "rolesMapped": 26,
+   "heldOutside": [],
+   "obs": 131,
+   "action": 28,
+   "timestep": 0.002,
+   "controlDt": 0.02,
+   "hardware": false,
+   "source": "PoBasketball/sim/assets/humanoid.xml",
+   "generatedAt": "2026-11-27T00:27:28Z",
+   "notes": "The basketball mannequin. Source uses compiler angle=degree; every angle is converted to radians here so one unit system holds across the family (a host's <compiler> wins over an included file's, so mixed units would silently corrupt the model).",
+   "interfaceSha": "94377ebae772ff6c",
+   "meshes": 0,
+   "files": {
+    "contract.json": 47441,
+    "creature.xml": 12805,
+    "golden_role_obs.npz": 144194,
+    "role_map.json": 1125,
+    "scene.xml": 1503
+   }
+  },
+  {
+   "id": "unitree_r1_a5",
+   "kind": "humanoid",
+   "morphologyId": 5,
+   "joints": 26,
+   "rolesTotal": 28,
+   "rolesMapped": 26,
+   "heldOutside": [],
+   "obs": 131,
+   "action": 28,
+   "timestep": 0.005,
+   "controlDt": 0.02,
+   "hardware": true,
+   "source": "PoRobotTrain/UnrealProject/MJCF/r1_twin.xml",
+   "generatedAt": "2026-11-27T00:27:30Z",
+   "notes": "Hardware-backed: this contract is the one the physical Unitree R1 A5 is driven with. Blueprints and the deploy gate live in PoRobotTrain; this folder is the portable twin. Any brain exported here must pass pocontract verify + the PoRobotTrain gate before it is copied on. Earth and timing verified: gravity [0,0,-9.81], SI metres/radians, 5 ms implicitfast, 50 Hz policy. KNOWN GAPS vs the physical A5 (from PoRobotTrain/docs/level2_walk.md and configs/sim_calibration.yaml, tracked in this folder's README): twin mass 30.15 kg vs real 28.93 kg (1.2 kg extra above the pelvis); contacts condim 6 / friction 1.0 vs training condim 3 / 0.6 randomised 0.3-1.6; sim_calibration last_calibrated_at is null and parity_rms_deg is null, so the actuator chain has never been identified against the robot; the twin applies no domain randomisation. Do not treat this contract alone as proof of sim-to-real fidelity.",
+   "interfaceSha": "94377ebae772ff6c",
+   "meshes": 42,
+   "files": {
+    "contract.json": 58203,
+    "creature.xml": 31476,
+    "golden_role_obs.npz": 137048,
+    "hardware.json": 8280,
+    "README.md": 8029,
+    "role_map.json": 1302,
+    "scene.xml": 1365
+   }
+  }
+ ]
+}

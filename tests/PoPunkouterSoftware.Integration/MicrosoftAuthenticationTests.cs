@@ -67,6 +67,62 @@ public class MicrosoftAuthenticationTests
         (await page.Content.ReadAsStringAsync()).Should().Contain("Sign out");
     }
 
+    // The signed-in test session is test@example.invalid (SessionTestClient above).
+    [Theory]
+    [InlineData("TEST@example.invalid", true)]
+    [InlineData("someone-else@example.invalid, TEST@example.invalid", true)]
+    [InlineData("someone-else@example.invalid", false)]
+    public async Task Session_IsHonouredOnlyForTheOwner(string ownerEmail, bool allowed)
+    {
+        await using var app = new ManagementGateApp(new() { ["MicrosoftAuth:OwnerEmail"] = ownerEmail });
+        using var client = app.CreateSignedInClient();
+
+        foreach (var api in new[] { "/api/global/summary", "/api/global/queue", "/api/signins", "/api/diag/report" })
+        {
+            var response = await client.GetAsync(api);
+            if (allowed)
+                response.StatusCode.Should().NotBe(HttpStatusCode.Unauthorized, api);
+            else
+                response.StatusCode.Should().Be(HttpStatusCode.Unauthorized, api);
+        }
+
+        foreach (var page in new[] { "/azure", "/users", "/global", "/global/queue" })
+        {
+            var response = await client.GetAsync(page);
+            response.StatusCode.Should().Be(allowed ? HttpStatusCode.OK : HttpStatusCode.Redirect, page);
+        }
+
+        // A refused account sees the public site exactly as a signed-out visitor does.
+        var home = await client.GetStringAsync("/");
+        if (allowed)
+            home.Should().Contain("Sign out").And.Contain("href=\"/global\"");
+        else
+            home.Should().Contain("Sign in with Microsoft").And.NotContain("href=\"/global\"")
+                .And.NotContain("href=\"/azure\"").And.NotContain("href=\"/users\"");
+    }
+
+    [Fact]
+    public async Task Production_WithNoOwnerConfigured_RefusesEverySession()
+    {
+        await using var app = new ManagementGateApp(new() { ["MicrosoftAuth:OwnerEmail"] = "" }, environment: "Production");
+        using var client = app.CreateSignedInClient();
+
+        (await client.GetAsync("/api/global/summary")).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        (await client.GetAsync("/azure")).StatusCode.Should().Be(HttpStatusCode.Redirect);
+    }
+
+    [Fact]
+    public async Task SignedOutHome_OffersSignIn_AndHidesTheOwnerPages()
+    {
+        await using var app = new ManagementGateApp();
+        using var client = app.CreateClient(new() { AllowAutoRedirect = false });
+
+        var home = await client.GetStringAsync("/");
+
+        home.Should().Contain("Sign in with Microsoft");
+        home.Should().NotContain("po-header__link");
+    }
+
     [Fact]
     public async Task SignOut_RequiresAntiforgeryToken()
     {

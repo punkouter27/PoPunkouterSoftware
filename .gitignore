@@ -145,6 +145,14 @@ core.*
 
 # Server-side report cache (was leaked publicly from wwwroot/data — never re-add it there)
 App_Data/
+# ...except the GLOBAL snapshot, which is committed on purpose (owner decision 2026-11-27):
+# /api/global/* reads it and the Unit tier parses it.
+!src/PoPunkouterSoftware.Api/App_Data/
+src/PoPunkouterSoftware.Api/App_Data/*
+!src/PoPunkouterSoftware.Api/App_Data/global/
+src/PoPunkouterSoftware.Api/App_Data/global/history/snapshots/
+src/PoPunkouterSoftware.Api/App_Data/global/rl/snapshots/
+src/PoPunkouterSoftware.Api/App_Data/global/rl/rl_progress_over_time.html
 src/PoPunkouterSoftware.Client/wwwroot/data/azure-full-report.json
 
 # Google Cloud training: local tarball staging (scripts/gcp/gcp_queue.py)

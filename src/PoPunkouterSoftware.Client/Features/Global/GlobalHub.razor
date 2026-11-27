@@ -93,6 +93,8 @@
                 $"{GlobalFormat.Bytes(s.ReclaimableBytes)} safely reclaimable"),
             new("/global/rl", "RL dashboard", $"{GlobalFormat.Number(s.ShippedBrainsRl)} shipped",
                 $"{GlobalFormat.Number(s.PeakSps)} peak env-steps/s · history chart"),
+            new("/global/queue", "Training queue", $"{s.JobsTotal} jobs",
+                "Every training job, its command, and whether it can start"),
             new("/global/unite", "UNITE", $"{s.CreaturesCount} creatures",
                 "Portable MJCF prefabs, the 28 rules and the contract schema"),
             new("/global/incubator", "Incubator", "5 questions",

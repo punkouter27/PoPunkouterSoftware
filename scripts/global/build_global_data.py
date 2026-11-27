@@ -7,8 +7,9 @@ PoPunkouterSoftware (Blazor, behind Microsoft sign-in), so this script produces 
   App_Data/global/history/station_timeline.jsonl
   App_Data/global/lessons.json                (harvest_lessons.py)
   App_Data/global/rl_facts.json               (collect_rl_facts.py)
-  App_Data/global/rl/timeline.jsonl           (record_rl_history.py)
+  App_Data/global/rl/rl_timeline.jsonl          (record_rl_history.py)
   App_Data/global/unite.json                  UNITE prefab catalogue (this file)
+  App_Data/global/queue.json                  training jobs + missing requirements (this file)
 
 Usage (from the repo root):
   python scripts/global/build_global_data.py              # everything
@@ -99,9 +100,25 @@ def build_unite() -> Path:
     return out
 
 
+def build_queue() -> Path:
+    """Write queue.json: the training jobs plus which `requires` paths are missing right now."""
+    import json
+
+    source = sc.CONFIG / "train_jobs.json"
+    jobs = json.loads(source.read_text(encoding="utf-8")).get("jobs", []) if source.exists() else []
+    for job in jobs:
+        job["missing"] = [p for p in job.get("requires", []) if not (sc.WORKSPACE / p).exists()]
+    out = sc.OUT / "queue.json"
+    payload = {"generated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "jobs": jobs}
+    out.write_text(json.dumps(payload, indent=1) + "\n", encoding="utf-8")
+    blocked = sum(1 for job in jobs if job["missing"])
+    print(f"queue: {len(jobs)} jobs, {blocked} blocked -> {out}")
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Refresh the GLOBAL data snapshot the app serves.")
-    parser.add_argument("--only", choices=["fleet", "lessons", "rl", "unite"], help="run a single step")
+    parser.add_argument("--only", choices=["fleet", "lessons", "rl", "unite", "queue"], help="run a single step")
     parser.add_argument("--no-gh", action="store_true", help="skip GitHub CI lookups (offline / rate limited)")
     args = parser.parse_args()
 
@@ -117,6 +134,8 @@ def main() -> int:
         _run("record_rl_history.py")
     if only in (None, "unite"):
         build_unite()
+    if only in (None, "queue"):
+        build_queue()
 
     print("\nDone. Restart the app (or reload /global) to see the new snapshot.")
     return 0

@@ -26,6 +26,9 @@ public sealed class ManagementGateApp(Dictionary<string, string?>? extra = null,
                 ["Pinger:Enabled"] = "false",
                 ["MicrosoftAuth:ClientId"] = "",
                 ["MicrosoftAuth:ClientSecret"] = "",
+                // Outside Testing a session is honoured only for the owner (Host/OwnerAccess.cs);
+                // the signed-in test session is this address. Tests override it via `extra`.
+                ["MicrosoftAuth:OwnerEmail"] = "test@example.invalid",
             };
             foreach (var (key, value) in extra ?? [])
                 settings[key] = value;

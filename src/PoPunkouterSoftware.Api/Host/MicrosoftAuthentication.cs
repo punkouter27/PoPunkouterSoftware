@@ -35,6 +35,17 @@ internal static class MicrosoftAuthentication
             options.ExpireTimeSpan = TimeSpan.FromHours(8);
             options.SlidingExpiration = true;
             options.LoginPath = "/auth/login/microsoft";
+            // A session is only ever the owner's: re-checked on every request so removing an
+            // account from MicrosoftAuth:OwnerEmail ends its session at once.
+            options.Events.OnValidatePrincipal = async context =>
+            {
+                var owners = context.HttpContext.RequestServices.GetRequiredService<OwnerAccess>();
+                if (!owners.IsOwner(context.Principal))
+                {
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync(SessionScheme);
+                }
+            };
             options.Events.OnRedirectToLogin = context =>
             {
                 if (context.Request.Path.StartsWithSegments("/api") || context.Request.Path.StartsWithSegments("/hubs"))
@@ -86,6 +97,16 @@ internal static class MicrosoftAuthentication
                         return issuer;
                     throw new SecurityTokenInvalidIssuerException("The Microsoft token issuer is not valid for this app.");
                 };
+                options.Events.OnTokenValidated = context =>
+                {
+                    var owners = context.HttpContext.RequestServices.GetRequiredService<OwnerAccess>();
+                    // An email claim is only proof of identity inside the owner's own directory.
+                    if (owners.Owners.Count > 0 && !Guid.TryParse(tenant, out _))
+                        context.Fail("MicrosoftAuth:TenantId must be the owner's tenant id when MicrosoftAuth:OwnerEmail is set.");
+                    else if (!owners.IsOwner(context.Principal))
+                        context.Fail("This Microsoft account is not the owner of this site.");
+                    return Task.CompletedTask;
+                };
                 options.Events.OnRemoteFailure = context =>
                 {
                     context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
@@ -99,6 +120,7 @@ internal static class MicrosoftAuthentication
         else
             Serilog.Log.Warning("Microsoft sign-in is unavailable: MicrosoftAuth:ClientId and ClientSecret are required.");
 
+        builder.Services.AddSingleton<OwnerAccess>();
         builder.Services.AddAuthorization();
         builder.Services.AddCascadingAuthenticationState();
     }

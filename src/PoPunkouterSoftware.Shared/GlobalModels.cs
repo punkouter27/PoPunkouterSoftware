@@ -220,6 +220,28 @@ public sealed class GlobalTrainJobDto
     public string? Device { get; set; }
     public bool SelfLimiting { get; set; }
     public List<string> Requires { get; set; } = [];
+    public string? BehaviorId { get; set; }
+    public string? Command { get; set; }
+    public double? DefaultHours { get; set; }
+    public string? Source { get; set; }
+    public string? After { get; set; }
+
+    /// <summary>
+    /// The <see cref="Requires"/> paths that were absent on the owner's PC at the last crawl.
+    /// Null when the crawl has not checked this job (no <c>queue.json</c> yet).
+    /// </summary>
+    public List<string>? Missing { get; set; }
+}
+
+/// <summary>
+/// <c>/api/global/queue</c>: the training jobs from <c>config/train_jobs.json</c>, each with
+/// the crawl's verdict on whether it could start (<c>queue.json</c>). Read-only: jobs run on
+/// the owner's PC, never from this site.
+/// </summary>
+public sealed class GlobalQueueDto
+{
+    public DateTimeOffset? Generated { get; set; }
+    public List<GlobalTrainJobDto> Jobs { get; set; } = [];
 }
 
 /// <summary>One line of <c>history/station_timeline.jsonl</c>.</summary>

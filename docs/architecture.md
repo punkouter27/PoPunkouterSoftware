@@ -560,6 +560,9 @@ proves a context and program were created, not that anything reached the screen.
   `MicrosoftAuth` is app-specific to avoid picking up another app's `AzureAd` secrets from the vault.
   Server authentication state is serialized to the WASM islands, and protected pages use `[Authorize]`.
   Private APIs return JSON 401 rather than redirects; page requests go to Microsoft sign-in.
+  Signed in always means the owner: `Host/OwnerAccess.cs` refuses any account not in
+  `MicrosoftAuth:OwnerEmail` when the token arrives and re-checks the cookie on every request
+  (no owner configured = nobody, outside Development/Testing).
   Only explicit `X-Fake-User` requests in Development/Test/Testing use FakeAuth; absent headers
   never create an authenticated guest. All admitted Microsoft users have the same access.
   GLOBAL/RL pages have not yet migrated and must use this boundary when they do.

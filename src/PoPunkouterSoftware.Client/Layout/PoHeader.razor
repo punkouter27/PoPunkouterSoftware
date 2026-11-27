@@ -9,6 +9,11 @@
     <div class="po-header__actions">
         <AuthorizeView>
             <Authorized Context="session">
+                @* Owner-only pages: a session only ever exists for the owner (Host/OwnerAccess.cs),
+                   so these links are invisible to every other visitor. Phones use the bottom nav. *@
+                <a href="/azure" class="po-header__link">Azure</a>
+                <a href="/users" class="po-header__link">Users</a>
+                <a href="/global" class="po-header__link">Fleet &amp; training</a>
                 <span class="po-header__email">@session.User.Identity?.Name</span>
                 <form method="post" action="/auth/logout" data-enhance="false">
                     <AntiforgeryToken />

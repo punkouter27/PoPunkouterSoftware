@@ -45,6 +45,9 @@ public sealed class ProductionApp : WebApplicationFactory<Program>
                 ["AzureTableStorage:ConnectionString"] = "",
                 ["AzureBlobStorage:Endpoint"] = "",
                 ["Pinger:Enabled"] = "false",
+                // Production honours a session only for the owner (Host/OwnerAccess.cs); the
+                // signed-in test session is this address.
+                ["MicrosoftAuth:OwnerEmail"] = "test@example.invalid",
                 // /api/diag's live probes of GitHub, nuget.org, the AI endpoint and friends stay off:
                 // a test must not call the internet. The rows still appear, saying so.
                 ["Diag:ProbeServices"] = "false",

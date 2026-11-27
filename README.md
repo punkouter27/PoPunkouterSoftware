@@ -57,6 +57,9 @@ The app runs locally on HTTP port `8000`.
   report/summary/sign-in APIs, Azure mutation APIs, and `/hubs/refresh` require Microsoft sign-in.
   The GLOBAL/RL pages moved into this app on 2026-11-27 and sit behind the same boundary
   (`/global` and `/api/global/*`). See [docs/global-migration.md](docs/global-migration.md).
+- Sign-in is optional and owner-only: only the account in `MicrosoftAuth:OwnerEmail` can complete it,
+  and only then does the header show Azure, Users and Fleet & training. Set it up once with
+  `pwsh ./scripts/setup-microsoft-signin.ps1 -OwnerEmail <owner address>`.
 - Microsoft OIDC uses a server-owned HttpOnly session cookie; access tokens are not sent to the
   Blazor client. The header provides Microsoft sign-in and antiforgery-protected sign-out.
   Missing Microsoft configuration leaves private routes inaccessible and sign-in reports 503.
@@ -114,7 +117,7 @@ Local tests may explicitly send `X-Fake-User`; those headers never authenticate 
 - Integration tests (`PoPunkouterSoftware.Integration`) cover host configuration, diagnostics endpoints, and Azure Table Storage behavior via `WebApplicationFactory` + Testcontainers Azurite.
 - E2E tests (`PoPunkouterSoftware.E2EAPI`, `PoPunkouterSoftware.E2EUI`) cover the HTTP contract and browser flows against a live instance; on demand, not in CI, and they skip with a clear message when no app answers at `BASE_URL`. E2EUI runs axe-core's WCAG 2.1 A/AA rules over every page (`Deque.AxeCore.Playwright`) and fails on serious or critical violations.
 - Integration runs in CI; locally its 6 Azurite tests skip with a clear message when Docker is not running.
-- Current counts: Unit 111, Integration 75 (6 need Docker), E2E API 22, E2E UI 32 (see [docs/testing.md](docs/testing.md)).
+- Current counts: Unit 113, Integration 82 (6 need Docker), E2E API 22, E2E UI 32 (see [docs/testing.md](docs/testing.md)).
 
 ## Developer Guidance
 

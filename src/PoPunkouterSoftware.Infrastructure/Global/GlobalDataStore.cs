@@ -136,6 +136,21 @@ public sealed class GlobalDataStore
         return jobs;
     }
 
+    /// <summary>
+    /// The training queue: <c>queue.json</c> (jobs plus which required paths were missing at
+    /// the last crawl) when the crawler has written it, else the bare job list.
+    /// </summary>
+    public GlobalQueueDto LoadQueue()
+    {
+        var queue = Load("queue.json", GlobalCrawlerJsonContext.Default.GlobalQueueDto,
+            () => new GlobalQueueDto { Jobs = LoadTrainJobs().Jobs });
+        queue.Jobs ??= [];
+        foreach (var job in queue.Jobs)
+            job.Requires ??= [];
+
+        return queue;
+    }
+
     public List<GlobalLessonDto> LoadLessons()
     {
         var harvested = Load("lessons.json", GlobalCrawlerJsonContext.Default.GlobalLessonsFileDto,

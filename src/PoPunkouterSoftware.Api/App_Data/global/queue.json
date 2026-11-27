@@ -1,0 +1,208 @@
+{
+ "generated": "2026-11-27T18:33:50+00:00",
+ "jobs": [
+  {
+   "id": "slap_v5_resume",
+   "repo": "PoSlapUnreal",
+   "label": "Resume v5 retrain queue (Mom/Tong L1-L4 + G1 get-up)",
+   "behavior_id": "slap_mom_tong_g1",
+   "cwd": "PoSlapUnreal/training",
+   "command": ".venv/Scripts/python.exe overnight.py --resume --hours {hours} --queue retrain_v5_queue.json",
+   "self_limiting": true,
+   "device": "gpu",
+   "default_hours": 6,
+   "requires": [
+    "PoSlapUnreal/training/.venv/Scripts/python.exe",
+    "PoSlapUnreal/training/runs/retrain_v5_queue.json"
+   ],
+   "close_editor": true,
+   "source": "PoSlapUnreal/training/overnight.py",
+   "source_line": 23,
+   "after": ".venv/Scripts/python.exe eval_candidates.py <queue run>  (see eval_candidates.py docstring)",
+   "missing": []
+  },
+  {
+   "id": "bball_queue",
+   "repo": "PoBasketball",
+   "label": "Streetball curriculum queue (picks up at the next level)",
+   "behavior_id": "bball_move_shoot",
+   "cwd": "PoBasketball/sim",
+   "command": "uv run python -m streetball.queue --hours {hours}",
+   "self_limiting": true,
+   "device": "gpu",
+   "default_hours": 6,
+   "requires": [
+    "PoBasketball/sim/.venv",
+    "PoBasketball/sim/streetball/queue.py"
+   ],
+   "close_editor": true,
+   "source": "PoBasketball/sim/streetball/queue.py",
+   "source_line": 5,
+   "after": "uv run python -m streetball.evaluate --level <level> --ckpt runs/<run>/model.pt",
+   "missing": []
+  },
+  {
+   "id": "box_queue",
+   "repo": "PoBox",
+   "label": "PoBox queue runner (works through training/logs/queue.json)",
+   "behavior_id": "box_short_reach",
+   "cwd": "PoBox/training",
+   "command": "uv run python tools/queue_runner.py",
+   "self_limiting": false,
+   "stop_file": "PoBox/training/logs/queue.hold",
+   "device": "gpu",
+   "default_hours": 6,
+   "requires": [
+    "PoBox/.venv",
+    "PoBox/training/tools/queue_runner.py",
+    "PoBox/training/logs/queue.json"
+   ],
+   "close_editor": true,
+   "source": "PoBox/AGENTS.md",
+   "source_line": 254,
+   "after": "uv run python tools/exam_v2.py --only <boxer>",
+   "missing": []
+  },
+  {
+   "id": "hill_queue",
+   "repo": "PoHillKing",
+   "label": "Hill queue (kim / trump / grandpa bodies)",
+   "behavior_id": "",
+   "cwd": "PoHillKing/Training",
+   "command": ".venv/Scripts/python.exe scripts/queue_hill.py",
+   "self_limiting": false,
+   "device": "gpu",
+   "default_hours": 4,
+   "requires": [
+    "PoHillKing/Training/.venv",
+    "PoHillKing/Training/scripts/queue_hill.py"
+   ],
+   "close_editor": true,
+   "source": "PoHillKing/AGENTS.md",
+   "source_line": 220,
+   "after": "uv run python scripts/eval.py --rung r4league --ckpt <ckpt> --opponent <opp> --seeds 3 --num-envs 256",
+   "missing": []
+  },
+  {
+   "id": "olympic_queue",
+   "repo": "PoOlympic",
+   "label": "Olympic train_queue.ps1 (runs Training/runs/queue.txt)",
+   "behavior_id": "",
+   "cwd": "PoOlympic/Training",
+   "command": "powershell -NoProfile -ExecutionPolicy Bypass -File tools\\train_queue.ps1",
+   "self_limiting": false,
+   "stop_file": "PoOlympic/Training/runs/queue.stop",
+   "device": "gpu",
+   "default_hours": 6,
+   "requires": [
+    "PoOlympic/Training/.venv",
+    "PoOlympic/Training/tools/train_queue.ps1",
+    "PoOlympic/Training/runs/queue.txt"
+   ],
+   "close_editor": true,
+   "source": "PoOlympic/AGENTS.md",
+   "source_line": 275,
+   "after": "uv run python tools/watch_gate.py <run_dir> <prefix> --gates S,2 --its 200,400,600",
+   "missing": []
+  },
+  {
+   "id": "robot_level0",
+   "repo": "PoRobotTrain",
+   "label": "Level 0 upper-body train (~20 min) + validate",
+   "behavior_id": "",
+   "cwd": "PoRobotTrain",
+   "command": ".venv\\Scripts\\python.exe -u RobotControl\\training\\train_level0.py --iters 1500 --num-envs 512",
+   "self_limiting": true,
+   "device": "gpu",
+   "default_hours": 1,
+   "requires": [
+    "PoRobotTrain/.venv",
+    "PoRobotTrain/RobotControl/training/train_level0.py"
+   ],
+   "close_editor": true,
+   "source": "PoRobotTrain/README.md",
+   "source_line": 41,
+   "after": ".venv\\Scripts\\python.exe RobotControl\\training\\validate_level0.py",
+   "missing": []
+  },
+  {
+   "id": "race_resume_r1",
+   "repo": "PoRaceUnreal",
+   "label": "Brax joystick resume (Docker porace-trainer) \u2014 edit logdir per run",
+   "behavior_id": "race_grandma_g1",
+   "cwd": "PoRaceUnreal",
+   "command": "powershell -File training\\run.ps1 -Gpu train.py --env joystick --num_envs 4096 --logdir runs/r1 --restore runs/r1/checkpoints",
+   "self_limiting": false,
+   "device": "gpu",
+   "default_hours": 2,
+   "requires": [
+    "PoRaceUnreal/training/run.ps1"
+   ],
+   "close_editor": true,
+   "source": "PoRaceUnreal/training/run.ps1",
+   "source_line": 2,
+   "after": "powershell -File training\\run.ps1 eval.py --rung r1 --params runs/r1/params.pkl",
+   "missing": []
+  },
+  {
+   "id": "football_unattended",
+   "repo": "PoFootball",
+   "label": "Football Base31 unattended (CPU \u2014 can run beside a GPU job)",
+   "behavior_id": "",
+   "cwd": "PoFootball",
+   "command": "$env:CUDA_VISIBLE_DEVICES='-1'; .venv\\Scripts\\python.exe Tools\\run_unattended.py --run football_base31 --config Training\\FootballBase31.yaml --hours {hours} --resume --stall-after 1500000",
+   "self_limiting": true,
+   "device": "cpu",
+   "default_hours": 8,
+   "requires": [
+    "PoFootball/.venv",
+    "PoFootball/Builds/FootballEnv"
+   ],
+   "close_editor": true,
+   "source": "PoFootball/Tools/run_unattended.py",
+   "source_line": 4,
+   "after": ".venv\\Scripts\\python.exe Tools\\checkpoint_realism.py --run football_base31 --last 4",
+   "missing": []
+  },
+  {
+   "id": "soccer_loop",
+   "repo": "PoSoccer",
+   "label": "Soccer train-loop (MATT, KIM, NICK profiles)",
+   "behavior_id": "",
+   "cwd": "PoSoccer",
+   "command": "pwsh -ExecutionPolicy Bypass -File scripts\\train-loop.ps1 -Hours {hours} -Profiles MATT,KIM,NICK -AdoptTag p39bot -BaselineTag p38",
+   "self_limiting": true,
+   "device": "cpu",
+   "default_hours": 8,
+   "requires": [
+    "PoSoccer/.venv",
+    "PoSoccer/Builds/PoSoccer/PoSoccer.exe"
+   ],
+   "close_editor": true,
+   "source": "PoSoccer/scripts/train-loop.ps1",
+   "source_line": 3,
+   "after": ".\\scripts\\evaluate.ps1 -RunId <run> -Episodes 350",
+   "missing": []
+  },
+  {
+   "id": "sumo_extended",
+   "repo": "PoSumo",
+   "label": "Sumo extended campaign (Run-Extended8h.ps1)",
+   "behavior_id": "",
+   "cwd": "PoSumo",
+   "command": "pwsh -ExecutionPolicy Bypass -File Training\\Run-Extended8h.ps1 -TotalHours {hours}",
+   "self_limiting": true,
+   "device": "cpu",
+   "default_hours": 8,
+   "requires": [
+    "PoSumo/Training/venv",
+    "PoSumo/Builds/MattEnv"
+   ],
+   "close_editor": true,
+   "source": "PoSumo/docs/20261110/unique01.md",
+   "source_line": 77,
+   "after": "Check the ELO curve in TensorBoard (AGENTS.md 4.x)",
+   "missing": []
+  }
+ ]
+}

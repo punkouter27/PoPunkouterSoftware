@@ -21,7 +21,7 @@ boundary on 2026-11-27.
 The one thing deliberately **not** carried over is `station/scripts/vault_import.py`: it is the
 only tool that wrote into a repo, and copying a brain stays a manual step.
 
-## The eleven pages
+## The twelve pages
 
 | Route | What it shows |
 | --- | --- |
@@ -34,6 +34,7 @@ only tool that wrote into a repo, and copying a brain stays a manual step.
 | `/global/lessons` | Traps and rules harvested from every repo's docs, with search, repo and kind filters |
 | `/global/disk` | Space per repo and folder type, heaviest folders, how safe each is to delete |
 | `/global/rl` | Shipped brains, benchmark facts, and the recorded history chart |
+| `/global/queue` | Training queue (read-only): every job in `config/train_jobs.json`, its command, and whether the crawl found everything it needs on the PC |
 | `/global/unite` | The 6 prefabs, the document list, and the rules |
 | `/global/incubator` | Five questions → which repo to start from, brains to bring, clone command |
 
@@ -46,7 +47,7 @@ scripts/global/build_global_data.py
 src/PoPunkouterSoftware.Api/App_Data/global/*.json     (committed)
         │  GlobalDataStore (timestamp-cached, degrades to empty)
         ▼
-/api/global/*        (Microsoft sign-in required, like /azure and /users)
+/api/global/*        (owner sign-in required, like /azure and /users)
         ▼
 /global/*            (Blazor WASM pages)
 ```
@@ -70,6 +71,26 @@ Then commit `App_Data/global` (the RLS and fleet data are the product) and reloa
 `App_Data/global/history/snapshots/` and `App_Data/global/rl/snapshots/` are **not** committed —
 they are the full per-run archive and only the compact timelines are needed for the briefing and
 the RL chart. See `.gitignore`.
+
+## Who can see it
+
+Only the owner. `MicrosoftAuth:OwnerEmail` names the one account that can complete Microsoft
+sign-in (`Host/OwnerAccess.cs`); any other account is refused before a session exists, so the
+header links to Azure, Users and Fleet & training never render for anyone else. With no owner
+configured, Production refuses everybody. One-time setup:
+`pwsh ./scripts/setup-microsoft-signin.ps1 -OwnerEmail <owner address>`.
+
+## Not carried over
+
+- **Starting or stopping training from the page.** `run_gpu_queue.ps1` and the hub buttons of
+  `station_server.py` (open VS Code / folder / engine, git status, update all, save and launch
+  a queue) run programs on the owner's PC. This site runs in Azure, so `/global/queue` is a
+  read-only list; the old scripts stay in `_CODEMATT/GLOBAL`.
+- **The 07:00 scheduled refresh** and `BENCHMARK.ps1` (each RL repo keeps its own benchmark kit).
+- **`blazor_apps/` standards prose** (each repo's AGENTS.md carries its own standard).
+
+The recorded history did come across: `history/station_timeline.jsonl` and
+`rl/rl_timeline.jsonl` start with GLOBAL's 16 fleet crawls and 15 RL records.
 
 ## Tests
 

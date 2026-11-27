@@ -1,0 +1,138 @@
+@page "/global/queue"
+@attribute [Authorize]
+@rendermode WasmRenderModes.Interactive
+@using PoPunkouterSoftware.Shared
+@inject PortfolioApiClient Api
+
+<PageTitle>Training queue · PoPunkouterSoftware</PageTitle>
+
+@* Replaces GLOBAL/station/pages/gpu_queue.html. Read-only on purpose: a job is a command on
+   the owner's PC (GPU, venvs, Unity), and this site runs in Azure, so it lists what can run
+   and how; it does not start anything. "Ready" is the crawl's check that every path in
+   `requires` existed on the PC when the snapshot was taken. *@
+<main id="main-content" class="app-page global-page" tabindex="-1">
+    <header class="global-head">
+        <div>
+            <h1>Training queue</h1>
+            <p class="app-note">
+                Every training job the overnight queue can run, from
+                <code>App_Data/global/config/train_jobs.json</code>. Jobs run on the PC, not from this page.
+            </p>
+        </div>
+        @if (_queue?.Generated is not null)
+        {
+            <span class="global-stamp">checked @GlobalFormat.Ago(_queue.Generated)</span>
+        }
+    </header>
+
+    @if (_loading)
+    {
+        <LoadingSkeleton Variant="cards" TileCount="6" AriaLabel="Loading training jobs" />
+    }
+    else if (_error is not null)
+    {
+        <div class="global-error" role="alert">@_error</div>
+    }
+    else if (_queue is null || _queue.Jobs.Count == 0)
+    {
+        <p class="app-empty-state">No training jobs yet. Run <code>python scripts/global/build_global_data.py --only queue</code>.</p>
+    }
+    else
+    {
+        <section class="global-kpis" aria-label="Job totals">
+            <div class="global-kpi"><div class="v">@_queue.Jobs.Count</div><div class="l">jobs</div></div>
+            <div class="global-kpi"><div class="v">@_queue.Jobs.Count(IsReady)</div><div class="l">ready to run</div></div>
+            <div class="global-kpi"><div class="v">@_queue.Jobs.Count(IsBlocked)</div><div class="l">blocked</div></div>
+            <div class="global-kpi"><div class="v">@_queue.Jobs.Count(NeedsGpu)</div><div class="l">need the GPU</div></div>
+        </section>
+
+        <ul class="global-list">
+            @foreach (var job in _queue.Jobs)
+            {
+                <li class="global-item">
+                    <div class="text">
+                        <strong>@(job.Label ?? job.Id)</strong>
+                        @if (IsBlocked(job))
+                        {
+                            <span class="global-tone is-bad">Blocked</span>
+                        }
+                        else if (IsReady(job))
+                        {
+                            <span class="global-tone is-good">Ready</span>
+                        }
+                        else
+                        {
+                            <span class="global-tone is-muted">Not checked</span>
+                        }
+                    </div>
+                    <div class="meta">
+                        <strong>@job.Repo</strong>
+                        <span class="global-tags">
+                            @if (job.Device is { Length: > 0 })
+                            {
+                                <span class="global-tag">@job.Device.ToUpperInvariant()</span>
+                            }
+                            @if (job.DefaultHours is { } hours)
+                            {
+                                <span class="global-tag">@Hours(hours) h default</span>
+                            }
+                            <span class="global-tag">@(job.SelfLimiting ? "stops itself" : "stopped by the queue")</span>
+                        </span>
+                    </div>
+                    @if (job.Command is { Length: > 0 })
+                    {
+                        <pre class="global-code"><code>@CommandText(job)</code></pre>
+                    }
+                    @if (job.Missing is { Count: > 0 })
+                    {
+                        <div class="meta">Missing on the PC: <span class="global-mono">@string.Join(", ", job.Missing)</span></div>
+                    }
+                    @if (job.After is { Length: > 0 })
+                    {
+                        <div class="meta">Afterwards: <span class="global-mono">@job.After</span></div>
+                    }
+                    @if (job.Source is { Length: > 0 })
+                    {
+                        <div class="meta">Command taken from <span class="global-mono">@job.Source</span></div>
+                    }
+                </li>
+            }
+        </ul>
+    }
+</main>
+
+@code {
+    private GlobalQueueDto? _queue;
+    private bool _loading = true;
+    private string? _error;
+
+    private static bool IsReady(GlobalTrainJobDto job) => job.Missing is { Count: 0 };
+
+    private static bool IsBlocked(GlobalTrainJobDto job) => job.Missing is { Count: > 0 };
+
+    private static bool NeedsGpu(GlobalTrainJobDto job) =>
+        string.Equals(job.Device, "gpu", StringComparison.OrdinalIgnoreCase);
+
+    private static string Hours(double hours) =>
+        hours.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+
+    private static string CommandText(GlobalTrainJobDto job) =>
+        job.Cwd is { Length: > 0 } ? $"cd {job.Cwd}\n{job.Command}" : job.Command ?? "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            _queue = await Api.GetGlobalQueueAsync(cts.Token);
+        }
+        catch (Exception ex)
+        {
+            _error = FriendlyError.Describe(ex);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

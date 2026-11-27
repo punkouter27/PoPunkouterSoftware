@@ -1,0 +1,6874 @@
+{
+  "PoBasketball": {
+    "benchmark": {
+      "when": "2026-11-26T11:58:52-05:00",
+      "ok": true,
+      "machine_gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "trainer": "streetball PPO (own) on mujoco_warp 4.0.0",
+      "script": "sim/streetball/train.py",
+      "num_envs": 4096,
+      "horizon": 24,
+      "net": [
+        512,
+        256,
+        128
+      ],
+      "step_time_ms": 67.178,
+      "sim_ms": 62.595,
+      "learn_ms": 4.582,
+      "env_steps_per_s": 60973,
+      "versions": {
+        "python": "3.12.16",
+        "torch": "2.14.1+cu130",
+        "mujoco": "4.0.0",
+        "mujoco_warp": "4.0.0",
+        "warp": "1.19.0"
+      },
+      "total_benchmark_runs": 5,
+      "by_machine": [
+        {
+          "hostname": "WIN-C2ANEVBHN6Q",
+          "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+          "cpu": "Intel(R) Core(TM) Ultra 9 275HX (24 threads)",
+          "runs": 3,
+          "failed_runs": 0,
+          "best_env_steps_per_s": 60973,
+          "best_num_envs": 4096,
+          "best_when": "2026-11-26T11:58:52-05:00",
+          "last_env_steps_per_s": 60973,
+          "last_when": "2026-11-26T11:58:52-05:00"
+        },
+        {
+          "hostname": "C4T4V44",
+          "gpu": "NVIDIA RTX 2000 Ada Generation Laptop GPU",
+          "cpu": "13th Gen Intel(R) Core(TM) i7-13850HX (28 threads)",
+          "runs": 0,
+          "failed_runs": 2,
+          "best_env_steps_per_s": 0,
+          "best_num_envs": null,
+          "best_when": null,
+          "last_env_steps_per_s": null,
+          "last_when": null
+        }
+      ]
+    },
+    "onnx_total_found": 24,
+    "onnx_shipped_count": 23,
+    "onnx_samples": [
+      {
+        "rel": "PoBasketball/shared/dummy_policy.onnx",
+        "name": "dummy_policy.onnx",
+        "kb": 909.1,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              125
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBasketball/shared/policies/balance.onnx",
+        "name": "balance.onnx",
+        "kb": 910.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              125
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBasketball/shared/policies/balance_posture.onnx",
+        "name": "balance_posture.onnx",
+        "kb": 910.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              125
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBasketball/shared/policies/balance_preview.onnx",
+        "name": "balance_preview.onnx",
+        "kb": 910.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              125
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBasketball/shared/policies/balance_v1w.onnx",
+        "name": "balance_v1w.onnx",
+        "kb": 910.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              125
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBasketball/shared/policies/dribble.onnx",
+        "name": "dribble.onnx",
+        "kb": 910.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              125
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBasketball/shared/policies/dribble_anchor_init.onnx",
+        "name": "dribble_anchor_init.onnx",
+        "kb": 910.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              125
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBasketball/shared/policies/dribble_drift250.onnx",
+        "name": "dribble_drift250.onnx",
+        "kb": 910.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              125
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBasketball/shared/policies/l0_stand.onnx",
+        "name": "l0_stand.onnx",
+        "kb": 910.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              125
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBasketball/shared/policies/l3b_scramble.onnx",
+        "name": "l3b_scramble.onnx",
+        "kb": 910.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              125
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBasketball/shared/policies/locomotion.onnx",
+        "name": "locomotion.onnx",
+        "kb": 910.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              125
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBasketball/shared/policies/scramble.onnx",
+        "name": "scramble.onnx",
+        "kb": 910.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              125
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBasketball/shared/policies_v1_27dof/balance.onnx",
+        "name": "balance.onnx",
+        "kb": 897.6,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              119
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              27
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBasketball/shared/policies_v1_27dof/l0_stand.onnx",
+        "name": "l0_stand.onnx",
+        "kb": 897.6,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              119
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              27
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBasketball/shared/policies_v1_27dof/locomotion.onnx",
+        "name": "locomotion.onnx",
+        "kb": 897.6,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              119
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              27
+            ]
+          ]
+        ]
+      }
+    ],
+    "mjcf_count": 2,
+    "mjcf_samples": [
+      {
+        "rel": "PoBasketball/sim/assets/humanoid.xml",
+        "bodies": 18,
+        "joints_total": 30,
+        "free_joints": 0,
+        "actuated_joints": 30,
+        "actuators": 29,
+        "timestep": null
+      },
+      {
+        "rel": "PoBasketball/unreal/StreetballGym/Content/Project/RL_Policies/humanoid.xml",
+        "bodies": 18,
+        "joints_total": 30,
+        "free_joints": 0,
+        "actuated_joints": 30,
+        "actuators": 29,
+        "timestep": null
+      }
+    ],
+    "yaml_configs": [],
+    "reward_configs": [
+      "PoBasketball/shared/reward_config.json"
+    ],
+    "visuals": [
+      {
+        "rel": "PoBasketball/docs/20261119/dribble_overnight_147M.gif",
+        "ext": ".gif",
+        "kb": 6813.1,
+        "mtime": 1795234241
+      },
+      {
+        "rel": "PoBasketball/docs/20261120/dribble_drift_250M.gif",
+        "ext": ".gif",
+        "kb": 12071.1,
+        "mtime": 1795234241
+      },
+      {
+        "rel": "PoBasketball/docs/phase_reports/A3_pose.png",
+        "ext": ".png",
+        "kb": 401.2,
+        "mtime": 1795234241
+      },
+      {
+        "rel": "PoBasketball/SCREENSHOTS/grandma_after_front.png",
+        "ext": ".png",
+        "kb": 1534.0,
+        "mtime": 1794843867
+      },
+      {
+        "rel": "PoBasketball/SCREENSHOTS/grandma_after_side.png",
+        "ext": ".png",
+        "kb": 1486.3,
+        "mtime": 1794843867
+      },
+      {
+        "rel": "PoBasketball/SCREENSHOTS/grandma_before_front.png",
+        "ext": ".png",
+        "kb": 1541.5,
+        "mtime": 1794843861
+      },
+      {
+        "rel": "PoBasketball/SCREENSHOTS/grandma_before_side.png",
+        "ext": ".png",
+        "kb": 1486.5,
+        "mtime": 1794843861
+      }
+    ]
+  },
+  "PoBox": {
+    "benchmark": {
+      "when": "2026-11-26T11:59:23-05:00",
+      "ok": true,
+      "machine_gpu": "NVIDIA RTX 2000 Ada Generation Laptop GPU",
+      "trainer": "PoBox ppo.py + mujoco_warp 3.15.0",
+      "script": "training/train_gauntlet.py",
+      "num_envs": 4592,
+      "horizon": 24,
+      "net": [
+        512,
+        256,
+        128
+      ],
+      "step_time_ms": 120.191,
+      "sim_ms": 108.45,
+      "learn_ms": 11.742,
+      "env_steps_per_s": 38206,
+      "versions": {
+        "python": "3.12.16",
+        "torch": "2.14.1+cu130",
+        "mujoco": "3.15.0",
+        "mujoco_warp": "3.15.0",
+        "warp": "1.19.0"
+      },
+      "total_benchmark_runs": 21,
+      "by_machine": [
+        {
+          "hostname": "WIN-C2ANEVBHN6Q",
+          "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+          "cpu": "Intel(R) Core(TM) Ultra 9 275HX (24 threads)",
+          "runs": 11,
+          "failed_runs": 1,
+          "best_env_steps_per_s": 46180,
+          "best_num_envs": 4592,
+          "best_when": "2026-11-26T11:59:23-05:00",
+          "last_env_steps_per_s": 46180,
+          "last_when": "2026-11-26T11:59:23-05:00"
+        },
+        {
+          "hostname": "C4T4V44",
+          "gpu": "NVIDIA RTX 2000 Ada Generation Laptop GPU",
+          "cpu": "13th Gen Intel(R) Core(TM) i7-13850HX (28 threads)",
+          "runs": 2,
+          "failed_runs": 0,
+          "best_env_steps_per_s": 38206,
+          "best_num_envs": 4592,
+          "best_when": "2026-11-26T11:59:23-05:00",
+          "last_env_steps_per_s": 38206,
+          "last_when": "2026-11-26T11:59:23-05:00"
+        },
+        {
+          "hostname": "legion",
+          "gpu": "NVIDIA GeForce RTX 2060",
+          "cpu": "Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz (12 threads)",
+          "runs": 7,
+          "failed_runs": 0,
+          "best_env_steps_per_s": 21721,
+          "best_num_envs": 4592,
+          "best_when": "2026-11-22T23:03:47-05:00",
+          "last_env_steps_per_s": 21721,
+          "last_when": "2026-11-22T23:03:47-05:00"
+        }
+      ]
+    },
+    "onnx_total_found": 39,
+    "onnx_shipped_count": 34,
+    "onnx_samples": [
+      {
+        "rel": "PoBox/Assets/_Project/RL_Models/zero_policy.onnx",
+        "name": "zero_policy.onnx",
+        "kb": 1710.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              21
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBox/Assets/_Project/RL_Models/Cardwalker/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 1713.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              21
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBox/Assets/_Project/RL_Models/Grandma/getup.onnx",
+        "name": "getup.onnx",
+        "kb": 1713.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              21
+            ]
+          ],
+          [
+            "value",
+            [
+              "batch",
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBox/Assets/_Project/RL_Models/Grandma/match.onnx",
+        "name": "match.onnx",
+        "kb": 1713.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              21
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBox/Assets/_Project/RL_Models/Grandma/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 1713.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              21
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBox/Assets/_Project/RL_Models/Grandpa/getup.onnx",
+        "name": "getup.onnx",
+        "kb": 1713.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              21
+            ]
+          ],
+          [
+            "value",
+            [
+              "batch",
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBox/Assets/_Project/RL_Models/Grandpa/match.onnx",
+        "name": "match.onnx",
+        "kb": 1713.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              21
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBox/Assets/_Project/RL_Models/Grandpa/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 1713.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              21
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBox/Assets/_Project/RL_Models/Kim/getup.onnx",
+        "name": "getup.onnx",
+        "kb": 1713.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              21
+            ]
+          ],
+          [
+            "value",
+            [
+              "batch",
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBox/Assets/_Project/RL_Models/Kim/match.onnx",
+        "name": "match.onnx",
+        "kb": 1713.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              21
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBox/Assets/_Project/RL_Models/Kim/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 1713.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              21
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBox/Assets/_Project/RL_Models/Matt/getup.onnx",
+        "name": "getup.onnx",
+        "kb": 1713.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              21
+            ]
+          ],
+          [
+            "value",
+            [
+              "batch",
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBox/Assets/_Project/RL_Models/Matt/match.onnx",
+        "name": "match.onnx",
+        "kb": 1713.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              21
+            ]
+          ],
+          [
+            "value",
+            [
+              "batch",
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBox/Assets/_Project/RL_Models/Matt/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 1713.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              21
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoBox/Assets/_Project/RL_Models/Nick/getup.onnx",
+        "name": "getup.onnx",
+        "kb": 1713.7,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              21
+            ]
+          ],
+          [
+            "value",
+            [
+              "batch",
+              1
+            ]
+          ]
+        ]
+      }
+    ],
+    "mjcf_count": 159,
+    "mjcf_samples": [
+      {
+        "rel": "PoBox/training/models/crew/cardwalker_bag.xml",
+        "bodies": 13,
+        "joints_total": 23,
+        "free_joints": 0,
+        "actuated_joints": 23,
+        "actuators": 21,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoBox/training/models/crew/cardwalker_solo.xml",
+        "bodies": 12,
+        "joints_total": 22,
+        "free_joints": 0,
+        "actuated_joints": 22,
+        "actuators": 21,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoBox/training/models/crew/cardwalker_spar.xml",
+        "bodies": 24,
+        "joints_total": 43,
+        "free_joints": 0,
+        "actuated_joints": 43,
+        "actuators": 42,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoBox/training/models/crew/referee_bag.xml",
+        "bodies": 13,
+        "joints_total": 23,
+        "free_joints": 0,
+        "actuated_joints": 23,
+        "actuators": 21,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoBox/training/models/crew/referee_solo.xml",
+        "bodies": 12,
+        "joints_total": 22,
+        "free_joints": 0,
+        "actuated_joints": 22,
+        "actuators": 21,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoBox/training/models/crew/referee_spar.xml",
+        "bodies": 24,
+        "joints_total": 43,
+        "free_joints": 0,
+        "actuated_joints": 43,
+        "actuators": 42,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoBox/training/models/v2/grandma_bag.xml",
+        "bodies": 21,
+        "joints_total": 23,
+        "free_joints": 0,
+        "actuated_joints": 23,
+        "actuators": 21,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoBox/training/models/v2/grandma_solo.xml",
+        "bodies": 20,
+        "joints_total": 22,
+        "free_joints": 0,
+        "actuated_joints": 22,
+        "actuators": 21,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoBox/training/models/v2/grandma_spar.xml",
+        "bodies": 32,
+        "joints_total": 43,
+        "free_joints": 0,
+        "actuated_joints": 43,
+        "actuators": 42,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoBox/training/models/v2/grandma_vs_grandpa_spar.xml",
+        "bodies": 32,
+        "joints_total": 43,
+        "free_joints": 0,
+        "actuated_joints": 43,
+        "actuators": 42,
+        "timestep": "0.005"
+      }
+    ],
+    "yaml_configs": [],
+    "reward_configs": [
+      "PoBox/training/config/reward.json"
+    ],
+    "visuals": [
+      {
+        "rel": "PoBox/SCREENSHOTS/2026-11-25-inference-report/gif_fight.gif",
+        "ext": ".gif",
+        "kb": 811.6,
+        "mtime": 1795661267
+      },
+      {
+        "rel": "PoBox/SCREENSHOTS/2026-11-25-inference-report/gif_knockdown.gif",
+        "ext": ".gif",
+        "kb": 1477.9,
+        "mtime": 1795661267
+      },
+      {
+        "rel": "PoBox/SCREENSHOTS/2026-11-25-inference-report/gif_walkon.gif",
+        "ext": ".gif",
+        "kb": 852.5,
+        "mtime": 1795661267
+      },
+      {
+        "rel": "PoBox/SCREENSHOTS/2026-11-25-new-brains/gif_walkon_zombie_timmy.gif",
+        "ext": ".gif",
+        "kb": 2214.6,
+        "mtime": 1795618918
+      },
+      {
+        "rel": "PoBox/SCREENSHOTS/2026-11-25-new-brains/gif_timmy_trump.gif",
+        "ext": ".gif",
+        "kb": 3041.8,
+        "mtime": 1795618785
+      },
+      {
+        "rel": "PoBox/SCREENSHOTS/2026-11-25-new-brains/gif_knockdown_getup_zombie.gif",
+        "ext": ".gif",
+        "kb": 3723.6,
+        "mtime": 1795618397
+      },
+      {
+        "rel": "PoBox/SCREENSHOTS/2026-11-25-new-brains/gif_nick_zombie.gif",
+        "ext": ".gif",
+        "kb": 3408.9,
+        "mtime": 1795618288
+      },
+      {
+        "rel": "PoBox/SCREENSHOTS/2026-11-25-inference-report/gizmo_after.png",
+        "ext": ".png",
+        "kb": 1829.2,
+        "mtime": 1795661267
+      },
+      {
+        "rel": "PoBox/SCREENSHOTS/2026-11-25-inference-report/gizmo_before.png",
+        "ext": ".png",
+        "kb": 1828.4,
+        "mtime": 1795661267
+      },
+      {
+        "rel": "PoBox/SCREENSHOTS/2026-11-25-inference-report/gizmo_pair.png",
+        "ext": ".png",
+        "kb": 865.8,
+        "mtime": 1795661267
+      },
+      {
+        "rel": "PoBox/SCREENSHOTS/2026-11-25-inference-report/shot_fight.png",
+        "ext": ".png",
+        "kb": 369.2,
+        "mtime": 1795661267
+      },
+      {
+        "rel": "PoBox/SCREENSHOTS/2026-11-25-inference-report/shot_limp.png",
+        "ext": ".png",
+        "kb": 394.0,
+        "mtime": 1795661267
+      }
+    ]
+  },
+  "PoFootball": {
+    "benchmark": {
+      "when": "2026-11-26T13:39:33-05:00",
+      "ok": true,
+      "machine_gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "trainer": "mlagents 1.1.0 (torch 2.5.1+cu121, CPU)",
+      "script": null,
+      "num_envs": 4,
+      "horizon": null,
+      "net": null,
+      "step_time_ms": 443.978,
+      "sim_ms": 24.052,
+      "learn_ms": 419.925,
+      "env_steps_per_s": 9,
+      "versions": {
+        "python": "3.10.11",
+        "torch": "2.5.1+cu121",
+        "mlagents": "1.1.0"
+      },
+      "total_benchmark_runs": 7,
+      "by_machine": [
+        {
+          "hostname": "WIN-C2ANEVBHN6Q",
+          "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+          "cpu": "Intel(R) Core(TM) Ultra 9 275HX (24 threads)",
+          "runs": 1,
+          "failed_runs": 3,
+          "best_env_steps_per_s": 9,
+          "best_num_envs": 4,
+          "best_when": "2026-11-26T13:39:33-05:00",
+          "last_env_steps_per_s": 9,
+          "last_when": "2026-11-26T13:39:33-05:00"
+        },
+        {
+          "hostname": "legion",
+          "gpu": "NVIDIA GeForce RTX 2060",
+          "cpu": "Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz (12 threads)",
+          "runs": 1,
+          "failed_runs": 0,
+          "best_env_steps_per_s": 7,
+          "best_num_envs": 4,
+          "best_when": "2026-11-22T19:35:11-05:00",
+          "last_env_steps_per_s": 7,
+          "last_when": "2026-11-22T19:35:11-05:00"
+        },
+        {
+          "hostname": "C4T4V44",
+          "gpu": "NVIDIA RTX 2000 Ada Generation Laptop GPU",
+          "cpu": "13th Gen Intel(R) Core(TM) i7-13850HX (28 threads)",
+          "runs": 0,
+          "failed_runs": 2,
+          "best_env_steps_per_s": 0,
+          "best_num_envs": null,
+          "best_when": null,
+          "last_env_steps_per_s": null,
+          "last_when": null
+        }
+      ]
+    },
+    "onnx_total_found": 12,
+    "onnx_shipped_count": 12,
+    "onnx_samples": [
+      {
+        "rel": "PoFootball/Assets/_Project/RL_Models/Football_v03/Defense.onnx",
+        "name": "Defense.onnx",
+        "kb": 403.0,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              84
+            ]
+          ],
+          [
+            "obs_1",
+            [
+              "batch",
+              50
+            ]
+          ],
+          [
+            "action_masks",
+            [
+              "batch",
+              2
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              2
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              2
+            ]
+          ],
+          [
+            "discrete_actions",
+            [
+              "batch",
+              1
+            ]
+          ],
+          [
+            "discrete_action_output_shape",
+            [
+              1,
+              1
+            ]
+          ],
+          [
+            "deterministic_discrete_actions",
+            [
+              "Concatdeterministic_discrete_actions_dim_0",
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoFootball/Assets/_Project/RL_Models/Football_v03/DefenseCall.onnx",
+        "name": "DefenseCall.onnx",
+        "kb": 26.6,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              12
+            ]
+          ],
+          [
+            "action_masks",
+            [
+              "batch",
+              9
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "discrete_actions",
+            [
+              "batch",
+              1
+            ]
+          ],
+          [
+            "discrete_action_output_shape",
+            [
+              1,
+              1
+            ]
+          ],
+          [
+            "deterministic_discrete_actions",
+            [
+              "Concatdeterministic_discrete_actions_dim_0",
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoFootball/Assets/_Project/RL_Models/Football_v03/Offense.onnx",
+        "name": "Offense.onnx",
+        "kb": 403.0,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              84
+            ]
+          ],
+          [
+            "obs_1",
+            [
+              "batch",
+              50
+            ]
+          ],
+          [
+            "action_masks",
+            [
+              "batch",
+              2
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              2
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              2
+            ]
+          ],
+          [
+            "discrete_actions",
+            [
+              "batch",
+              1
+            ]
+          ],
+          [
+            "discrete_action_output_shape",
+            [
+              1,
+              1
+            ]
+          ],
+          [
+            "deterministic_discrete_actions",
+            [
+              "Concatdeterministic_discrete_actions_dim_0",
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoFootball/Assets/_Project/RL_Models/Football_v03/Quarterback.onnx",
+        "name": "Quarterback.onnx",
+        "kb": 415.2,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              84
+            ]
+          ],
+          [
+            "obs_1",
+            [
+              "batch",
+              50
+            ]
+          ],
+          [
+            "action_masks",
+            [
+              "batch",
+              10
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              4
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              4
+            ]
+          ],
+          [
+            "discrete_actions",
+            [
+              "batch",
+              2
+            ]
+          ],
+          [
+            "discrete_action_output_shape",
+            [
+              1,
+              2
+            ]
+          ],
+          [
+            "deterministic_discrete_actions",
+            [
+              "Concatdeterministic_discrete_actions_dim_0",
+              2
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoFootball/Assets/_Project/RL_Models/Football_v04/Defense.onnx",
+        "name": "Defense.onnx",
+        "kb": 403.0,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              84
+            ]
+          ],
+          [
+            "obs_1",
+            [
+              "batch",
+              50
+            ]
+          ],
+          [
+            "action_masks",
+            [
+              "batch",
+              2
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              2
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              2
+            ]
+          ],
+          [
+            "discrete_actions",
+            [
+              "batch",
+              1
+            ]
+          ],
+          [
+            "discrete_action_output_shape",
+            [
+              1,
+              1
+            ]
+          ],
+          [
+            "deterministic_discrete_actions",
+            [
+              "Concatdeterministic_discrete_actions_dim_0",
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoFootball/Assets/_Project/RL_Models/Football_v04/DefenseCall.onnx",
+        "name": "DefenseCall.onnx",
+        "kb": 26.6,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              12
+            ]
+          ],
+          [
+            "action_masks",
+            [
+              "batch",
+              9
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "discrete_actions",
+            [
+              "batch",
+              1
+            ]
+          ],
+          [
+            "discrete_action_output_shape",
+            [
+              1,
+              1
+            ]
+          ],
+          [
+            "deterministic_discrete_actions",
+            [
+              "Concatdeterministic_discrete_actions_dim_0",
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoFootball/Assets/_Project/RL_Models/Football_v04/Offense.onnx",
+        "name": "Offense.onnx",
+        "kb": 403.0,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              84
+            ]
+          ],
+          [
+            "obs_1",
+            [
+              "batch",
+              50
+            ]
+          ],
+          [
+            "action_masks",
+            [
+              "batch",
+              2
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              2
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              2
+            ]
+          ],
+          [
+            "discrete_actions",
+            [
+              "batch",
+              1
+            ]
+          ],
+          [
+            "discrete_action_output_shape",
+            [
+              1,
+              1
+            ]
+          ],
+          [
+            "deterministic_discrete_actions",
+            [
+              "Concatdeterministic_discrete_actions_dim_0",
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoFootball/Assets/_Project/RL_Models/Football_v04/Quarterback.onnx",
+        "name": "Quarterback.onnx",
+        "kb": 415.2,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              84
+            ]
+          ],
+          [
+            "obs_1",
+            [
+              "batch",
+              50
+            ]
+          ],
+          [
+            "action_masks",
+            [
+              "batch",
+              10
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              4
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              4
+            ]
+          ],
+          [
+            "discrete_actions",
+            [
+              "batch",
+              2
+            ]
+          ],
+          [
+            "discrete_action_output_shape",
+            [
+              1,
+              2
+            ]
+          ],
+          [
+            "deterministic_discrete_actions",
+            [
+              "Concatdeterministic_discrete_actions_dim_0",
+              2
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoFootball/Assets/_Project/RL_Models/Football_v05/Defense.onnx",
+        "name": "Defense.onnx",
+        "kb": 403.0,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              84
+            ]
+          ],
+          [
+            "obs_1",
+            [
+              "batch",
+              50
+            ]
+          ],
+          [
+            "action_masks",
+            [
+              "batch",
+              2
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              2
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              2
+            ]
+          ],
+          [
+            "discrete_actions",
+            [
+              "batch",
+              1
+            ]
+          ],
+          [
+            "discrete_action_output_shape",
+            [
+              1,
+              1
+            ]
+          ],
+          [
+            "deterministic_discrete_actions",
+            [
+              "Concatdeterministic_discrete_actions_dim_0",
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoFootball/Assets/_Project/RL_Models/Football_v05/DefenseCall.onnx",
+        "name": "DefenseCall.onnx",
+        "kb": 26.6,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              12
+            ]
+          ],
+          [
+            "action_masks",
+            [
+              "batch",
+              9
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "discrete_actions",
+            [
+              "batch",
+              1
+            ]
+          ],
+          [
+            "discrete_action_output_shape",
+            [
+              1,
+              1
+            ]
+          ],
+          [
+            "deterministic_discrete_actions",
+            [
+              "Concatdeterministic_discrete_actions_dim_0",
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoFootball/Assets/_Project/RL_Models/Football_v05/Offense.onnx",
+        "name": "Offense.onnx",
+        "kb": 403.0,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              84
+            ]
+          ],
+          [
+            "obs_1",
+            [
+              "batch",
+              50
+            ]
+          ],
+          [
+            "action_masks",
+            [
+              "batch",
+              2
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              2
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              2
+            ]
+          ],
+          [
+            "discrete_actions",
+            [
+              "batch",
+              1
+            ]
+          ],
+          [
+            "discrete_action_output_shape",
+            [
+              1,
+              1
+            ]
+          ],
+          [
+            "deterministic_discrete_actions",
+            [
+              "Concatdeterministic_discrete_actions_dim_0",
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoFootball/Assets/_Project/RL_Models/Football_v05/Quarterback.onnx",
+        "name": "Quarterback.onnx",
+        "kb": 415.2,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              84
+            ]
+          ],
+          [
+            "obs_1",
+            [
+              "batch",
+              50
+            ]
+          ],
+          [
+            "action_masks",
+            [
+              "batch",
+              10
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              4
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              4
+            ]
+          ],
+          [
+            "discrete_actions",
+            [
+              "batch",
+              2
+            ]
+          ],
+          [
+            "discrete_action_output_shape",
+            [
+              1,
+              2
+            ]
+          ],
+          [
+            "deterministic_discrete_actions",
+            [
+              "Concatdeterministic_discrete_actions_dim_0",
+              2
+            ]
+          ]
+        ]
+      }
+    ],
+    "mjcf_count": 0,
+    "mjcf_samples": [],
+    "yaml_configs": [
+      "PoFootball/results/_benchmark.yaml",
+      "PoFootball/Training/FootballBase31.yaml",
+      "PoFootball/Training/FootballBase32.yaml",
+      "PoFootball/Training/FootballBase33.yaml"
+    ],
+    "reward_configs": [],
+    "visuals": [
+      {
+        "rel": "PoFootball/SCREENSHOTS/new_features/gif_01_dropback_separation.gif",
+        "ext": ".gif",
+        "kb": 2190.5,
+        "mtime": 1794952337
+      },
+      {
+        "rel": "PoFootball/SCREENSHOTS/new_features/gif_02_pursuit_breakaway.gif",
+        "ext": ".gif",
+        "kb": 2385.6,
+        "mtime": 1794952337
+      },
+      {
+        "rel": "PoFootball/SCREENSHOTS/new_features/gif_03_weather_night_rain.gif",
+        "ext": ".gif",
+        "kb": 1617.9,
+        "mtime": 1794952337
+      },
+      {
+        "rel": "PoFootball/SCREENSHOTS/new_features/gif_04_highlight_vcam.gif",
+        "ext": ".gif",
+        "kb": 2137.6,
+        "mtime": 1794952337
+      },
+      {
+        "rel": "PoFootball/SCREENSHOTS/new_features/02_pursuit_surround.png",
+        "ext": ".png",
+        "kb": 606.9,
+        "mtime": 1794952337
+      },
+      {
+        "rel": "PoFootball/SCREENSHOTS/new_features/03_weather_night_rain.png",
+        "ext": ".png",
+        "kb": 466.5,
+        "mtime": 1794952337
+      },
+      {
+        "rel": "PoFootball/SCREENSHOTS/new_features/04_debug_telemetry.png",
+        "ext": ".png",
+        "kb": 404.3,
+        "mtime": 1794952337
+      },
+      {
+        "rel": "PoFootball/SCREENSHOTS/new_features/05_highlight_vcam.png",
+        "ext": ".png",
+        "kb": 468.5,
+        "mtime": 1794952337
+      },
+      {
+        "rel": "PoFootball/SCREENSHOTS/new_features/annotated_01_separation_cinemachine.png",
+        "ext": ".png",
+        "kb": 406.6,
+        "mtime": 1794952337
+      },
+      {
+        "rel": "PoFootball/SCREENSHOTS/new_features/annotated_02_pursuit_surround.png",
+        "ext": ".png",
+        "kb": 507.2,
+        "mtime": 1794952337
+      },
+      {
+        "rel": "PoFootball/SCREENSHOTS/new_features/annotated_03_weather_night_rain.png",
+        "ext": ".png",
+        "kb": 372.7,
+        "mtime": 1794952337
+      },
+      {
+        "rel": "PoFootball/SCREENSHOTS/new_features/annotated_04_debug_telemetry.png",
+        "ext": ".png",
+        "kb": 333.9,
+        "mtime": 1794952337
+      }
+    ]
+  },
+  "PoHillKing": {
+    "benchmark": {
+      "when": "2026-11-26T12:00:34-05:00",
+      "ok": true,
+      "machine_gpu": "NVIDIA RTX 2000 Ada Generation Laptop GPU",
+      "trainer": "rsl_rl 5.5.1",
+      "script": "training/scripts/train.py",
+      "num_envs": 4096,
+      "horizon": 24,
+      "net": [
+        512,
+        256,
+        128
+      ],
+      "step_time_ms": 103.199,
+      "sim_ms": 86.696,
+      "learn_ms": 16.503,
+      "env_steps_per_s": 39690,
+      "versions": {
+        "python": "3.11.18",
+        "torch": "2.9.1+cu128",
+        "mujoco_warp": "3.15.0"
+      },
+      "total_benchmark_runs": 5,
+      "by_machine": [
+        {
+          "hostname": "WIN-C2ANEVBHN6Q",
+          "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+          "cpu": "Intel(R) Core(TM) Ultra 9 275HX (24 threads)",
+          "runs": 3,
+          "failed_runs": 0,
+          "best_env_steps_per_s": 65024,
+          "best_num_envs": 4096,
+          "best_when": "2026-11-25T14:26:17-05:00",
+          "last_env_steps_per_s": 47917,
+          "last_when": "2026-11-26T12:00:32-05:00"
+        },
+        {
+          "hostname": "C4T4V44",
+          "gpu": "NVIDIA RTX 2000 Ada Generation Laptop GPU",
+          "cpu": "13th Gen Intel(R) Core(TM) i7-13850HX (28 threads)",
+          "runs": 2,
+          "failed_runs": 0,
+          "best_env_steps_per_s": 39943,
+          "best_num_envs": 4096,
+          "best_when": "2026-11-25T19:39:20-05:00",
+          "last_env_steps_per_s": 39690,
+          "last_when": "2026-11-26T12:00:34-05:00"
+        }
+      ]
+    },
+    "onnx_total_found": 30,
+    "onnx_shipped_count": 25,
+    "onnx_samples": [
+      {
+        "rel": "PoHillKing/Assets/_Project/RL_Models/attacker_policy.onnx",
+        "name": "attacker_policy.onnx",
+        "kb": 884.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              112
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoHillKing/Assets/_Project/RL_Models/duelist_policy.onnx",
+        "name": "duelist_policy.onnx",
+        "kb": 884.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              112
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoHillKing/Assets/_Project/RL_Models/ffa_policy.onnx",
+        "name": "ffa_policy.onnx",
+        "kb": 902.3,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              121
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoHillKing/Assets/_Project/RL_Models/ffa_value.onnx",
+        "name": "ffa_value.onnx",
+        "kb": 906.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              130
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoHillKing/Assets/_Project/RL_Models/getup_policy.onnx",
+        "name": "getup_policy.onnx",
+        "kb": 866.1,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoHillKing/Assets/_Project/RL_Models/r0_policy.onnx",
+        "name": "r0_policy.onnx",
+        "kb": 866.3,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoHillKing/Assets/_Project/RL_Models/r1_policy.onnx",
+        "name": "r1_policy.onnx",
+        "kb": 866.3,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoHillKing/Assets/_Project/RL_Models/r2_policy.onnx",
+        "name": "r2_policy.onnx",
+        "kb": 866.3,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoHillKing/Assets/_Project/RL_Models/r3_policy.onnx",
+        "name": "r3_policy.onnx",
+        "kb": 866.3,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoHillKing/Assets/_Project/RL_Models/rammer_policy.onnx",
+        "name": "rammer_policy.onnx",
+        "kb": 884.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              112
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoHillKing/Assets/_Project/RL_Models/grandpa/fighter_policy.onnx",
+        "name": "fighter_policy.onnx",
+        "kb": 884.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              112
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoHillKing/Assets/_Project/RL_Models/grandpa/fighter_value.onnx",
+        "name": "fighter_value.onnx",
+        "kb": 888.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              121
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoHillKing/Assets/_Project/RL_Models/grandpa/getup_policy.onnx",
+        "name": "getup_policy.onnx",
+        "kb": 866.1,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoHillKing/Assets/_Project/RL_Models/grandpa/walker_policy.onnx",
+        "name": "walker_policy.onnx",
+        "kb": 866.1,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoHillKing/Assets/_Project/RL_Models/grandpa/walker_value.onnx",
+        "name": "walker_value.onnx",
+        "kb": 870.1,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              112
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      }
+    ],
+    "mjcf_count": 118,
+    "mjcf_samples": [
+      {
+        "rel": "PoHillKing/training/assets/brawler/brawler_mjx.xml",
+        "bodies": 30,
+        "joints_total": 46,
+        "free_joints": 0,
+        "actuated_joints": 46,
+        "actuators": 29,
+        "timestep": null
+      },
+      {
+        "rel": "PoHillKing/training/assets/brawler/scene_flat_1p.xml",
+        "bodies": 34,
+        "joints_total": 46,
+        "free_joints": 0,
+        "actuated_joints": 46,
+        "actuators": 29,
+        "timestep": "0.002"
+      },
+      {
+        "rel": "PoHillKing/training/assets/brawler/scene_flat_1p_train.xml",
+        "bodies": 34,
+        "joints_total": 51,
+        "free_joints": 5,
+        "actuated_joints": 46,
+        "actuators": 29,
+        "timestep": null
+      },
+      {
+        "rel": "PoHillKing/training/assets/brawler/scene_flat_1p_unity.xml",
+        "bodies": 34,
+        "joints_total": 51,
+        "free_joints": 5,
+        "actuated_joints": 46,
+        "actuators": 29,
+        "timestep": null
+      },
+      {
+        "rel": "PoHillKing/training/assets/brawler/scene_koth_1p.xml",
+        "bodies": 34,
+        "joints_total": 46,
+        "free_joints": 0,
+        "actuated_joints": 46,
+        "actuators": 29,
+        "timestep": "0.002"
+      },
+      {
+        "rel": "PoHillKing/training/assets/brawler/scene_koth_1p_train.xml",
+        "bodies": 34,
+        "joints_total": 51,
+        "free_joints": 5,
+        "actuated_joints": 46,
+        "actuators": 29,
+        "timestep": null
+      },
+      {
+        "rel": "PoHillKing/training/assets/brawler/scene_koth_1p_unity.xml",
+        "bodies": 34,
+        "joints_total": 51,
+        "free_joints": 5,
+        "actuated_joints": 46,
+        "actuators": 29,
+        "timestep": null
+      },
+      {
+        "rel": "PoHillKing/training/assets/brawler/scene_koth_2p.xml",
+        "bodies": 64,
+        "joints_total": 75,
+        "free_joints": 0,
+        "actuated_joints": 75,
+        "actuators": 58,
+        "timestep": "0.002"
+      },
+      {
+        "rel": "PoHillKing/training/assets/brawler/scene_koth_2p_train.xml",
+        "bodies": 64,
+        "joints_total": 81,
+        "free_joints": 6,
+        "actuated_joints": 75,
+        "actuators": 58,
+        "timestep": null
+      },
+      {
+        "rel": "PoHillKing/training/assets/brawler/scene_koth_2p_unity.xml",
+        "bodies": 64,
+        "joints_total": 81,
+        "free_joints": 6,
+        "actuated_joints": 75,
+        "actuators": 58,
+        "timestep": null
+      }
+    ],
+    "yaml_configs": [],
+    "reward_configs": [
+      "PoHillKing/training/config/reward_penalties.json"
+    ],
+    "visuals": [
+      {
+        "rel": "PoHillKing/SCREENSHOTS/ui-261124-po-standard-audit/after-diag-1366.png",
+        "ext": ".png",
+        "kb": 21.3,
+        "mtime": 1795527992
+      },
+      {
+        "rel": "PoHillKing/SCREENSHOTS/ui-261124-po-standard-audit/after-diag-390.png",
+        "ext": ".png",
+        "kb": 17.3,
+        "mtime": 1795527992
+      },
+      {
+        "rel": "PoHillKing/SCREENSHOTS/ui-261124-po-standard-audit/after-game-1366.png",
+        "ext": ".png",
+        "kb": 203.9,
+        "mtime": 1795527992
+      },
+      {
+        "rel": "PoHillKing/SCREENSHOTS/ui-261124-po-standard-audit/after-game-390.png",
+        "ext": ".png",
+        "kb": 57.3,
+        "mtime": 1795527992
+      },
+      {
+        "rel": "PoHillKing/SCREENSHOTS/ui-261124-po-standard-audit/before-diag-1366.png",
+        "ext": ".png",
+        "kb": 21.4,
+        "mtime": 1795527992
+      },
+      {
+        "rel": "PoHillKing/SCREENSHOTS/ui-261124-po-standard-audit/before-diag-390.png",
+        "ext": ".png",
+        "kb": 17.3,
+        "mtime": 1795527992
+      },
+      {
+        "rel": "PoHillKing/SCREENSHOTS/ui-261124-po-standard-audit/before-game-1366.png",
+        "ext": ".png",
+        "kb": 218.7,
+        "mtime": 1795527992
+      },
+      {
+        "rel": "PoHillKing/SCREENSHOTS/ui-261124-po-standard-audit/before-game-390.png",
+        "ext": ".png",
+        "kb": 65.5,
+        "mtime": 1795527992
+      },
+      {
+        "rel": "PoHillKing/SCREENSHOTS/ui-261124-po-standard-audit/side-by-side.png",
+        "ext": ".png",
+        "kb": 240.4,
+        "mtime": 1795527992
+      },
+      {
+        "rel": "PoHillKing/SCREENSHOTS/archive/mountain_ejection.png",
+        "ext": ".png",
+        "kb": 5202.0,
+        "mtime": 1794757586
+      },
+      {
+        "rel": "PoHillKing/SCREENSHOTS/archive/mountain_menu.png",
+        "ext": ".png",
+        "kb": 3580.3,
+        "mtime": 1794757586
+      },
+      {
+        "rel": "PoHillKing/SCREENSHOTS/archive/mountain_overview.png",
+        "ext": ".png",
+        "kb": 1329.0,
+        "mtime": 1794757586
+      }
+    ]
+  },
+  "PoOlympic": {
+    "benchmark": {
+      "when": "2026-11-26T12:01:58-05:00",
+      "ok": true,
+      "machine_gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "trainer": "mjlab 1.6.0 + rsl_rl 5.4.2",
+      "script": "mjlab train (training/.venv)",
+      "num_envs": 4096,
+      "horizon": 24,
+      "net": [
+        512,
+        256,
+        128
+      ],
+      "step_time_ms": 110.378,
+      "sim_ms": 84.479,
+      "learn_ms": 25.9,
+      "env_steps_per_s": 37109,
+      "versions": {
+        "python": "3.11.9",
+        "torch": "2.14.0+cu130",
+        "mujoco_warp": "3.11.0",
+        "warp": "1.17.0"
+      },
+      "total_benchmark_runs": 4,
+      "by_machine": [
+        {
+          "hostname": "WIN-C2ANEVBHN6Q",
+          "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+          "cpu": "Intel(R) Core(TM) Ultra 9 275HX (24 threads)",
+          "runs": 2,
+          "failed_runs": 0,
+          "best_env_steps_per_s": 37109,
+          "best_num_envs": 4096,
+          "best_when": "2026-11-26T12:01:58-05:00",
+          "last_env_steps_per_s": 37109,
+          "last_when": "2026-11-26T12:01:58-05:00"
+        },
+        {
+          "hostname": "C4T4V44",
+          "gpu": "NVIDIA RTX 2000 Ada Generation Laptop GPU",
+          "cpu": "13th Gen Intel(R) Core(TM) i7-13850HX (28 threads)",
+          "runs": 2,
+          "failed_runs": 0,
+          "best_env_steps_per_s": 34692,
+          "best_num_envs": 4096,
+          "best_when": "2026-11-26T12:01:42-05:00",
+          "last_env_steps_per_s": 34692,
+          "last_when": "2026-11-26T12:01:42-05:00"
+        }
+      ]
+    },
+    "onnx_total_found": 137,
+    "onnx_shipped_count": 137,
+    "onnx_samples": [
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/Brains/crawl_grandma.critic.onnx",
+        "name": "crawl_grandma.critic.onnx",
+        "kb": 814.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              84
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/Brains/crawl_grandma.onnx",
+        "name": "crawl_grandma.onnx",
+        "kb": 833.4,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              84
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "ctrl",
+            [
+              1,
+              23
+            ]
+          ],
+          [
+            "action_raw",
+            [
+              1,
+              23
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/Brains/crawl_kim.critic.onnx",
+        "name": "crawl_kim.critic.onnx",
+        "kb": 814.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              84
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/Brains/crawl_kim.onnx",
+        "name": "crawl_kim.onnx",
+        "kb": 833.3,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              84
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "ctrl",
+            [
+              1,
+              23
+            ]
+          ],
+          [
+            "action_raw",
+            [
+              1,
+              23
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/Brains/crawl_matt.critic.onnx",
+        "name": "crawl_matt.critic.onnx",
+        "kb": 814.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              84
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/Brains/crawl_matt.onnx",
+        "name": "crawl_matt.onnx",
+        "kb": 833.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              84
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "ctrl",
+            [
+              1,
+              23
+            ]
+          ],
+          [
+            "action_raw",
+            [
+              1,
+              23
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/Brains/crawl_zombie.critic.onnx",
+        "name": "crawl_zombie.critic.onnx",
+        "kb": 814.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              84
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/Brains/crawl_zombie.onnx",
+        "name": "crawl_zombie.onnx",
+        "kb": 832.8,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              84
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "ctrl",
+            [
+              1,
+              23
+            ]
+          ],
+          [
+            "action_raw",
+            [
+              1,
+              23
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/Brains/getup_grandma.onnx",
+        "name": "getup_grandma.onnx",
+        "kb": 833.4,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              84
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "ctrl",
+            [
+              1,
+              23
+            ]
+          ],
+          [
+            "action_raw",
+            [
+              1,
+              23
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/Brains/getup_kim.onnx",
+        "name": "getup_kim.onnx",
+        "kb": 833.4,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              84
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "ctrl",
+            [
+              1,
+              23
+            ]
+          ],
+          [
+            "action_raw",
+            [
+              1,
+              23
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/Brains/getup_matt.onnx",
+        "name": "getup_matt.onnx",
+        "kb": 833.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              84
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "ctrl",
+            [
+              1,
+              23
+            ]
+          ],
+          [
+            "action_raw",
+            [
+              1,
+              23
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/Brains/getup_zombie.onnx",
+        "name": "getup_zombie.onnx",
+        "kb": 833.4,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              84
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "ctrl",
+            [
+              1,
+              23
+            ]
+          ],
+          [
+            "action_raw",
+            [
+              1,
+              23
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/Brains/grandma_rung0.critic.onnx",
+        "name": "grandma_rung0.critic.onnx",
+        "kb": 814.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              84
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/Brains/grandma_rung0.onnx",
+        "name": "grandma_rung0.onnx",
+        "kb": 833.3,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              84
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "ctrl",
+            [
+              1,
+              23
+            ]
+          ],
+          [
+            "action_raw",
+            [
+              1,
+              23
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/Brains/grandma_rung2.critic.onnx",
+        "name": "grandma_rung2.critic.onnx",
+        "kb": 814.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              84
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      }
+    ],
+    "mjcf_count": 151,
+    "mjcf_samples": [
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/scene_archer8_mattbio.xml",
+        "bodies": 144,
+        "joints_total": 200,
+        "free_joints": 0,
+        "actuated_joints": 200,
+        "actuators": 184,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/scene_beacon8_roster.xml",
+        "bodies": 528,
+        "joints_total": 800,
+        "free_joints": 0,
+        "actuated_joints": 800,
+        "actuators": 736,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/scene_bridge8_roster.xml",
+        "bodies": 528,
+        "joints_total": 800,
+        "free_joints": 0,
+        "actuated_joints": 800,
+        "actuators": 736,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/scene_crab16_roster.xml",
+        "bodies": 1056,
+        "joints_total": 1600,
+        "free_joints": 0,
+        "actuated_joints": 1600,
+        "actuators": 1472,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/scene_crab8.xml",
+        "bodies": 144,
+        "joints_total": 200,
+        "free_joints": 0,
+        "actuated_joints": 200,
+        "actuators": 184,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/scene_crab8_roster.xml",
+        "bodies": 528,
+        "joints_total": 800,
+        "free_joints": 0,
+        "actuated_joints": 800,
+        "actuators": 736,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/scene_crawl16_roster.xml",
+        "bodies": 1056,
+        "joints_total": 1600,
+        "free_joints": 0,
+        "actuated_joints": 1600,
+        "actuators": 1472,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/scene_crawl8_roster.xml",
+        "bodies": 528,
+        "joints_total": 800,
+        "free_joints": 0,
+        "actuated_joints": 800,
+        "actuators": 736,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/scene_crossroad8_roster.xml",
+        "bodies": 528,
+        "joints_total": 800,
+        "free_joints": 0,
+        "actuated_joints": 800,
+        "actuators": 736,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoOlympic/Assets/_Project/RL_Models/scene_flamingo8_mattbio.xml",
+        "bodies": 144,
+        "joints_total": 200,
+        "free_joints": 0,
+        "actuated_joints": 200,
+        "actuators": 184,
+        "timestep": "0.005"
+      }
+    ],
+    "yaml_configs": [],
+    "reward_configs": [
+      "PoOlympic/training/config/reward_penalties.json"
+    ],
+    "visuals": [
+      {
+        "rel": "PoOlympic/SCREENSHOTS/events_roster_after_assets.png",
+        "ext": ".png",
+        "kb": 437.1,
+        "mtime": 1795387546
+      },
+      {
+        "rel": "PoOlympic/parity/tensorboard/zcrawl_v3_hands_down.png",
+        "ext": ".png",
+        "kb": 22.6,
+        "mtime": 1794757738
+      },
+      {
+        "rel": "PoOlympic/parity/tensorboard/zcrawl_v3_progress.png",
+        "ext": ".png",
+        "kb": 23.3,
+        "mtime": 1794757738
+      },
+      {
+        "rel": "PoOlympic/parity/tensorboard/zcrawl_v3_track_yaw.png",
+        "ext": ".png",
+        "kb": 20.6,
+        "mtime": 1794757738
+      },
+      {
+        "rel": "PoOlympic/parity/ui/fx_menu_before_after.png",
+        "ext": ".png",
+        "kb": 773.1,
+        "mtime": 1794757738
+      },
+      {
+        "rel": "PoOlympic/parity/ui/menu_after.png",
+        "ext": ".png",
+        "kb": 69.7,
+        "mtime": 1794757738
+      },
+      {
+        "rel": "PoOlympic/parity/ui/menu_allfours_before_after.png",
+        "ext": ".png",
+        "kb": 96.5,
+        "mtime": 1794757738
+      },
+      {
+        "rel": "PoOlympic/parity/ui/menu_before.png",
+        "ext": ".png",
+        "kb": 69.7,
+        "mtime": 1794757738
+      },
+      {
+        "rel": "PoOlympic/parity/ui/menu_gauntlet_before_after.png",
+        "ext": ".png",
+        "kb": 514.5,
+        "mtime": 1794757738
+      },
+      {
+        "rel": "PoOlympic/parity/ui/series_observe_1.png",
+        "ext": ".png",
+        "kb": 1566.2,
+        "mtime": 1794757738
+      },
+      {
+        "rel": "PoOlympic/parity/ui/series_observe_final.png",
+        "ext": ".png",
+        "kb": 267.7,
+        "mtime": 1794757738
+      },
+      {
+        "rel": "PoOlympic/parity/ui/after/dock_pedestal_result.png",
+        "ext": ".png",
+        "kb": 1132.1,
+        "mtime": 1794757738
+      }
+    ]
+  },
+  "PoRaceUnreal": {
+    "benchmark": {
+      "when": "2026-11-26T12:06:27-05:00",
+      "ok": true,
+      "machine_gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "trainer": "brax 0.14.2 ppo (jax 0.11.2, mujoco_warp 3.15.0)",
+      "script": "training/train.py (docker image porace-trainer, training/Dockerfile)",
+      "num_envs": 1024,
+      "horizon": 20,
+      "net": [
+        512,
+        256,
+        128
+      ],
+      "step_time_ms": 39.4,
+      "sim_ms": 39.4,
+      "learn_ms": 0.0,
+      "env_steps_per_s": 25990,
+      "versions": {
+        "python": "3.12.3",
+        "jax": "0.11.2",
+        "brax": "0.14.2",
+        "mujoco": "3.15.0",
+        "mujoco_warp": "3.15.0",
+        "playground": "0.2.0",
+        "image": "eedd49aae793"
+      },
+      "total_benchmark_runs": 4,
+      "by_machine": [
+        {
+          "hostname": "C4T4V44",
+          "gpu": "NVIDIA RTX 2000 Ada Generation Laptop GPU",
+          "cpu": "13th Gen Intel(R) Core(TM) i7-13850HX (28 threads)",
+          "runs": 2,
+          "failed_runs": 0,
+          "best_env_steps_per_s": 58583,
+          "best_num_envs": 1024,
+          "best_when": "2026-11-25T19:43:09-05:00",
+          "last_env_steps_per_s": 56035,
+          "last_when": "2026-11-26T12:02:19-05:00"
+        },
+        {
+          "hostname": "WIN-C2ANEVBHN6Q",
+          "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+          "cpu": "Intel(R) Core(TM) Ultra 9 275HX (24 threads)",
+          "runs": 2,
+          "failed_runs": 0,
+          "best_env_steps_per_s": 26506,
+          "best_num_envs": 1024,
+          "best_when": "2026-11-21T17:28:43-05:00",
+          "last_env_steps_per_s": 25990,
+          "last_when": "2026-11-26T12:06:27-05:00"
+        }
+      ]
+    },
+    "onnx_total_found": 10,
+    "onnx_shipped_count": 10,
+    "onnx_samples": [
+      {
+        "rel": "PoRaceUnreal/training/final/grandma_g14.onnx",
+        "name": "grandma_g14.onnx",
+        "kb": 865.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRaceUnreal/training/final/matt_m20.onnx",
+        "name": "matt_m20.onnx",
+        "kb": 865.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRaceUnreal/training/models/brains/go2_getup.onnx",
+        "name": "go2_getup.onnx",
+        "kb": 734.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              42
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              12
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRaceUnreal/training/models/brains/go2_loco.onnx",
+        "name": "go2_loco.onnx",
+        "kb": 746.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              48
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              12
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRaceUnreal/training/models/brains/go2_loco_bank.onnx",
+        "name": "go2_loco_bank.onnx",
+        "kb": 746.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              48
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              12
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRaceUnreal/training/models/brains/go2_loco_fast.onnx",
+        "name": "go2_loco_fast.onnx",
+        "kb": 746.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              48
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              12
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRaceUnreal/training/models/brains/go2_loco_steeple.onnx",
+        "name": "go2_loco_steeple.onnx",
+        "kb": 746.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              48
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              12
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRaceUnreal/training/models/brains/matt_loco.onnx",
+        "name": "matt_loco.onnx",
+        "kb": 865.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              103
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              29
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRaceUnreal/training/models/brains/stroller_roll.onnx",
+        "name": "stroller_roll.onnx",
+        "kb": 685.8,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              20
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              3
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRaceUnreal/training/models/brains/zero_policy.onnx",
+        "name": "zero_policy.onnx",
+        "kb": 2.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              48
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              12
+            ]
+          ]
+        ]
+      }
+    ],
+    "mjcf_count": 16,
+    "mjcf_samples": [
+      {
+        "rel": "PoRaceUnreal/docs/parity/unity_generated.xml",
+        "bodies": 17,
+        "joints_total": 12,
+        "free_joints": 0,
+        "actuated_joints": 12,
+        "actuators": 12,
+        "timestep": "0.004"
+      },
+      {
+        "rel": "PoRaceUnreal/Plugins/UnrealRoboticsLab/Content/TestData/issue72_includes/parent.xml",
+        "bodies": 1,
+        "joints_total": 1,
+        "free_joints": 1,
+        "actuated_joints": 0,
+        "actuators": 0,
+        "timestep": null
+      },
+      {
+        "rel": "PoRaceUnreal/training/assets/go2/go2_mjx.xml",
+        "bodies": 13,
+        "joints_total": 16,
+        "free_joints": 0,
+        "actuated_joints": 16,
+        "actuators": 12,
+        "timestep": null
+      },
+      {
+        "rel": "PoRaceUnreal/training/assets/go2/go2_porace.xml",
+        "bodies": 13,
+        "joints_total": 16,
+        "free_joints": 0,
+        "actuated_joints": 16,
+        "actuators": 12,
+        "timestep": "0.004"
+      },
+      {
+        "rel": "PoRaceUnreal/training/assets/tracks/flat_oval.xml",
+        "bodies": 48,
+        "joints_total": 52,
+        "free_joints": 3,
+        "actuated_joints": 49,
+        "actuators": 44,
+        "timestep": "0.004"
+      },
+      {
+        "rel": "PoRaceUnreal/training/assets/tracks/planar_sprint.xml",
+        "bodies": 48,
+        "joints_total": 52,
+        "free_joints": 3,
+        "actuated_joints": 49,
+        "actuators": 44,
+        "timestep": "0.004"
+      },
+      {
+        "rel": "PoRaceUnreal/training/g1/assets/g1_porace.xml",
+        "bodies": 30,
+        "joints_total": 48,
+        "free_joints": 1,
+        "actuated_joints": 47,
+        "actuators": 29,
+        "timestep": null
+      },
+      {
+        "rel": "PoRaceUnreal/training/grandma/assets/grandma_porace.xml",
+        "bodies": 30,
+        "joints_total": 29,
+        "free_joints": 0,
+        "actuated_joints": 29,
+        "actuators": 29,
+        "timestep": "0.004"
+      },
+      {
+        "rel": "PoRaceUnreal/training/matt/assets/matt_porace.xml",
+        "bodies": 30,
+        "joints_total": 29,
+        "free_joints": 0,
+        "actuated_joints": 29,
+        "actuators": 29,
+        "timestep": "0.004"
+      },
+      {
+        "rel": "PoRaceUnreal/training/models/unity_flat/go2_unity.xml",
+        "bodies": 17,
+        "joints_total": 21,
+        "free_joints": 5,
+        "actuated_joints": 16,
+        "actuators": 12,
+        "timestep": "0.004"
+      }
+    ],
+    "yaml_configs": [
+      "PoRaceUnreal/Plugins/UnrealRoboticsLab/mkdocs.yml"
+    ],
+    "reward_configs": [
+      "PoRaceUnreal/training/reward_config.json"
+    ],
+    "visuals": [
+      {
+        "rel": "PoRaceUnreal/SCREENSHOTS/261124-v4-audit.png",
+        "ext": ".png",
+        "kb": 311.5,
+        "mtime": 1795528012
+      },
+      {
+        "rel": "PoRaceUnreal/SCREENSHOTS/261124-v4-audit/after_diag_1366x768.png",
+        "ext": ".png",
+        "kb": 50.8,
+        "mtime": 1795528012
+      },
+      {
+        "rel": "PoRaceUnreal/SCREENSHOTS/261124-v4-audit/after_diag_390x844.png",
+        "ext": ".png",
+        "kb": 66.4,
+        "mtime": 1795528012
+      },
+      {
+        "rel": "PoRaceUnreal/SCREENSHOTS/261124-v4-audit/after_root_1366x768.png",
+        "ext": ".png",
+        "kb": 134.0,
+        "mtime": 1795528012
+      },
+      {
+        "rel": "PoRaceUnreal/SCREENSHOTS/261124-v4-audit/after_root_390x844.png",
+        "ext": ".png",
+        "kb": 104.5,
+        "mtime": 1795528012
+      },
+      {
+        "rel": "PoRaceUnreal/SCREENSHOTS/261124-v4-audit/after_viewer_1366x768.png",
+        "ext": ".png",
+        "kb": 28.1,
+        "mtime": 1795528012
+      },
+      {
+        "rel": "PoRaceUnreal/SCREENSHOTS/261124-v4-audit/after_viewer_390x844.png",
+        "ext": ".png",
+        "kb": 21.8,
+        "mtime": 1795528012
+      },
+      {
+        "rel": "PoRaceUnreal/SCREENSHOTS/261124-v4-audit/before_diag_1366x768.png",
+        "ext": ".png",
+        "kb": 47.0,
+        "mtime": 1795528012
+      },
+      {
+        "rel": "PoRaceUnreal/SCREENSHOTS/261124-v4-audit/before_diag_390x844.png",
+        "ext": ".png",
+        "kb": 60.2,
+        "mtime": 1795528012
+      },
+      {
+        "rel": "PoRaceUnreal/SCREENSHOTS/261124-v4-audit/before_root_1366x768.png",
+        "ext": ".png",
+        "kb": 147.7,
+        "mtime": 1795528012
+      },
+      {
+        "rel": "PoRaceUnreal/SCREENSHOTS/261124-v4-audit/before_root_390x844.png",
+        "ext": ".png",
+        "kb": 97.1,
+        "mtime": 1795528012
+      },
+      {
+        "rel": "PoRaceUnreal/SCREENSHOTS/v3/demo_after_450x800.png",
+        "ext": ".png",
+        "kb": 387.9,
+        "mtime": 1795387564
+      }
+    ]
+  },
+  "PoRobotTrain": {
+    "benchmark": {
+      "when": "2026-11-26T12:04:42-05:00",
+      "ok": true,
+      "machine_gpu": "NVIDIA RTX 2000 Ada Generation Laptop GPU",
+      "trainer": "PoRobotTrain PPO (RobotControl/training/ppo.py), torch 2.11.0+cu128",
+      "script": "RobotControl/training/train_level0.py",
+      "num_envs": 512,
+      "horizon": 24,
+      "net": [
+        256,
+        128,
+        64
+      ],
+      "step_time_ms": 14.632,
+      "sim_ms": 9.936,
+      "learn_ms": 4.695,
+      "env_steps_per_s": 34993,
+      "versions": {
+        "python": "3.11.18",
+        "torch": "2.11.0+cu128",
+        "mujoco": "4.0.0",
+        "device": "cuda",
+        "mujoco_threads": 27
+      },
+      "total_benchmark_runs": 4,
+      "by_machine": [
+        {
+          "hostname": "C4T4V44",
+          "gpu": "NVIDIA RTX 2000 Ada Generation Laptop GPU",
+          "cpu": "13th Gen Intel(R) Core(TM) i7-13850HX (28 threads)",
+          "runs": 2,
+          "failed_runs": 0,
+          "best_env_steps_per_s": 34993,
+          "best_num_envs": 512,
+          "best_when": "2026-11-26T12:04:42-05:00",
+          "last_env_steps_per_s": 34993,
+          "last_when": "2026-11-26T12:04:42-05:00"
+        },
+        {
+          "hostname": "WIN-C2ANEVBHN6Q",
+          "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+          "cpu": "Intel(R) Core(TM) Ultra 9 275HX (24 threads)",
+          "runs": 2,
+          "failed_runs": 0,
+          "best_env_steps_per_s": 30757,
+          "best_num_envs": 512,
+          "best_when": "2026-11-26T12:02:40-05:00",
+          "last_env_steps_per_s": 30757,
+          "last_when": "2026-11-26T12:02:40-05:00"
+        }
+      ]
+    },
+    "onnx_total_found": 21,
+    "onnx_shipped_count": 20,
+    "onnx_samples": [
+      {
+        "rel": "PoRobotTrain/logs/head_skills/staging/hold_centre_ndfcejs_/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 39.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              9
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              2
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRobotTrain/logs/level2_training/candidate/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 823.6,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              83
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              24
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRobotTrain/logs/level2_training/rsl_rl/r1_velocity/2026-11-21_15-55-03/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 825.0,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              83
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              24
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRobotTrain/RobotControl/models/head_skills/glance_around/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 39.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              9
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              2
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRobotTrain/RobotControl/models/head_skills/glance_around/versions/v1/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 39.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              9
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              2
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRobotTrain/RobotControl/models/head_skills/glance_around/versions/v2/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 106.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              131
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              28
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRobotTrain/RobotControl/models/head_skills/hold_centre/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 106.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              131
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              28
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRobotTrain/RobotControl/models/head_skills/hold_centre/versions/v1/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 39.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              9
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              2
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRobotTrain/RobotControl/models/head_skills/hold_centre/versions/v2/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 106.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              131
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              28
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRobotTrain/RobotControl/models/head_skills/look_at/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 39.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              9
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              2
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRobotTrain/RobotControl/models/head_skills/look_at/versions/v1/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 39.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              9
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              2
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRobotTrain/RobotControl/models/head_skills/look_at/versions/v2/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 106.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              131
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              28
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRobotTrain/RobotControl/models/head_skills/nod_yes/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 106.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              131
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              28
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRobotTrain/RobotControl/models/head_skills/nod_yes/versions/v1/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 37.4,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              6
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoRobotTrain/RobotControl/models/head_skills/nod_yes/versions/v2/policy.onnx",
+        "name": "policy.onnx",
+        "kb": 106.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              "batch",
+              131
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              "batch",
+              28
+            ]
+          ]
+        ]
+      }
+    ],
+    "mjcf_count": 11,
+    "mjcf_samples": [
+      {
+        "rel": "PoRobotTrain/external/urlab_bridge/assets/robots/g1/g1_29dof_rev_1_0.xml",
+        "bodies": 30,
+        "joints_total": 31,
+        "free_joints": 1,
+        "actuated_joints": 30,
+        "actuators": 29,
+        "timestep": null
+      },
+      {
+        "rel": "PoRobotTrain/external/urlab_bridge/assets/robots/g1/g1_mjlab.xml",
+        "bodies": 30,
+        "joints_total": 30,
+        "free_joints": 1,
+        "actuated_joints": 29,
+        "actuators": 29,
+        "timestep": null
+      },
+      {
+        "rel": "PoRobotTrain/external/urlab_bridge/tests/fixtures/golden_scene.xml",
+        "bodies": 3,
+        "joints_total": 2,
+        "free_joints": 0,
+        "actuated_joints": 2,
+        "actuators": 2,
+        "timestep": "0.002"
+      },
+      {
+        "rel": "PoRobotTrain/external/urlab_bridge/tests/fixtures/golden_scene_alt.xml",
+        "bodies": 1,
+        "joints_total": 1,
+        "free_joints": 0,
+        "actuated_joints": 1,
+        "actuators": 1,
+        "timestep": "0.002"
+      },
+      {
+        "rel": "PoRobotTrain/UnrealProject/MJCF/r1_twin.xml",
+        "bodies": 27,
+        "joints_total": 28,
+        "free_joints": 1,
+        "actuated_joints": 27,
+        "actuators": 26,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoRobotTrain/UnrealProject/MJCF/r1_twin_stand.xml",
+        "bodies": 28,
+        "joints_total": 28,
+        "free_joints": 1,
+        "actuated_joints": 27,
+        "actuators": 26,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoRobotTrain/UnrealProject/MJCF/r1_twin_stand_train.xml",
+        "bodies": 28,
+        "joints_total": 28,
+        "free_joints": 1,
+        "actuated_joints": 27,
+        "actuators": 26,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoRobotTrain/UnrealProject/MJCF/r1_twin_train.xml",
+        "bodies": 27,
+        "joints_total": 28,
+        "free_joints": 1,
+        "actuated_joints": 27,
+        "actuators": 26,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoRobotTrain/UnrealProject/MJCF/scene_ground.xml",
+        "bodies": 27,
+        "joints_total": 28,
+        "free_joints": 1,
+        "actuated_joints": 27,
+        "actuators": 26,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoRobotTrain/UnrealProject/MJCF/scene_stand.xml",
+        "bodies": 28,
+        "joints_total": 28,
+        "free_joints": 1,
+        "actuated_joints": 27,
+        "actuators": 26,
+        "timestep": "0.005"
+      }
+    ],
+    "yaml_configs": [
+      "PoRobotTrain/dist/r1_level0_upperbody_20261115_1610/deploy.yaml",
+      "PoRobotTrain/dist/r1_level0_upperbody_20261115_1610/r1_joint_map.yaml",
+      "PoRobotTrain/external/unitree_rl_mjlab/simulate/config.yaml",
+      "PoRobotTrain/logs/head_skills/staging/hold_centre_ndfcejs_/deploy.yaml",
+      "PoRobotTrain/logs/level2_training/candidate/deploy.yaml",
+      "PoRobotTrain/RobotControl/configs/r1_joint_map.yaml",
+      "PoRobotTrain/RobotControl/configs/sim_calibration.yaml",
+      "PoRobotTrain/RobotControl/models/head_skills/glance_around/deploy.yaml",
+      "PoRobotTrain/RobotControl/models/head_skills/hold_centre/deploy.yaml",
+      "PoRobotTrain/RobotControl/models/head_skills/look_at/deploy.yaml",
+      "PoRobotTrain/RobotControl/models/head_skills/nod_yes/deploy.yaml",
+      "PoRobotTrain/RobotControl/models/head_skills/shake_no/deploy.yaml"
+    ],
+    "reward_configs": [
+      "PoRobotTrain/RobotControl/configs/reward_config.json"
+    ],
+    "visuals": [
+      {
+        "rel": "PoRobotTrain/SCREENSHOTS/v4_after_unreal_overlay_policy_1600x900.png",
+        "ext": ".png",
+        "kb": 1315.5,
+        "mtime": 1795528020
+      },
+      {
+        "rel": "PoRobotTrain/SCREENSHOTS/v4_audit_after_diag_1366x768.png",
+        "ext": ".png",
+        "kb": 73.3,
+        "mtime": 1795528020
+      },
+      {
+        "rel": "PoRobotTrain/SCREENSHOTS/v4_audit_after_diag_390x844.png",
+        "ext": ".png",
+        "kb": 63.3,
+        "mtime": 1795528020
+      },
+      {
+        "rel": "PoRobotTrain/SCREENSHOTS/v4_audit_after_root_1366x768.png",
+        "ext": ".png",
+        "kb": 94.3,
+        "mtime": 1795528020
+      },
+      {
+        "rel": "PoRobotTrain/SCREENSHOTS/v4_audit_after_root_390x844.png",
+        "ext": ".png",
+        "kb": 57.3,
+        "mtime": 1795528020
+      },
+      {
+        "rel": "PoRobotTrain/SCREENSHOTS/v4_audit_after_skills_1366x768.png",
+        "ext": ".png",
+        "kb": 85.5,
+        "mtime": 1795528020
+      },
+      {
+        "rel": "PoRobotTrain/SCREENSHOTS/v4_audit_after_skills_390x844.png",
+        "ext": ".png",
+        "kb": 51.5,
+        "mtime": 1795528020
+      },
+      {
+        "rel": "PoRobotTrain/SCREENSHOTS/v4_audit_before_diag_1366x768.png",
+        "ext": ".png",
+        "kb": 72.5,
+        "mtime": 1795528020
+      },
+      {
+        "rel": "PoRobotTrain/SCREENSHOTS/v4_audit_before_diag_390x844.png",
+        "ext": ".png",
+        "kb": 62.9,
+        "mtime": 1795528020
+      },
+      {
+        "rel": "PoRobotTrain/SCREENSHOTS/v4_audit_before_root_1366x768.png",
+        "ext": ".png",
+        "kb": 94.3,
+        "mtime": 1795528020
+      },
+      {
+        "rel": "PoRobotTrain/SCREENSHOTS/v4_audit_before_root_390x844.png",
+        "ext": ".png",
+        "kb": 57.3,
+        "mtime": 1795528020
+      },
+      {
+        "rel": "PoRobotTrain/SCREENSHOTS/v4_audit_before_skills_1366x768.png",
+        "ext": ".png",
+        "kb": 85.5,
+        "mtime": 1795528020
+      }
+    ]
+  },
+  "PoSlapUnreal": {
+    "benchmark": {
+      "when": "2026-11-26T12:05:25-05:00",
+      "ok": true,
+      "machine_gpu": "NVIDIA RTX 2000 Ada Generation Laptop GPU",
+      "trainer": "own PPO (training/ppo.py), mujoco-warp 3.10.0.3",
+      "script": "training/train.py",
+      "num_envs": 8192,
+      "horizon": 24,
+      "net": [
+        512,
+        256,
+        128
+      ],
+      "step_time_ms": 157.653,
+      "sim_ms": 136.837,
+      "learn_ms": 20.816,
+      "env_steps_per_s": 51962,
+      "versions": {
+        "python": "3.12.16",
+        "torch": "2.11.0+cu128",
+        "mujoco": "3.10.0",
+        "mujoco_warp": "3.10.0.3",
+        "warp": "1.19.0"
+      },
+      "total_benchmark_runs": 4,
+      "by_machine": [
+        {
+          "hostname": "C4T4V44",
+          "gpu": "NVIDIA RTX 2000 Ada Generation Laptop GPU",
+          "cpu": "13th Gen Intel(R) Core(TM) i7-13850HX (28 threads)",
+          "runs": 2,
+          "failed_runs": 0,
+          "best_env_steps_per_s": 53092,
+          "best_num_envs": 8192,
+          "best_when": "2026-11-25T19:48:06-05:00",
+          "last_env_steps_per_s": 51962,
+          "last_when": "2026-11-26T12:05:25-05:00"
+        },
+        {
+          "hostname": "WIN-C2ANEVBHN6Q",
+          "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+          "cpu": "Intel(R) Core(TM) Ultra 9 275HX (24 threads)",
+          "runs": 2,
+          "failed_runs": 0,
+          "best_env_steps_per_s": 47940,
+          "best_num_envs": 8192,
+          "best_when": "2026-11-26T12:03:57-05:00",
+          "last_env_steps_per_s": 47940,
+          "last_when": "2026-11-26T12:03:57-05:00"
+        }
+      ]
+    },
+    "onnx_total_found": 34,
+    "onnx_shipped_count": 30,
+    "onnx_samples": [
+      {
+        "rel": "PoSlapUnreal/training/models/random_brain.onnx",
+        "name": "random_brain.onnx",
+        "kb": 396.8,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              108
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "action",
+            [
+              1,
+              30
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/brains/grandpa_challenger_vs_kim.onnx",
+        "name": "grandpa_challenger_vs_kim.onnx",
+        "kb": 1850.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              136
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              30
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/brains/grandpa_final.onnx",
+        "name": "grandpa_final.onnx",
+        "kb": 1850.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              136
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              30
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/brains/grandpa_final_vs_kim.onnx",
+        "name": "grandpa_final_vs_kim.onnx",
+        "kb": 1850.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              136
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              30
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/brains/grandpa_final_vs_kim_v2.onnx",
+        "name": "grandpa_final_vs_kim_v2.onnx",
+        "kb": 1850.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              136
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              30
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/brains/grandpa_L0.onnx",
+        "name": "grandpa_L0.onnx",
+        "kb": 1738.2,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              108
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              30
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/brains/grandpa_L2.onnx",
+        "name": "grandpa_L2.onnx",
+        "kb": 1850.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              136
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              30
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/brains/grandpa_L3_v4.onnx",
+        "name": "grandpa_L3_v4.onnx",
+        "kb": 1874.6,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              142
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              30
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/brains/grandpa_L4.onnx",
+        "name": "grandpa_L4.onnx",
+        "kb": 1850.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              136
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              30
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/brains/grandpa_L4_v2.onnx",
+        "name": "grandpa_L4_v2.onnx",
+        "kb": 1850.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              136
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              30
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/brains/grandpa_L4_vs_kim_v4.onnx",
+        "name": "grandpa_L4_vs_kim_v4.onnx",
+        "kb": 1874.6,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              142
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              30
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/brains/grandpa_S2.onnx",
+        "name": "grandpa_S2.onnx",
+        "kb": 1850.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              136
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              30
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/brains/kim_final.onnx",
+        "name": "kim_final.onnx",
+        "kb": 1850.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              136
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              30
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/brains/kim_final_vs_grandpa.onnx",
+        "name": "kim_final_vs_grandpa.onnx",
+        "kb": 1850.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              136
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              30
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/brains/kim_final_vs_grandpa_v2.onnx",
+        "name": "kim_final_vs_grandpa_v2.onnx",
+        "kb": 1850.5,
+        "inputs": [
+          [
+            "obs",
+            [
+              1,
+              136
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "actions",
+            [
+              1,
+              30
+            ]
+          ],
+          [
+            "value",
+            [
+              1,
+              1
+            ]
+          ]
+        ]
+      }
+    ],
+    "mjcf_count": 132,
+    "mjcf_samples": [
+      {
+        "rel": "PoSlapUnreal/Plugins/UnrealRoboticsLab/Content/TestData/issue72_includes/parent.xml",
+        "bodies": 1,
+        "joints_total": 1,
+        "free_joints": 1,
+        "actuated_joints": 0,
+        "actuators": 0,
+        "timestep": null
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/grandpa_loco.xml",
+        "bodies": 18,
+        "joints_total": 32,
+        "free_joints": 1,
+        "actuated_joints": 31,
+        "actuators": 30,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/grandpa_solo.xml",
+        "bodies": 18,
+        "joints_total": 32,
+        "free_joints": 1,
+        "actuated_joints": 31,
+        "actuators": 30,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/grandpa_vs_grandpa_arena.xml",
+        "bodies": 34,
+        "joints_total": 63,
+        "free_joints": 2,
+        "actuated_joints": 61,
+        "actuators": 60,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/grandpa_vs_grandpa_arena_ue.xml",
+        "bodies": 34,
+        "joints_total": 63,
+        "free_joints": 2,
+        "actuated_joints": 61,
+        "actuators": 60,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/grandpa_vs_kim_arena.xml",
+        "bodies": 34,
+        "joints_total": 63,
+        "free_joints": 2,
+        "actuated_joints": 61,
+        "actuators": 60,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/grandpa_vs_kim_arena_ue.xml",
+        "bodies": 34,
+        "joints_total": 63,
+        "free_joints": 2,
+        "actuated_joints": 61,
+        "actuators": 60,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/grandpa_vs_matt_arena.xml",
+        "bodies": 34,
+        "joints_total": 63,
+        "free_joints": 2,
+        "actuated_joints": 61,
+        "actuators": 60,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/grandpa_vs_matt_arena_ue.xml",
+        "bodies": 34,
+        "joints_total": 63,
+        "free_joints": 2,
+        "actuated_joints": 61,
+        "actuators": 60,
+        "timestep": "0.005"
+      },
+      {
+        "rel": "PoSlapUnreal/training/models/grandpa_vs_mom_arena.xml",
+        "bodies": 34,
+        "joints_total": 63,
+        "free_joints": 2,
+        "actuated_joints": 61,
+        "actuators": 60,
+        "timestep": "0.005"
+      }
+    ],
+    "yaml_configs": [
+      "PoSlapUnreal/Plugins/UnrealRoboticsLab/mkdocs.yml"
+    ],
+    "reward_configs": [
+      "PoSlapUnreal/training/configs/reward_config.json"
+    ],
+    "visuals": [
+      {
+        "rel": "PoSlapUnreal/SCREENSHOTS/review-261124/gif_02_overnight_matt_l4.gif",
+        "ext": ".gif",
+        "kb": 859.5,
+        "mtime": 1795529425
+      },
+      {
+        "rel": "PoSlapUnreal/SCREENSHOTS/review-261124/gif_01_slap_impact_120fps.gif",
+        "ext": ".gif",
+        "kb": 1714.4,
+        "mtime": 1795529423
+      },
+      {
+        "rel": "PoSlapUnreal/SCREENSHOTS/review-261124/ed_03_pie_unbroken_ann.jpg",
+        "ext": ".jpg",
+        "kb": 243.4,
+        "mtime": 1795529426
+      },
+      {
+        "rel": "PoSlapUnreal/SCREENSHOTS/review-261124/ann_01_overnight_matt_overlay.jpg",
+        "ext": ".jpg",
+        "kb": 165.6,
+        "mtime": 1795529425
+      },
+      {
+        "rel": "PoSlapUnreal/SCREENSHOTS/review-261124/ann_02_overnight_mom_tong.jpg",
+        "ext": ".jpg",
+        "kb": 178.9,
+        "mtime": 1795529425
+      },
+      {
+        "rel": "PoSlapUnreal/SCREENSHOTS/review-261124/ann_03_rules2_flinch_strike.jpg",
+        "ext": ".jpg",
+        "kb": 214.1,
+        "mtime": 1795529425
+      },
+      {
+        "rel": "PoSlapUnreal/SCREENSHOTS/review-261124/ann_04_replay_and_demo.jpg",
+        "ext": ".jpg",
+        "kb": 208.9,
+        "mtime": 1795529425
+      },
+      {
+        "rel": "PoSlapUnreal/SCREENSHOTS/review-261124/ann_05_tournament_league.jpg",
+        "ext": ".jpg",
+        "kb": 121.1,
+        "mtime": 1795529425
+      },
+      {
+        "rel": "PoSlapUnreal/SCREENSHOTS/review-261124/ed_01_gizmo_before_ann.jpg",
+        "ext": ".jpg",
+        "kb": 363.2,
+        "mtime": 1795529425
+      },
+      {
+        "rel": "PoSlapUnreal/SCREENSHOTS/review-261124/ed_02_gizmo_after_ann.jpg",
+        "ext": ".jpg",
+        "kb": 363.7,
+        "mtime": 1795529425
+      },
+      {
+        "rel": "PoSlapUnreal/SCREENSHOTS/review-261124/raw/editor/ed_02_gizmo_after.png",
+        "ext": ".png",
+        "kb": 3043.1,
+        "mtime": 1795529311
+      },
+      {
+        "rel": "PoSlapUnreal/SCREENSHOTS/review-261124/raw/editor/ed_01_gizmo_before.png",
+        "ext": ".png",
+        "kb": 3042.2,
+        "mtime": 1795529308
+      }
+    ]
+  },
+  "PoSoccer": {
+    "benchmark": {
+      "when": "2026-11-26T13:33:08-05:00",
+      "ok": true,
+      "machine_gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "trainer": "mlagents 1.2.0.dev0 (torch 2.8.0)",
+      "script": null,
+      "num_envs": 4,
+      "horizon": null,
+      "net": [
+        256,
+        256
+      ],
+      "step_time_ms": 22.996,
+      "sim_ms": 9.579,
+      "learn_ms": 13.417,
+      "env_steps_per_s": 174,
+      "versions": {
+        "python": "3.10.11",
+        "torch": "2.8.0",
+        "mlagents": "1.2.0.dev0"
+      },
+      "total_benchmark_runs": 5,
+      "by_machine": [
+        {
+          "hostname": "WIN-C2ANEVBHN6Q",
+          "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+          "cpu": "Intel(R) Core(TM) Ultra 9 275HX (24 threads)",
+          "runs": 1,
+          "failed_runs": 1,
+          "best_env_steps_per_s": 174,
+          "best_num_envs": 4,
+          "best_when": "2026-11-26T13:33:08-05:00",
+          "last_env_steps_per_s": 174,
+          "last_when": "2026-11-26T13:33:08-05:00"
+        },
+        {
+          "hostname": "legion",
+          "gpu": "NVIDIA GeForce RTX 2060",
+          "cpu": "Intel(R) Core(TM) i7-10750H CPU @ 2.60GHz (12 threads)",
+          "runs": 1,
+          "failed_runs": 0,
+          "best_env_steps_per_s": 119,
+          "best_num_envs": 4,
+          "best_when": "2026-11-22T19:38:36-05:00",
+          "last_env_steps_per_s": 119,
+          "last_when": "2026-11-22T19:38:36-05:00"
+        },
+        {
+          "hostname": "C4T4V44",
+          "gpu": "NVIDIA RTX 2000 Ada Generation Laptop GPU",
+          "cpu": "13th Gen Intel(R) Core(TM) i7-13850HX (28 threads)",
+          "runs": 0,
+          "failed_runs": 2,
+          "best_env_steps_per_s": 0,
+          "best_num_envs": null,
+          "best_when": null,
+          "last_env_steps_per_s": null,
+          "last_when": null
+        }
+      ]
+    },
+    "onnx_total_found": 10,
+    "onnx_shipped_count": 10,
+    "onnx_samples": [
+      {
+        "rel": "PoSoccer/Assets/_Project/RL_Models/Alan_v01/ALAN.onnx",
+        "name": "ALAN.onnx",
+        "kb": 445.1,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_1",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_2",
+            [
+              "batch",
+              27
+            ]
+          ],
+          [
+            "obs_3",
+            [
+              "batch",
+              68
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              4
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              4
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSoccer/Assets/_Project/RL_Models/Baily_v01/BAILY.onnx",
+        "name": "BAILY.onnx",
+        "kb": 445.1,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_1",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_2",
+            [
+              "batch",
+              27
+            ]
+          ],
+          [
+            "obs_3",
+            [
+              "batch",
+              68
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              4
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              4
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSoccer/Assets/_Project/RL_Models/Brendan_v01/BRENDAN.onnx",
+        "name": "BRENDAN.onnx",
+        "kb": 445.1,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_1",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_2",
+            [
+              "batch",
+              27
+            ]
+          ],
+          [
+            "obs_3",
+            [
+              "batch",
+              68
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              4
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              4
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSoccer/Assets/_Project/RL_Models/Decoy_v01/DECOY.onnx",
+        "name": "DECOY.onnx",
+        "kb": 445.1,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_1",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_2",
+            [
+              "batch",
+              27
+            ]
+          ],
+          [
+            "obs_3",
+            [
+              "batch",
+              68
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              4
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              4
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSoccer/Assets/_Project/RL_Models/Dupee_v01/DUPEE.onnx",
+        "name": "DUPEE.onnx",
+        "kb": 445.1,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_1",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_2",
+            [
+              "batch",
+              27
+            ]
+          ],
+          [
+            "obs_3",
+            [
+              "batch",
+              68
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              4
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              4
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSoccer/Assets/_Project/RL_Models/Jh_v01/JH.onnx",
+        "name": "JH.onnx",
+        "kb": 445.1,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_1",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_2",
+            [
+              "batch",
+              27
+            ]
+          ],
+          [
+            "obs_3",
+            [
+              "batch",
+              68
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              4
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              4
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSoccer/Assets/_Project/RL_Models/Kim_v01/KIM.onnx",
+        "name": "KIM.onnx",
+        "kb": 445.1,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_1",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_2",
+            [
+              "batch",
+              27
+            ]
+          ],
+          [
+            "obs_3",
+            [
+              "batch",
+              68
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              4
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              4
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSoccer/Assets/_Project/RL_Models/Matt_v01/MATT.onnx",
+        "name": "MATT.onnx",
+        "kb": 445.1,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_1",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_2",
+            [
+              "batch",
+              27
+            ]
+          ],
+          [
+            "obs_3",
+            [
+              "batch",
+              68
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              4
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              4
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSoccer/Assets/_Project/RL_Models/Nick_v01/NICK.onnx",
+        "name": "NICK.onnx",
+        "kb": 445.1,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_1",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_2",
+            [
+              "batch",
+              27
+            ]
+          ],
+          [
+            "obs_3",
+            [
+              "batch",
+              68
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              4
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              4
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSoccer/Assets/_Project/RL_Models/Standard_v01/STANDARD.onnx",
+        "name": "STANDARD.onnx",
+        "kb": 445.1,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_1",
+            [
+              "batch",
+              39
+            ]
+          ],
+          [
+            "obs_2",
+            [
+              "batch",
+              27
+            ]
+          ],
+          [
+            "obs_3",
+            [
+              "batch",
+              68
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              4
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              4
+            ]
+          ]
+        ]
+      }
+    ],
+    "mjcf_count": 0,
+    "mjcf_samples": [],
+    "yaml_configs": [
+      "PoSoccer/Training/TRAIN_ALAN_p50.yaml",
+      "PoSoccer/Training/TRAIN_ALAN_p51bot.yaml",
+      "PoSoccer/Training/TRAIN_BAILY_p50.yaml",
+      "PoSoccer/Training/TRAIN_BAILY_p51bot.yaml",
+      "PoSoccer/Training/TRAIN_BRENDAN_p50.yaml",
+      "PoSoccer/Training/TRAIN_BRENDAN_p51bot.yaml",
+      "PoSoccer/Training/TRAIN_DECOY_p50.yaml",
+      "PoSoccer/Training/TRAIN_DECOY_p51bot.yaml",
+      "PoSoccer/Training/TRAIN_DUPEE_p50.yaml",
+      "PoSoccer/Training/TRAIN_DUPEE_p51bot.yaml",
+      "PoSoccer/Training/TRAIN_JH_p50.yaml",
+      "PoSoccer/Training/TRAIN_JH_p51bot.yaml"
+    ],
+    "reward_configs": [],
+    "visuals": [
+      {
+        "rel": "PoSoccer/SCREENSHOTS/20261117/gameplay_1v1_ai.gif",
+        "ext": ".gif",
+        "kb": 5027.5,
+        "mtime": 1795012041
+      },
+      {
+        "rel": "PoSoccer/SCREENSHOTS/20261117/gameplay_4v4_1p.gif",
+        "ext": ".gif",
+        "kb": 4312.2,
+        "mtime": 1795012041
+      },
+      {
+        "rel": "PoSoccer/SCREENSHOTS/20261117/gameplay_goal_replay.gif",
+        "ext": ".gif",
+        "kb": 3133.9,
+        "mtime": 1795012041
+      },
+      {
+        "rel": "PoSoccer/SCREENSHOTS/20261123_v4-audit/diag-1366-after.png",
+        "ext": ".png",
+        "kb": 18.6,
+        "mtime": 1795528033
+      },
+      {
+        "rel": "PoSoccer/SCREENSHOTS/20261123_v4-audit/diag-1366-before.png",
+        "ext": ".png",
+        "kb": 17.4,
+        "mtime": 1795528033
+      },
+      {
+        "rel": "PoSoccer/SCREENSHOTS/20261123_v4-audit/diag-390-after.png",
+        "ext": ".png",
+        "kb": 15.5,
+        "mtime": 1795528033
+      },
+      {
+        "rel": "PoSoccer/SCREENSHOTS/20261123_v4-audit/diag-390-before.png",
+        "ext": ".png",
+        "kb": 14.8,
+        "mtime": 1795528033
+      },
+      {
+        "rel": "PoSoccer/SCREENSHOTS/20261123_v4-audit/home-390-after.png",
+        "ext": ".png",
+        "kb": 27.8,
+        "mtime": 1795528033
+      },
+      {
+        "rel": "PoSoccer/SCREENSHOTS/20261123_v4-audit/v4-audit.png",
+        "ext": ".png",
+        "kb": 101.7,
+        "mtime": 1795528033
+      },
+      {
+        "rel": "PoSoccer/SCREENSHOTS/20261117/feat_01_menu.png",
+        "ext": ".png",
+        "kb": 271.1,
+        "mtime": 1795012044
+      },
+      {
+        "rel": "PoSoccer/SCREENSHOTS/20261117/feat_02_intro_stadium.png",
+        "ext": ".png",
+        "kb": 473.9,
+        "mtime": 1795012044
+      },
+      {
+        "rel": "PoSoccer/SCREENSHOTS/20261117/feat_03_shaders_shadows.png",
+        "ext": ".png",
+        "kb": 462.6,
+        "mtime": 1795012044
+      }
+    ]
+  },
+  "PoSumo": {
+    "benchmark": {
+      "when": "2026-11-26T13:27:27-05:00",
+      "ok": true,
+      "machine_gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+      "trainer": "mlagents 1.2.0.dev0 (torch 2.5.1+cpu)",
+      "script": null,
+      "num_envs": 2,
+      "horizon": null,
+      "net": [
+        512,
+        512,
+        512
+      ],
+      "step_time_ms": 6.798,
+      "sim_ms": 5.52,
+      "learn_ms": 1.278,
+      "env_steps_per_s": 294,
+      "versions": {
+        "python": "3.10.11",
+        "torch": "2.5.1+cpu",
+        "mlagents": "1.2.0.dev0"
+      },
+      "total_benchmark_runs": 4,
+      "by_machine": [
+        {
+          "hostname": "WIN-C2ANEVBHN6Q",
+          "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU",
+          "cpu": "Intel(R) Core(TM) Ultra 9 275HX (24 threads)",
+          "runs": 1,
+          "failed_runs": 1,
+          "best_env_steps_per_s": 294,
+          "best_num_envs": 2,
+          "best_when": "2026-11-26T13:27:27-05:00",
+          "last_env_steps_per_s": 294,
+          "last_when": "2026-11-26T13:27:27-05:00"
+        },
+        {
+          "hostname": "C4T4V44",
+          "gpu": "NVIDIA RTX 2000 Ada Generation Laptop GPU",
+          "cpu": "13th Gen Intel(R) Core(TM) i7-13850HX (28 threads)",
+          "runs": 0,
+          "failed_runs": 2,
+          "best_env_steps_per_s": 0,
+          "best_num_envs": null,
+          "best_when": null,
+          "last_env_steps_per_s": null,
+          "last_when": null
+        }
+      ]
+    },
+    "onnx_total_found": 16,
+    "onnx_shipped_count": 16,
+    "onnx_samples": [
+      {
+        "rel": "PoSumo/Assets/_Project/RL_Models/Alan_v01/Alan.onnx",
+        "name": "Alan.onnx",
+        "kb": 2194.8,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              53
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              14
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              14
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSumo/Assets/_Project/RL_Models/Baily_v01/Baily.onnx",
+        "name": "Baily.onnx",
+        "kb": 2194.8,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              53
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              14
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              14
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSumo/Assets/_Project/RL_Models/Brendan_v01/Brendan.onnx",
+        "name": "Brendan.onnx",
+        "kb": 2194.8,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              53
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              14
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              14
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSumo/Assets/_Project/RL_Models/Decoy_v01/Decoy.onnx",
+        "name": "Decoy.onnx",
+        "kb": 2194.8,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              53
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              14
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              14
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSumo/Assets/_Project/RL_Models/Dupee_v01/Dupee.onnx",
+        "name": "Dupee.onnx",
+        "kb": 2194.8,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              53
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              14
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              14
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSumo/Assets/_Project/RL_Models/Grandma_v01/Grandma.onnx",
+        "name": "Grandma.onnx",
+        "kb": 2194.8,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              53
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              14
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              14
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSumo/Assets/_Project/RL_Models/Josh_v01/Josh.onnx",
+        "name": "Josh.onnx",
+        "kb": 2194.8,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              53
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              14
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              14
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSumo/Assets/_Project/RL_Models/Kim_v01/Kim.onnx",
+        "name": "Kim.onnx",
+        "kb": 2194.8,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              53
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              14
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              14
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSumo/Assets/_Project/RL_Models/Manzi_v01/Manzi.onnx",
+        "name": "Manzi.onnx",
+        "kb": 2194.8,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              53
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              14
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              14
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSumo/Assets/_Project/RL_Models/Matt_v01/Matt.onnx",
+        "name": "Matt.onnx",
+        "kb": 2198.9,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              55
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              14
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              14
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSumo/Assets/_Project/RL_Models/Maya_v01/Maya.onnx",
+        "name": "Maya.onnx",
+        "kb": 2194.8,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              53
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              14
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              14
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSumo/Assets/_Project/RL_Models/Nick_v01/Nick.onnx",
+        "name": "Nick.onnx",
+        "kb": 2194.8,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              53
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              14
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              14
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSumo/Assets/_Project/RL_Models/Porto_v01/Porto.onnx",
+        "name": "Porto.onnx",
+        "kb": 2194.8,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              53
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              14
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              14
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSumo/Assets/_Project/RL_Models/Sokol_v01/Sokol.onnx",
+        "name": "Sokol.onnx",
+        "kb": 2194.8,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              53
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              14
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              14
+            ]
+          ]
+        ]
+      },
+      {
+        "rel": "PoSumo/Assets/_Project/RL_Models/Tong_v01/Tong.onnx",
+        "name": "Tong.onnx",
+        "kb": 2194.8,
+        "inputs": [
+          [
+            "obs_0",
+            [
+              "batch",
+              53
+            ]
+          ]
+        ],
+        "outputs": [
+          [
+            "version_number",
+            [
+              1
+            ]
+          ],
+          [
+            "memory_size",
+            [
+              1
+            ]
+          ],
+          [
+            "continuous_actions",
+            [
+              "batch",
+              14
+            ]
+          ],
+          [
+            "continuous_action_output_shape",
+            [
+              1
+            ]
+          ],
+          [
+            "deterministic_continuous_actions",
+            [
+              "Divdeterministic_continuous_actions_dim_0",
+              14
+            ]
+          ]
+        ]
+      }
+    ],
+    "mjcf_count": 0,
+    "mjcf_samples": [],
+    "yaml_configs": [
+      "PoSumo/Training/configs/AlanUnique01.yaml",
+      "PoSumo/Training/configs/BailyUnique01.yaml",
+      "PoSumo/Training/configs/BrendanUnique01.yaml",
+      "PoSumo/Training/configs/DecoyUnique01.yaml",
+      "PoSumo/Training/configs/DupeeUnique01.yaml",
+      "PoSumo/Training/configs/GrandmaIntent01.yaml",
+      "PoSumo/Training/configs/GrandmaLunge01.yaml",
+      "PoSumo/Training/configs/GrandmaReal01.yaml",
+      "PoSumo/Training/configs/GrandmaReal02.yaml",
+      "PoSumo/Training/configs/GrandmaRebuild01.yaml",
+      "PoSumo/Training/configs/GrandmaSumo01.yaml",
+      "PoSumo/Training/configs/GrandmaUnique01.yaml"
+    ],
+    "reward_configs": [],
+    "visuals": [
+      {
+        "rel": "PoSumo/SCREENSHOTS/20261124_v4-audit/v4-audit.png",
+        "ext": ".png",
+        "kb": 100.7,
+        "mtime": 1795528037
+      },
+      {
+        "rel": "PoSumo/SCREENSHOTS/20261124_v4-audit/after/diag_1366x768.png",
+        "ext": ".png",
+        "kb": 17.0,
+        "mtime": 1795528037
+      },
+      {
+        "rel": "PoSumo/SCREENSHOTS/20261124_v4-audit/before/diag_1366x768.png",
+        "ext": ".png",
+        "kb": 15.0,
+        "mtime": 1795528037
+      },
+      {
+        "rel": "PoSumo/docs/ui_reports/2026-11-10_bracket16/after_bout.jpg",
+        "ext": ".jpg",
+        "kb": 73.9,
+        "mtime": 1795291763
+      },
+      {
+        "rel": "PoSumo/docs/ui_reports/2026-11-10_bracket16/after_running.jpg",
+        "ext": ".jpg",
+        "kb": 77.5,
+        "mtime": 1795291763
+      },
+      {
+        "rel": "PoSumo/docs/ui_reports/2026-11-10_bracket16/after_seeding.jpg",
+        "ext": ".jpg",
+        "kb": 84.6,
+        "mtime": 1795291763
+      },
+      {
+        "rel": "PoSumo/docs/ui_reports/2026-11-10_bracket16/before_bracket_2026-10-04.jpg",
+        "ext": ".jpg",
+        "kb": 55.1,
+        "mtime": 1795291763
+      },
+      {
+        "rel": "PoSumo/docs/ui_review/arena_after_broadcast.jpg",
+        "ext": ".jpg",
+        "kb": 65.2,
+        "mtime": 1795291763
+      },
+      {
+        "rel": "PoSumo/docs/ui_review/arena_after_full.jpg",
+        "ext": ".jpg",
+        "kb": 63.7,
+        "mtime": 1795291763
+      },
+      {
+        "rel": "PoSumo/docs/ui_review/arena_after_minimal.jpg",
+        "ext": ".jpg",
+        "kb": 48.8,
+        "mtime": 1795291763
+      },
+      {
+        "rel": "PoSumo/docs/ui_review/arena_before.jpg",
+        "ext": ".jpg",
+        "kb": 68.5,
+        "mtime": 1795291763
+      },
+      {
+        "rel": "PoSumo/docs/ui_review/bracket_after.jpg",
+        "ext": ".jpg",
+        "kb": 55.1,
+        "mtime": 1795291763
+      }
+    ]
+  }
+}

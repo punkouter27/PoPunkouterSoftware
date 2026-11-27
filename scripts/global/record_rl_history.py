@@ -3,7 +3,7 @@
 Every run:
 1. Reads App_Data/global/rl_facts.json and scans the real .onnx timestamps of all 10 RL repos.
 2. Saves a full timestamped snapshot under App_Data/global/rl/snapshots/<stamp>.json (git-ignored).
-3. Appends a compact run record to App_Data/global/rl/timeline.jsonl (append-only, committed).
+3. Appends a compact run record to App_Data/global/rl/rl_timeline.jsonl (append-only, committed).
    The app's /global/rl page renders that history; this script only records it.
 """
 from __future__ import annotations
@@ -20,7 +20,7 @@ from station_common import WORKSPACE as ROOT
 RL_DIR = OUT                                    # rl_facts.json lives at the snapshot root
 HIST_DIR = OUT / "rl"
 SNAP_DIR = HIST_DIR / "snapshots"
-TIMELINE_PATH = HIST_DIR / "timeline.jsonl"
+TIMELINE_PATH = HIST_DIR / "rl_timeline.jsonl"
 
 REPOS = [
     ("PoBasketball", "unreal_mujoco", 18, 2.0),

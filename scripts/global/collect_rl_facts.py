@@ -9,7 +9,7 @@ import os
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from station_common import RL_OUT as OUT_DIR
+from station_common import OUT as OUT_DIR
 from station_common import WORKSPACE as ROOT
 
 OUT_DIR.mkdir(parents=True, exist_ok=True)
