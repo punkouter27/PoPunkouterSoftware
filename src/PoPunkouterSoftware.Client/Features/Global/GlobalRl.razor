@@ -97,7 +97,7 @@
                                 {
                                     <div class="is-nowrap">
                                         <span class="global-tone is-@(b.Ok ? "good" : "bad")">@(b.Ok ? "ok" : "failed")</span>
-                                        <span>@GlobalFormat.Number(b.EnvStepsPerS ?? 0) steps/s</span>
+                                        <span>@GlobalFormat.Number((int)(b.EnvStepsPerS ?? 0)) steps/s</span>
                                         <span>· @GlobalFormat.Milliseconds(b.StepTimeMs)</span>
                                     </div>
                                     <div class="global-count">
@@ -115,6 +115,12 @@
                                             <span> · @GlobalFormat.Ago(when)</span>
                                         }
                                     </div>
+                                    @if (b.Versions.Count > 0)
+                                    {
+                                        <div class="global-count">
+                                            @string.Join(" · ", b.Versions.Take(3).Select(v => $"{v.Key} {v.Value}"))
+                                        </div>
+                                    }
                                 }
                                 else
                                 {

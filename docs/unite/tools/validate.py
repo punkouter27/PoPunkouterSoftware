@@ -109,7 +109,8 @@ def main():
                 failed = True
             mapped_actual = sum(1 for v in cr["role_map"].values() if v)
             if mapped_actual != cr["mapped_roles"]:
-                print(f"  INVARIANT: {name} role_map has {mapped_actual} non-null entries but mapped_roles says {cr['mapped_roles']}")
+                print(f"  INVARIANT: {name} role_map has {mapped_actual} non-null entries "
+                      f"but mapped_roles says {cr['mapped_roles']}")
                 failed = True
         print(f"  {len(a['creatures'])} creatures, {n} roles")
 

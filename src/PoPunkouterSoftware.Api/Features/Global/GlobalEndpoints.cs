@@ -21,7 +21,7 @@ internal static class GlobalEndpoints
         global.MapGet("/summary", (GlobalDataStore store) => Results.Ok(store.LoadSummary()))
             .WithName("GetGlobalSummary");
 
-        global.MapGet("/fleet", (GlobalDataStore store) => Results.Ok(store.LoadFleet()))
+        global.MapGet("/fleet", (GlobalDataStore store) => Results.Ok(store.LoadFleetView()))
             .WithName("GetGlobalFleet");
 
         global.MapGet("/vault", (GlobalDataStore store) => Results.Ok(store.LoadVault()))

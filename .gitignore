@@ -32,6 +32,12 @@ logs/
 appservice-logs/
 appservice-logs.zip
 
+# GLOBAL crawler archives (the compact timelines ARE tracked; the full per-run snapshots are not)
+src/PoPunkouterSoftware.Api/App_Data/global/history/snapshots/
+src/PoPunkouterSoftware.Api/App_Data/global/rl/snapshots/
+src/PoPunkouterSoftware.Api/App_Data/global/rl/rl_progress_over_time.html
+scripts/global/__pycache__/
+
 # Environment / secrets
 .env
 .env.*

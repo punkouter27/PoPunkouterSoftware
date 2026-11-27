@@ -97,7 +97,10 @@ def check_policy(policy, creatures):
             "morphology_id": morph, "is_own_creature": own,
         })
         if not (shape_ok and finite and in_range):
-            problems.append(f"{policy.name} on {cid}: bad output (shape {shape_ok}, finite {finite}, in [-1,1] {in_range})")
+            problems.append(
+                f"{policy.name} on {cid}: bad output "
+                f"(shape {shape_ok}, finite {finite}, in [-1,1] {in_range})"
+            )
     return problems, {"trained_for": trained_for, "rows": rows}
 
 

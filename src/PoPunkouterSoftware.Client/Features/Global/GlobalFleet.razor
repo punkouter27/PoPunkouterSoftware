@@ -40,7 +40,7 @@
             <button type="button" class="global-chip @(_onlyDirty ? "is-on" : null)" @onclick="() => _onlyDirty = !_onlyDirty">Only dirty</button>
             <button type="button" class="global-chip @(_onlyFailing ? "is-on" : null)" @onclick="() => _onlyFailing = !_onlyFailing">Only CI failing</button>
             <button type="button" class="global-chip @(_onlyRl ? "is-on" : null)" @onclick="() => _onlyRl = !_onlyRl">Only RL</button>
-            <span class="global-count">@Visible.Count of @_fleet.Repos.Count</span>
+            <span class="global-count">@Visible.Count() of @_fleet.Repos.Count</span>
         </div>
 
         <div class="global-table-wrap">
@@ -54,7 +54,6 @@
                         <th scope="col">Last commit</th>
                         <th scope="col">CI</th>
                         <th scope="col" class="is-number">Brains</th>
-                        <th scope="col" class="is-number">Models</th>
                         <th scope="col" class="is-number">Disk</th>
                         <th scope="col">Live</th>
                     </tr>
@@ -94,7 +93,7 @@
                                 @if (repo.Git.LastCommitIso is { } when)
                                 {
                                     <div class="global-mono">@when.ToLocalTime().ToString("MM-dd HH:mm") · @GlobalFormat.Ago(when)</div>
-                                    <div>@repo.Git.LastCommitMsg</div>
+                                    <div class="is-clip">@repo.Git.LastCommitMsg</div>
                                 }
                                 else
                                 {
@@ -112,8 +111,10 @@
                                     <span class="global-tone is-muted">none</span>
                                 }
                             </td>
-                            <td class="is-number">@repo.Onnx.Count</td>
-                            <td class="is-number">@repo.Mjcf.Count</td>
+                            <td class="is-number">
+                                @repo.Onnx.Count
+                                <div class="global-count">@repo.Mjcf.Count models</div>
+                            </td>
                             <td class="is-number">@GlobalFormat.Bytes(repo.Disk.TotalBytes)</td>
                             <td>
                                 @if (!string.IsNullOrEmpty(repo.Docs.LiveUrl))
@@ -134,7 +135,7 @@
 </main>
 
 @code {
-    private GlobalSnapshotDto? _fleet;
+    private GlobalFleetDto? _fleet;
     private bool _loading = true;
     private string? _error;
     private string _search = "";

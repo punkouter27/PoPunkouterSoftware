@@ -301,7 +301,9 @@ def build_contract(*, cid, xml_path, role_map, kind, mujoco_version, root_body=N
             "kp": kp,
             "kd": kd,
             "effort": float(act["forcerange"][1]) if act and act.get("forcerange") else None,
-            "action_scale": (0.25 * float(act["forcerange"][1]) / kp) if (act and kp and act.get("forcerange")) else None,
+            "action_scale": (
+                (0.25 * float(act["forcerange"][1]) / kp) if (act and kp and act.get("forcerange")) else None
+            ),
             "actuator": act_name,
             "gear": gear,
             "motor_slot": None,
@@ -336,7 +338,8 @@ def build_contract(*, cid, xml_path, role_map, kind, mujoco_version, root_body=N
     observation = {"n_obs": n_obs, "order": "roles", "slots": slots, "normalizer": {"kind": "none", "path": None}}
     action = {
         "n_action": N_ROLES,
-        "rule": "ctrl = clip(default + a * action_scale, soft_limit_lo, soft_limit_hi); masked roles are PD-held at default",
+        "rule": ("ctrl = clip(default + a * action_scale, soft_limit_lo, soft_limit_hi); "
+                 "masked roles are PD-held at default"),
         "clip": [-5.0, 5.0],
         "soft_limit_factor": 0.9,
     }
@@ -347,7 +350,11 @@ def build_contract(*, cid, xml_path, role_map, kind, mujoco_version, root_body=N
         "joints": joints,
         "bodies": bodies,
         "actuators": mj_actuators,
-        "sites": {mujoco.mj_id2name(m, T.mjOBJ_SITE, s): {} for s in range(m.nsite) if mujoco.mj_id2name(m, T.mjOBJ_SITE, s)},
+        "sites": {
+            mujoco.mj_id2name(m, T.mjOBJ_SITE, s): {}
+            for s in range(m.nsite)
+            if mujoco.mj_id2name(m, T.mjOBJ_SITE, s)
+        },
         "geoms": [],
         "frame": {"sim": "metres, right-handed, Z-up, creature faces +X at qpos=0"},
     }

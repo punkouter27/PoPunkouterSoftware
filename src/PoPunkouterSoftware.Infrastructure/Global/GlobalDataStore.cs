@@ -50,22 +50,104 @@ public sealed class GlobalDataStore
 
     // ─── Raw snapshot reads ─────────────────────────────────────────────────
 
-    public GlobalSnapshotDto LoadFleet() =>
-        Load("fleet.json", GlobalJsonContext.Default.GlobalSnapshotDto, static () => new GlobalSnapshotDto());
+    public GlobalSnapshotDto LoadFleet()
+    {
+        var fleet = Load("fleet.json", GlobalCrawlerJsonContext.Default.GlobalSnapshotDto, static () => new GlobalSnapshotDto());
+        fleet.Repos ??= [];
+        foreach (var (name, repo) in fleet.Repos)
+            Normalize(repo, name);
 
-    public GlobalUniteDto LoadUnite() =>
-        Load("unite.json", GlobalJsonContext.Default.GlobalUniteDto, static () => new GlobalUniteDto());
+        return fleet;
+    }
 
-    public GlobalTrainJobsFileDto LoadTrainJobs() =>
-        Load(Path.Combine("config", "train_jobs.json"), GlobalJsonContext.Default.GlobalTrainJobsFileDto,
+    /// <summary>
+    /// The crawl writes <c>null</c> for whole sections of a folder that is not a repo
+    /// (<c>ci</c>, <c>docs</c>, <c>media</c>, <c>recent_commits</c>), and a JSON <c>null</c>
+    /// overwrites a property initializer. Fill every one back in once, here, so no page and no
+    /// aggregate has to null-check a section.
+    /// </summary>
+    private static void Normalize(GlobalRepoDto repo, string name)
+    {
+        repo.Name = string.IsNullOrEmpty(repo.Name) ? name : repo.Name;
+        repo.Kind ??= "";
+
+        repo.Git ??= new GlobalGitDto();
+        repo.Git.DirtyFiles ??= [];
+        repo.Git.RecentCommits ??= [];
+
+        repo.Ci ??= new GlobalCiDto();
+        repo.Ci.Workflows ??= [];
+        if (repo.Ci.LatestRun is { } run)
+            run.Recent ??= [];
+
+        repo.Docs ??= new GlobalDocsDto();
+        repo.Docs.Files ??= [];
+        repo.Docs.Tests ??= [];
+
+        repo.Media ??= new GlobalMediaDto();
+        repo.Media.Newest ??= [];
+        repo.Media.Showcase ??= [];
+
+        repo.Onnx ??= [];
+        repo.Mjcf ??= [];
+
+        repo.Disk ??= new GlobalDiskDto();
+        repo.Disk.Categories ??= [];
+        repo.Disk.HeavyDirs ??= [];
+    }
+
+    /// <summary>Every repo in the crawl, ordered by name, with <see cref="GlobalRepoDto.Name"/> set.</summary>
+    public GlobalFleetDto LoadFleetView()
+    {
+        var fleet = LoadFleet();
+        return new GlobalFleetDto
+        {
+            Generated = fleet.Generated,
+            Stamp = fleet.Stamp,
+            UsedGh = fleet.UsedGh,
+            Repos = fleet.Repos
+                .OrderBy(kv => kv.Key, StringComparer.OrdinalIgnoreCase)
+                .Select(kv => kv.Value)
+                .ToList(),
+        };
+    }
+
+    public GlobalUniteDto LoadUnite()
+    {
+        var unite = Load("unite.json", GlobalJsonContext.Default.GlobalUniteDto, static () => new GlobalUniteDto());
+        unite.Rules ??= new GlobalUniteRulesDto();
+        unite.Rules.Markdown ??= "";
+        unite.Documents ??= [];
+        unite.Creatures ??= [];
+        foreach (var creature in unite.Creatures)
+            creature.Files ??= [];
+
+        return unite;
+    }
+
+    public GlobalTrainJobsFileDto LoadTrainJobs()
+    {
+        var jobs = Load(Path.Combine("config", "train_jobs.json"), GlobalCrawlerJsonContext.Default.GlobalTrainJobsFileDto,
             static () => new GlobalTrainJobsFileDto());
+        jobs.Jobs ??= [];
+        foreach (var job in jobs.Jobs)
+            job.Requires ??= [];
+
+        return jobs;
+    }
 
     public List<GlobalLessonDto> LoadLessons()
     {
-        var harvested = Load("lessons.json", GlobalJsonContext.Default.GlobalLessonsFileDto,
-            static () => new GlobalLessonsFileDto()).Lessons;
-        var manual = Load(Path.Combine("config", "lessons_manual.json"), GlobalJsonContext.Default.GlobalLessonsFileDto,
-            static () => new GlobalLessonsFileDto()).Lessons;
+        var harvested = Load("lessons.json", GlobalCrawlerJsonContext.Default.GlobalLessonsFileDto,
+            static () => new GlobalLessonsFileDto()).Lessons ?? [];
+        var manual = Load(Path.Combine("config", "lessons_manual.json"), GlobalCrawlerJsonContext.Default.GlobalLessonsFileDto,
+            static () => new GlobalLessonsFileDto()).Lessons ?? [];
+
+        foreach (var lesson in harvested)
+        {
+            lesson.Repos ??= [];
+            lesson.Tags ??= [];
+        }
 
         if (manual.Count == 0)
             return harvested;
@@ -98,17 +180,55 @@ public sealed class GlobalDataStore
         return merged;
     }
 
-    public List<GlobalTimelineEntryDto> LoadStationTimeline() =>
-        LoadJsonLines(Path.Combine("history", "station_timeline.jsonl"),
-            GlobalJsonContext.Default.GlobalTimelineEntryDto);
+    public List<GlobalTimelineEntryDto> LoadStationTimeline()
+    {
+        var entries = LoadJsonLines(Path.Combine("history", "station_timeline.jsonl"),
+            GlobalCrawlerJsonContext.Default.GlobalTimelineEntryDto);
+        foreach (var entry in entries)
+        {
+            entry.Repos ??= [];
+            foreach (var repo in entry.Repos.Values)
+            {
+                repo.Cats ??= [];
+                repo.OnnxShas ??= [];
+            }
+        }
 
-    public List<GlobalRlTimelineEntryDto> LoadRlTimeline() =>
-        LoadJsonLines(Path.Combine("rl", "rl_timeline.jsonl"), GlobalJsonContext.Default.GlobalRlTimelineEntryDto);
+        return entries;
+    }
 
-    public Dictionary<string, GlobalRlRepoFactDto> LoadRlFacts() =>
-        Load("rl_facts.json",
-            (JsonTypeInfo<Dictionary<string, GlobalRlRepoFactDto>>)GlobalJsonContext.Default.DictionaryStringGlobalRlRepoFactDto,
+    public List<GlobalRlTimelineEntryDto> LoadRlTimeline()
+    {
+        var entries = LoadJsonLines(Path.Combine("rl", "rl_timeline.jsonl"),
+            GlobalCrawlerJsonContext.Default.GlobalRlTimelineEntryDto);
+        foreach (var entry in entries)
+        {
+            entry.PerRepoOnnx ??= [];
+            entry.PerRepoSps ??= [];
+        }
+
+        return entries;
+    }
+
+    public Dictionary<string, GlobalRlRepoFactDto> LoadRlFacts()
+    {
+        var facts = Load("rl_facts.json",
+            (JsonTypeInfo<Dictionary<string, GlobalRlRepoFactDto>>)GlobalCrawlerJsonContext.Default.DictionaryStringGlobalRlRepoFactDto,
             static () => []);
+        foreach (var fact in facts.Values)
+        {
+            fact.YamlConfigs ??= [];
+            fact.RewardConfigs ??= [];
+            fact.Visuals ??= [];
+            if (fact.Benchmark is { } benchmark)
+            {
+                benchmark.Net ??= [];
+                benchmark.Versions ??= [];
+            }
+        }
+
+        return facts;
+    }
 
     // ─── Assembled responses ────────────────────────────────────────────────
 
@@ -120,7 +240,7 @@ public sealed class GlobalDataStore
         var lessons = LoadLessons();
         var unite = LoadUnite();
         var lastRl = rlTimeline.Count > 0 ? rlTimeline[^1] : null;
-        var repos = fleet.Repos;
+        var repos = fleet.Repos.Values.ToList();
 
         var jobsReady = jobs.Count(j => j.Requires.Count == 0
             || j.Requires.All(r => repos.Any(repo => r.StartsWith(repo.Name + "/", StringComparison.OrdinalIgnoreCase))));
@@ -158,13 +278,13 @@ public sealed class GlobalDataStore
     public GlobalVaultDto LoadVault()
     {
         var fleet = LoadFleet();
-        var gold = Load(Path.Combine("config", "vault_gold.json"), GlobalJsonContext.Default.GlobalVaultGoldFileDto,
-            static () => new GlobalVaultGoldFileDto()).Gold;
+        var gold = Load(Path.Combine("config", "vault_gold.json"), GlobalCrawlerJsonContext.Default.GlobalVaultGoldFileDto,
+            static () => new GlobalVaultGoldFileDto()).Gold ?? [];
 
         var brains = new List<GlobalVaultBrainDto>();
         var models = new List<GlobalVaultModelDto>();
 
-        foreach (var repo in fleet.Repos.OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase))
+        foreach (var repo in fleet.Repos.Values.OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase))
         {
             foreach (var b in repo.Onnx)
             {
@@ -231,11 +351,13 @@ public sealed class GlobalDataStore
     public GlobalReadinessDto LoadReadiness()
     {
         var fleet = LoadFleet();
-        var config = Load(Path.Combine("config", "readiness.json"), GlobalJsonContext.Default.GlobalReadinessFileDto,
-            static () => new GlobalReadinessFileDto()).Apps;
+        var config = Load(Path.Combine("config", "readiness.json"), GlobalCrawlerJsonContext.Default.GlobalReadinessFileDto,
+            static () => new GlobalReadinessFileDto()).Apps ?? [];
+        foreach (var entry in config.Values)
+            entry.Checklist ??= [];
 
         var apps = new List<GlobalReadinessAppDto>();
-        foreach (var repo in fleet.Repos.Where(r => r.Git.IsGit).OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase))
+        foreach (var repo in fleet.Repos.Values.Where(r => r.Git.IsGit).OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase))
         {
             config.TryGetValue(repo.Name, out var entry);
             entry ??= new GlobalReadinessEntryDto();
@@ -295,7 +417,7 @@ public sealed class GlobalDataStore
     {
         var fleet = LoadFleet();
         var timeline = LoadStationTimeline();
-        var failing = fleet.Repos.Where(r => IsCiConclusion(r, "failure")).Select(r => r.Name).ToList();
+        var failing = fleet.Repos.Values.Where(r => IsCiConclusion(r, "failure")).Select(r => r.Name).ToList();
 
         if (timeline.Count == 0)
         {
@@ -334,7 +456,7 @@ public sealed class GlobalDataStore
             if (Math.Abs(diskDelta) > 200_000_000)
                 moved += Math.Abs(diskDelta);
 
-            var repoFleet = fleet.Repos.FirstOrDefault(r => r.Name == name);
+            var repoFleet = fleet.Repos.Values.FirstOrDefault(r => r.Name == name);
             var latestMessages = repoFleet?.Git.RecentCommits
                 .Take(3)
                 .Select(c => c.Msg ?? "")
@@ -437,7 +559,7 @@ public sealed class GlobalDataStore
             .Select(kv =>
             {
                 var fact = kv.Value;
-                var inFleet = fleet.Repos.FirstOrDefault(r => string.Equals(r.Name, kv.Key, StringComparison.OrdinalIgnoreCase));
+                var inFleet = fleet.Repos.Values.FirstOrDefault(r => string.Equals(r.Name, kv.Key, StringComparison.OrdinalIgnoreCase));
                 return new GlobalRlRepoViewDto
                 {
                     Name = kv.Key,
@@ -508,9 +630,6 @@ public sealed class GlobalDataStore
 
         return unit <= 1 ? $"{value:0} {units[unit]}" : $"{value:0.0} {units[unit]}";
     }
-
-    /// <summary>Oldest timeline entry this store will look at — the briefing compares two.</summary>
-    public int TimelineEntries => LoadStationTimeline().Count;
 
     private T Load<T>(string relativePath, JsonTypeInfo<T> typeInfo, Func<T> fallback)
     {

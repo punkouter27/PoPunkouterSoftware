@@ -190,6 +190,13 @@
     white-space: nowrap;
 }
 
+.global-table .is-clip {
+    max-width: 34ch;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .global-mono {
     font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
     font-size: var(--po-text-xs);

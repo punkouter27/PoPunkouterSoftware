@@ -105,9 +105,8 @@ for ruff; Docker Desktop for Azurite).
 | Format | `dotnet format PoPunkouterSoftware.slnx --verify-no-changes` | — |
 | Python lint | `uvx ruff check .` (config: `ruff.toml`) | — |
 | Build | `dotnet build PoPunkouterSoftware.slnx -c Release` (warnings are errors) | — |
-| Unit (94) | `dotnet test tests/PoPunkouterSoftware.Unit -c Release --no-build` | nothing |
-| Integration (45) | `dotnet test tests/PoPunkouterSoftware.Integration -c Release --no-build` | Docker for the 6 Testcontainers Azurite tests; without it they skip with "Docker is not running…" |
-| E2E API (22) | `BASE_URL=http://localhost:8000 dotnet test tests/PoPunkouterSoftware.E2EAPI -c Release --no-build` | a running app; without one every test skips ("No app is answering at …") |
+| Unit (111) | `dotnet test tests/PoPunkouterSoftware.Unit -c Release --no-build` | nothing |
+| Integration (75) | `dotnet test tests/PoPunkouterSoftware.Integration -c Release --no-build` | Docker for the 6 Testcontainers Azurite tests; without it they skip with "Docker is not running…" || E2E API (22) | `BASE_URL=http://localhost:8000 dotnet test tests/PoPunkouterSoftware.E2EAPI -c Release --no-build` | a running app; without one every test skips ("No app is answering at …") |
 | E2E UI (32) | `BASE_URL=http://localhost:8000 dotnet test tests/PoPunkouterSoftware.E2EUI -c Release --no-build` | a running app with a stored Azure scan (on a fresh machine: `curl -s https://app-popunkoutersoftware2.azurewebsites.net/api/diag/report -o src/PoPunkouterSoftware.Api/App_Data/azure-full-report.json`) + Playwright Chromium (`pwsh tests/PoPunkouterSoftware.E2EUI/bin/Release/net10.0/playwright.ps1 install chromium` once); without either every test skips with the reason |
 | E2E on the trimmed Release build | `pwsh ./scripts/run-e2eui.ps1 -Tiers E2EAPI,E2EUI` (publishes Release like deploy.yml, seeds the scan, starts Azurite + the published app on :8000 with the pinger and outside probes off so no test traffic reaches the live Po apps, runs both tiers, stops the app and removes the Azurite container it started) | Docker + Playwright Chromium |
 | Before/after page | `pwsh ./scripts/screenshots.ps1 -Feature <name> [-Before <ref>\|-BeforeDir <pngs>] [-After <ref>] [-Screens 'home=/','home-fallen=/|[data-letter-fall]'] [-Crops 'home-fallen_1366x768=1166,688,200,80'] [-Notes '...']`\|[data-letter-fall]'] [-Notes '...']` | publishes `-Before` (default `HEAD~1`, in a temp worktree) and `-After` (default the working tree) Release, runs each on :8010 like run-e2eui.ps1 (pinger/probes off, Azurite started and removed if needed), shoots 1366x768 + 390x844, boxes changed pixels in red, writes `SCREENSHOTS/<yyMMdd>-<name>.html` + `.png` (≤300 KB). Never the live site. Docker + Playwright Chromium |
@@ -122,7 +121,8 @@ for ruff; Docker Desktop for Azurite).
 
 | Deviation | Why | Commit sha / date | How to undo |
 | --- | --- | --- | --- |
-| Portfolio remains public; Azure and Users require Microsoft sign-in. Header shows the session and sign-out; settings gear stays removed | owner approved Microsoft authorization for Azure, Users, and the upcoming GLOBAL/RL migration | 2026-11-27 | owner-approved access change |
+| GLOBAL moved in: `/global` + `/api/global/*` replace the `_CODEMATT/global` static hub (fleet, briefing, vault, showroom, ship board, lessons, disk, RL, UNITE, incubator). Snapshot in `App_Data/global`, crawlers in `scripts/global`, prefabs in `docs/unite` | owner asked for the move; approved Microsoft sign-in for it 2026-11-27 | 2026-11-27 | delete the `Global` feature slices, `scripts/global`, `docs/unite` and `App_Data/global` |
+| Portfolio remains public; Azure, Fleet and Users require Microsoft sign-in. Header shows the session and sign-out; settings gear stays removed | owner approved Microsoft authorization for Azure, Users, and the GLOBAL/RL migration | 2026-11-27 | owner-approved access change |
 | Azure names predate the naming rule: `app-popunkoutersoftware2` on `asp-PoPunkouterSoftware-f1`, with `stpopunkoutersoftware2`, all in RG `PoShared` (moved from the deleted `PoPunkouterSoftware` group 2026-11-23; CI holds Website Contributor on the site only) | renaming or moving means recreating the site | — | owner-approved recreate |
 | Extra `src/PoPunkouterSoftware.Infrastructure` project (Azure adapters) | keeps Api/Client/Shared as the skeleton has them | — | fold it into Api |
 | Reads other Po apps' public `/health/live`, pages and repos (`wwwroot/data/apps.json`) | that is the product; data, not shared code | — | — |
@@ -158,6 +158,10 @@ owner dropped the scheduled jobs. `deploy.yml` is now the only workflow. Gone:
 ### Documents
 
 - `README.md`: what the app is, live URL, local run, deploy, configuration keys.
+- `docs/global-migration.md`: what moved here from the old `global/` folder, the eleven `/global`
+  pages, how the snapshot is refreshed, and the deviations.
+- `scripts/global/README.md`: the crawler entry point (`build_global_data.py`) and what each step writes.
+- `docs/unite/README.md`: the portable creature prefabs and their tools.
 - `docs/architecture.md`: the architecture map and the decisions behind it. Read it before changing behaviour.
 - `docs/testing.md`: the four test tiers, counts, and how each skips.
 

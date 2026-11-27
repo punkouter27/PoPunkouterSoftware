@@ -13,6 +13,7 @@ namespace PoPunkouterSoftware.Shared;
     PropertyNameCaseInsensitive = true,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 [JsonSerializable(typeof(GlobalSnapshotDto))]
+[JsonSerializable(typeof(GlobalFleetDto))]
 [JsonSerializable(typeof(GlobalRepoDto))]
 [JsonSerializable(typeof(GlobalLessonsFileDto))]
 [JsonSerializable(typeof(GlobalReadinessFileDto))]

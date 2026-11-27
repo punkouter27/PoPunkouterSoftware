@@ -158,7 +158,7 @@ def train(creature, *, iters, steps, envs, epochs, minibatch, gamma=0.99, lam=0.
 
         with torch.no_grad():
             _, last_v = net(torch.as_tensor(obs, dtype=torch.float32))
-        O = torch.as_tensor(np.concatenate(batch["obs"]), dtype=torch.float32)
+        OBS = torch.as_tensor(np.concatenate(batch["obs"]), dtype=torch.float32)
         A = torch.as_tensor(np.concatenate(batch["act"]), dtype=torch.float32)
         LP = torch.as_tensor(np.concatenate(batch["logp"]), dtype=torch.float32)
         R = torch.as_tensor(np.concatenate(batch["rew"]), dtype=torch.float32).reshape(steps, envs)
@@ -183,7 +183,7 @@ def train(creature, *, iters, steps, envs, epochs, minibatch, gamma=0.99, lam=0.
             perm = idx[torch.randperm(n)]
             for s in range(0, n, minibatch):
                 mb = perm[s:s + minibatch]
-                mu, v = net(O[mb])
+                mu, v = net(OBS[mb])
                 dist = torch.distributions.Normal(mu, net.log_std.exp())
                 logp = dist.log_prob(A[mb]).sum(-1)
                 ratio = (logp - LP[mb]).exp()

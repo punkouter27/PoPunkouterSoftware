@@ -218,8 +218,8 @@ def verify_sidecar(policy, creature, contract, info):
 def selftest():
     """Build a conforming 131/28 policy and a non-conforming one, then exercise the paths."""
     import numpy as np
-    from onnx import TensorProto, helper, numpy_helper
     import onnx
+    from onnx import TensorProto, helper, numpy_helper
 
     tmp = Path(tempfile.mkdtemp(prefix="unite-selftest-"))
     want_obs = L.N_ROLES * 3 + 3 + 3 + 3 + 2 + L.N_ROLES + 8

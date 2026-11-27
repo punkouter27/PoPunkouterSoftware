@@ -533,7 +533,8 @@ def main():
             if not a.check:
                 print(f"  wrote  {cid}/{f}")
         if not stale or not a.check:
-            print(f"{cid:20s} joints={len(c['morphology']['joints']):2d} roles={sum(c['roles']['mask']):2d}/{L.N_ROLES} "
+            print(f"{cid:20s} joints={len(c['morphology']['joints']):2d} "
+                  f"roles={sum(c['roles']['mask']):2d}/{L.N_ROLES} "
                   f"n_obs={c['observation']['n_obs']} n_action={c['action']['n_action']}")
 
     if a.check and stale:

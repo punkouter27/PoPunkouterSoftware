@@ -41,8 +41,8 @@ public sealed class PortfolioApiClient
     public Task<GlobalSummaryDto?> GetGlobalSummaryAsync(CancellationToken ct = default) =>
         _http.GetFromJsonAsync("/api/global/summary", GlobalJsonContext.Default.GlobalSummaryDto, ct);
 
-    public Task<GlobalSnapshotDto?> GetGlobalFleetAsync(CancellationToken ct = default) =>
-        _http.GetFromJsonAsync("/api/global/fleet", GlobalJsonContext.Default.GlobalSnapshotDto, ct);
+    public Task<GlobalFleetDto?> GetGlobalFleetAsync(CancellationToken ct = default) =>
+        _http.GetFromJsonAsync("/api/global/fleet", GlobalJsonContext.Default.GlobalFleetDto, ct);
 
     public Task<GlobalVaultDto?> GetGlobalVaultAsync(CancellationToken ct = default) =>
         _http.GetFromJsonAsync("/api/global/vault", GlobalJsonContext.Default.GlobalVaultDto, ct);

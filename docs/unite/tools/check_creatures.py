@@ -15,7 +15,6 @@ For each creature:
 """
 
 import json
-import shutil
 import sys
 import tempfile
 from pathlib import Path

@@ -147,7 +147,6 @@ def _samples(creature, n=N_SAMPLES, seed=0):
     d = mujoco.MjData(m)
     rng = np.random.default_rng(seed)
 
-    root = int(mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_BODY, contract["morphology"]["root_body"]))
     T = mujoco.mjtObj
     hinge = {}
     for j in range(m.njnt):

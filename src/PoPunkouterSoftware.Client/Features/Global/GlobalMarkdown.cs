@@ -44,7 +44,10 @@ internal static class GlobalMarkdown
             {
                 CloseList(html, ref inList);
                 var level = Math.Clamp(line.Length - line.TrimStart('#').Length, 1, 4);
-                html.Append($"<h{level + 1}>").Append(Inline(line.TrimStart('#').Trim())).Append($"</h{level + 1}>");
+                var heading = (level + 1).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                html.Append("<h").Append(heading).Append('>')
+                    .Append(Inline(line.TrimStart('#').Trim()))
+                    .Append("</h").Append(heading).Append('>');
                 continue;
             }
 

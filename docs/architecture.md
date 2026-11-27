@@ -350,6 +350,48 @@ no scroller at all.
   `AzureResourceExplorer`, `AzureAppDetail`),
   plus the shared `AppDrawer`.
 
+## The GLOBAL snapshot (`/global`)
+
+The old `_CODEMATT/global` folder — a non-repo hub that crawled every sibling app and rendered
+static HTML — was moved in on 2026-11-27. It is a **read-only snapshot** feature: nothing here
+crawls, spawns processes or writes to another repo at runtime.
+
+```
+scripts/global/build_global_data.py        (owner's machine, read-only crawl)
+        │  fleet.json, lessons.json, rl_facts.json, unite.json, config/*.json,
+        │  history/station_timeline.jsonl, rl/timeline.jsonl
+        ▼
+src/PoPunkouterSoftware.Api/App_Data/global/     committed, under the CONTENT root
+        │  GlobalDataStore (Infrastructure/Global) — timestamp-cached per file, degrades to empty
+        ▼
+/api/global/*   (Features/Global/GlobalEndpoints.cs, RequireAuthorization)
+        ▼
+Client/Features/Global/*.razor   (/global, /fleet, /briefing, /vault, /showroom,
+                                  /readiness, /lessons, /disk, /rl, /unite, /incubator)
+```
+
+Three details that are easy to get wrong:
+
+- **Two naming policies, on purpose.** The Python crawlers write `snake_case`
+  (`is_git`, `dirty_count`, `commits_7d`); the app's wire contract is `camelCase`. Two
+  source-generated contexts cover the two shapes — `GlobalCrawlerJsonContext` (snake_case, files)
+  and `GlobalJsonContext` (camelCase, wire) — so the Release build never needs reflection. A few
+  keys fuse a digit to the word (`Commits7d` → `commits7d`), so those carry an explicit
+  `[JsonPropertyName]`.
+- **`App_Data`, never `wwwroot`.** The snapshot names local paths, uncommitted files and commit
+  hashes. It is deployed beside the app, not served — the API is the only entrance. This is the
+  same lesson as the Azure report cache (see "Things that will bite you").
+- **Nulls are normal.** A folder that is not a repo has `"ci": null`, `"docs": null`,
+  `"media": null` and `"recent_commits": null`; a JSON `null` overwrites a property initializer.
+  `GlobalDataStore.Normalize` fills every section back in once, so no page or aggregate needs a
+  null check. `GlobalDataStoreTests` fails if a crawler change starts writing a shape the app
+  cannot read.
+
+The briefing and the ship board are **computed** in the store, not archived: the briefing diffs
+the last two `station_timeline.jsonl` entries (commits, brain hashes, disk, CI flips, dirty
+counts), and readiness suggests a stage from the crawl unless `config/readiness.json` sets one.
+`docs/global-migration.md` is the full record, including what was retired.
+
 ## Graphics and audio
 
 Nine files (`audio-kit.js` was deleted 2026-11-17 — there is no sound in the app) in [wwwroot/js/](../src/PoPunkouterSoftware.Client/wwwroot/js/). Read the header

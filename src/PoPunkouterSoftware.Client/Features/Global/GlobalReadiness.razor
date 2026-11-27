@@ -35,9 +35,9 @@
     else
     {
         <div class="global-toolbar">
-            <button type="button" class="global-chip @(_filter == "all" ? "is-on" : null)" @onclick="() => _filter = "all"">All (@_board.Apps.Count)</button>
-            <button type="button" class="global-chip @(_filter == "rl" ? "is-on" : null)" @onclick="() => _filter = "rl"">RL games</button>
-            <button type="button" class="global-chip @(_filter == "apps" ? "is-on" : null)" @onclick="() => _filter = "apps"">Apps &amp; tools</button>
+            <button type="button" class="global-chip @(_filter == "all" ? "is-on" : null)" @onclick="SetAll">All (@_board.Apps.Count)</button>
+            <button type="button" class="global-chip @(_filter == "rl" ? "is-on" : null)" @onclick="SetRl">RL games</button>
+            <button type="button" class="global-chip @(_filter == "apps" ? "is-on" : null)" @onclick="SetApps">Apps &amp; tools</button>
         </div>
 
         <div class="global-board">
@@ -48,6 +48,7 @@
                     <h2>@Label(stage) <span>@apps.Count</span></h2>
                     @foreach (var app in apps)
                     {
+                        var live = app.LiveUrl;
                         <article class="global-app">
                             <div class="hd">
                                 <strong>@app.Name</strong>
@@ -66,10 +67,10 @@
                                 }
                             </ul>
                             <div class="global-count">
-                                @app.Kind@(app.IsRl ? " · RL" : "") · @(app.Ci.Length > 0 ? "CI " + app.Ci : "no CI")
-                                @if (app.LiveUrl is { Length: > 0 })
+                                @app.Kind@(app.IsRl ? " · RL" : "") · @(string.IsNullOrEmpty(app.Ci) ? "no CI" : "CI " + app.Ci)
+                                @if (live is { Length: > 0 })
                                 {
-                                    <a href="@app.LiveUrl" rel="noopener noreferrer"> · live</a>
+                                    <a href="@live" rel="noopener noreferrer"> · live</a>
                                 }
                             </div>
                         </article>
@@ -108,6 +109,12 @@
             _ => true,
         })
         .OrderBy(a => a.Name, StringComparer.OrdinalIgnoreCase);
+
+    private void SetAll() => _filter = "all";
+
+    private void SetRl() => _filter = "rl";
+
+    private void SetApps() => _filter = "apps";
 
     protected override async Task OnInitializedAsync()
     {

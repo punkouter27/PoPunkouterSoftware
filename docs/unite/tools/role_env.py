@@ -118,7 +118,7 @@ class CreatureEnv:
             self.d.qpos[self.free_q:self.free_q + 3] += self.rng.normal(0, 0.01, 3)
             q = self.rng.normal(size=4)
             self.d.qpos[self.free_q + 3:self.free_q + 7] = q / np.linalg.norm(q)
-            for name, (qa, _va) in self._hinge.items():
+            for _name, (qa, _va) in self._hinge.items():
                 self.d.qpos[qa] += self.rng.normal(0, 0.02)
         self.d.qvel[:] = 0.0
         self.d.ctrl[:] = 0.0

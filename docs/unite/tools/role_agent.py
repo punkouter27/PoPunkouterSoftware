@@ -304,8 +304,10 @@ def selftest():
     check("masked roles carry no motor", all(contract["roles"]["mask"][bus.roles.index(r)] == 0
                                             for r in ("toe_l", "toe_r")))
     cmd = bus.build(np.zeros(len(bus.roles)))
-    check("zero action -> nominal pose", all(abs(q - float(bus.by_role[r].get("default") or 0.0)) < 1e-12
-                                             for r in bus.by_role for q in [cmd["q"][int(bus.by_role[r]["motor_slot"])]]))
+    check("zero action -> nominal pose",
+          all(abs(q - float(bus.by_role[r].get("default") or 0.0)) < 1e-12
+              for r in bus.by_role
+              for q in [cmd["q"][int(bus.by_role[r]["motor_slot"])]]))
 
     env = CreatureEnv("unitree_r1_a5")
     check("sim and bus agree", not check_bus_matches_sim(bus, env, action))
