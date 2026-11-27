@@ -191,6 +191,9 @@ public sealed class GlobalLessonDto
     public string Text { get; set; } = "";
     public List<string> Tags { get; set; } = [];
     public bool Manual { get; set; }
+
+    /// <summary>Every place the same bullet was found (a lesson shared by several repos has several).</summary>
+    public List<GlobalLessonSourceDto> Sources { get; set; } = [];
 }
 
 public sealed class GlobalReadinessFileDto
@@ -622,6 +625,15 @@ public sealed class GlobalBriefingRepoDto
     public int DirtyBefore { get; set; }
     public int DirtyAfter { get; set; }
     public List<string> LatestCommitMessages { get; set; } = [];
+
+    /// <summary><c>owner/repo</c> on GitHub, for links to brains and commits.</summary>
+    public string? GitHubSlug { get; set; }
+
+    /// <summary>The commits of the period, newest first (the crawl keeps the newest few per repo).</summary>
+    public List<GlobalCommitDto> CommitList { get; set; } = [];
+
+    /// <summary>The new or changed brains of the period.</summary>
+    public List<GlobalBriefingBrainDto> BrainFiles { get; set; } = [];
 }
 
 public sealed class GlobalRlDto

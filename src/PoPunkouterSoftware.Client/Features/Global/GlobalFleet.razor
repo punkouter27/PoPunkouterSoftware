@@ -1,25 +1,31 @@
 @page "/global/fleet"
 @attribute [Authorize]
 @rendermode WasmRenderModes.Interactive
+@using System.Globalization
 @using PoPunkouterSoftware.Shared
 @inject PortfolioApiClient Api
 @inject LocalHelperClient Helper
+@inject IJSRuntime JS
 
 <PageTitle>Fleet health · PoPunkouterSoftware</PageTitle>
 
-@* Fleet health: the git, CI and size state of every repo in the workspace, from the same
-   crawl the old GLOBAL/station/fleet_health.html used. The table is read-only; with the local
-   helper connected each row also gets buttons that open the repo on this PC. *@
+@* GLOBAL's Fleet Health & Git Radar: every git repo's uncommitted work, unpushed commits,
+   latest GitHub Actions run, test folders, staleness and disk use, worst first, plus the
+   fleet-wide commit feed and the uncommitted file lists. The table reads the crawl; with
+   the local helper connected each row also gets buttons that act on this PC. *@
 <main id="main-content" class="app-page global-page" tabindex="-1">
     <GlobalTabs />
     <header class="global-head">
         <div>
             <h1>Fleet health</h1>
-            <p class="app-note">Uncommitted and unpushed work, latest CI run, brains on disk and size, per repo.</p>
+            <p class="app-note">
+                Every git repo in the workspace: uncommitted work, unpushed commits, the latest GitHub Actions run, test folders,
+                staleness and disk use. Red sorts first.
+            </p>
         </div>
         @if (_fleet?.Generated is { } generated)
         {
-            <span class="global-stamp">Crawled @generated.ToLocalTime().ToString("yyyy-MM-dd HH:mm") · @GlobalFormat.Ago(_fleet.Generated)</span>
+            <span class="global-stamp">Crawled @generated.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) · @GlobalFormat.Ago(_fleet.Generated)</span>
         }
     </header>
 
@@ -44,133 +50,314 @@
     }
     else
     {
+        <section class="global-kpis" aria-label="Fleet totals">
+            <div class="global-kpi"><div class="v">@GitRepos.Count</div><div class="l">git repos tracked</div></div>
+            <div class="global-kpi fleet-kpi is-@(CiFailing.Count > 0 ? "bad" : "good")">
+                <div class="v">@CiFailing.Count</div>
+                <div class="l">CI failing@(CiFailing.Count > 0 ? ": " + string.Join(", ", CiFailing) : "")</div>
+            </div>
+            <div class="global-kpi fleet-kpi is-@(Dirty.Count > 0 ? "warn" : "good")"><div class="v">@Dirty.Count</div><div class="l">repos with uncommitted work</div></div>
+            <div class="global-kpi fleet-kpi is-@(Unpushed > 0 ? "warn" : "good")"><div class="v">@Unpushed</div><div class="l">repos with unpushed commits</div></div>
+            <div class="global-kpi fleet-kpi is-@(Stale > 0 ? "warn" : "good")"><div class="v">@Stale</div><div class="l">stale (&gt; @StaleDays days)</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(GitRepos.Sum(r => r.Git.Commits7d))</div><div class="l">commits in last 7 days</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Bytes(_fleet.Repos.Sum(r => r.Disk.TotalBytes ?? 0))</div><div class="l">on disk (all folders)</div></div>
+        </section>
+
         <div class="global-toolbar">
             <input class="global-search" type="search" placeholder="Filter repos, branches or commit messages…"
                    value="@_search" @oninput="OnSearch" aria-label="Filter repos" />
-            <button type="button" class="global-chip @(_onlyDirty ? "is-on" : null)" @onclick="() => _onlyDirty = !_onlyDirty">Only dirty</button>
-            <button type="button" class="global-chip @(_onlyFailing ? "is-on" : null)" @onclick="() => _onlyFailing = !_onlyFailing">Only CI failing</button>
-            <button type="button" class="global-chip @(_onlyRl ? "is-on" : null)" @onclick="() => _onlyRl = !_onlyRl">Only RL</button>
-            <span class="global-count">@Visible.Count() of @_fleet.Repos.Count</span>
+            @foreach (var (key, label) in Filters)
+            {
+                var k = key;
+                <button type="button" class="global-chip @(_filter == k ? "is-on" : null)" aria-pressed="@(_filter == k ? "true" : "false")"
+                        @onclick="() => _filter = k">@label</button>
+            }
+            <span class="global-count">@Visible.Count of @GitRepos.Count</span>
         </div>
 
         <div class="global-table-wrap">
-            <table class="global-table">
-                <caption class="app-sr-only">Fleet health per repository</caption>
+            <table class="global-table fleet-table">
+                <caption class="app-sr-only">Fleet health per repository, worst first</caption>
                 <thead>
                     <tr>
                         <th scope="col">Repo</th>
-                        <th scope="col">Kind</th>
-                        <th scope="col">Git</th>
+                        <th scope="col">Alerts</th>
+                        <th scope="col">Branch</th>
+                        <th scope="col" class="is-number">Dirty</th>
                         <th scope="col">Last commit</th>
-                        <th scope="col">CI</th>
-                        <th scope="col" class="is-number">Brains</th>
+                        <th scope="col" class="is-number">Commits 7d/30d</th>
+                        <th scope="col">CI (latest)</th>
+                        <th scope="col">Tests</th>
                         <th scope="col" class="is-number">Disk</th>
-                        <th scope="col">Live</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var repo in Visible)
                     {
+                        var name = repo.Name;
+                        var alerts = Alerts(repo);
+                        var run = repo.Ci.LatestRun;
                         <tr>
                             <th scope="row">
-                                @repo.Name
-                                @if (Helper.IsConnected && repo.Git.IsGit)
-                                {
-                                    @* Under the name, not in a column of their own: a ninth column pushed
-                                       the table past the page width. *@
-                                    var name = repo.Name;
-                                    <div class="global-actions global-row-actions">
+                                <div class="fleet-name">@repo.Name</div>
+                                <div class="global-count">
+                                    @KindLabel(repo.Kind)
+                                    @if (!string.IsNullOrEmpty(repo.RlStack))
+                                    {
+                                        <span> · @repo.RlStack</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(repo.Docs.LiveUrl))
+                                    {
+                                        <span> · </span><a href="@repo.Docs.LiveUrl" target="_blank" rel="noopener noreferrer">live ↗</a>
+                                    }
+                                </div>
+                                <div class="global-actions fleet-row-actions">
+                                    @if (Helper.IsConnected)
+                                    {
                                         <button type="button" class="global-chip" disabled="@_busy" @onclick='() => Run("open_vscode", name)'>Code</button>
                                         <button type="button" class="global-chip" disabled="@_busy" @onclick='() => Run("open_folder", name)'>Folder</button>
                                         <button type="button" class="global-chip" disabled="@_busy" @onclick='() => Run("git_status", name)'>Status</button>
-                                        @if (repo.Kind.Contains("unity", StringComparison.OrdinalIgnoreCase) || repo.Kind.Contains("unreal", StringComparison.OrdinalIgnoreCase))
+                                        @if (repo.Kind is "unity" or "unreal")
                                         {
-                                            <button type="button" class="global-chip" disabled="@_busy" @onclick='() => Run("open_engine", name)'>Engine</button>
+                                            <button type="button" class="global-chip" disabled="@_busy" @onclick='() => Run("open_engine", name)'>@KindLabel(repo.Kind)</button>
                                         }
-                                    </div>
-                                }
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="global-chip" @onclick="() => CopyOpen(name)"
+                                                title="Copies a command that opens this repo in VS Code">copy: code …</button>
+                                    }
+                                </div>
                             </th>
-                            <td class="is-nowrap">@repo.Kind@(repo.IsRl ? " · RL" : "")</td>
                             <td>
-                                @if (!repo.Git.IsGit)
+                                @if (alerts.Count == 0)
                                 {
-                                    <span class="global-tone is-muted">no git</span>
+                                    <span class="global-tone is-good">all clear</span>
                                 }
                                 else
                                 {
-                                    <div class="is-nowrap">
-                                        <span class="global-mono">@(repo.Git.Branch ?? "—")</span>
-                                        @if (repo.Git.DirtyCount > 0)
+                                    <div class="fleet-alerts">
+                                        @foreach (var alert in alerts)
                                         {
-                                            <span class="global-tone is-warn">@repo.Git.DirtyCount dirty</span>
-                                        }
-                                        @if (repo.Git.Ahead > 0)
-                                        {
-                                            <span class="global-tone is-info">↑@repo.Git.Ahead</span>
-                                        }
-                                        @if (repo.Git.Behind > 0)
-                                        {
-                                            <span class="global-tone is-warn">↓@repo.Git.Behind</span>
+                                            <span class="global-tone is-@alert.Tone">@alert.Text</span>
                                         }
                                     </div>
-                                    <div class="global-count">@repo.Git.Commits7d in 7d · @repo.Git.Commits30d in 30d</div>
-                                }
-                            </td>
-                            <td>
-                                @if (repo.Git.LastCommitIso is { } when)
-                                {
-                                    <div class="global-mono">@when.ToLocalTime().ToString("MM-dd HH:mm") · @GlobalFormat.Ago(when)</div>
-                                    <div class="is-clip">@repo.Git.LastCommitMsg</div>
-                                }
-                                else
-                                {
-                                    <span class="global-note">—</span>
                                 }
                             </td>
                             <td class="is-nowrap">
-                                @if (repo.Ci.LatestRun is { } run)
-                                {
-                                    <span class="global-tone is-@GlobalFormat.CiTone(run.Conclusion)">@(run.Conclusion ?? run.Status ?? "unknown")</span>
-                                    <div class="global-count">@run.WorkflowName</div>
-                                }
-                                else
-                                {
-                                    <span class="global-tone is-muted">none</span>
-                                }
+                                <code>@(repo.Git.Branch ?? "—")</code>
+                                <div class="global-count">@AheadBehind(repo.Git)</div>
                             </td>
-                            <td class="is-number">
-                                @repo.Onnx.Count
-                                <div class="global-count">@repo.Mjcf.Count models</div>
-                            </td>
-                            <td class="is-number">@GlobalFormat.Bytes(repo.Disk.TotalBytes)</td>
+                            <td class="is-number">@repo.Git.DirtyCount</td>
                             <td>
-                                @if (!string.IsNullOrEmpty(repo.Docs.LiveUrl))
+                                @if (repo.Git.LastCommitIso is { } when)
                                 {
-                                    <a href="@repo.Docs.LiveUrl" rel="noopener noreferrer">open</a>
+                                    <div class="global-count">@GlobalFormat.Ago(when)</div>
+                                    <div class="is-clip">@Shorten(repo.Git.LastCommitMsg, 90)</div>
                                 }
                                 else
                                 {
                                     <span class="global-note">—</span>
                                 }
                             </td>
+                            <td class="is-number">@repo.Git.Commits7d <span class="global-count">/ @repo.Git.Commits30d</span></td>
+                            <td class="is-nowrap">
+                                @if (run is null)
+                                {
+                                    <span class="global-tone is-muted">–</span>
+                                }
+                                else
+                                {
+                                    var conclusion = run.Conclusion ?? run.Status ?? "?";
+                                    if (!string.IsNullOrEmpty(run.Url))
+                                    {
+                                        <a href="@run.Url" target="_blank" rel="noopener noreferrer" class="fleet-ci-link">
+                                            <span class="global-tone is-@GlobalFormat.CiTone(conclusion)">@conclusion</span>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="global-tone is-@GlobalFormat.CiTone(conclusion)">@conclusion</span>
+                                    }
+                                    @foreach (var earlier in run.Recent.Skip(1))
+                                    {
+                                        <span class="fleet-dot is-@GlobalFormat.CiTone(earlier)" title="@earlier" aria-hidden="true"></span>
+                                    }
+                                    @if (run.Recent.Count > 1)
+                                    {
+                                        <span class="app-sr-only">earlier runs: @string.Join(", ", run.Recent.Skip(1))</span>
+                                    }
+                                    <div class="global-count">@run.WorkflowName · @GlobalFormat.Ago(run.CreatedAt)</div>
+                                }
+                            </td>
+                            <td>
+                                @if (repo.Docs.Tests.Count > 0)
+                                {
+                                    <span class="global-tone is-good" title="@string.Join(", ", repo.Docs.Tests)">yes</span>
+                                }
+                                else
+                                {
+                                    <span class="global-tone is-warn">none</span>
+                                }
+                            </td>
+                            <td class="is-number">@GlobalFormat.Bytes(repo.Disk.TotalBytes)</td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
+
+        <div class="fleet-grid">
+            <section class="global-item" aria-label="Latest commits across the fleet">
+                <div class="text"><strong>Latest commits across the fleet</strong></div>
+                <ul class="fleet-feed">
+                    @foreach (var (repo, commit) in Feed)
+                    {
+                        <li>
+                            <span class="global-count fleet-feed-age">@GlobalFormat.Ago(commit.Iso)</span>
+                            <strong class="fleet-feed-repo">@repo</strong>
+                            <span class="fleet-feed-msg">@Shorten(commit.Msg, 120)</span>
+                        </li>
+                    }
+                </ul>
+            </section>
+            <section aria-label="Uncommitted files">
+                <h2 class="fleet-h">Uncommitted files</h2>
+                @if (Dirty.Count == 0)
+                {
+                    <p class="global-note">No repo has uncommitted changes.</p>
+                }
+                @foreach (var repo in Dirty)
+                {
+                    <div class="global-item">
+                        <div class="text"><strong>@repo.Name</strong> <span class="global-count">@repo.Git.DirtyCount file(s)</span></div>
+                        <pre class="global-code fleet-dirty"><code>@string.Join("\n", repo.Git.DirtyFiles)</code></pre>
+                    </div>
+                }
+            </section>
+        </div>
     }
 </main>
 
 @code {
+    /// <summary>GLOBAL's threshold for "stale": no commit for this many days.</summary>
+    private const int StaleDays = 14;
+
+    private static readonly (string Key, string Label)[] Filters =
+    [
+        ("all", "All"),
+        ("rl", "RL games"),
+        ("apps", "Apps & tools"),
+        ("alerts", "Needs attention"),
+    ];
+
     private GlobalFleetDto? _fleet;
     private bool _loading = true;
-    private string? _error;
-    private string _search = "";
-    private bool _onlyDirty;
-    private bool _onlyFailing;
-    private bool _onlyRl;
     private bool _busy;
+    private string? _error;
     private string? _output;
+    private string _search = "";
+    private string _filter = "all";
+
+    private sealed record Alert(string Tone, string Text, int Weight);
+
+    private List<GlobalRepoDto> GitRepos => _fleet?.Repos.Where(r => r.Git.IsGit).ToList() ?? [];
+
+    private List<string> CiFailing =>
+        GitRepos.Where(r => string.Equals(r.Ci.LatestRun?.Conclusion, "failure", StringComparison.OrdinalIgnoreCase))
+            .Select(r => r.Name).ToList();
+
+    private List<GlobalRepoDto> Dirty => GitRepos.Where(r => r.Git.DirtyCount > 0).OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
+
+    private int Unpushed => GitRepos.Count(r => r.Git.Ahead > 0);
+
+    private int Stale => GitRepos.Count(r => (r.Git.DaysSinceCommit ?? 0) > StaleDays);
+
+    /// <summary>GLOBAL's repo_alerts: red = broken now, amber = check, blue = information.</summary>
+    private static List<Alert> Alerts(GlobalRepoDto repo)
+    {
+        var git = repo.Git;
+        if (!git.IsGit)
+            return [new("info", "not a git repo", 0)];
+
+        var alerts = new List<Alert>();
+        if (git.DirtyCount > 0)
+            alerts.Add(new("warn", $"{git.DirtyCount} uncommitted", 1));
+        if (git.Ahead > 0)
+            alerts.Add(new("warn", $"{git.Ahead} unpushed", 1));
+        if (git.Behind > 0)
+            alerts.Add(new("info", $"{git.Behind} behind remote", 0));
+        if (git.Branch is { Length: > 0 } branch && branch is not ("master" or "main"))
+            alerts.Add(new("info", $"on {branch}", 0));
+        if (repo.Ci.LatestRun?.Conclusion is "failure" or "timed_out" or "startup_failure" or "cancelled")
+            alerts.Add(new("bad", $"CI {repo.Ci.LatestRun.Conclusion}", 3));
+        if (repo.Ci.Workflows.Count == 0)
+            alerts.Add(new("warn", "no CI workflow", 1));
+        if ((git.DaysSinceCommit ?? 0) > StaleDays)
+            alerts.Add(new("info", $"stale {(int)git.DaysSinceCommit!.Value}d", 0));
+        if (repo.Docs.Tests.Count == 0)
+            alerts.Add(new("warn", "no tests folder", 1));
+        return alerts;
+    }
+
+    private static int Severity(GlobalRepoDto repo) => Alerts(repo).Sum(a => a.Weight);
+
+    private List<GlobalRepoDto> Visible
+    {
+        get
+        {
+            IEnumerable<GlobalRepoDto> repos = GitRepos;
+            repos = _filter switch
+            {
+                "rl" => repos.Where(r => r.IsRl),
+                "apps" => repos.Where(r => !r.IsRl),
+                "alerts" => repos.Where(r => Severity(r) > 0),
+                _ => repos,
+            };
+
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                var q = _search.Trim();
+                repos = repos.Where(r =>
+                    r.Name.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || (r.Git.Branch ?? "").Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || (r.Git.LastCommitMsg ?? "").Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || r.Kind.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || Alerts(r).Any(a => a.Text.Contains(q, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            // Red first (GLOBAL sorted by the count of red alerts, then by name).
+            return repos
+                .OrderByDescending(r => Alerts(r).Count(a => a.Tone == "bad"))
+                .ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+    }
+
+    private IEnumerable<(string Repo, GlobalCommitDto Commit)> Feed =>
+        GitRepos
+            .SelectMany(r => r.Git.RecentCommits.Select(c => (r.Name, c)))
+            .OrderByDescending(x => x.c.Iso)
+            .Take(30);
+
+    private static string AheadBehind(GlobalGitDto git) =>
+        string.IsNullOrEmpty(git.Remote) ? "no upstream" : $"{git.Ahead}↑ {git.Behind}↓";
+
+    private static string KindLabel(string kind) => kind switch
+    {
+        "unity" => "Unity",
+        "unreal" => "Unreal",
+        "blazor" => "Blazor",
+        "dotnet" => ".NET",
+        "python" => "Python",
+        "" => "other",
+        _ => kind,
+    };
+
+    private static string Shorten(string? text, int max) =>
+        string.IsNullOrEmpty(text) ? "" : text.Length <= max ? text : string.Concat(text.AsSpan(0, max), "…");
+
+    private void OnSearch(ChangeEventArgs e) => _search = e.Value?.ToString() ?? "";
 
     private async Task Run(string action, string repo)
     {
@@ -186,36 +373,24 @@
         }
     }
 
-    private IEnumerable<GlobalRepoDto> Visible
+    private async Task CopyOpen(string repo)
     {
-        get
+        var path = Helper.Workspace is { Length: > 0 } root ? $"{root.TrimEnd('\\', '/')}\\{repo}" : repo;
+        var command = $"code \"{path}\"";
+        bool copied;
+        try
         {
-            if (_fleet is null)
-                return [];
-
-            IEnumerable<GlobalRepoDto> repos = _fleet.Repos;
-            if (_onlyDirty)
-                repos = repos.Where(r => r.Git.IsGit && r.Git.DirtyCount > 0);
-            if (_onlyFailing)
-                repos = repos.Where(r => string.Equals(r.Ci.LatestRun?.Conclusion, "failure", StringComparison.OrdinalIgnoreCase));
-            if (_onlyRl)
-                repos = repos.Where(r => r.IsRl);
-
-            if (!string.IsNullOrWhiteSpace(_search))
-            {
-                var q = _search.Trim();
-                repos = repos.Where(r =>
-                    r.Name.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || (r.Git.Branch ?? "").Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || (r.Git.LastCommitMsg ?? "").Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || r.Kind.Contains(q, StringComparison.OrdinalIgnoreCase));
-            }
-
-            return repos.OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase);
+            copied = await JS.InvokeAsync<bool>("copyToClipboard", command);
         }
-    }
+        catch (JSException)
+        {
+            copied = false;
+        }
 
-    private void OnSearch(ChangeEventArgs e) => _search = e.Value?.ToString() ?? "";
+        _output = copied
+            ? $"Copied: {command}" + (Helper.Workspace is null ? "  (run it from the workspace folder)" : "")
+            : $"Could not copy. Run this yourself: {command}";
+    }
 
     protected override async Task OnInitializedAsync()
     {

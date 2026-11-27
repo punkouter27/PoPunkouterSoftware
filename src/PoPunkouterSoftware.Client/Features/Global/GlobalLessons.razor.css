@@ -1,0 +1,8 @@
+.lessons-tags { gap: 4px; }
+
+.lessons-tag {
+    padding: 1px 8px;
+    font-size: var(--po-text-xs);
+    text-transform: none;
+    letter-spacing: 0;
+}

@@ -1,19 +1,32 @@
 @page "/global/disk"
 @attribute [Authorize]
 @rendermode WasmRenderModes.Interactive
+@using System.Globalization
 @using PoPunkouterSoftware.Shared
 @inject PortfolioApiClient Api
+@inject LocalHelperClient Helper
+@inject IJSRuntime JS
 
 <PageTitle>Disk · PoPunkouterSoftware</PageTitle>
 
-@* Disk: how much space each repo takes and what kind of files hold it, plus the heavy
-   folders the crawl found. Read-only — this page never deletes anything. *@
-<main id="main-content" class="app-page global-page" tabindex="-1">
+@* GLOBAL's Disk Heatmap: where the space goes, by repo and by kind of folder, the total over
+   time, and the heavy folders with a cleanup command to copy. This page never deletes
+   anything: every cleanup is a command the owner copies and runs; "review" commands only
+   list files or use -WhatIf.
+
+   The crawl has twelve folder categories; a chart can only tell about eight colours apart,
+   so they are drawn as seven groups plus a grey "everything else" (palette validated with
+   the dataviz skill's checker, light and dark). The exact category is in each segment's
+   tooltip and in the table view. *@
+<main id="main-content" class="app-page global-page disk-root" tabindex="-1">
     <GlobalTabs />
     <header class="global-head">
         <div>
-            <h1>Disk</h1>
-            <p class="app-note">Space used per repo and per folder type, and the heaviest folders found. Nothing here deletes anything.</p>
+            <h1>Disk use</h1>
+            <p class="app-note">
+                Where the space goes, by repo and by kind of folder. The page never deletes anything: every cleanup is a command you
+                copy and run yourself. "Review" commands only list files or use <code>-WhatIf</code>.
+            </p>
         </div>
         @if (_fleet?.Generated is { } generated)
         {
@@ -36,81 +49,154 @@
     else
     {
         <section class="global-kpis" aria-label="Disk totals">
-            <div class="global-kpi"><div class="v">@GlobalFormat.Bytes(Total)</div><div class="l">across @_fleet.Repos.Count repos</div></div>
-            @foreach (var category in TopCategories)
+            <div class="global-kpi"><div class="v">@GlobalFormat.Bytes(Total)</div><div class="l">total under the workspace</div></div>
+            <div class="global-kpi disk-kpi is-good"><div class="v">@GlobalFormat.Bytes(SafetyBytes("regenerable"))</div><div class="l">safe to reclaim (rebuilt automatically)</div></div>
+            <div class="global-kpi disk-kpi is-warn"><div class="v">@GlobalFormat.Bytes(SafetyBytes("slow_rebuild") + SafetyBytes("recreate"))</div><div class="l">reclaimable with a slow rebuild / venv recreate</div></div>
+            <div class="global-kpi disk-kpi is-bad"><div class="v">@GlobalFormat.Bytes(SafetyBytes("review"))</div><div class="l">training output, Saved, builds: review by hand</div></div>
+        </section>
+
+        <section class="global-item disk-panel" aria-label="Disk use per repository">
+            <ul class="disk-legend" aria-label="Legend">
+                @foreach (var group in Groups)
+                {
+                    <li><span class="disk-swatch" style="background: var(--disk-@group.Slot)" aria-hidden="true"></span>@group.Label</li>
+                }
+            </ul>
+            <div class="disk-bars">
+                @foreach (var repo in Repos)
+                {
+                    var total = repo.Disk.TotalBytes ?? 0;
+                    <div class="disk-row">
+                        <div class="disk-name" title="@repo.Name">@repo.Name</div>
+                        <div class="disk-bar" role="img" aria-label="@BarLabel(repo)">
+                            <div class="disk-fill" style="width: @Pct(total, MaxRepo)%">
+                                @foreach (var (group, bytes) in Split(repo))
+                                {
+                                    <span class="disk-seg" style="flex-grow: @Grow(bytes); background: var(--disk-@group.Slot)"
+                                          title="@SegmentTitle(repo, group, bytes)"></span>
+                                }
+                            </div>
+                        </div>
+                        <div class="disk-value">@GlobalFormat.Bytes(total)</div>
+                    </div>
+                }
+            </div>
+            <details class="disk-details">
+                <summary>Show as a table</summary>
+                <div class="global-table-wrap">
+                    <table class="global-table">
+                        <caption class="app-sr-only">Disk use per repository and folder group</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Repo</th>
+                                @foreach (var group in Groups)
+                                {
+                                    <th scope="col" class="is-number">@group.Label</th>
+                                }
+                                <th scope="col" class="is-number">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var repo in Repos)
+                            {
+                                var split = Split(repo).ToDictionary(x => x.Group.Slot, x => x.Bytes);
+                                <tr>
+                                    <th scope="row">@repo.Name</th>
+                                    @foreach (var group in Groups)
+                                    {
+                                        <td class="is-number">@(split.TryGetValue(group.Slot, out var b) ? GlobalFormat.Bytes(b) : "–")</td>
+                                    }
+                                    <td class="is-number">@GlobalFormat.Bytes(repo.Disk.TotalBytes)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+            @if (Repos.Any(r => r.Disk.Stale || !r.Disk.Complete))
             {
-                <div class="global-kpi"><div class="v">@GlobalFormat.Bytes(category.Bytes)</div><div class="l">@Label(category.Name)</div></div>
+                <p class="global-note">
+                    Not fully measured:
+                    @string.Join(", ", Repos.Where(r => r.Disk.Stale || !r.Disk.Complete)
+                        .Select(r => r.Disk.Stale ? $"{r.Name} (size reused from an earlier crawl)" : $"{r.Name} ({r.Disk.ScanErrors} scan errors)"))
+                </p>
             }
         </section>
 
-        <div class="global-table-wrap">
-            <table class="global-table">
-                <caption class="app-sr-only">Disk usage per repository</caption>
-                <thead>
-                    <tr>
-                        <th scope="col">Repo</th>
-                        <th scope="col" class="is-number">Total</th>
-                        <th scope="col">Where it goes</th>
-                        <th scope="col">Notes</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var repo in Repos)
+        <h2>Total over time</h2>
+        <section class="global-item" aria-label="Total disk use over time">
+            @if (_trend.Count >= 2)
+            {
+                <svg class="global-chart" viewBox="0 0 760 200" role="img" aria-label="@TrendLabel">
+                    <line class="axis" x1="64" y1="170" x2="740" y2="170" />
+                    <text class="label" x="64" y="188">@Day(_trend[0].When)</text>
+                    <text class="label" x="740" y="188" text-anchor="end">@Day(_trend[^1].When)</text>
+                    <text class="label" x="4" y="24">@GlobalFormat.Bytes((long)TrendMax)</text>
+                    <text class="label" x="4" y="168">@GlobalFormat.Bytes((long)TrendMin)</text>
+                    <polyline class="line" points="@TrendPoints" />
+                    @foreach (var (x, y, point) in TrendDots)
                     {
-                        <tr>
-                            <th scope="row">@repo.Name</th>
-                            <td class="is-number">@GlobalFormat.Bytes(repo.Disk.TotalBytes)</td>
-                            <td>
-                                @foreach (var category in repo.Disk.Categories.OrderByDescending(c => c.Value).Take(4))
-                                {
-                                    <div class="global-count">
-                                        @Label(category.Key): @GlobalFormat.Bytes(category.Value)
-                                        (@Share(category.Value, repo.Disk.TotalBytes) %)
-                                    </div>
-                                }
-                            </td>
-                            <td class="global-count">
-                                @if (repo.Disk.Stale)
-                                {
-                                    <span class="global-tone is-warn">stale (reused size)</span>
-                                }
-                                else if (!repo.Disk.Complete)
-                                {
-                                    <span class="global-tone is-warn">partial scan (@repo.Disk.ScanErrors errors)</span>
-                                }
-                            </td>
-                        </tr>
+                        <circle class="disk-hit" cx="@Coord(x)" cy="@Coord(y)" r="10"><title>@Stamp(point.When): @GlobalFormat.Bytes(point.DiskBytes)</title></circle>
+                        <circle class="dot" cx="@Coord(x)" cy="@Coord(y)" r="4" />
                     }
-                </tbody>
-            </table>
-        </div>
+                </svg>
+                <p class="global-note">Point spacing reflects elapsed time. Hover a point for its date and size.</p>
+            }
+            else
+            {
+                <p class="global-note">The trend line appears after the second refresh.</p>
+            }
+        </section>
 
-        <h2>Heaviest folders</h2>
+        <h2>Heavy folders</h2>
+        <div class="global-toolbar">
+            @foreach (var (key, label) in SafetyFilters)
+            {
+                var k = key;
+                <button type="button" class="global-chip @(_safety == k ? "is-on" : null)" aria-pressed="@(_safety == k ? "true" : "false")"
+                        @onclick="() => _safety = k">@label</button>
+            }
+            <span class="global-count">@VisibleHeavy.Count shown</span>
+        </div>
+        <p class="global-note">
+            Close Unity / Unreal before deleting <code>Library</code>, <code>Intermediate</code> or <code>DerivedDataCache</code>.
+            Unity reimports on next open (minutes); Unreal rebuilds shaders/DDC on next open.
+            @if (Helper.Workspace is null)
+            {
+                <span>Commands use paths relative to the workspace folder (run them from there); connect this PC on <a href="/global/pc">This PC</a> for full paths.</span>
+            }
+        </p>
+        @if (_copyStatus is not null)
+        {
+            <p class="global-note" role="status" aria-live="polite">@_copyStatus</p>
+        }
         <div class="global-table-wrap">
             <table class="global-table">
                 <caption class="app-sr-only">Heaviest folders in the fleet</caption>
                 <thead>
                     <tr>
+                        <th scope="col">Repo</th>
                         <th scope="col">Folder</th>
-                        <th scope="col">Category</th>
+                        <th scope="col">Kind</th>
                         <th scope="col" class="is-number">Size</th>
                         <th scope="col" class="is-number">Files</th>
-                        <th scope="col">Deleting it</th>
+                        <th scope="col">Safety</th>
+                        <th scope="col">Cleanup</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var dir in HeavyDirs)
+                    @foreach (var (repo, dir) in VisibleHeavy)
                     {
+                        var d = dir;
+                        var (tone, safetyLabel) = Safety(dir.Safety);
                         <tr>
-                            <th scope="row" class="global-mono">@dir.Rel</th>
-                            <td class="is-nowrap">@Label(dir.Category ?? "")</td>
+                            <th scope="row">@repo</th>
+                            <td class="global-mono disk-folder">@FolderInRepo(repo, dir.Rel)</td>
+                            <td class="is-nowrap">@CategoryLabel(dir.Category)</td>
                             <td class="is-number">@GlobalFormat.Bytes(dir.Bytes)</td>
                             <td class="is-number">@GlobalFormat.Number(dir.Files)</td>
-                            <td class="is-nowrap">
-                                <span class="global-tone is-@(dir.Safety == "regenerable" ? "good" : dir.Safety == "recreate" ? "warn" : "muted")">
-                                    @(dir.Safety ?? "review")
-                                </span>
-                            </td>
+                            <td><span class="global-tone is-@tone">@safetyLabel</span></td>
+                            <td><button type="button" class="global-chip disk-copy" @onclick="() => Copy(d)">Copy command</button></td>
                         </tr>
                     }
                 </tbody>
@@ -121,55 +207,203 @@
 
 @code {
     private GlobalFleetDto? _fleet;
+    private List<GlobalTrendPointDto> _trend = [];
     private bool _loading = true;
     private string? _error;
+    private string? _copyStatus;
+    private string _safety = "all";
+
+    private sealed record Group(int Slot, string Label, string[] Categories);
+
+    /// <summary>Seven colour groups in the validated categorical order, then grey for the rest.</summary>
+    private static readonly Group[] Groups =
+    [
+        new(1, "Engine caches & binaries", ["unity_cache", "unreal_cache", "unreal_binaries"]),
+        new(2, "Python venvs", ["python_env"]),
+        new(3, "Training runs / checkpoints", ["training_output"]),
+        new(4, "Builds (bin/obj, dist, Saved)", ["dotnet_build", "builds", "unreal_saved"]),
+        new(5, "node_modules", ["node"]),
+        new(6, "Screenshots & media", ["media"]),
+        new(7, ".git history", ["git"]),
+        new(0, "Source & everything else", ["source_other"]),
+    ];
+
+    private static readonly (string Key, string Label)[] SafetyFilters =
+    [
+        ("all", "All"),
+        ("regenerable", "Safe"),
+        ("slow_rebuild", "Slow rebuild"),
+        ("recreate", "venvs"),
+        ("review", "Review"),
+    ];
+
+    /// <summary>GLOBAL's CAT_META labels.</summary>
+    private static string CategoryLabel(string? category) => category switch
+    {
+        "unity_cache" => "Unity Library/Temp",
+        "unreal_cache" => "Unreal Intermediate/DDC",
+        "unreal_saved" => "Unreal Saved",
+        "unreal_binaries" => "Unreal Binaries",
+        "dotnet_build" => ".NET bin/obj",
+        "python_env" => "Python venvs",
+        "node" => "node_modules",
+        "training_output" => "Training runs/checkpoints",
+        "builds" => "Builds / dist",
+        "media" => "SCREENSHOTS",
+        "git" => ".git history",
+        "source_other" => "Source & everything else",
+        null or "" => "unknown",
+        _ => category.Replace('_', ' '),
+    };
+
+    /// <summary>GLOBAL's SAFETY badges: (tone, label).</summary>
+    private static (string Tone, string Label) Safety(string? safety) => safety switch
+    {
+        "regenerable" => ("good", "Safe — rebuilt automatically"),
+        "slow_rebuild" => ("warn", "Safe, slow rebuild"),
+        "recreate" => ("warn", "Recreate with uv sync"),
+        "review" => ("bad", "Review first — may hold work"),
+        "never" => ("muted", "Keep (maintenance only)"),
+        _ => ("muted", safety ?? "unknown"),
+    };
+
+    private List<GlobalRepoDto> Repos =>
+        _fleet?.Repos.Where(r => (r.Disk.TotalBytes ?? 0) > 0).OrderByDescending(r => r.Disk.TotalBytes ?? 0).ToList() ?? [];
 
     private long Total => _fleet?.Repos.Sum(r => r.Disk.TotalBytes ?? 0) ?? 0;
 
-    private List<GlobalRepoDto> Repos =>
-        _fleet?.Repos.OrderByDescending(r => r.Disk.TotalBytes ?? 0).ToList() ?? [];
+    private long MaxRepo => Math.Max(1, Repos.Select(r => r.Disk.TotalBytes ?? 0).DefaultIfEmpty(0).Max());
 
-    private List<(string Name, long Bytes)> TopCategories =>
-        Repos
-            .SelectMany(r => r.Disk.Categories)
-            .GroupBy(c => c.Key)
-            .Select(g => (Name: g.Key, Bytes: g.Sum(x => x.Value)))
-            .OrderByDescending(c => c.Bytes)
-            .Take(3)
-            .ToList();
+    private long SafetyBytes(string safety) =>
+        Repos.SelectMany(r => r.Disk.HeavyDirs).Where(h => h.Safety == safety).Sum(h => h.Bytes);
 
-    private List<GlobalHeavyDirDto> HeavyDirs =>
-        Repos
-            .SelectMany(r => r.Disk.HeavyDirs)
-            .OrderByDescending(d => d.Bytes)
-            .Take(30)
-            .ToList();
-
-    private static int Share(long value, long? total) =>
-        total is > 0 ? (int)Math.Round(value * 100d / total.Value) : 0;
-
-    private static string Label(string category) => category switch
+    private static IEnumerable<(Group Group, long Bytes)> Split(GlobalRepoDto repo)
     {
-        "git" => ".git",
-        "python_env" => "Python envs (.venv)",
-        "unity_cache" => "Unity cache (Library)",
-        "unreal_cache" => "Unreal cache (DerivedDataCache)",
-        "unreal_binaries" => "Unreal binaries",
-        "unreal_saved" => "Unreal Saved",
-        "builds" => "build output",
-        "training_output" => "training output",
-        "media" => "media",
-        "source_other" => "source and everything else",
-        "" => "unknown",
-        _ => category.Replace('_', ' '),
-    };
+        var known = Groups.SelectMany(g => g.Categories).ToHashSet();
+        foreach (var group in Groups)
+        {
+            var bytes = repo.Disk.Categories.Where(c => group.Categories.Contains(c.Key)).Sum(c => c.Value);
+            if (group.Slot == 0)
+                bytes += repo.Disk.Categories.Where(c => !known.Contains(c.Key)).Sum(c => c.Value);
+            if (bytes > 0)
+                yield return (group, bytes);
+        }
+    }
+
+    private static string SegmentTitle(GlobalRepoDto repo, Group group, long bytes)
+    {
+        var parts = repo.Disk.Categories
+            .Where(c => group.Categories.Contains(c.Key) || (group.Slot == 0 && !Groups.SelectMany(g => g.Categories).Contains(c.Key)))
+            .Where(c => c.Value > 0)
+            .Select(c => $"{CategoryLabel(c.Key)} {GlobalFormat.Bytes(c.Value)}");
+        return $"{repo.Name} · {group.Label}: {GlobalFormat.Bytes(bytes)} ({string.Join(", ", parts)})";
+    }
+
+    private static string BarLabel(GlobalRepoDto repo) =>
+        $"{repo.Name}: {GlobalFormat.Bytes(repo.Disk.TotalBytes)}, " +
+        string.Join(", ", Split(repo).OrderByDescending(x => x.Bytes).Take(3).Select(x => $"{x.Group.Label} {GlobalFormat.Bytes(x.Bytes)}"));
+
+    private static string Pct(long value, long max) =>
+        (Math.Max(0.5, value * 100.0 / max)).ToString("0.###", CultureInfo.InvariantCulture);
+
+    private static string Grow(long bytes) => (bytes / 1_000_000.0).ToString("0.###", CultureInfo.InvariantCulture);
+
+    private List<(string Repo, GlobalHeavyDirDto Dir)> VisibleHeavy =>
+        Repos.SelectMany(r => r.Disk.HeavyDirs.Select(h => (r.Name, h)))
+            .Where(x => _safety == "all" || x.h.Safety == _safety)
+            .OrderByDescending(x => x.h.Bytes)
+            .Take(80)
+            .ToList();
+
+    private static string FolderInRepo(string repo, string rel) =>
+        rel.StartsWith(repo + "/", StringComparison.OrdinalIgnoreCase) ? rel[(repo.Length + 1)..] : rel;
+
+    /// <summary>A port of GLOBAL's cleanup_cmd: PowerShell that deletes only what is safe, otherwise lists or uses -WhatIf.</summary>
+    public static string CleanupCommand(GlobalHeavyDirDto dir, string? workspace)
+    {
+        var rel = dir.Rel.Replace('/', '\\');
+        var path = workspace is { Length: > 0 } root ? $"{root.TrimEnd('\\', '/')}\\{rel}" : rel;
+        var slash = path.LastIndexOf('\\');
+        var parent = slash > 0 ? path[..slash] : ".";
+        return dir.Safety switch
+        {
+            "regenerable" or "slow_rebuild" => $"Remove-Item -LiteralPath \"{path}\" -Recurse -Force",
+            "recreate" => $"Remove-Item -LiteralPath \"{path}\" -Recurse -Force; Set-Location \"{parent}\"; uv sync",
+            "never" => $"git -C \"{parent}\" gc --prune=now",
+            _ when dir.Category == "training_output" =>
+                "# biggest files (read-only)\n" +
+                $"Get-ChildItem -LiteralPath \"{path}\" -Recurse -File | Sort-Object Length -Descending | " +
+                "Select-Object -First 25 @{n=\"MB\";e={[int]($_.Length/1MB)}},LastWriteTime,FullName\n" +
+                "# preview pruning .pt checkpoints older than the newest 3 in each folder (remove -WhatIf to do it)\n" +
+                $"Get-ChildItem -LiteralPath \"{path}\" -Recurse -Directory | ForEach-Object {{ Get-ChildItem $_.FullName -Filter *.pt -File | " +
+                "Sort-Object LastWriteTime -Descending | Select-Object -Skip 3 | Remove-Item -WhatIf }",
+            _ => $"Get-ChildItem -LiteralPath \"{path}\" -Recurse -File | Sort-Object Length -Descending | " +
+                 "Select-Object -First 25 @{n=\"MB\";e={[int]($_.Length/1MB)}},LastWriteTime,FullName",
+        };
+    }
+
+    private async Task Copy(GlobalHeavyDirDto dir)
+    {
+        var command = CleanupCommand(dir, Helper.Workspace);
+        bool copied;
+        try
+        {
+            copied = await JS.InvokeAsync<bool>("copyToClipboard", command);
+        }
+        catch (JSException)
+        {
+            copied = false;
+        }
+
+        _copyStatus = copied
+            ? $"Copied the cleanup command for {dir.Rel}. Nothing has been deleted; run it yourself in PowerShell."
+            : $"Could not copy to the clipboard. The command for {dir.Rel} is: {command}";
+    }
+
+    // ─── trend ───────────────────────────────────────────────────────────────
+
+    private double TrendMin => _trend.Min(p => (double)p.DiskBytes);
+
+    private double TrendMax => Math.Max(_trend.Max(p => (double)p.DiskBytes), TrendMin + 1e9);
+
+    private IEnumerable<(double X, double Y, GlobalTrendPointDto Point)> TrendDots
+    {
+        get
+        {
+            var first = _trend[0].When ?? DateTimeOffset.MinValue;
+            var span = Math.Max(1, ((_trend[^1].When ?? first) - first).TotalSeconds);
+            var (min, max) = (TrendMin, TrendMax);
+            foreach (var point in _trend)
+            {
+                var x = 64 + 676 * (((point.When ?? first) - first).TotalSeconds / span);
+                var y = 170 - 146 * ((point.DiskBytes - min) / (max - min));
+                yield return (x, y, point);
+            }
+        }
+    }
+
+    private string TrendPoints => string.Join(" ", TrendDots.Select(d => $"{Coord(d.X)},{Coord(d.Y)}"));
+
+    private string TrendLabel =>
+        $"Total disk use per crawl, from {GlobalFormat.Bytes(_trend[0].DiskBytes)} on {Day(_trend[0].When)} to {GlobalFormat.Bytes(_trend[^1].DiskBytes)} on {Day(_trend[^1].When)}";
+
+    private static string Coord(double value) => value.ToString("0.#", CultureInfo.InvariantCulture);
+
+    private static string Day(DateTimeOffset? when) =>
+        when?.ToLocalTime().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "";
+
+    private static string Stamp(DateTimeOffset? when) =>
+        when?.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) ?? "";
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            _fleet = await Api.GetGlobalFleetAsync(cts.Token);
+            var fleet = Api.GetGlobalFleetAsync(cts.Token);
+            var home = Api.GetGlobalHomeAsync(cts.Token);
+            _fleet = await fleet;
+            _trend = (await home)?.Trend ?? [];
         }
         catch (Exception ex)
         {
@@ -178,6 +412,14 @@
         finally
         {
             _loading = false;
+        }
+
+        // Absolute paths in the cleanup commands need the workspace folder, which only the
+        // local helper knows. Asking it is quiet: away from the PC it simply is not there.
+        if (Helper.State == LocalHelperState.Unknown)
+        {
+            await Helper.ConnectAsync();
+            StateHasChanged();
         }
     }
 }

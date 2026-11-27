@@ -1,0 +1,34 @@
+.brief-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--po-space-4);
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .brief-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+.brief-list {
+    margin: 4px 0 0;
+    padding-left: 1.2em;
+    font-size: var(--po-text-sm);
+    overflow-wrap: anywhere;
+}
+
+.brief-list li { margin: 2px 0; }
+
+.brief-file {
+    display: inline-block;
+    margin-right: 8px;
+    overflow-wrap: anywhere;
+}
+
+.brief-commits { margin-bottom: var(--po-space-2); }
+
+.brief-log {
+    max-height: 14em;
+    margin-top: var(--po-space-2);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}

@@ -174,6 +174,7 @@ public sealed class GlobalDataStore
         {
             lesson.Repos ??= [];
             lesson.Tags ??= [];
+            lesson.Sources ??= [];
         }
 
         if (manual.Count == 0)
@@ -580,6 +581,8 @@ public sealed class GlobalDataStore
 
         var current = timeline[^1];
         var previous = timeline.Count > 1 ? timeline[^2] : null;
+        // The period: since the previous crawl, or the last 24 hours on the very first crawl.
+        var since = previous?.When ?? (current.When ?? fleet.Generated ?? DateTimeOffset.UtcNow).AddHours(-24);
         var items = new List<GlobalBriefingItemDto>();
         var repos = new List<GlobalBriefingRepoDto>();
         var commits = 0;
@@ -593,8 +596,30 @@ public sealed class GlobalDataStore
                 ? Math.Max(0, isNow - was)
                 : 0;
 
-            var beforeShas = before?.OnnxShas.ToHashSet(StringComparer.Ordinal) ?? [];
-            var fresh = now.OnnxShas.Where(sha => !beforeShas.Contains(sha)).ToList();
+            var repoFleet = fleet.Repos.Values.FirstOrDefault(r => r.Name == name);
+            List<string> fresh;
+            if (previous is null)
+            {
+                // First crawl: nothing to compare shas with, so "new" means written in the last 24 hours.
+                fresh = repoFleet?.Onnx.Where(o => DateTimeOffset.FromUnixTimeSeconds(o.Mtime) >= since)
+                    .Select(o => o.Sha1 ?? o.Rel).ToList() ?? [];
+            }
+            else
+            {
+                var beforeShas = before?.OnnxShas.ToHashSet(StringComparer.Ordinal) ?? [];
+                fresh = now.OnnxShas.Where(sha => !beforeShas.Contains(sha)).ToList();
+            }
+
+            var freshSet = fresh.ToHashSet(StringComparer.Ordinal);
+            var brainFiles = repoFleet?.Onnx
+                .Where(o => freshSet.Contains(o.Sha1 ?? o.Rel))
+                .OrderByDescending(o => o.Mtime)
+                .Select(o => new GlobalBriefingBrainDto { Name = o.Name, Rel = o.Rel })
+                .ToList() ?? [];
+            var commitList = repoFleet?.Git.RecentCommits
+                .Where(c => c.Iso is { } iso && iso > since)
+                .OrderByDescending(c => c.Iso)
+                .ToList() ?? [];
 
             var diskDelta = (now.Bytes ?? 0) - (before?.Bytes ?? 0);
             var dirtyBefore = before?.Dirty ?? 0;
@@ -605,7 +630,6 @@ public sealed class GlobalDataStore
             if (Math.Abs(diskDelta) > 200_000_000)
                 moved += Math.Abs(diskDelta);
 
-            var repoFleet = fleet.Repos.Values.FirstOrDefault(r => r.Name == name);
             var latestMessages = repoFleet?.Git.RecentCommits
                 .Take(3)
                 .Select(c => c.Msg ?? "")
@@ -665,7 +689,9 @@ public sealed class GlobalDataStore
                 });
             }
 
-            if (commitDelta > 0 || fresh.Count > 0 || Math.Abs(diskDelta) > 200_000_000 || dirtyBefore != dirtyAfter)
+            var ciFlipped = !string.IsNullOrEmpty(ciAfter) && !string.Equals(ciBefore, ciAfter, StringComparison.OrdinalIgnoreCase);
+            if (commitDelta > 0 || fresh.Count > 0 || commitList.Count > 0 || ciFlipped
+                || Math.Abs(diskDelta) > 200_000_000 || dirtyBefore != dirtyAfter)
             {
                 repos.Add(new GlobalBriefingRepoDto
                 {
@@ -678,6 +704,9 @@ public sealed class GlobalDataStore
                     DirtyBefore = dirtyBefore,
                     DirtyAfter = dirtyAfter,
                     LatestCommitMessages = latestMessages,
+                    GitHubSlug = SlugOf(repoFleet),
+                    CommitList = commitList,
+                    BrainFiles = brainFiles,
                 });
             }
         }
@@ -685,7 +714,7 @@ public sealed class GlobalDataStore
         return new GlobalBriefingDto
         {
             Generated = current.When ?? fleet.Generated,
-            Since = previous?.When,
+            Since = since,
             IsBaseline = previous is null,
             Commits = commits,
             NewBrains = newBrains,
@@ -756,6 +785,23 @@ public sealed class GlobalDataStore
         ["PoSoccer"] = "Unity ML-Agents",
         ["PoSumo"] = "Unity ML-Agents",
     };
+
+    /// <summary><c>owner/repo</c> from the crawl's slug or its GitHub remote, or null.</summary>
+    private static string? SlugOf(GlobalRepoDto? repo)
+    {
+        if (repo is null)
+            return null;
+        if (repo.Git.Slug is { Length: > 0 } slug)
+            return slug;
+
+        var remote = repo.Git.Remote?.Trim().TrimEnd('/');
+        const string prefix = "https://github.com/";
+        if (remote is null || !remote.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        var path = remote[prefix.Length..];
+        return path.EndsWith(".git", StringComparison.OrdinalIgnoreCase) ? path[..^4] : path;
+    }
 
     private static bool IsCiConclusion(GlobalRepoDto repo, string conclusion) =>
         string.Equals(repo.Ci.LatestRun?.Conclusion, conclusion, StringComparison.OrdinalIgnoreCase);
