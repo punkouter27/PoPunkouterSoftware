@@ -164,6 +164,8 @@ owner dropped the scheduled jobs. `deploy.yml` is now the only workflow. Gone:
 - `docs/unite/README.md`: the portable creature prefabs and their tools.
 - `docs/architecture.md`: the architecture map and the decisions behind it. Read it before changing behaviour.
 - `docs/testing.md`: the four test tiers, counts, and how each skips.
+- `docs/gcp-training.md`: running the sibling Po repos' MuJoCo Warp trainings on a rented Google Cloud
+  Spot L4 (`scripts/gcp/`, job catalog `scripts/gcp/cloud_jobs.json`, runbook, costs, troubleshooting).
 
 ### Commands and footguns
 

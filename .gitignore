@@ -146,3 +146,11 @@ core.*
 # Server-side report cache (was leaked publicly from wwwroot/data — never re-add it there)
 App_Data/
 src/PoPunkouterSoftware.Client/wwwroot/data/azure-full-report.json
+
+# Google Cloud training: local tarball staging (scripts/gcp/gcp_queue.py)
+scripts/gcp/runs/
+
+# Python bytecode (scripts/)
+__pycache__/
+*.py[cod]
+

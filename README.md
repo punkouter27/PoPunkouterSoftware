@@ -22,7 +22,7 @@ Azure estate behind them.
 - `tests/PoPunkouterSoftware.E2EUI/`: C# Playwright browser tests (run on demand against a live instance).
 - `scripts/`: setup and helper scripts (`run-dev.ps1`, `ensure-azure-access.ps1`, `post-deploy-smoke.ps1`, the icon-font subset builder) and the GLOBAL crawlers under `scripts/global/` (`build_global_data.py` refreshes the fleet snapshot the `/global` pages read).
 - `infra/`: Bicep (`main.bicep`, `main.bicepparam`, `modules/`), applied by hand.
-- `docs/`: architecture and testing notes, the GitHub Pages site (privacy pages linked from app stores), the UNITE prefabs and rules in `docs/unite/`, and the GLOBAL migration record in [docs/global-migration.md](docs/global-migration.md).
+- `docs/`: architecture and testing notes, the Google Cloud training runbook ([docs/gcp-training.md](docs/gcp-training.md)), the GitHub Pages site (privacy pages linked from app stores), the UNITE prefabs and rules in `docs/unite/`, and the GLOBAL migration record in [docs/global-migration.md](docs/global-migration.md).
 
 ## Local Development
 
