@@ -1,0 +1,182 @@
+@page "/global/disk"
+@attribute [Authorize]
+@rendermode WasmRenderModes.Interactive
+@using PoPunkouterSoftware.Shared
+@inject PortfolioApiClient Api
+
+<PageTitle>Disk · PoPunkouterSoftware</PageTitle>
+
+@* Disk: how much space each repo takes and what kind of files hold it, plus the heavy
+   folders the crawl found. Read-only — this page never deletes anything. *@
+<main id="main-content" class="app-page global-page" tabindex="-1">
+    <header class="global-head">
+        <div>
+            <h1>Disk</h1>
+            <p class="app-note">Space used per repo and per folder type, and the heaviest folders found. Nothing here deletes anything.</p>
+        </div>
+        @if (_fleet?.Generated is { } generated)
+        {
+            <span class="global-stamp">Crawled @GlobalFormat.Ago(generated)</span>
+        }
+    </header>
+
+    @if (_loading)
+    {
+        <LoadingSkeleton Variant="summary" TileCount="4" AriaLabel="Loading disk usage" />
+    }
+    else if (_error is not null)
+    {
+        <div class="global-error" role="alert">@_error</div>
+    }
+    else if (_fleet is null || _fleet.Repos.Count == 0)
+    {
+        <p class="app-empty-state">No crawl yet.</p>
+    }
+    else
+    {
+        <section class="global-kpis" aria-label="Disk totals">
+            <div class="global-kpi"><div class="v">@GlobalFormat.Bytes(Total)</div><div class="l">across @_fleet.Repos.Count repos</div></div>
+            @foreach (var category in TopCategories)
+            {
+                <div class="global-kpi"><div class="v">@GlobalFormat.Bytes(category.Bytes)</div><div class="l">@Label(category.Name)</div></div>
+            }
+        </section>
+
+        <div class="global-table-wrap">
+            <table class="global-table">
+                <caption class="app-sr-only">Disk usage per repository</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Repo</th>
+                        <th scope="col" class="is-number">Total</th>
+                        <th scope="col">Where it goes</th>
+                        <th scope="col">Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var repo in Repos)
+                    {
+                        <tr>
+                            <th scope="row">@repo.Name</th>
+                            <td class="is-number">@GlobalFormat.Bytes(repo.Disk.TotalBytes)</td>
+                            <td>
+                                @foreach (var category in repo.Disk.Categories.OrderByDescending(c => c.Value).Take(4))
+                                {
+                                    <div class="global-count">
+                                        @Label(category.Key): @GlobalFormat.Bytes(category.Value)
+                                        (@Share(category.Value, repo.Disk.TotalBytes) %)
+                                    </div>
+                                }
+                            </td>
+                            <td class="global-count">
+                                @if (repo.Disk.Stale)
+                                {
+                                    <span class="global-tone is-warn">stale (reused size)</span>
+                                }
+                                else if (!repo.Disk.Complete)
+                                {
+                                    <span class="global-tone is-warn">partial scan (@repo.Disk.ScanErrors errors)</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <h2>Heaviest folders</h2>
+        <div class="global-table-wrap">
+            <table class="global-table">
+                <caption class="app-sr-only">Heaviest folders in the fleet</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Folder</th>
+                        <th scope="col">Category</th>
+                        <th scope="col" class="is-number">Size</th>
+                        <th scope="col" class="is-number">Files</th>
+                        <th scope="col">Deleting it</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var dir in HeavyDirs)
+                    {
+                        <tr>
+                            <th scope="row" class="global-mono">@dir.Rel</th>
+                            <td class="is-nowrap">@Label(dir.Category ?? "")</td>
+                            <td class="is-number">@GlobalFormat.Bytes(dir.Bytes)</td>
+                            <td class="is-number">@GlobalFormat.Number(dir.Files)</td>
+                            <td class="is-nowrap">
+                                <span class="global-tone is-@(dir.Safety == "regenerable" ? "good" : dir.Safety == "recreate" ? "warn" : "muted")">
+                                    @(dir.Safety ?? "review")
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</main>
+
+@code {
+    private GlobalSnapshotDto? _fleet;
+    private bool _loading = true;
+    private string? _error;
+
+    private long Total => _fleet?.Repos.Sum(r => r.Disk.TotalBytes ?? 0) ?? 0;
+
+    private List<GlobalRepoDto> Repos =>
+        _fleet?.Repos.OrderByDescending(r => r.Disk.TotalBytes ?? 0).ToList() ?? [];
+
+    private List<(string Name, long Bytes)> TopCategories =>
+        Repos
+            .SelectMany(r => r.Disk.Categories)
+            .GroupBy(c => c.Key)
+            .Select(g => (Name: g.Key, Bytes: g.Sum(x => x.Value)))
+            .OrderByDescending(c => c.Bytes)
+            .Take(3)
+            .ToList();
+
+    private List<GlobalHeavyDirDto> HeavyDirs =>
+        Repos
+            .SelectMany(r => r.Disk.HeavyDirs)
+            .OrderByDescending(d => d.Bytes)
+            .Take(30)
+            .ToList();
+
+    private static int Share(long value, long? total) =>
+        total is > 0 ? (int)Math.Round(value * 100d / total.Value) : 0;
+
+    private static string Label(string category) => category switch
+    {
+        "git" => ".git",
+        "python_env" => "Python envs (.venv)",
+        "unity_cache" => "Unity cache (Library)",
+        "unreal_cache" => "Unreal cache (DerivedDataCache)",
+        "unreal_binaries" => "Unreal binaries",
+        "unreal_saved" => "Unreal Saved",
+        "builds" => "build output",
+        "training_output" => "training output",
+        "media" => "media",
+        "source_other" => "source and everything else",
+        "" => "unknown",
+        _ => category.Replace('_', ' '),
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            _fleet = await Api.GetGlobalFleetAsync(cts.Token);
+        }
+        catch (Exception ex)
+        {
+            _error = FriendlyError.Describe(ex);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

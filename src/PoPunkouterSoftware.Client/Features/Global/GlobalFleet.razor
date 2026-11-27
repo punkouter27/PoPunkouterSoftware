@@ -1,0 +1,192 @@
+@page "/global/fleet"
+@attribute [Authorize]
+@rendermode WasmRenderModes.Interactive
+@using PoPunkouterSoftware.Shared
+@inject PortfolioApiClient Api
+
+<PageTitle>Fleet health · PoPunkouterSoftware</PageTitle>
+
+@* Fleet health: the git, CI and size state of every repo in the workspace, from the same
+   crawl the old GLOBAL/station/fleet_health.html used. Read-only — nothing here writes. *@
+<main id="main-content" class="app-page global-page" tabindex="-1">
+    <header class="global-head">
+        <div>
+            <h1>Fleet health</h1>
+            <p class="app-note">Uncommitted and unpushed work, latest CI run, brains on disk and size, per repo.</p>
+        </div>
+        @if (_fleet?.Generated is { } generated)
+        {
+            <span class="global-stamp">Crawled @generated.ToLocalTime().ToString("yyyy-MM-dd HH:mm") · @GlobalFormat.Ago(_fleet.Generated)</span>
+        }
+    </header>
+
+    @if (_loading)
+    {
+        <LoadingSkeleton Variant="summary" TileCount="4" AriaLabel="Loading the fleet crawl" />
+    }
+    else if (_error is not null)
+    {
+        <div class="global-error" role="alert">@_error</div>
+    }
+    else if (_fleet is null || _fleet.Repos.Count == 0)
+    {
+        <p class="app-empty-state">No crawl yet. Run <code>python scripts/global/build_global_data.py --only fleet</code>.</p>
+    }
+    else
+    {
+        <div class="global-toolbar">
+            <input class="global-search" type="search" placeholder="Filter repos, branches or commit messages…"
+                   value="@_search" @oninput="OnSearch" aria-label="Filter repos" />
+            <button type="button" class="global-chip @(_onlyDirty ? "is-on" : null)" @onclick="() => _onlyDirty = !_onlyDirty">Only dirty</button>
+            <button type="button" class="global-chip @(_onlyFailing ? "is-on" : null)" @onclick="() => _onlyFailing = !_onlyFailing">Only CI failing</button>
+            <button type="button" class="global-chip @(_onlyRl ? "is-on" : null)" @onclick="() => _onlyRl = !_onlyRl">Only RL</button>
+            <span class="global-count">@Visible.Count of @_fleet.Repos.Count</span>
+        </div>
+
+        <div class="global-table-wrap">
+            <table class="global-table">
+                <caption class="app-sr-only">Fleet health per repository</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Repo</th>
+                        <th scope="col">Kind</th>
+                        <th scope="col">Git</th>
+                        <th scope="col">Last commit</th>
+                        <th scope="col">CI</th>
+                        <th scope="col" class="is-number">Brains</th>
+                        <th scope="col" class="is-number">Models</th>
+                        <th scope="col" class="is-number">Disk</th>
+                        <th scope="col">Live</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var repo in Visible)
+                    {
+                        <tr>
+                            <th scope="row">@repo.Name</th>
+                            <td class="is-nowrap">@repo.Kind@(repo.IsRl ? " · RL" : "")</td>
+                            <td>
+                                @if (!repo.Git.IsGit)
+                                {
+                                    <span class="global-tone is-muted">no git</span>
+                                }
+                                else
+                                {
+                                    <div class="is-nowrap">
+                                        <span class="global-mono">@(repo.Git.Branch ?? "—")</span>
+                                        @if (repo.Git.DirtyCount > 0)
+                                        {
+                                            <span class="global-tone is-warn">@repo.Git.DirtyCount dirty</span>
+                                        }
+                                        @if (repo.Git.Ahead > 0)
+                                        {
+                                            <span class="global-tone is-info">↑@repo.Git.Ahead</span>
+                                        }
+                                        @if (repo.Git.Behind > 0)
+                                        {
+                                            <span class="global-tone is-warn">↓@repo.Git.Behind</span>
+                                        }
+                                    </div>
+                                    <div class="global-count">@repo.Git.Commits7d in 7d · @repo.Git.Commits30d in 30d</div>
+                                }
+                            </td>
+                            <td>
+                                @if (repo.Git.LastCommitIso is { } when)
+                                {
+                                    <div class="global-mono">@when.ToLocalTime().ToString("MM-dd HH:mm") · @GlobalFormat.Ago(when)</div>
+                                    <div>@repo.Git.LastCommitMsg</div>
+                                }
+                                else
+                                {
+                                    <span class="global-note">—</span>
+                                }
+                            </td>
+                            <td class="is-nowrap">
+                                @if (repo.Ci.LatestRun is { } run)
+                                {
+                                    <span class="global-tone is-@GlobalFormat.CiTone(run.Conclusion)">@(run.Conclusion ?? run.Status ?? "unknown")</span>
+                                    <div class="global-count">@run.WorkflowName</div>
+                                }
+                                else
+                                {
+                                    <span class="global-tone is-muted">none</span>
+                                }
+                            </td>
+                            <td class="is-number">@repo.Onnx.Count</td>
+                            <td class="is-number">@repo.Mjcf.Count</td>
+                            <td class="is-number">@GlobalFormat.Bytes(repo.Disk.TotalBytes)</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(repo.Docs.LiveUrl))
+                                {
+                                    <a href="@repo.Docs.LiveUrl" rel="noopener noreferrer">open</a>
+                                }
+                                else
+                                {
+                                    <span class="global-note">—</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</main>
+
+@code {
+    private GlobalSnapshotDto? _fleet;
+    private bool _loading = true;
+    private string? _error;
+    private string _search = "";
+    private bool _onlyDirty;
+    private bool _onlyFailing;
+    private bool _onlyRl;
+
+    private IEnumerable<GlobalRepoDto> Visible
+    {
+        get
+        {
+            if (_fleet is null)
+                return [];
+
+            IEnumerable<GlobalRepoDto> repos = _fleet.Repos;
+            if (_onlyDirty)
+                repos = repos.Where(r => r.Git.IsGit && r.Git.DirtyCount > 0);
+            if (_onlyFailing)
+                repos = repos.Where(r => string.Equals(r.Ci.LatestRun?.Conclusion, "failure", StringComparison.OrdinalIgnoreCase));
+            if (_onlyRl)
+                repos = repos.Where(r => r.IsRl);
+
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                var q = _search.Trim();
+                repos = repos.Where(r =>
+                    r.Name.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || (r.Git.Branch ?? "").Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || (r.Git.LastCommitMsg ?? "").Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || r.Kind.Contains(q, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return repos.OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase);
+        }
+    }
+
+    private void OnSearch(ChangeEventArgs e) => _search = e.Value?.ToString() ?? "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            _fleet = await Api.GetGlobalFleetAsync(cts.Token);
+        }
+        catch (Exception ex)
+        {
+            _error = FriendlyError.Describe(ex);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

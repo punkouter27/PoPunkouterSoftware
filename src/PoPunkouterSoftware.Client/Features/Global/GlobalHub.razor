@@ -1,0 +1,119 @@
+@page "/global"
+@attribute [Authorize]
+@rendermode WasmRenderModes.Interactive
+@using PoPunkouterSoftware.Shared
+@inject PortfolioApiClient Api
+
+<PageTitle>Global · PoPunkouterSoftware</PageTitle>
+
+@* The hub of the GLOBAL folder, now part of this app. Ten tools that used to be static
+   HTML generated into GLOBAL/station and GLOBAL/rl_training: fleet health, briefing, brain
+   vault, showroom, ship board, lessons, disk, the RL dashboard, UNITE and the incubator.
+   Same boundary as /azure and /users (owner decision, 2026-11-27). *@
+<main id="main-content" class="app-page global-page" tabindex="-1">
+    <header class="global-head">
+        <div>
+            <h1>Global</h1>
+            <p class="app-note">
+                Every Po repo in one place: what changed, which brains exist, what still needs work.
+                The snapshot is produced on the owner's machine by <code>scripts/global/build_global_data.py</code>.
+            </p>
+        </div>
+        @if (_summary?.Generated is { } generated)
+        {
+            <span class="global-stamp">
+                Crawled @generated.ToLocalTime().ToString("yyyy-MM-dd HH:mm") · @GlobalFormat.Ago(_summary.Generated)
+            </span>
+        }
+    </header>
+
+    @if (_loading)
+    {
+        <LoadingSkeleton Variant="cards" TileCount="6" AriaLabel="Loading the fleet snapshot" />
+    }
+    else if (_error is not null)
+    {
+        <div class="global-error" role="alert">
+            <strong>The snapshot could not be read.</strong>
+            <p>@_error</p>
+        </div>
+    }
+    else if (_summary is null)
+    {
+        <p class="app-empty-state">No snapshot yet. Run <code>python scripts/global/build_global_data.py</code> and reload.</p>
+    }
+    else
+    {
+        <section class="global-kpis" aria-label="Fleet at a glance">
+            <div class="global-kpi"><div class="v">@_summary.RepoCount</div><div class="l">repos crawled (@_summary.RlCount RL)</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_summary.BrainCount)</div><div class="l">brains on disk (@GlobalFormat.Number(_summary.ShippedBrainCount) shipped)</div></div>
+            <div class="global-kpi"><div class="v">@_summary.CiFailing</div><div class="l">CI failing now</div></div>
+            <div class="global-kpi"><div class="v">@_summary.DirtyRepos</div><div class="l">repos with uncommitted work</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Bytes(_summary.DiskBytes)</div><div class="l">on disk across the fleet</div></div>
+        </section>
+
+        <div class="global-grid">
+            @foreach (var tile in Tiles())
+            {
+                <a class="global-tile" href="@tile.Href">
+                    <h2>@tile.Title</h2>
+                    <span class="v">@tile.Value</span>
+                    <span class="n">@tile.Note</span>
+                </a>
+            }
+        </div>
+    }
+</main>
+
+@code {
+    private GlobalSummaryDto? _summary;
+    private bool _loading = true;
+    private string? _error;
+
+    private sealed record Tile(string Href, string Title, string Value, string Note);
+
+    private IEnumerable<Tile> Tiles()
+    {
+        var s = _summary!;
+        return
+        [
+            new("/global/fleet", "Fleet health", $"{s.RepoCount} repos",
+                $"{s.CiFailing} CI failing · {s.DirtyRepos} dirty · crawled {GlobalFormat.Ago(s.Generated)}"),
+            new("/global/briefing", "Morning briefing", "What changed",
+                s.RlRecordedAt is { Length: > 0 } rl ? $"RL snapshot {rl}" : "Deltas since the previous crawl"),
+            new("/global/vault", "Brain vault", $"{GlobalFormat.Number(s.BrainCount)} brains",
+                $"{GlobalFormat.Number(s.ModelCount)} MJCF models, grouped by socket"),
+            new("/global/showroom", "Showroom", $"{GlobalFormat.Number(s.MediaCount)} captures",
+                "Newest GIFs and screenshots per repo, plus live URLs"),
+            new("/global/readiness", "Ship board", "Prototype → Shipped",
+                "Six-point checklist per app, with a suggested stage"),
+            new("/global/lessons", "Lessons & gotchas", $"{GlobalFormat.Number(s.LessonsCount)} lessons",
+                "Traps and rules harvested from every repo's docs"),
+            new("/global/disk", "Disk", GlobalFormat.Bytes(s.DiskBytes),
+                $"{GlobalFormat.Bytes(s.ReclaimableBytes)} safely reclaimable"),
+            new("/global/rl", "RL dashboard", $"{GlobalFormat.Number(s.ShippedBrainsRl)} shipped",
+                $"{GlobalFormat.Number(s.PeakSps)} peak env-steps/s · history chart"),
+            new("/global/unite", "UNITE", $"{s.CreaturesCount} creatures",
+                "Portable MJCF prefabs, the 28 rules and the contract schema"),
+            new("/global/incubator", "Incubator", "5 questions",
+                "Which repo to start a new idea from, and what carries over"),
+        ];
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            _summary = await Api.GetGlobalSummaryAsync(cts.Token);
+        }
+        catch (Exception ex)
+        {
+            _error = FriendlyError.Describe(ex);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

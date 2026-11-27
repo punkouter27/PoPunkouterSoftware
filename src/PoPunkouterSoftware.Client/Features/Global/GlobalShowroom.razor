@@ -1,0 +1,134 @@
+@page "/global/showroom"
+@attribute [Authorize]
+@rendermode WasmRenderModes.Interactive
+@using PoPunkouterSoftware.Shared
+@inject PortfolioApiClient Api
+
+<PageTitle>Showroom · PoPunkouterSoftware</PageTitle>
+
+@* Showroom: the newest GIFs and screenshots each repo produced, plus its live URL. The image
+   files stay in the repos (nothing is copied into this app), so each entry links to the file
+   on GitHub instead of serving a second copy. *@
+<main id="main-content" class="app-page global-page" tabindex="-1">
+    <header class="global-head">
+        <div>
+            <h1>Showroom</h1>
+            <p class="app-note">Newest captures per repo, straight from each repo's SCREENSHOTS folder.</p>
+        </div>
+        @if (_fleet?.Generated is { } generated)
+        {
+            <span class="global-stamp">Crawled @GlobalFormat.Ago(generated)</span>
+        }
+    </header>
+
+    @if (_loading)
+    {
+        <LoadingSkeleton Variant="cards" TileCount="6" AriaLabel="Loading the showroom" />
+    }
+    else if (_error is not null)
+    {
+        <div class="global-error" role="alert">@_error</div>
+    }
+    else if (_fleet is null || _fleet.Repos.Count == 0)
+    {
+        <p class="app-empty-state">No crawl yet.</p>
+    }
+    else
+    {
+        <div class="global-toolbar">
+            <button type="button" class="global-chip @(_onlyWithMedia ? "is-on" : null)" @onclick="() => _onlyWithMedia = !_onlyWithMedia">
+                Only repos with captures
+            </button>
+            <span class="global-count">@Repos.Count of @_fleet.Repos.Count</span>
+        </div>
+
+        <div class="global-grid">
+            @foreach (var repo in Repos)
+            {
+                <article class="global-tile">
+                    <h2>@repo.Name</h2>
+                    <span class="v">@repo.Media.Count captures (@repo.Media.GifCount GIFs)</span>
+                    @if (repo.Docs.LiveUrl is { Length: > 0 } live)
+                    {
+                        <a href="@live" rel="noopener noreferrer">Open the live app</a>
+                    }
+                    else
+                    {
+                        <span class="n">No live URL in its README</span>
+                    }
+                    <ul class="global-list">
+                        @foreach (var item in repo.Media.Showcase.Take(4))
+                        {
+                            <li>
+                                @{
+                                    var href = GlobalFormat.GitHubPath(repo.Git.Remote, repo.Git.Slug, item.Rel);
+                                }
+                                @if (href is not null)
+                                {
+                                    <a href="@href" rel="noopener noreferrer">@item.Rel.Split('/').Last()</a>
+                                }
+                                else
+                                {
+                                    <span class="global-mono">@item.Rel</span>
+                                }
+                                <span class="global-count"> · @item.Kb.ToString("0") KB</span>
+                            </li>
+                        }
+                        @if (repo.Media.Showcase.Count == 0)
+                        {
+                            <li class="global-note">No showcase captures.</li>
+                        }
+                    </ul>
+                    <span class="n">Latest: @Latest(repo)</span>
+                </article>
+            }
+        </div>
+    }
+</main>
+
+@code {
+    private GlobalSnapshotDto? _fleet;
+    private bool _loading = true;
+    private string? _error;
+    private bool _onlyWithMedia;
+
+    private List<GlobalRepoDto> Repos
+    {
+        get
+        {
+            if (_fleet is null)
+                return [];
+
+            var repos = _fleet.Repos.AsEnumerable();
+            if (_onlyWithMedia)
+                repos = repos.Where(r => r.Media.Count > 0);
+
+            return repos
+                .OrderByDescending(r => r.Media.Showcase.FirstOrDefault()?.Mtime ?? 0)
+                .ThenBy(r => r.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+    }
+
+    private static string Latest(GlobalRepoDto repo) =>
+        repo.Media.Newest.Count > 0
+            ? GlobalFormat.Ago(DateTimeOffset.FromUnixTimeSeconds(repo.Media.Newest[0].Mtime))
+            : "—";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            _fleet = await Api.GetGlobalFleetAsync(cts.Token);
+        }
+        catch (Exception ex)
+        {
+            _error = FriendlyError.Describe(ex);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

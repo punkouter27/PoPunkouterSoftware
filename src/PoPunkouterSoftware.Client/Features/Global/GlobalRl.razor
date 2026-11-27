@@ -1,0 +1,217 @@
+@page "/global/rl"
+@attribute [Authorize]
+@rendermode WasmRenderModes.Interactive
+@using System.Globalization
+@using PoPunkouterSoftware.Shared
+@inject PortfolioApiClient Api
+
+<PageTitle>RL dashboard · PoPunkouterSoftware</PageTitle>
+
+@* The RL track: what each of the ten training repos really has on disk (shipped brains,
+   bodies, reward configs) and the recorded benchmark history. The old
+   rl_training_overview.html is replaced by this page; the numbers come from
+   App_Data/global/rl_facts.json and rl/rl_timeline.jsonl. *@
+<main id="main-content" class="app-page global-page" tabindex="-1">
+    <header class="global-head">
+        <div>
+            <h1>RL dashboard</h1>
+            <p class="app-note">Ground-truth counts and benchmark results for the ten training repos, plus the recorded history.</p>
+        </div>
+        @if (_rl?.RecordedAt is { Length: > 0 } recorded)
+        {
+            <span class="global-stamp">Last snapshot @recorded</span>
+        }
+    </header>
+
+    @if (_loading)
+    {
+        <LoadingSkeleton Variant="summary" TileCount="4" AriaLabel="Loading RL facts" />
+    }
+    else if (_error is not null)
+    {
+        <div class="global-error" role="alert">@_error</div>
+    }
+    else if (_rl is null || _rl.Repos.Count == 0)
+    {
+        <p class="app-empty-state">No RL facts yet. Run <code>python scripts/global/build_global_data.py --only rl</code>.</p>
+    }
+    else
+    {
+        <section class="global-kpis" aria-label="RL totals">
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_rl.ShippedBrains)</div><div class="l">shipped brains (of @GlobalFormat.Number(_rl.AllBrains) on disk)</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_rl.PeakSps)</div><div class="l">peak env-steps/s</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_rl.EstHours)</div><div class="l">estimated training hours</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_rl.Updated7d)</div><div class="l">brains touched in 7 days</div></div>
+        </section>
+
+        @if (_rl.History.Count >= 2)
+        {
+            <h2>Brains learned over time</h2>
+            <svg class="global-chart" viewBox="0 0 760 240" role="img"
+                 aria-label="Shipped brains per recorded snapshot, from @_rl.History[0].TotalShippedOnnx to @_rl.History[^1].TotalShippedOnnx">
+                <line class="axis" x1="48" y1="200" x2="736" y2="200" />
+                <line class="axis" x1="48" y1="20" x2="48" y2="200" />
+                <text class="label" x="48" y="216">@_rl.History[0].Timestamp</text>
+                <text class="label" x="600" y="216">@_rl.History[^1].Timestamp</text>
+                <text class="label" x="8" y="24">@MaxShipped</text>
+                <text class="label" x="8" y="204">0</text>
+                <polyline class="line" points="@ChartPoints" />
+                @foreach (var point in ChartDots)
+                {
+                    <circle class="dot" cx="@point.X.ToString("0.#", CultureInfo.InvariantCulture)" cy="@point.Y.ToString("0.#", CultureInfo.InvariantCulture)" r="3">
+                        <title>@point.When: @point.Value shipped brains</title>
+                    </circle>
+                }
+            </svg>
+        }
+
+        <h2>Per repo</h2>
+        <div class="global-table-wrap">
+            <table class="global-table">
+                <caption class="app-sr-only">RL facts per repository</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Repo</th>
+                        <th scope="col">Stack</th>
+                        <th scope="col" class="is-number">Shipped</th>
+                        <th scope="col" class="is-number">All .onnx</th>
+                        <th scope="col" class="is-number">MJCF</th>
+                        <th scope="col" class="is-number">Reward cfg</th>
+                        <th scope="col" class="is-number">Visuals</th>
+                        <th scope="col">Latest benchmark</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var repo in _rl.Repos)
+                    {
+                        <tr>
+                            <th scope="row">@repo.Name</th>
+                            <td class="is-nowrap">@(repo.Stack is { Length: > 0 } stack ? stack : "—")</td>
+                            <td class="is-number">@repo.Shipped</td>
+                            <td class="is-number">@repo.Found</td>
+                            <td class="is-number">@repo.Mjcf</td>
+                            <td class="is-number">@repo.RewardConfigs</td>
+                            <td class="is-number">@repo.Visuals</td>
+                            <td>
+                                @if (repo.Benchmark is { } b)
+                                {
+                                    <div class="is-nowrap">
+                                        <span class="global-tone is-@(b.Ok ? "good" : "bad")">@(b.Ok ? "ok" : "failed")</span>
+                                        <span>@GlobalFormat.Number(b.EnvStepsPerS ?? 0) steps/s</span>
+                                        <span>· @GlobalFormat.Milliseconds(b.StepTimeMs)</span>
+                                    </div>
+                                    <div class="global-count">
+                                        @(b.NumEnvs is { } envs ? $"{envs} envs" : "—")
+                                        @if (b.Net.Count > 0)
+                                        {
+                                            <span> · net @string.Join("×", b.Net)</span>
+                                        }
+                                        @if (b.MachineGpu is { Length: > 0 } gpu)
+                                        {
+                                            <span> · @gpu</span>
+                                        }
+                                        @if (b.When is { } when)
+                                        {
+                                            <span> · @GlobalFormat.Ago(when)</span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="global-note">no benchmark recorded</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (_rl.History.Count > 0)
+        {
+            <h2>Recorded history</h2>
+            <div class="global-table-wrap">
+                <table class="global-table">
+                    <caption class="app-sr-only">RL history snapshots</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Snapshot</th>
+                            <th scope="col" class="is-number">Shipped brains</th>
+                            <th scope="col" class="is-number">Updated 7d</th>
+                            <th scope="col" class="is-number">Peak steps/s</th>
+                            <th scope="col" class="is-number">Avg steps/s</th>
+                            <th scope="col" class="is-number">Est. hours</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var entry in Enumerable.Reverse(_rl.History))
+                        {
+                            <tr>
+                                <th scope="row">@entry.Timestamp</th>
+                                <td class="is-number">@entry.TotalShippedOnnx</td>
+                                <td class="is-number">@entry.Updated7dOnnx</td>
+                                <td class="is-number">@GlobalFormat.Number(entry.PeakSps)</td>
+                                <td class="is-number">@GlobalFormat.Number(entry.AvgSps)</td>
+                                <td class="is-number">@entry.EstTotalHours</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+</main>
+
+@code {
+    private GlobalRlDto? _rl;
+    private bool _loading = true;
+    private string? _error;
+
+    private int MaxShipped => Math.Max(10, _rl?.History.Max(h => h.TotalShippedOnnx) ?? 0);
+
+    private sealed record Dot(double X, double Y, string When, int Value);
+
+    private string ChartPoints =>
+        string.Join(' ', ChartDots.Select(d =>
+            d.X.ToString("0.#", CultureInfo.InvariantCulture) + "," + d.Y.ToString("0.#", CultureInfo.InvariantCulture)));
+
+    private List<Dot> ChartDots
+    {
+        get
+        {
+            if (_rl is null || _rl.History.Count == 0)
+                return [];
+
+            const double left = 48, right = 736, top = 20, bottom = 200;
+            var max = MaxShipped;
+            var count = _rl.History.Count;
+            var dots = new List<Dot>(count);
+            for (var i = 0; i < count; i++)
+            {
+                var entry = _rl.History[i];
+                var x = count == 1 ? left : left + (right - left) * i / (count - 1);
+                var y = bottom - (bottom - top) * entry.TotalShippedOnnx / max;
+                dots.Add(new Dot(x, y, entry.Timestamp ?? "", entry.TotalShippedOnnx));
+            }
+
+            return dots;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            _rl = await Api.GetGlobalRlAsync(cts.Token);
+        }
+        catch (Exception ex)
+        {
+            _error = FriendlyError.Describe(ex);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

@@ -1,0 +1,161 @@
+@page "/global/briefing"
+@attribute [Authorize]
+@rendermode WasmRenderModes.Interactive
+@using PoPunkouterSoftware.Shared
+@inject PortfolioApiClient Api
+
+<PageTitle>Morning briefing · PoPunkouterSoftware</PageTitle>
+
+@* What changed since the previous crawl: commits, new or changed brains, CI flips, disk
+   movement and working-tree churn — computed from the last two entries of
+   history/station_timeline.jsonl, not from a generated page. *@
+<main id="main-content" class="app-page global-page" tabindex="-1">
+    <header class="global-head">
+        <div>
+            <h1>Morning briefing</h1>
+            <p class="app-note">
+                @if (_briefing is null)
+                {
+                    <span>What changed since the previous crawl.</span>
+                }
+                else if (_briefing.IsBaseline)
+                {
+                    <span>First snapshot — the next crawl will show the deltas.</span>
+                }
+                else
+                {
+                    <span>Changes since @(_briefing.Since?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "the previous crawl").</span>
+                }
+            </p>
+        </div>
+        @if (_briefing?.Generated is { } generated)
+        {
+            <span class="global-stamp">Crawled @generated.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+        }
+    </header>
+
+    @if (_loading)
+    {
+        <LoadingSkeleton Variant="summary" TileCount="4" AriaLabel="Loading the briefing" />
+    }
+    else if (_error is not null)
+    {
+        <div class="global-error" role="alert">@_error</div>
+    }
+    else if (_briefing is null)
+    {
+        <p class="app-empty-state">No snapshot yet.</p>
+    }
+    else
+    {
+        <section class="global-kpis" aria-label="What changed">
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_briefing.Commits)</div><div class="l">commits</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_briefing.NewBrains)</div><div class="l">new or changed brains</div></div>
+            <div class="global-kpi"><div class="v">@_briefing.CiFailing.Count</div><div class="l">CI failing now</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Bytes(_briefing.MovedBytes)</div><div class="l">disk moved (repos over 200 MB)</div></div>
+        </section>
+
+        @if (_briefing.CiFailing.Count > 0)
+        {
+            <p>
+                <strong>CI failing now:</strong>
+                @string.Join(", ", _briefing.CiFailing)
+            </p>
+        }
+
+        @if (_briefing.Repos.Count == 0)
+        {
+            <p class="app-empty-state">Nothing changed since the previous crawl.</p>
+        }
+        else
+        {
+            <div class="global-table-wrap">
+                <table class="global-table">
+                    <caption class="app-sr-only">Repositories that changed since the previous crawl</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Repo</th>
+                            <th scope="col" class="is-number">Commits</th>
+                            <th scope="col" class="is-number">New brains</th>
+                            <th scope="col" class="is-number">Disk</th>
+                            <th scope="col">CI</th>
+                            <th scope="col">Working tree</th>
+                            <th scope="col">Latest commits</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var repo in _briefing.Repos)
+                        {
+                            <tr>
+                                <th scope="row">@repo.Repo</th>
+                                <td class="is-number">@repo.Commits</td>
+                                <td class="is-number">@repo.NewBrains</td>
+                                <td class="is-number">
+                                    @if (repo.DiskDelta == 0)
+                                    {
+                                        <span>—</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@(repo.DiskDelta > 0 ? "+" : "−")@GlobalFormat.Bytes(Math.Abs(repo.DiskDelta))</span>
+                                    }
+                                </td>
+                                <td class="is-nowrap">
+                                    @if (!string.IsNullOrEmpty(repo.CiAfter) && !string.Equals(repo.CiBefore, repo.CiAfter, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="global-tone is-@GlobalFormat.CiTone(repo.CiBefore)">@(repo.CiBefore ?? "—")</span>
+                                        <span>→</span>
+                                        <span class="global-tone is-@GlobalFormat.CiTone(repo.CiAfter)">@repo.CiAfter</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="global-tone is-muted">no change</span>
+                                    }
+                                </td>
+                                <td class="is-nowrap">
+                                    @if (repo.DirtyBefore != repo.DirtyAfter)
+                                    {
+                                        <span>@repo.DirtyBefore → @repo.DirtyAfter uncommitted</span>
+                                    }
+                                    else
+                                    {
+                                        <span>@repo.DirtyAfter uncommitted</span>
+                                    }
+                                </td>
+                                <td>
+                                    @foreach (var message in repo.LatestCommitMessages)
+                                    {
+                                        <div class="global-count">@message</div>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+</main>
+
+@code {
+    private GlobalBriefingDto? _briefing;
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            _briefing = await Api.GetGlobalBriefingAsync(cts.Token);
+        }
+        catch (Exception ex)
+        {
+            _error = FriendlyError.Describe(ex);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

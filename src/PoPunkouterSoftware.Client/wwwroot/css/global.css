@@ -32,7 +32,7 @@
     padding: var(--po-space-3);
     background: var(--po-surface);
     border: 1px solid var(--po-border);
-    border-radius: var(--po-radius-md, 10px);
+    border-radius: var(--po-radius);
 }
 
 .global-kpi .v {
@@ -59,7 +59,7 @@
     padding: var(--po-space-3);
     background: var(--po-surface);
     border: 1px solid var(--po-border);
-    border-radius: var(--po-radius-md, 10px);
+    border-radius: var(--po-radius);
     color: inherit;
     text-decoration: none;
 }
@@ -100,7 +100,7 @@
     color: var(--po-text);
     background: var(--po-surface);
     border: 1px solid var(--po-border);
-    border-radius: var(--po-radius-sm, 8px);
+    border-radius: var(--po-radius-sm);
     font: inherit;
     font-size: var(--po-text-sm);
 }
@@ -150,7 +150,7 @@
 .global-table-wrap {
     overflow-x: auto;
     border: 1px solid var(--po-border);
-    border-radius: var(--po-radius-md, 10px);
+    border-radius: var(--po-radius);
     background: var(--po-surface);
 }
 
@@ -209,7 +209,7 @@
     background: var(--po-surface);
     border: 1px solid var(--po-border);
     border-left: 3px solid var(--po-border);
-    border-radius: var(--po-radius-md, 10px);
+    border-radius: var(--po-radius);
 }
 
 .global-item.is-trap { border-left-color: var(--po-danger); }
@@ -254,7 +254,7 @@
     padding: var(--po-space-2);
     background: var(--po-surface-2);
     border: 1px solid var(--po-border);
-    border-radius: var(--po-radius-md, 10px);
+    border-radius: var(--po-radius);
     min-height: 140px;
 }
 
@@ -273,7 +273,7 @@
     margin-bottom: 8px;
     background: var(--po-surface);
     border: 1px solid var(--po-border);
-    border-radius: var(--po-radius-sm, 8px);
+    border-radius: var(--po-radius-sm);
     font-size: var(--po-text-xs);
 }
 
@@ -329,7 +329,7 @@
     padding: var(--po-space-3);
     background: var(--po-danger-soft);
     border: 1px solid var(--po-danger);
-    border-radius: var(--po-radius-md, 10px);
+    border-radius: var(--po-radius);
     color: var(--po-text);
 }
 
@@ -364,7 +364,7 @@
     overflow-x: auto;
     padding: var(--po-space-2);
     background: var(--po-surface-2);
-    border-radius: var(--po-radius-sm, 8px);
+    border-radius: var(--po-radius-sm);
     font-size: var(--po-text-xs);
 }
 
@@ -374,7 +374,7 @@
     height: auto;
     background: var(--po-surface);
     border: 1px solid var(--po-border);
-    border-radius: var(--po-radius-md, 10px);
+    border-radius: var(--po-radius);
 }
 
 .global-chart .axis { stroke: var(--po-border); }

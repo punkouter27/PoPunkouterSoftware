@@ -1,0 +1,132 @@
+@page "/global/unite"
+@attribute [Authorize]
+@rendermode WasmRenderModes.Interactive
+@using PoPunkouterSoftware.Shared
+@inject PortfolioApiClient Api
+
+<PageTitle>UNITE · PoPunkouterSoftware</PageTitle>
+
+@* UNITE: the portable creature prefabs, the contract schema and the 28 rules every session
+   is meant to start from. The prefabs themselves live in docs/unite/creatures; this page
+   reads the generated catalogue so a game can check what it can mount. *@
+<main id="main-content" class="app-page global-page" tabindex="-1">
+    <header class="global-head">
+        <div>
+            <h1>UNITE</h1>
+            <p class="app-note">
+                Portable MJCF prefabs every Po sim can mount, all answering the same
+                observation and action interface. Files live under <code>docs/unite</code>.
+            </p>
+        </div>
+        @if (_unite?.Generated is { } generated)
+        {
+            <span class="global-stamp">Catalogue built @GlobalFormat.Ago(generated)</span>
+        }
+    </header>
+
+    @if (_loading)
+    {
+        <LoadingSkeleton Variant="cards" TileCount="6" AriaLabel="Loading the UNITE catalogue" />
+    }
+    else if (_error is not null)
+    {
+        <div class="global-error" role="alert">@_error</div>
+    }
+    else if (_unite is null || _unite.Creatures.Count == 0)
+    {
+        <p class="app-empty-state">No catalogue yet. Run <code>python scripts/global/build_global_data.py --only unite</code>.</p>
+    }
+    else
+    {
+        <section class="global-kpis" aria-label="UNITE totals">
+            <div class="global-kpi"><div class="v">@_unite.Creatures.Count</div><div class="l">verified creatures</div></div>
+            <div class="global-kpi"><div class="v">@_unite.Creatures.Select(c => c.Obs).Distinct().Count()</div><div class="l">observation widths</div></div>
+            <div class="global-kpi"><div class="v">@_unite.Creatures.Select(c => c.Action).Distinct().Count()</div><div class="l">action widths</div></div>
+            <div class="global-kpi"><div class="v">@_unite.Documents.Count</div><div class="l">documents</div></div>
+        </section>
+
+        <div class="global-grid">
+            @foreach (var creature in _unite.Creatures)
+            {
+                <article class="global-tile">
+                    <h2>@creature.Id</h2>
+                    <span class="v">@creature.Kind · @creature.Joints joints</span>
+                    <span class="n">
+                        @creature.RolesMapped of @creature.RolesTotal roles mapped ·
+                        obs @creature.Obs → act @creature.Action ·
+                        @creature.Meshes mesh files
+                    </span>
+                    <span class="n">
+                        <span class="global-tone is-@(creature.Hardware ? "warn" : "muted")">@(creature.Hardware ? "hardware twin" : "sim only")</span>
+                        @if (creature.InterfaceSha is { Length: > 0 } hash)
+                        {
+                            <span class="global-mono">interface @hash</span>
+                        }
+                    </span>
+                    @if (creature.Notes is { Length: > 0 } notes)
+                    {
+                        <span class="n">@Shorten(notes)</span>
+                    }
+                    @if (creature.Source is { Length: > 0 } source)
+                    {
+                        <span class="n global-mono">@source</span>
+                    }
+                </article>
+            }
+        </div>
+
+        <h2>Documents</h2>
+        <ul class="global-list">
+            @foreach (var document in _unite.Documents)
+            {
+                <li>
+                    @{
+                        var href = GlobalFormat.GitHubPath("https://github.com/punkouter27/PoPunkouterSoftware.git", null, document.Path);
+                    }
+                    @if (href is not null)
+                    {
+                        <a href="@href" rel="noopener noreferrer">@document.Path</a>
+                    }
+                    else
+                    {
+                        <span class="global-mono">@document.Path</span>
+                    }
+                    <span class="global-count"> · @document.Bytes bytes</span>
+                </li>
+            }
+        </ul>
+
+        <details>
+            <summary><strong>The rules</strong> (@_unite.Rules.Path)</summary>
+            <div class="global-doc">
+                @((MarkupString)GlobalMarkdown.ToHtml(_unite.Rules.Markdown))
+            </div>
+        </details>
+    }
+</main>
+
+@code {
+    private GlobalUniteDto? _unite;
+    private bool _loading = true;
+    private string? _error;
+
+    private static string Shorten(string text) =>
+        text.Length <= 160 ? text : string.Concat(text.AsSpan(0, 160), "…");
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            _unite = await Api.GetGlobalUniteAsync(cts.Token);
+        }
+        catch (Exception ex)
+        {
+            _error = FriendlyError.Describe(ex);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

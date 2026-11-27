@@ -1,0 +1,207 @@
+@page "/global/vault"
+@attribute [Authorize]
+@rendermode WasmRenderModes.Interactive
+@using PoPunkouterSoftware.Shared
+@inject PortfolioApiClient Api
+
+<PageTitle>Brain vault · PoPunkouterSoftware</PageTitle>
+
+@* The vault: every .onnx brain in the fleet, grouped by the socket it plugs into
+   (observation width → action width), plus every MuJoCo MJCF body. This is the page that
+   answers "do I already have a brain for this shape?". *@
+<main id="main-content" class="app-page global-page" tabindex="-1">
+    <header class="global-head">
+        <div>
+            <h1>Brain vault</h1>
+            <p class="app-note">Every <code>.onnx</code> in the fleet grouped by socket (obs → action), and every MJCF model the sims load.</p>
+        </div>
+    </header>
+
+    @if (_loading)
+    {
+        <LoadingSkeleton Variant="summary" TileCount="4" AriaLabel="Loading the brain vault" />
+    }
+    else if (_error is not null)
+    {
+        <div class="global-error" role="alert">@_error</div>
+    }
+    else if (_vault is null || _vault.BrainCount == 0)
+    {
+        <p class="app-empty-state">No brains in the snapshot yet. Run <code>python scripts/global/build_global_data.py --only fleet</code>.</p>
+    }
+    else
+    {
+        <section class="global-kpis" aria-label="Vault totals">
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_vault.BrainCount)</div><div class="l">brains</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_vault.Brains.Count(b => b.Shipped))</div><div class="l">shipped (outside runs/checkpoints)</div></div>
+            <div class="global-kpi"><div class="v">@_vault.GoldCount</div><div class="l">starred in vault_gold.json</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_vault.ModelCount)</div><div class="l">MJCF models</div></div>
+        </section>
+
+        <div class="global-toolbar">
+            <input class="global-search" type="search" placeholder="Filter by repo, brain name or path…"
+                   value="@_search" @oninput="OnSearch" aria-label="Filter brains" />
+            <button type="button" class="global-chip @(_socketFilter is null ? "is-on" : null)" @onclick="() => _socketFilter = null">
+                All sockets (@_vault.Sockets.Count)
+            </button>
+            @foreach (var socket in _vault.Sockets)
+            {
+                <button type="button" class="global-chip @(_socketFilter == socket.Socket ? "is-on" : null)"
+                        @onclick="() => _socketFilter = socket.Socket">
+                    @socket.Socket (@socket.Count)
+                </button>
+            }
+            <button type="button" class="global-chip @(_onlyGold ? "is-on" : null)" @onclick="() => _onlyGold = !_onlyGold">Only starred</button>
+            <span class="global-count">@VisibleBrains.Count of @_vault.BrainCount</span>
+        </div>
+
+        <div class="global-table-wrap">
+            <table class="global-table">
+                <caption class="app-sr-only">Brains grouped by socket</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Repo</th>
+                        <th scope="col">Brain</th>
+                        <th scope="col">Socket</th>
+                        <th scope="col" class="is-number">Size</th>
+                        <th scope="col">State</th>
+                        <th scope="col">Modified</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var brain in VisibleBrains)
+                    {
+                        <tr>
+                            <th scope="row">@brain.Repo</th>
+                            <td class="global-mono">@brain.Name</td>
+                            <td class="is-nowrap"><span class="global-tone is-info">@brain.Socket</span></td>
+                            <td class="is-number">@brain.Kb.ToString("0") KB</td>
+                            <td class="is-nowrap">
+                                @if (brain.Gold)
+                                {
+                                    <span class="global-tone is-warn">★ starred</span>
+                                }
+                                <span class="global-tone is-@(brain.Shipped ? "good" : "muted")">@(brain.Shipped ? "shipped" : "run output")</span>
+                            </td>
+                            <td class="is-nowrap">@GlobalFormat.Ago(brain.Modified)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="global-toolbar">
+            <h2>MJCF bodies</h2>
+            <button type="button" class="global-chip @(_showModels ? "is-on" : null)" @onclick="() => _showModels = !_showModels">
+                @(_showModels ? "Hide" : "Show") @GlobalFormat.Number(_vault.ModelCount) models
+            </button>
+        </div>
+
+        @if (_showModels)
+        {
+            <div class="global-table-wrap">
+                <table class="global-table">
+                    <caption class="app-sr-only">MuJoCo models</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Repo</th>
+                            <th scope="col">Model</th>
+                            <th scope="col" class="is-number">Bodies</th>
+                            <th scope="col" class="is-number">Joints</th>
+                            <th scope="col" class="is-number">Actuators</th>
+                            <th scope="col">Timestep</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var model in VisibleModels)
+                        {
+                            <tr>
+                                <th scope="row">@model.Repo</th>
+                                <td class="global-mono">@model.Name</td>
+                                <td class="is-number">@model.Bodies</td>
+                                <td class="is-number">@model.Joints</td>
+                                <td class="is-number">@model.Actuators</td>
+                                <td class="is-nowrap">@(string.IsNullOrEmpty(model.Timestep) ? "—" : model.Timestep)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+</main>
+
+@code {
+    private GlobalVaultDto? _vault;
+    private bool _loading = true;
+    private string? _error;
+    private string _search = "";
+    private string? _socketFilter;
+    private bool _onlyGold;
+    private bool _showModels;
+
+    private List<GlobalVaultBrainDto> VisibleBrains
+    {
+        get
+        {
+            if (_vault is null)
+                return [];
+
+            IEnumerable<GlobalVaultBrainDto> brains = _vault.Brains;
+            if (_socketFilter is { Length: > 0 } socket)
+                brains = brains.Where(b => b.Socket == socket);
+            if (_onlyGold)
+                brains = brains.Where(b => b.Gold);
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                var q = _search.Trim();
+                brains = brains.Where(b =>
+                    b.Repo.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || b.Name.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || b.Rel.Contains(q, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return brains.ToList();
+        }
+    }
+
+    private List<GlobalVaultModelDto> VisibleModels
+    {
+        get
+        {
+            if (_vault is null)
+                return [];
+
+            IEnumerable<GlobalVaultModelDto> models = _vault.Models;
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                var q = _search.Trim();
+                models = models.Where(m =>
+                    m.Repo.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || m.Name.Contains(q, StringComparison.OrdinalIgnoreCase)
+                    || m.Rel.Contains(q, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return models.Take(400).ToList();
+        }
+    }
+
+    private void OnSearch(ChangeEventArgs e) => _search = e.Value?.ToString() ?? "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            _vault = await Api.GetGlobalVaultAsync(cts.Token);
+        }
+        catch (Exception ex)
+        {
+            _error = FriendlyError.Describe(ex);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

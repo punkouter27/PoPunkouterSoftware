@@ -1,0 +1,168 @@
+@page "/global/lessons"
+@attribute [Authorize]
+@rendermode WasmRenderModes.Interactive
+@using PoPunkouterSoftware.Shared
+@inject PortfolioApiClient Api
+
+<PageTitle>Lessons &amp; gotchas · PoPunkouterSoftware</PageTitle>
+
+@* Harvested from every repo's AGENTS.md, CLAUDE.md, README and docs: each bullet under a
+   heading about traps, landmines, known issues or "things that bite" (traps), plus house
+   rules and contracts (rules). A bullet found in several repos is stored once. *@
+<main id="main-content" class="app-page global-page" tabindex="-1">
+    <header class="global-head">
+        <div>
+            <h1>Lessons &amp; gotchas</h1>
+            <p class="app-note">
+                Traps and rules harvested from every repo's docs. Add your own in
+                <code>App_Data/global/config/lessons_manual.json</code>.
+            </p>
+        </div>
+        @if (_file is not null)
+        {
+            <span class="global-stamp">@GlobalFormat.Number(_file.Count) lessons</span>
+        }
+    </header>
+
+    @if (_loading)
+    {
+        <LoadingSkeleton Variant="cards" TileCount="6" AriaLabel="Loading lessons" />
+    }
+    else if (_error is not null)
+    {
+        <div class="global-error" role="alert">@_error</div>
+    }
+    else if (_file is null || _file.Lessons.Count == 0)
+    {
+        <p class="app-empty-state">No lessons harvested yet. Run <code>python scripts/global/build_global_data.py --only lessons</code>.</p>
+    }
+    else
+    {
+        <section class="global-kpis" aria-label="Lesson totals">
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_file.Lessons.Count)</div><div class="l">lessons</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_file.Lessons.Count(l => l.Kind == "trap"))</div><div class="l">traps</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_file.Lessons.Count(l => l.Kind == "rule"))</div><div class="l">rules</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_file.Lessons.Count(l => l.Repos.Count > 1))</div><div class="l">shared by 2+ repos</div></div>
+        </section>
+
+        <div class="global-toolbar">
+            <input class="global-search" type="search"
+                   placeholder="Search e.g. onnx export, --force, CRLF, normalizer…"
+                   value="@_search" @oninput="OnSearch" aria-label="Search lessons" />
+            <button type="button" class="global-chip @(_traps ? "is-on" : null)" @onclick="() => _traps = !_traps">Traps</button>
+            <button type="button" class="global-chip @(_rules ? "is-on" : null)" @onclick="() => _rules = !_rules">Rules</button>
+            <button type="button" class="global-chip @(_sharedOnly ? "is-on" : null)" @onclick="() => _sharedOnly = !_sharedOnly">Shared by 2+</button>
+            <select class="global-search" value="@_repo" @onchange="OnRepo" aria-label="Filter by repo">
+                <option value="">All repos</option>
+                @foreach (var repo in _repos)
+                {
+                    <option value="@repo">@repo</option>
+                }
+            </select>
+            <span class="global-count">@Visible.Count shown</span>
+        </div>
+
+        <ul class="global-list">
+            @foreach (var lesson in Visible.Take(400))
+            {
+                <li class="global-item is-@lesson.Kind">
+                    <div class="text">@lesson.Text</div>
+                    <div class="meta">
+                        @foreach (var repo in lesson.Repos)
+                        {
+                            <strong>@repo</strong>@(repo == lesson.Repos[^1] ? "" : ", ")
+                        }
+                        @if (lesson.Heading is { Length: > 0 })
+                        {
+                            <span> · @lesson.Heading</span>
+                        }
+                        @if (lesson.File is { Length: > 0 })
+                        {
+                            <span class="global-mono"> · @lesson.File@(lesson.Line > 0 ? ":" + lesson.Line : "")</span>
+                        }
+                        @if (lesson.Tags.Count > 0)
+                        {
+                            <span class="global-tags">
+                                @foreach (var tag in lesson.Tags)
+                                {
+                                    <span class="global-tag">@tag</span>
+                                }
+                            </span>
+                        }
+                    </div>
+                </li>
+            }
+        </ul>
+        @if (Visible.Count > 400)
+        {
+            <p class="global-note">Showing the first 400. Narrow the search to see the rest.</p>
+        }
+    }
+</main>
+
+@code {
+    private GlobalLessonsFileDto? _file;
+    private bool _loading = true;
+    private string? _error;
+    private string _search = "";
+    private string _repo = "";
+    private bool _traps = true;
+    private bool _rules = true;
+    private bool _sharedOnly;
+
+    private List<string> _repos = [];
+
+    private List<GlobalLessonDto> Visible
+    {
+        get
+        {
+            if (_file is null)
+                return [];
+
+            IEnumerable<GlobalLessonDto> lessons = _file.Lessons;
+            if (_traps != _rules)
+                lessons = lessons.Where(l => l.Kind == (_traps ? "trap" : "rule"));
+            if (_sharedOnly)
+                lessons = lessons.Where(l => l.Repos.Count > 1);
+            if (_repo.Length > 0)
+                lessons = lessons.Where(l => l.Repos.Contains(_repo));
+
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                var words = _search.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                lessons = lessons.Where(l => words.All(w =>
+                    l.Text.Contains(w, StringComparison.OrdinalIgnoreCase)
+                    || (l.Heading ?? "").Contains(w, StringComparison.OrdinalIgnoreCase)
+                    || l.Repos.Any(r => r.Contains(w, StringComparison.OrdinalIgnoreCase))));
+            }
+
+            return lessons.ToList();
+        }
+    }
+
+    private void OnSearch(ChangeEventArgs e) => _search = e.Value?.ToString() ?? "";
+
+    private void OnRepo(ChangeEventArgs e) => _repo = e.Value?.ToString() ?? "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            _file = await Api.GetGlobalLessonsAsync(cts.Token);
+            _repos = _file?.Lessons
+                .SelectMany(l => l.Repos)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(r => r, StringComparer.OrdinalIgnoreCase)
+                .ToList() ?? [];
+        }
+        catch (Exception ex)
+        {
+            _error = FriendlyError.Describe(ex);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

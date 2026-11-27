@@ -1,0 +1,128 @@
+@page "/global/readiness"
+@attribute [Authorize]
+@rendermode WasmRenderModes.Interactive
+@using PoPunkouterSoftware.Shared
+@inject PortfolioApiClient Api
+
+<PageTitle>Ship board · PoPunkouterSoftware</PageTitle>
+
+@* The ship board: where every app stands, Prototype to Shipped. A stage set in
+   App_Data/global/config/readiness.json wins; otherwise the board suggests one from what the
+   crawl can see (live URL, CI, checklist, captures) and says why. *@
+<main id="main-content" class="app-page global-page" tabindex="-1">
+    <header class="global-head">
+        <div>
+            <h1>Ship board</h1>
+            <p class="app-note">
+                Until a stage is set in <code>config/readiness.json</code>, the board suggests one and states why.
+                The six-point checklist is per app.
+            </p>
+        </div>
+    </header>
+
+    @if (_loading)
+    {
+        <LoadingSkeleton Variant="cards" TileCount="5" AriaLabel="Loading the ship board" />
+    }
+    else if (_error is not null)
+    {
+        <div class="global-error" role="alert">@_error</div>
+    }
+    else if (_board is null || _board.Apps.Count == 0)
+    {
+        <p class="app-empty-state">No apps in the snapshot yet. Run <code>python scripts/global/build_global_data.py --only fleet</code>.</p>
+    }
+    else
+    {
+        <div class="global-toolbar">
+            <button type="button" class="global-chip @(_filter == "all" ? "is-on" : null)" @onclick="() => _filter = "all"">All (@_board.Apps.Count)</button>
+            <button type="button" class="global-chip @(_filter == "rl" ? "is-on" : null)" @onclick="() => _filter = "rl"">RL games</button>
+            <button type="button" class="global-chip @(_filter == "apps" ? "is-on" : null)" @onclick="() => _filter = "apps"">Apps &amp; tools</button>
+        </div>
+
+        <div class="global-board">
+            @foreach (var stage in Stages)
+            {
+                var apps = AppsIn(stage).ToList();
+                <section class="global-col" aria-label="@stage">
+                    <h2>@Label(stage) <span>@apps.Count</span></h2>
+                    @foreach (var app in apps)
+                    {
+                        <article class="global-app">
+                            <div class="hd">
+                                <strong>@app.Name</strong>
+                                <span class="global-tone is-@GlobalFormat.StageTone(app.Stage)">@app.Effective</span>
+                            </div>
+                            <div class="why">
+                                @app.Why@(app.StageIsSet ? "" : " (suggested)")
+                            </div>
+                            <div class="global-progress" role="img" aria-label="@app.Done of @app.Total checklist items done">
+                                <span style="width:@(app.Total == 0 ? 0 : app.Done * 100 / app.Total)%"></span>
+                            </div>
+                            <ul class="global-checks">
+                                @foreach (var item in app.Checklist)
+                                {
+                                    <li class="@(item.Done ? "is-done" : null)">@item.Label</li>
+                                }
+                            </ul>
+                            <div class="global-count">
+                                @app.Kind@(app.IsRl ? " · RL" : "") · @(app.Ci.Length > 0 ? "CI " + app.Ci : "no CI")
+                                @if (app.LiveUrl is { Length: > 0 })
+                                {
+                                    <a href="@app.LiveUrl" rel="noopener noreferrer"> · live</a>
+                                }
+                            </div>
+                        </article>
+                    }
+                </section>
+            }
+        </div>
+    }
+</main>
+
+@code {
+    private static readonly string[] Stages = ["prototype", "playable", "polishing", "ready", "shipped"];
+
+    private GlobalReadinessDto? _board;
+    private bool _loading = true;
+    private string? _error;
+    private string _filter = "all";
+
+    private static string Label(string stage) => stage switch
+    {
+        "prototype" => "Prototype",
+        "playable" => "Playable",
+        "polishing" => "Polishing",
+        "ready" => "Ready to ship",
+        "shipped" => "Shipped",
+        _ => stage,
+    };
+
+    private IEnumerable<GlobalReadinessAppDto> AppsIn(string stage) =>
+        (_board?.Apps ?? [])
+        .Where(a => a.Stage == stage)
+        .Where(a => _filter switch
+        {
+            "rl" => a.IsRl,
+            "apps" => !a.IsRl,
+            _ => true,
+        })
+        .OrderBy(a => a.Name, StringComparer.OrdinalIgnoreCase);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            _board = await Api.GetGlobalReadinessAsync(cts.Token);
+        }
+        catch (Exception ex)
+        {
+            _error = FriendlyError.Describe(ex);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}
