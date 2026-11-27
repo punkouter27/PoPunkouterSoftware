@@ -27,7 +27,9 @@ internal static class SecurityHeaders
         "object-src 'none'; " +
         "frame-ancestors 'none'; " +
         "form-action 'self'; " +
-        "img-src 'self' data: blob:; " +
+        // The /global pages show screenshots straight from the (public) Po repos on GitHub instead
+        // of keeping a second copy of ~900 captures here.
+        "img-src 'self' data: blob: https://raw.githubusercontent.com https://media.githubusercontent.com; " +
         "font-src 'self'; " +
         "style-src 'self' 'unsafe-inline'; " +
         "script-src 'self' 'wasm-unsafe-eval'; " +

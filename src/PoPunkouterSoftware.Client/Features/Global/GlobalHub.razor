@@ -1,57 +1,287 @@
 @page "/global"
 @attribute [Authorize]
 @rendermode WasmRenderModes.Interactive
+@using System.Globalization
 @using PoPunkouterSoftware.Shared
 @inject PortfolioApiClient Api
+@inject LocalHelperClient Helper
 
 <PageTitle>Global · PoPunkouterSoftware</PageTitle>
 
-@* The hub of the GLOBAL folder, now part of this app. Ten tools that used to be static
-   HTML generated into GLOBAL/station and GLOBAL/rl_training: fleet health, briefing, brain
-   vault, showroom, ship board, lessons, disk, the RL dashboard, UNITE and the incubator.
-   Same boundary as /azure and /users (owner decision, 2026-11-27). *@
+@* The Central Station home page that GLOBAL/index.html was: how fresh the data is, what needs
+   attention now, the latest benchmark attempt, the totals with their change since the last
+   crawl, the control panel, the trend over time, the RL data-quality flags and benchmark
+   context, and a tile per tool. Everything is computed by /api/global/home from the committed
+   snapshot; the control panel talks to the local helper. *@
 <main id="main-content" class="app-page global-page" tabindex="-1">
+    <GlobalTabs />
     <header class="global-head">
         <div>
-            <h1>Global</h1>
+            <h1>Central Station</h1>
             <p class="app-note">
-                Every Po repo in one place: what changed, which brains exist, what still needs work.
-                The snapshot is produced on the owner's machine by <code>scripts/global/build_global_data.py</code>.
+                One place to watch, plan and act across every Po repo
+                @if (_summary is not null)
+                {
+                    <text>: @_summary.RlCount RL training games and @(_summary.RepoCount - _summary.RlCount) apps &amp; tools.</text>
+                }
             </p>
         </div>
-        @if (_summary?.Generated is { } generated)
-        {
-            <span class="global-stamp">
-                Crawled @generated.ToLocalTime().ToString("yyyy-MM-dd HH:mm") · @GlobalFormat.Ago(_summary.Generated)
-            </span>
-        }
     </header>
 
     @if (_loading)
     {
-        <LoadingSkeleton Variant="cards" TileCount="6" AriaLabel="Loading the fleet snapshot" />
+        <LoadingSkeleton Variant="summary" TileCount="4" AriaLabel="Loading the global summary" />
     }
     else if (_error is not null)
     {
-        <div class="global-error" role="alert">
-            <strong>The snapshot could not be read.</strong>
-            <p>@_error</p>
-        </div>
+        <div class="global-error" role="alert">@_error</div>
     }
-    else if (_summary is null)
+    else if (_summary is null || _home is null || _summary.RepoCount == 0)
     {
-        <p class="app-empty-state">No snapshot yet. Run <code>python scripts/global/build_global_data.py</code> and reload.</p>
+        <p class="app-empty-state">No snapshot yet. Run <code>python scripts/global/build_global_data.py</code> on the workspace machine.</p>
     }
     else
     {
-        <section class="global-kpis" aria-label="Fleet at a glance">
-            <div class="global-kpi"><div class="v">@_summary.RepoCount</div><div class="l">repos crawled (@_summary.RlCount RL)</div></div>
-            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_summary.BrainCount)</div><div class="l">brains on disk (@GlobalFormat.Number(_summary.ShippedBrainCount) shipped)</div></div>
-            <div class="global-kpi"><div class="v">@_summary.CiFailing</div><div class="l">CI failing now</div></div>
-            <div class="global-kpi"><div class="v">@_summary.DirtyRepos</div><div class="l">repos with uncommitted work</div></div>
-            <div class="global-kpi"><div class="v">@GlobalFormat.Bytes(_summary.DiskBytes)</div><div class="l">on disk across the fleet</div></div>
+        <section class="global-item" aria-label="Data freshness">
+            <div class="text"><strong>Data freshness</strong></div>
+            <div class="global-fresh">
+                <div>
+                    <span class="global-tone is-@AgeTone(_home.FleetGenerated)">Station inventory</span>
+                    last successful crawl @Stamp(_home.FleetGenerated) · @GlobalFormat.Ago(_home.FleetGenerated)
+                </div>
+                <div>
+                    <span class="global-tone is-@AgeTone(_home.RlRecorded)">RL metrics &amp; history</span>
+                    latest RL snapshot @Stamp(_home.RlRecorded) · @GlobalFormat.Ago(_home.RlRecorded)
+                </div>
+            </div>
+            <p class="global-note">
+                Each source reports its own last snapshot. The 07:00 task refreshes both; "Update everything" below does it now.
+            </p>
         </section>
 
+        <section class="global-item" aria-label="Start here">
+            <div class="text"><strong>Start here</strong></div>
+            <ol class="global-doc">
+                <li><strong>Check "Needs attention"</strong> below: anything marked <em>fix</em> is broken now.</li>
+                <li><strong>Open the <a href="/global/briefing">Briefing</a></strong> to see what changed since the last refresh.</li>
+                <li><strong>Before bed:</strong> plan jobs in the <a href="/global/queue">GPU Queue</a> so the machine trains overnight.</li>
+                <li>
+                    <strong>Browsing around:</strong> <a href="/global/showroom">Showroom</a> (pictures),
+                    <a href="/global/vault">Brain Vault</a> (trained models), <a href="/global/readiness">Ship Board</a> (what is ready to release).
+                </li>
+            </ol>
+        </section>
+
+        <section class="global-item is-attention" aria-label="Needs attention">
+            <div class="text"><strong>Needs attention</strong></div>
+            @if (_home.Attention.Count == 0)
+            {
+                <p><span class="global-tone is-good">all clear</span> No failing CI and nothing uncommitted.</p>
+            }
+            else
+            {
+                <ul class="global-attention">
+                    @foreach (var item in _home.Attention)
+                    {
+                        <li>
+                            <span class="global-tone is-@SeverityTone(item.Severity)">@item.Severity</span>
+                            <a href="@item.Href">@item.Text</a>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+
+        <section class="global-item" aria-label="Latest benchmark attempt">
+            <div class="text">
+                <strong>Latest benchmark attempt</strong>
+                @if (_home.Benchmark is { } bench)
+                {
+                    <span class="global-tone is-@BenchTone(bench)">@BenchLabel(bench)</span>
+                }
+            </div>
+            @if (_home.Benchmark is { } run)
+            {
+                <p class="global-note">
+                    @run.Stamp · @run.Results.Count project(s) · @run.Results.Count(r => r.Result == "ok") passed ·
+                    @run.Results.Count(r => r.Result.StartsWith("FAILED", StringComparison.Ordinal)) failed ·
+                    @run.Results.Count(r => r.Result == "TIMEOUT") timed out · @run.Results.Count(r => r.Result == "skipped") skipped
+                </p>
+                <details>
+                    <summary>View per-project results (@run.Results.Count)</summary>
+                    <div class="global-table-wrap">
+                        <table class="global-table">
+                            <caption class="app-sr-only">Benchmark result per project</caption>
+                            <thead><tr><th scope="col">Project</th><th scope="col">Result</th><th scope="col" class="is-number">Seconds</th><th scope="col">Detail</th></tr></thead>
+                            <tbody>
+                                @foreach (var result in run.Results)
+                                {
+                                    <tr>
+                                        <th scope="row">@result.Repo</th>
+                                        <td>@result.Result</td>
+                                        <td class="is-number">@result.Seconds</td>
+                                        <td>@(string.IsNullOrWhiteSpace(result.Detail) ? "No detail recorded." : result.Detail)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
+            }
+            else
+            {
+                <p class="global-note">No benchmark attempt has been recorded yet. Run one from <a href="/global/pc">This PC</a>.</p>
+            }
+        </section>
+
+        <section class="global-kpis" aria-label="Fleet totals">
+            <div class="global-kpi">
+                <div class="v">@_summary.RepoCount</div>
+                <div class="l">repos (@_summary.RlCount RL + @(_summary.RepoCount - _summary.RlCount) apps)</div>
+            </div>
+            <div class="global-kpi">
+                <div class="v">@_summary.CiFailing</div>
+                <div class="l">CI runs not passing</div>
+                @Delta(_home.Now.CiFailing, _home.Previous?.CiFailing, badWhenUp: true)
+            </div>
+            <div class="global-kpi">
+                <div class="v">@_summary.DirtyRepos</div>
+                <div class="l">repos with uncommitted work</div>
+                @Delta(_home.Now.Dirty, _home.Previous?.Dirty, badWhenUp: true)
+            </div>
+            <div class="global-kpi">
+                <div class="v">@GlobalFormat.Number(_summary.BrainCount)</div>
+                <div class="l">.onnx brains on disk (@GlobalFormat.Number(_summary.ShippedBrainCount) shipped)</div>
+                @Delta(_home.Now.Brains, _home.Previous?.Brains, badWhenUp: false)
+            </div>
+            <div class="global-kpi">
+                <div class="v">@GlobalFormat.Number(_summary.LessonsCount)</div>
+                <div class="l">harvested lessons</div>
+            </div>
+            <div class="global-kpi">
+                <div class="v">@GlobalFormat.Bytes(_summary.DiskBytes)</div>
+                <div class="l">disk used by all repos</div>
+                @DiskDelta()
+            </div>
+        </section>
+
+        <section class="global-item" aria-label="Control panel">
+            <div class="text"><strong>Control panel</strong></div>
+            <LocalHelperBar OnChanged="StateHasChanged" />
+            @if (Helper.IsConnected)
+            {
+                <div class="global-actions">
+                    <button type="button" class="global-chip" disabled="@_busy" @onclick="() => Refresh(push: true)">⟳ Update everything (crawl, commit, push)</button>
+                    <button type="button" class="global-chip" disabled="@_busy" @onclick="() => Refresh(push: false)">⟳ Crawl only</button>
+                    <button type="button" class="global-chip" disabled="@_busy" @onclick="OpenRepo">Open PoPunkouterSoftware in VS Code</button>
+                    <a class="global-chip" href="/global/pc">More on This PC →</a>
+                </div>
+            }
+            @if (_output is not null)
+            {
+                <pre class="global-code global-output" role="status" aria-live="polite"><code>@_output</code></pre>
+            }
+        </section>
+
+        @if (_home.Trend.Count >= 2)
+        {
+            <h2>Over time</h2>
+            <div class="global-actions">
+                @foreach (var metric in Metrics)
+                {
+                    var key = metric.Key;
+                    <button type="button" class="global-chip @(_metric == key ? "is-on" : null)" @onclick="() => _metric = key">@metric.Label</button>
+                }
+            </div>
+            <svg class="global-chart" viewBox="0 0 760 240" role="img" aria-label="@ChartSummary">
+                <line class="axis" x1="56" y1="200" x2="736" y2="200" />
+                <line class="axis" x1="56" y1="20" x2="56" y2="200" />
+                <text class="label" x="56" y="216">@Stamp(_home.Trend[0].When)</text>
+                <text class="label" x="640" y="216">@Stamp(_home.Trend[^1].When)</text>
+                <text class="label" x="4" y="24">@FormatMetric(ChartMax)</text>
+                <text class="label" x="4" y="204">@FormatMetric(ChartMin)</text>
+                <polyline class="line" points="@ChartPoints" />
+                @foreach (var dot in ChartDots)
+                {
+                    <circle class="dot" cx="@Coord(dot.X)" cy="@Coord(dot.Y)" r="3"><title>@dot.Title</title></circle>
+                }
+            </svg>
+            <p class="global-note">
+                Point spacing reflects elapsed time. From <code>history/station_timeline.jsonl</code> (@_home.Trend.Count crawls);
+                RL history is on the <a href="/global/rl">RL Dashboard</a>.
+            </p>
+        }
+
+        @if (_home.Flags.Count > 0)
+        {
+            <h2 id="flags">Data-quality flags <span class="global-tone is-warn">@_home.Flags.Count</span></h2>
+            <p class="global-note">These RL numbers are real but should not be compared at face value. A dash means <em>not measured</em>, not zero.</p>
+            <div class="global-table-wrap">
+                <table class="global-table">
+                    <caption class="app-sr-only">RL data-quality flags</caption>
+                    <thead><tr><th scope="col">Repo</th><th scope="col">Why the numbers look odd</th></tr></thead>
+                    <tbody>
+                        @foreach (var flag in _home.Flags)
+                        {
+                            <tr><th scope="row">@flag.Repo</th><td>@flag.Why</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        @if (_home.Benchmarks.Count > 0)
+        {
+            <h2>RL benchmark context</h2>
+            <p class="global-note">
+                Only compare speed figures when environment count, hardware and training setup are similar. Rows show the latest
+                recorded benchmark, not necessarily today's run.
+            </p>
+            <div class="global-table-wrap">
+                <table class="global-table">
+                    <caption class="app-sr-only">Environments, speed, hardware and trainer per RL repo</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Repo</th>
+                            <th scope="col">Status</th>
+                            <th scope="col" class="is-number">Envs</th>
+                            <th scope="col" class="is-number">Steps/s</th>
+                            <th scope="col">GPU</th>
+                            <th scope="col">Trainer</th>
+                            <th scope="col">Horizon · network</th>
+                            <th scope="col">Recorded</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var repo in _home.Benchmarks)
+                        {
+                            var b = repo.Benchmark;
+                            <tr>
+                                <th scope="row">@repo.Name</th>
+                                <td>
+                                    @if (b is null)
+                                    {
+                                        <span class="global-tone is-muted">Not measured</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="global-tone is-@(b.Ok ? "good" : "bad")">@(b.Ok ? "Last success" : "Last failed")</span>
+                                    }
+                                </td>
+                                <td class="is-number">@(b?.NumEnvs is { } envs ? GlobalFormat.Number(envs) : "–")</td>
+                                <td class="is-number">@(b?.EnvStepsPerS is { } sps ? GlobalFormat.Number((int)sps) : "–")</td>
+                                <td>@(b?.MachineGpu ?? "–")</td>
+                                <td>@(b?.Trainer ?? "–")</td>
+                                <td class="is-nowrap">@(b?.Horizon?.ToString(CultureInfo.InvariantCulture) ?? "–") · @(b is { Net.Count: > 0 } ? $"[{string.Join(", ", b.Net)}]" : "–")</td>
+                                <td class="is-nowrap">@(b?.When is { } when ? when.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) : "–")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+
+        <h2>Station tools</h2>
         <div class="global-grid">
             @foreach (var tile in Tiles())
             {
@@ -67,51 +297,199 @@
 
 @code {
     private GlobalSummaryDto? _summary;
+    private GlobalHomeDto? _home;
     private bool _loading = true;
+    private bool _busy;
     private string? _error;
+    private string? _output;
+    private string _metric = "brains";
 
     private sealed record Tile(string Href, string Title, string Value, string Note);
+
+    private sealed record Metric(string Key, string Label);
+
+    private sealed record Dot(double X, double Y, string Title);
+
+    private static readonly Metric[] Metrics =
+    [
+        new("brains", "Brains on disk"),
+        new("disk", "Disk used"),
+        new("dirty", "Repos with uncommitted work"),
+        new("failing", "CI not passing"),
+    ];
 
     private IEnumerable<Tile> Tiles()
     {
         var s = _summary!;
         return
         [
-            new("/global/fleet", "Fleet health", $"{s.RepoCount} repos",
+            new("/global/fleet", "Fleet Health & Git Radar", $"{s.RepoCount} repos",
                 $"{s.CiFailing} CI failing · {s.DirtyRepos} dirty · crawled {GlobalFormat.Ago(s.Generated)}"),
-            new("/global/briefing", "Morning briefing", "What changed",
+            new("/global/briefing", "Morning Briefing", "What changed",
                 s.RlRecordedAt is { Length: > 0 } rl ? $"RL snapshot {rl}" : "Deltas since the previous crawl"),
-            new("/global/vault", "Brain vault", $"{GlobalFormat.Number(s.BrainCount)} brains",
+            new("/global/queue", "Overnight GPU Queue", $"{_home!.JobsReady}/{_home.JobsTotal} jobs ready",
+                "Start jobs on this PC's GPU or the cloud GPU, with a dry run first"),
+            new("/global/vault", "Brain & Body Vault", $"{GlobalFormat.Number(s.BrainCount)} brains",
                 $"{GlobalFormat.Number(s.ModelCount)} MJCF models, grouped by socket"),
             new("/global/showroom", "Showroom", $"{GlobalFormat.Number(s.MediaCount)} captures",
                 "Newest GIFs and screenshots per repo, plus live URLs"),
-            new("/global/readiness", "Ship board", "Prototype → Shipped",
+            new("/global/readiness", "Ship Board", "Prototype → Shipped",
                 "Six-point checklist per app, with a suggested stage"),
-            new("/global/lessons", "Lessons & gotchas", $"{GlobalFormat.Number(s.LessonsCount)} lessons",
+            new("/global/lessons", "Lessons & Gotchas", $"{GlobalFormat.Number(s.LessonsCount)} lessons",
                 "Traps and rules harvested from every repo's docs"),
-            new("/global/disk", "Disk", GlobalFormat.Bytes(s.DiskBytes),
+            new("/global/disk", "Disk Heatmap", GlobalFormat.Bytes(s.DiskBytes),
                 $"{GlobalFormat.Bytes(s.ReclaimableBytes)} safely reclaimable"),
-            new("/global/rl", "RL dashboard", $"{GlobalFormat.Number(s.ShippedBrainsRl)} shipped",
+            new("/global/incubator", "Idea Incubator", "5 questions",
+                "Which repo to start a new idea from, and what carries over"),
+            new("/global/rl", "RL Dashboard", $"{GlobalFormat.Number(s.ShippedBrainsRl)} shipped",
                 $"{GlobalFormat.Number(s.PeakSps)} peak env-steps/s · history chart"),
-            new("/global/queue", "Training queue", $"{s.JobsTotal} jobs",
-                "Start jobs on this PC's GPU or the cloud GPU, with a dry run first"),
             new("/global/unite", "UNITE", $"{s.CreaturesCount} creatures",
                 "Portable MJCF prefabs, the 28 rules and the contract schema"),
-            new("/global/incubator", "Incubator", "5 questions",
-                "Which repo to start a new idea from, and what carries over"),
+            new("/global/standards", "Standards & prompts", "Blazor & RL",
+                "The shared standards, the portability contract and the saved prompts"),
             new("/global/pc", "This PC", "Local actions",
                 "Refresh and push the snapshot, run benchmarks, copy a brain, drive the cloud VM"),
-            new("/global/standards", "Standards", "Blazor & RL",
-                "The shared standards, the portability contract and the saved prompts"),
         ];
     }
+
+    // ─── formatting ────────────────────────────────────────────────────────────
+
+    private static string Stamp(DateTimeOffset? when) =>
+        when is { } value ? value.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) : "never";
+
+    private static string AgeTone(DateTimeOffset? when) => when switch
+    {
+        null => "bad",
+        { } value when DateTimeOffset.UtcNow - value < TimeSpan.FromHours(26) => "good",
+        { } value when DateTimeOffset.UtcNow - value < TimeSpan.FromDays(3) => "warn",
+        _ => "bad",
+    };
+
+    private static string SeverityTone(string severity) => severity switch
+    {
+        "fix" => "bad",
+        "check" => "warn",
+        _ => "info",
+    };
+
+    private static string BenchLabel(GlobalBenchmarkRunDto run) =>
+        run.Results.Any(r => r.Result.StartsWith("FAILED", StringComparison.Ordinal) || r.Result == "TIMEOUT") ? "Failed"
+        : run.Results.Count == 0 || run.Results.Any(r => r.Result != "ok") ? "Partial"
+        : "Passed";
+
+    private static string BenchTone(GlobalBenchmarkRunDto run) => BenchLabel(run) switch
+    {
+        "Passed" => "good",
+        "Partial" => "warn",
+        _ => "bad",
+    };
+
+    private RenderFragment Delta(double now, double? before, bool badWhenUp) => builder =>
+    {
+        var (text, tone) = before is not { } was ? ("first crawl: no trend yet", "muted")
+            : Math.Abs(now - was) < 0.5 ? ("no change since last refresh", "muted")
+            : ($"{(now > was ? "▲" : "▼")} {now - was:+0;-0} since last refresh", (now > was) == badWhenUp ? "bad" : "good");
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", $"global-delta is-{tone}");
+        builder.AddContent(2, text);
+        builder.CloseElement();
+    };
+
+    private RenderFragment DiskDelta() => builder =>
+    {
+        var now = _home!.Now.DiskBytes;
+        var before = _home.Previous?.DiskBytes;
+        string text;
+        var tone = "muted";
+        if (before is not { } was || was == 0)
+            text = "first crawl: no trend yet";
+        else if (Math.Abs(now - was) / (double)was >= 0.5)
+            (text, tone) = ($"⚠ large change ({(now - was) / (double)was:+0%;-0%}); verify the crawl before treating it as reclaimed space", "bad");
+        else if (Math.Abs(now - was) < 50_000_000)
+            text = "no change since last refresh";
+        else
+            text = $"{(now > was ? "▲" : "▼")} {(now - was) / 1e9:+0.0;-0.0} GB since last refresh";
+        builder.OpenElement(0, "div");
+        builder.AddAttribute(1, "class", $"global-delta is-{tone}");
+        builder.AddContent(2, text);
+        builder.CloseElement();
+    };
+
+    // ─── chart ─────────────────────────────────────────────────────────────────
+
+    private double Value(GlobalTrendPointDto point) => _metric switch
+    {
+        "disk" => point.DiskBytes / 1e9,
+        "dirty" => point.Dirty,
+        "failing" => point.CiFailing,
+        _ => point.Brains,
+    };
+
+    private string FormatMetric(double value) =>
+        _metric == "disk" ? $"{value:0} GB" : value.ToString("0", CultureInfo.InvariantCulture);
+
+    private double ChartMax => Math.Max(_home!.Trend.Max(Value), ChartMin + 1);
+
+    private double ChartMin => _metric == "disk" || _metric == "brains" ? Math.Floor(_home!.Trend.Min(Value) * 0.9) : 0;
+
+    private IEnumerable<Dot> ChartDots
+    {
+        get
+        {
+            var trend = _home!.Trend;
+            var first = trend[0].When ?? DateTimeOffset.MinValue;
+            var span = Math.Max(1, ((trend[^1].When ?? first) - first).TotalSeconds);
+            var (min, max) = (ChartMin, ChartMax);
+            foreach (var point in trend)
+            {
+                var x = 56 + 680 * (((point.When ?? first) - first).TotalSeconds / span);
+                var y = 200 - 180 * ((Value(point) - min) / (max - min));
+                yield return new Dot(x, y, $"{Stamp(point.When)}: {FormatMetric(Value(point))}");
+            }
+        }
+    }
+
+    private string ChartPoints => string.Join(" ", ChartDots.Select(d => $"{Coord(d.X)},{Coord(d.Y)}"));
+
+    private string ChartSummary =>
+        $"{Metrics.First(m => m.Key == _metric).Label} per crawl, from {FormatMetric(Value(_home!.Trend[0]))} to {FormatMetric(Value(_home.Trend[^1]))}";
+
+    private static string Coord(double value) => value.ToString("0.#", CultureInfo.InvariantCulture);
+
+    // ─── control panel ─────────────────────────────────────────────────────────
+
+    private async Task Send(LocalHelperRequest request)
+    {
+        _busy = true;
+        _output = "Working…";
+        StateHasChanged();
+        try
+        {
+            _output = (await Helper.SendAsync(request)).Output;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task Refresh(bool push)
+    {
+        await Send(new LocalHelperRequest { Action = "refresh", Push = push });
+        _output += "\nProgress is on the This PC page. Reload this page when it finishes.";
+    }
+
+    private Task OpenRepo() => Send(new LocalHelperRequest { Action = "open_vscode", Repo = "PoPunkouterSoftware" });
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            _summary = await Api.GetGlobalSummaryAsync(cts.Token);
+            var summary = Api.GetGlobalSummaryAsync(cts.Token);
+            var home = Api.GetGlobalHomeAsync(cts.Token);
+            _summary = await summary;
+            _home = await home;
         }
         catch (Exception ex)
         {

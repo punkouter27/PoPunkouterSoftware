@@ -132,6 +132,10 @@ public sealed class GlobalBrainDto
     public int? Opset { get; set; }
     public int? Obs { get; set; }
     public int? Act { get; set; }
+
+    /// <summary>ONNX graph inputs and outputs as the crawler wrote them: <c>[name, [dims…]]</c> pairs.</summary>
+    public List<System.Text.Json.JsonElement> Inputs { get; set; } = [];
+    public List<System.Text.Json.JsonElement> Outputs { get; set; } = [];
 }
 
 public sealed class GlobalModelDto
@@ -225,6 +229,7 @@ public sealed class GlobalTrainJobDto
     public double? DefaultHours { get; set; }
     public string? Source { get; set; }
     public string? After { get; set; }
+    public string? StopFile { get; set; }
 
     /// <summary>
     /// The <see cref="Requires"/> paths that were absent on the owner's PC at the last crawl.
@@ -245,6 +250,52 @@ public sealed class GlobalQueueDto
 
     /// <summary>The jobs <c>scripts/gcp/cloud_jobs.json</c> can run on the Google Cloud GPU.</summary>
     public List<GlobalCloudJobDto> CloudJobs { get; set; } = [];
+
+    /// <summary>The RL triage list (<c>config/behaviors.json</c>), most urgent first.</summary>
+    public List<GlobalBehaviorDto> Behaviors { get; set; } = [];
+
+    /// <summary>The newest overnight queue runs on the PC (<c>scripts/global/.local/runs</c>), newest first.</summary>
+    public List<GlobalQueueRunDto> PastRuns { get; set; } = [];
+}
+
+public sealed class GlobalBehaviorDto
+{
+    public string Id { get; set; } = "";
+    public string Repo { get; set; } = "";
+    public string Behavior { get; set; } = "";
+    public int Importance { get; set; }
+    public int Quality { get; set; }
+
+    /// <summary>importance × (100 − quality) / 10, rounded (the old GPU queue's ranking).</summary>
+    public int Urgency { get; set; }
+    public string? EstTime { get; set; }
+    public bool QuickWin { get; set; }
+    public string? GameRole { get; set; }
+    public string? CurrentState { get; set; }
+    public string? NextAction { get; set; }
+}
+
+public sealed class GlobalQueueRunDto
+{
+    public string Stamp { get; set; } = "";
+    public string? Queue { get; set; }
+
+    /// <summary>False when the run left no summary.json (still running, or stopped early).</summary>
+    public bool HasSummary { get; set; }
+    public List<GlobalQueueRunJobDto> Jobs { get; set; } = [];
+
+    /// <summary>The last lines of queue.log.</summary>
+    public List<string> Log { get; set; } = [];
+}
+
+public sealed class GlobalQueueRunJobDto
+{
+    public string? Id { get; set; }
+    public string? Repo { get; set; }
+    public string? Outcome { get; set; }
+    public int Minutes { get; set; }
+    public double Hours { get; set; }
+    public List<string> NewOnnx { get; set; } = [];
 }
 
 public sealed class GlobalCloudJobDto
@@ -290,6 +341,15 @@ public sealed class LocalHelperRequest
     public double? Hours { get; set; }
     public bool? Dry { get; set; }
     public bool? Push { get; set; }
+
+    /// <summary>With <see cref="Push"/>: commit and push the snapshot as it is (config edits), without crawling.</summary>
+    public bool? NoCrawl { get; set; }
+
+    /// <summary><c>save_config</c>: <c>readiness</c> or <c>vault_gold</c>.</summary>
+    public string? Arg { get; set; }
+
+    /// <summary><c>save_config</c>: the whole file, as the page edited it.</summary>
+    public System.Text.Json.JsonElement? Data { get; set; }
     public int? CoolTemp { get; set; }
     public int? GapMin { get; set; }
     public bool? RefreshAfter { get; set; }
@@ -591,3 +651,65 @@ public sealed class GlobalRlRepoViewDto
     public string? Stack { get; set; }
     public bool InFleet { get; set; }
 }
+
+// ─── Hub (the Central Station home page) ─────────────────────────────────────
+
+/// <summary>
+/// <c>/api/global/home</c>: everything the old <c>GLOBAL/index.html</c> showed beyond the summary
+/// counts — freshness, the "needs attention" list, the latest benchmark attempt, the change since
+/// the previous crawl, the trend over time, and the RL data-quality flags and benchmark context.
+/// </summary>
+public sealed class GlobalHomeDto
+{
+    public DateTimeOffset? FleetGenerated { get; set; }
+    public DateTimeOffset? RlRecorded { get; set; }
+    public List<GlobalAttentionDto> Attention { get; set; } = [];
+    public GlobalBenchmarkRunDto? Benchmark { get; set; }
+    public GlobalTrendPointDto Now { get; set; } = new();
+    public GlobalTrendPointDto? Previous { get; set; }
+    public List<GlobalTrendPointDto> Trend { get; set; } = [];
+    public List<GlobalRlFlagDto> Flags { get; set; } = [];
+    public List<GlobalRlRepoViewDto> Benchmarks { get; set; } = [];
+    public int JobsReady { get; set; }
+    public int JobsTotal { get; set; }
+}
+
+public sealed class GlobalAttentionDto
+{
+    /// <summary><c>fix</c> (broken now), <c>check</c>, or <c>info</c>.</summary>
+    public string Severity { get; set; } = "info";
+    public string Text { get; set; } = "";
+    public string Href { get; set; } = "/global";
+}
+
+/// <summary>Fleet totals at one crawl (one line of <c>history/station_timeline.jsonl</c>).</summary>
+public sealed class GlobalTrendPointDto
+{
+    public DateTimeOffset? When { get; set; }
+    public int Brains { get; set; }
+    public long DiskBytes { get; set; }
+    public int Dirty { get; set; }
+    public int CiFailing { get; set; }
+}
+
+public sealed class GlobalRlFlagDto
+{
+    public string Repo { get; set; } = "";
+    public string Why { get; set; } = "";
+}
+
+/// <summary><c>benchmark_last.json</c>: the newest benchmark attempt from <c>run_benchmarks.ps1</c>.</summary>
+public sealed class GlobalBenchmarkRunDto
+{
+    public string Stamp { get; set; } = "";
+    public List<GlobalBenchmarkResultDto> Results { get; set; } = [];
+}
+
+public sealed class GlobalBenchmarkResultDto
+{
+    public string Repo { get; set; } = "";
+    public string Result { get; set; } = "";
+    public int Seconds { get; set; }
+    public string? Detail { get; set; }
+}
+

@@ -101,6 +101,42 @@ def build_unite() -> Path:
     return out
 
 
+def _read_json_bom(path: Path, default):
+    import json
+
+    try:
+        return json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError):
+        return default
+
+
+def _past_runs(limit: int = 10) -> list[dict]:
+    """The newest overnight queue runs (run_gpu_queue.ps1 writes them to scripts/global/.local/runs)."""
+    import json
+
+    root = sc.HERE / ".local" / "runs"
+    runs = sorted((p for p in root.iterdir() if p.is_dir()), reverse=True)[:limit] if root.is_dir() else []
+    out = []
+    for run in runs:
+        # run_gpu_queue.ps1 writes these with Windows PowerShell's UTF-8 BOM.
+        summary = _read_json_bom(run / "summary.json", None)
+        planned = _read_json_bom(run / "queue.json", {})
+        try:
+            log = (run / "queue.log").read_text(encoding="utf-8-sig", errors="replace").splitlines()[-12:]
+        except OSError:
+            log = []
+        if summary:
+            jobs = [{"id": j.get("id"), "repo": j.get("repo"), "outcome": j.get("outcome"),
+                     "minutes": int(j.get("minutes") or 0), "hours": float(j.get("hours") or 0),
+                     "new_onnx": list(j.get("new_onnx") or [])} for j in summary.get("jobs", [])]
+        else:
+            jobs = [{"id": j.get("id"), "repo": j.get("repo"), "outcome": "no summary", "minutes": 0,
+                     "hours": float(j.get("hours") or 0), "new_onnx": []} for j in planned.get("jobs", [])]
+        out.append({"stamp": run.name, "queue": (summary or {}).get("queue") or planned.get("name"),
+                    "has_summary": bool(summary), "jobs": jobs, "log": log})
+    return json.loads(json.dumps(out))
+
+
 def build_queue() -> Path:
     """Write queue.json: the training jobs plus which `requires` paths are missing right now."""
     import json
@@ -111,9 +147,13 @@ def build_queue() -> Path:
         job["missing"] = [p for p in job.get("requires", []) if not (sc.WORKSPACE / p).exists()]
     cloud = sc.load_json(sc.REPO / "scripts" / "gcp" / "cloud_jobs.json", {}).get("jobs", [])
     cloud_jobs = [{key: job.get(key) for key in ("id", "source", "cwd", "command", "hours")} for job in cloud]
+    behaviors = sc.load_json(sc.CONFIG / "behaviors.json", {}).get("behaviors", [])
+    for item in behaviors:
+        item["urgency"] = round((item.get("importance") or 0) * (100 - (item.get("quality") or 0)) / 10)
+    behaviors.sort(key=lambda item: -item["urgency"])
     out = sc.OUT / "queue.json"
     payload = {"generated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "jobs": jobs,
-               "cloud_jobs": cloud_jobs}
+               "cloud_jobs": cloud_jobs, "behaviors": behaviors, "past_runs": _past_runs()}
     out.write_text(json.dumps(payload, indent=1) + "\n", encoding="utf-8")
     blocked = sum(1 for job in jobs if job["missing"])
     print(f"queue: {len(jobs)} jobs, {blocked} blocked -> {out}")
@@ -144,9 +184,44 @@ def build_standards() -> Path:
     return out
 
 
+def build_benchmark() -> Path | None:
+    """Copy the newest run_benchmarks.ps1 summary into benchmark_last.json (the hub's "Latest benchmark attempt")."""
+    import json
+
+    root = sc.HERE / ".local" / "benchmarks"
+    runs = sorted((p for p in root.iterdir() if p.is_dir()), key=lambda p: p.name) if root.is_dir() else []
+    run = next((p for p in reversed(runs) if (p / "summary.json").exists()), None)
+    if run is None:
+        print("benchmark: no recorded attempt yet")
+        return None
+    try:
+        raw = json.loads((run / "summary.json").read_text(encoding="utf-8-sig"))
+    except (OSError, ValueError) as error:
+        print(f"benchmark: could not read {run.name}/summary.json: {error}")
+        return None
+    items = raw if isinstance(raw, list) else [raw] if isinstance(raw, dict) else []
+    results = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        detail = item.get("Detail")
+        results.append({"repo": str(item.get("Repo") or "Unknown"), "result": str(item.get("Result") or "unknown"),
+                        "seconds": int(item.get("Seconds") or 0),
+                        "detail": detail if isinstance(detail, str) else ""})
+    stamp = run.name
+    try:
+        stamp = dt.datetime.strptime(run.name, "%Y-%m-%d_%H%M").strftime("%Y-%m-%d %H:%M")
+    except ValueError:
+        pass
+    out = sc.OUT / "benchmark_last.json"
+    out.write_text(json.dumps({"stamp": stamp, "results": results}, indent=1) + "\n", encoding="utf-8")
+    print(f"benchmark: {run.name}, {len(results)} result(s) -> {out}")
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Refresh the GLOBAL data snapshot the app serves.")
-    steps = ["fleet", "lessons", "rl", "unite", "queue", "standards"]
+    steps = ["fleet", "lessons", "rl", "unite", "queue", "standards", "benchmark"]
     parser.add_argument("--only", choices=steps, help="run a single step")
     parser.add_argument("--no-gh", action="store_true", help="skip GitHub CI lookups (offline / rate limited)")
     args = parser.parse_args()
@@ -167,6 +242,8 @@ def main() -> int:
         build_queue()
     if only in (None, "standards"):
         build_standards()
+    if only in (None, "benchmark"):
+        build_benchmark()
 
     print("\nDone. Restart the app (or reload /global) to see the new snapshot.")
     return 0

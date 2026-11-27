@@ -174,6 +174,47 @@ public sealed class GlobalDataStoreTests
     }
 
     [Fact]
+    public void Queue_CarriesTheBehaviorsMostUrgentFirst()
+    {
+        var queue = Store().LoadQueue();
+
+        queue.Behaviors.Should().NotBeEmpty();
+        queue.Behaviors.Should().BeInDescendingOrder(b => b.Urgency);
+        queue.Behaviors.Should().OnlyContain(b => b.Urgency == (int)Math.Round(b.Importance * (100 - b.Quality) / 10.0, MidpointRounding.ToEven));
+    }
+
+    [Fact]
+    public void Home_FlagsTinyAndMissingBenchmarks()
+    {
+        var now = new DateTimeOffset(2026, 11, 27, 12, 0, 0, TimeSpan.Zero);
+        var repos = new[]
+        {
+            new GlobalRlRepoViewDto { Name = "Big", Benchmark = new() { NumEnvs = 4096, EnvStepsPerS = 40000, When = now.AddDays(-1) } },
+            new GlobalRlRepoViewDto { Name = "Tiny", Benchmark = new() { NumEnvs = 4, EnvStepsPerS = 9, When = now.AddDays(-1) } },
+            new GlobalRlRepoViewDto { Name = "Old", Benchmark = new() { NumEnvs = 4096, EnvStepsPerS = 40000, When = now.AddDays(-9) } },
+            new GlobalRlRepoViewDto { Name = "None" },
+        };
+
+        var flags = GlobalDataStore.RlFlags(repos, now);
+
+        flags.Select(f => f.Repo).Should().Equal("None", "Old", "Tiny");
+        flags.Single(f => f.Repo == "Tiny").Why.Should().Contain("only 4 envs").And.Contain("9 steps/s is very low");
+        flags.Single(f => f.Repo == "Old").Why.Should().Contain("9 days old");
+        flags.Single(f => f.Repo == "None").Why.Should().Contain("not zero");
+    }
+
+    [Fact]
+    public void Home_ComputesTheTrendFromTheTimeline()
+    {
+        var home = Store().LoadHome();
+
+        home.Trend.Should().HaveCountGreaterThan(1);
+        home.Previous.Should().NotBeNull();
+        home.Trend.Select(p => p.When).Should().BeInAscendingOrder();
+        home.JobsTotal.Should().BeGreaterThan(0);
+    }
+
+    [Fact]
     public void Queue_CarriesTheCloudJobs()
     {
         var queue = Store().LoadQueue();

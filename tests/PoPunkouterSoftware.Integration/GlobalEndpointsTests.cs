@@ -16,6 +16,7 @@ public class GlobalEndpointsTests(TestWebApp app) : IClassFixture<TestWebApp>
     private static readonly string[] Routes =
     [
         "/api/global/summary",
+        "/api/global/home",
         "/api/global/fleet",
         "/api/global/vault",
         "/api/global/lessons",
@@ -36,6 +37,7 @@ public class GlobalEndpointsTests(TestWebApp app) : IClassFixture<TestWebApp>
 
     [Theory]
     [InlineData("/api/global/summary")]
+    [InlineData("/api/global/home")]
     [InlineData("/api/global/fleet")]
     [InlineData("/api/global/vault")]
     [InlineData("/api/global/lessons")]
@@ -141,6 +143,21 @@ public class GlobalEndpointsTests(TestWebApp app) : IClassFixture<TestWebApp>
     }
 
     [Fact]
+    public async Task Home_CarriesFreshnessAttentionTrendAndBenchmarks()
+    {
+        using var client = SignedIn(app);
+
+        var home = await client.GetFromJsonAsync("/api/global/home", GlobalJsonContext.Default.GlobalHomeDto);
+
+        home!.FleetGenerated.Should().NotBeNull();
+        home.Trend.Should().HaveCountGreaterThan(1, "the committed station timeline holds GLOBAL's crawl history");
+        home.Now.Brains.Should().BeGreaterThan(0);
+        home.Benchmarks.Should().NotBeEmpty();
+        home.Attention.Should().OnlyContain(a => a.Text.Length > 0 && a.Href.StartsWith('/') || a.Href.StartsWith('#'));
+        home.Attention.Select(a => a.Severity).Should().OnlyContain(s => s == "fix" || s == "check" || s == "info");
+    }
+
+    [Fact]
     public async Task Queue_ListsTheCloudJobs()
     {
         using var client = SignedIn(app);
@@ -188,6 +205,7 @@ public class GlobalEndpointsTests(TestWebApp app) : IClassFixture<TestWebApp>
 
         var csp = string.Join(" ", response.Headers.GetValues("Content-Security-Policy"));
         csp.Should().Contain("connect-src 'self' http://127.0.0.1:5050");
+        csp.Should().Contain("img-src 'self' data: blob: https://raw.githubusercontent.com https://media.githubusercontent.com");
         csp.Should().NotContain("connect-src *").And.NotContain("http://localhost");
     }
 

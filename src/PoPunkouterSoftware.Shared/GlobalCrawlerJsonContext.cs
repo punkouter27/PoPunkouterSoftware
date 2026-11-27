@@ -19,6 +19,7 @@ namespace PoPunkouterSoftware.Shared;
 [JsonSerializable(typeof(GlobalVaultGoldFileDto))]
 [JsonSerializable(typeof(GlobalTrainJobsFileDto))]
 [JsonSerializable(typeof(GlobalQueueDto))]
+[JsonSerializable(typeof(GlobalBenchmarkRunDto))]
 [JsonSerializable(typeof(GlobalStandardsDto))]
 [JsonSerializable(typeof(Dictionary<string, GlobalRlRepoFactDto>))]
 [JsonSerializable(typeof(GlobalTimelineEntryDto))]

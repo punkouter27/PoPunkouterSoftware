@@ -1,0 +1,47 @@
+@namespace PoPunkouterSoftware.Client
+@implements IDisposable
+@inject NavigationManager Nav
+
+@* The tab strip the GLOBAL station had across the top of every page (Hub, Fleet Health,
+   Briefing, GPU Queue, Brain Vault, Showroom, Ship Board, Lessons, Disk, Incubator, RL
+   Dashboard), in the same order, plus the pages that are new here. One click between any two
+   tools; the hub tiles alone meant going back to /global every time. *@
+<nav class="global-tabs" aria-label="Fleet and training pages">
+    @foreach (var tab in Tabs)
+    {
+        var active = IsActive(tab.Href);
+        <a href="@tab.Href" class="global-tab @(active ? "is-active" : null)" aria-current="@(active ? "page" : null)">@tab.Label</a>
+    }
+</nav>
+
+@code {
+    private sealed record Tab(string Href, string Label);
+
+    private static readonly Tab[] Tabs =
+    [
+        new("/global", "Hub"),
+        new("/global/fleet", "Fleet Health"),
+        new("/global/briefing", "Briefing"),
+        new("/global/queue", "GPU Queue"),
+        new("/global/vault", "Brain Vault"),
+        new("/global/showroom", "Showroom"),
+        new("/global/readiness", "Ship Board"),
+        new("/global/lessons", "Lessons"),
+        new("/global/disk", "Disk"),
+        new("/global/incubator", "Incubator"),
+        new("/global/rl", "RL Dashboard"),
+        new("/global/unite", "UNITE"),
+        new("/global/standards", "Standards"),
+        new("/global/pc", "This PC"),
+    ];
+
+    protected override void OnInitialized() => Nav.LocationChanged += OnLocationChanged;
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e) =>
+        InvokeAsync(StateHasChanged);
+
+    private bool IsActive(string href) =>
+        string.Equals(new Uri(Nav.Uri).AbsolutePath.TrimEnd('/'), href, StringComparison.OrdinalIgnoreCase);
+
+    public void Dispose() => Nav.LocationChanged -= OnLocationChanged;
+}

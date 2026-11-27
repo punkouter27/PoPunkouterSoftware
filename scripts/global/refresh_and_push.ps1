@@ -16,8 +16,9 @@
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File scripts\global\refresh_and_push.ps1
   powershell -ExecutionPolicy Bypass -File scripts\global\refresh_and_push.ps1 -NoPush
+  powershell -ExecutionPolicy Bypass -File scripts\global\refresh_and_push.ps1 -NoCrawl   # push config edits only
 #>
-param([switch]$NoPush)
+param([switch]$NoPush, [switch]$NoCrawl)
 
 # 'Continue': under Windows PowerShell 5.1 a native tool writing to stderr would otherwise stop
 # the script; every step checks $LASTEXITCODE instead.
@@ -38,10 +39,12 @@ function Log($msg) {
 $python = Join-Path $workspace 'PoBox\.venv\Scripts\python.exe'
 if (-not (Test-Path $python)) { $python = 'python' }
 
-Log "Refresh started (push: $(-not $NoPush))"
-& $python (Join-Path $PSScriptRoot 'build_global_data.py') 2>&1 | ForEach-Object { Add-Content -LiteralPath $log -Value "  $_" }
-if ($LASTEXITCODE -ne 0) { Log "Crawl failed with exit code $LASTEXITCODE - nothing committed."; exit 1 }
-Log 'Crawl finished.'
+Log "Refresh started (push: $(-not $NoPush), crawl: $(-not $NoCrawl))"
+if (-not $NoCrawl) {
+    & $python (Join-Path $PSScriptRoot 'build_global_data.py') 2>&1 | ForEach-Object { Add-Content -LiteralPath $log -Value "  $_" }
+    if ($LASTEXITCODE -ne 0) { Log "Crawl failed with exit code $LASTEXITCODE - nothing committed."; exit 1 }
+    Log 'Crawl finished.'
+}
 if ($NoPush) { Log 'Done (no push requested).'; exit 0 }
 
 $branch = (& git -C $repo rev-parse --abbrev-ref HEAD).Trim()

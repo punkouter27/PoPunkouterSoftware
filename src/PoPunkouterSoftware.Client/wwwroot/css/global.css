@@ -430,3 +430,39 @@
 
 .global-row-actions { flex-wrap: nowrap; gap: 4px; margin-top: 4px; }
 .global-row-actions .global-chip { padding: 1px 8px; font-size: var(--po-text-xs); text-transform: none; letter-spacing: 0; }
+
+/* The station tab strip (one row, scrolls sideways on a phone) */
+.global-tabs {
+    display: flex;
+    gap: 2px;
+    margin: 0 0 var(--po-space-3);
+    padding-bottom: 2px;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--po-border);
+    scrollbar-width: thin;
+}
+
+.global-tab {
+    flex: 0 0 auto;
+    padding: 6px 10px;
+    border-radius: var(--po-radius-sm) var(--po-radius-sm) 0 0;
+    color: var(--po-text-muted);
+    font-size: var(--po-text-sm);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.global-tab:hover { color: var(--po-text); background: var(--po-surface-2); }
+.global-tab:focus-visible { outline: 2px solid var(--po-accent); outline-offset: -2px; }
+.global-tab.is-active { color: var(--po-text); background: var(--po-surface); font-weight: 600; box-shadow: inset 0 -2px 0 var(--po-accent); }
+
+/* Hub */
+.global-fresh { display: grid; gap: 4px; margin: 6px 0; font-size: var(--po-text-sm); }
+.global-item.is-attention { border-left-color: var(--po-warning); }
+.global-attention { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: var(--po-text-sm); }
+.global-attention li { display: flex; gap: 8px; align-items: baseline; }
+.global-delta { margin-top: 2px; font-size: var(--po-text-xs); color: var(--po-text-muted); }
+.global-delta.is-bad, .global-delta.is-good { color: var(--po-text); font-weight: 600; }
+.global-delta.is-bad::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 4px; border-radius: 50%; background: var(--po-danger); }
+.global-delta.is-good::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 4px; border-radius: 50%; background: var(--po-success); }
+a.global-chip { text-decoration: none; color: inherit; }

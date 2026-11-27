@@ -69,6 +69,35 @@ class ActionRefusalTests(unittest.TestCase):
         self.assertFalse(lh.do_action({"action": "vault_import", "brain": "x.onnx", "target": "nope"})["ok"])
 
 
+class ConfigTests(unittest.TestCase):
+    def test_readiness_keeps_known_keys_and_drops_empty_apps(self):
+        repo = sorted(lh.repo_names())[0]
+        cleaned, problem = lh.clean_config("readiness", {"apps": {repo: {
+            "stage": "polishing", "notes": "  ship it  ",
+            "checklist": {"core_loop": True, "perf": False, "evil": True, "audio_fx": None},
+            "extra": "dropped"}}})
+        self.assertEqual(problem, "")
+        self.assertEqual(cleaned, {"apps": {repo: {"stage": "polishing", "notes": "ship it",
+                                                   "checklist": {"core_loop": True, "perf": False}}}})
+        self.assertEqual(lh.clean_config("readiness", {"apps": {repo: {"checklist": {}}}})[0], {"apps": {}})
+
+    def test_readiness_refuses_unknown_repos_and_stages(self):
+        self.assertIsNone(lh.clean_config("readiness", {"apps": {"..": {}}})[0])
+        repo = sorted(lh.repo_names())[0]
+        self.assertIsNone(lh.clean_config("readiness", {"apps": {repo: {"stage": "launched"}}})[0])
+
+    def test_vault_gold_accepts_only_brains_inside_workspace_repos(self):
+        repo = sorted(lh.repo_names())[0]
+        ok, _ = lh.clean_config("vault_gold", {"gold": {f"{repo}/a/b.onnx": "best"}})
+        self.assertEqual(ok, {"gold": {f"{repo}/a/b.onnx": "best"}})
+        for bad in (f"{repo}/../x.onnx", "NotARepo/a.onnx", f"{repo}/a.txt"):
+            self.assertIsNone(lh.clean_config("vault_gold", {"gold": {bad: ""}})[0], bad)
+
+    def test_unknown_config_names_are_refused(self):
+        self.assertIsNone(lh.clean_config("appsettings", {})[0])
+        self.assertFalse(lh.do_action({"action": "save_config", "arg": "../../x", "data": {}})["ok"])
+
+
 class HttpGateTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

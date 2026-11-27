@@ -146,6 +146,8 @@ public sealed class GlobalDataStore
             () => new GlobalQueueDto { Jobs = LoadTrainJobs().Jobs });
         queue.Jobs ??= [];
         queue.CloudJobs ??= [];
+        queue.Behaviors ??= [];
+        queue.PastRuns ??= [];
         foreach (var job in queue.Jobs)
             job.Requires ??= [];
 
@@ -436,6 +438,128 @@ public sealed class GlobalDataStore
         }
 
         return new GlobalReadinessDto { Apps = apps };
+    }
+
+    /// <summary>
+    /// The hub page: what GLOBAL/index.html computed in hub_extras.py, from the same files.
+    /// </summary>
+    public GlobalHomeDto LoadHome()
+    {
+        var fleet = LoadFleet();
+        var repos = fleet.Repos.Values.ToList();
+        var gitRepos = repos.Where(r => r.Git.IsGit).ToList();
+        var rl = LoadRl();
+        var timeline = LoadStationTimeline();
+        var trend = timeline.Select(Point).ToList();
+        var queue = LoadQueue();
+
+        var attention = new List<GlobalAttentionDto>();
+        foreach (var repo in gitRepos.Where(r => r.Ci.LatestRun?.Conclusion is { Length: > 0 } c && c != "success"))
+            attention.Add(new() { Severity = "fix", Text = $"CI is not passing in {repo.Name} ({repo.Ci.LatestRun!.Conclusion})", Href = "/global/fleet" });
+        var noCi = gitRepos.Count(r => string.IsNullOrEmpty(r.Ci.LatestRun?.Conclusion));
+        if (noCi > 0)
+            attention.Add(new() { Severity = "check", Text = $"{noCi} repo(s) have no completed CI result", Href = "/global/fleet" });
+        foreach (var repo in gitRepos)
+        {
+            if (repo.Git.DirtyCount > 0)
+                attention.Add(new() { Severity = "check", Text = $"{repo.Name}: {repo.Git.DirtyCount} uncommitted file(s) - commit or stash", Href = "/global/fleet" });
+            if (repo.Git.Ahead > 0)
+                attention.Add(new() { Severity = "check", Text = $"{repo.Name}: {repo.Git.Ahead} commit(s) not pushed to GitHub", Href = "/global/fleet" });
+            if (repo.Git.Behind > 0)
+                attention.Add(new() { Severity = "info", Text = $"{repo.Name}: {repo.Git.Behind} commit(s) behind remote - pull", Href = "/global/fleet" });
+        }
+
+        var flags = RlFlags(rl.Repos);
+        if (flags.Count > 0)
+            attention.Add(new() { Severity = "check", Text = $"{flags.Count} RL repo(s) have speed numbers that are missing or not comparable", Href = "#flags" });
+
+        var ready = queue.Jobs.Count(j => j.Missing is { Count: 0 });
+        if (queue.Jobs.Count > 0)
+            attention.Add(new() { Severity = "info", Text = $"Overnight GPU queue: {ready}/{queue.Jobs.Count} jobs ready - plan tonight's run", Href = "/global/queue" });
+
+        var heavy = repos.SelectMany(r => r.Disk.HeavyDirs)
+            .Where(h => string.Equals(h.Safety, "regenerable", StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(h => h.Bytes)
+            .ToList();
+        if (heavy.Count > 0)
+        {
+            var top = string.Join(", ", heavy.Take(3).Select(h => $"{h.Rel} ({h.Bytes / 1e9:0.0} GB)"));
+            attention.Add(new()
+            {
+                Severity = "info",
+                Text = $"Disk: {heavy.Sum(h => h.Bytes) / 1e9:0} GB can be rebuilt if you need space. Biggest: {top}. Cleanup commands are copy-only - nothing is deleted for you.",
+                Href = "/global/disk",
+            });
+        }
+
+        return new GlobalHomeDto
+        {
+            FleetGenerated = fleet.Generated,
+            RlRecorded = rl.History.Count > 0 && DateTimeOffset.TryParse(rl.History[^1].Timestamp, out var recorded) ? recorded : null,
+            Attention = attention,
+            Benchmark = LoadBenchmarkRun(),
+            Now = new GlobalTrendPointDto
+            {
+                When = fleet.Generated,
+                Brains = gitRepos.Sum(r => r.Onnx.Count),
+                DiskBytes = repos.Sum(r => r.Disk.TotalBytes ?? 0),
+                Dirty = gitRepos.Count(r => r.Git.DirtyCount > 0),
+                CiFailing = gitRepos.Count(r => r.Ci.LatestRun?.Conclusion is { Length: > 0 } c && c != "success"),
+            },
+            Previous = trend.Count > 1 ? trend[^2] : null,
+            Trend = trend,
+            Flags = flags,
+            Benchmarks = rl.Repos.OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList(),
+            JobsReady = ready,
+            JobsTotal = queue.Jobs.Count,
+        };
+
+        static GlobalTrendPointDto Point(GlobalTimelineEntryDto entry) => new()
+        {
+            When = entry.When,
+            Brains = entry.Repos.Values.Sum(r => r.Onnx ?? 0),
+            DiskBytes = entry.Repos.Values.Sum(r => r.Bytes ?? 0),
+            Dirty = entry.Repos.Values.Count(r => r.Dirty > 0),
+            CiFailing = entry.Repos.Values.Count(r => r.Ci is { Length: > 0 } c && c != "success"),
+        };
+    }
+
+    /// <summary>The newest benchmark attempt (<c>benchmark_last.json</c>), or null when none was recorded.</summary>
+    public GlobalBenchmarkRunDto? LoadBenchmarkRun()
+    {
+        var run = Load("benchmark_last.json", GlobalCrawlerJsonContext.Default.GlobalBenchmarkRunDto,
+            static () => new GlobalBenchmarkRunDto());
+        if (run.Stamp.Length == 0)
+            return null;
+
+        run.Results ??= [];
+        return run;
+    }
+
+    /// <summary>RL speed numbers that are real but must not be compared at face value (hub_extras.rl_flags).</summary>
+    public static List<GlobalRlFlagDto> RlFlags(IEnumerable<GlobalRlRepoViewDto> repos, DateTimeOffset? now = null)
+    {
+        var flags = new List<GlobalRlFlagDto>();
+        foreach (var repo in repos.OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase))
+        {
+            if (repo.Benchmark is not { } bench)
+            {
+                flags.Add(new() { Repo = repo.Name, Why = "no speed benchmark recorded - speed shows as '-' (not zero)" });
+                continue;
+            }
+
+            var notes = new List<string>();
+            if (bench.NumEnvs is > 0 and < 64)
+                notes.Add($"only {bench.NumEnvs} envs (tiny test run)");
+            if (bench.EnvStepsPerS is > 0 and < 1000)
+                notes.Add($"{bench.EnvStepsPerS:N0} steps/s is very low");
+            if (bench.When is { } when && ((now ?? DateTimeOffset.UtcNow) - when).TotalDays > 3)
+                notes.Add($"benchmark is {(int)((now ?? DateTimeOffset.UtcNow) - when).TotalDays} days old");
+            if (notes.Count > 0)
+                flags.Add(new() { Repo = repo.Name, Why = string.Join("; ", notes) + " - not comparable with the 4,096-env runs" });
+        }
+
+        return flags;
     }
 
     public GlobalBriefingDto LoadBriefing()

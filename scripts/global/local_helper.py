@@ -153,6 +153,58 @@ def build_queue(body: dict) -> tuple[dict | None, str]:
     return queue, ""
 
 
+STAGES = ("prototype", "playable", "polishing", "ready", "shipped")
+CHECKS = ("core_loop", "controls", "ui_polish", "audio_fx", "perf", "no_critical_bugs")
+CONFIG_FILES = {"readiness": "readiness.json", "vault_gold": "vault_gold.json"}
+
+
+def lh_config_path(name: str) -> Path:
+    return sc.CONFIG / CONFIG_FILES[name]
+
+
+def clean_config(name: str, data) -> tuple[dict | None, str]:
+    """Validate a page's edit of readiness.json or vault_gold.json; keep only known keys and sizes."""
+    if name not in CONFIG_FILES:
+        return None, f"unknown config {name!r}"
+    if not isinstance(data, dict):
+        return None, "config data must be an object"
+    if name == "readiness":
+        apps = data.get("apps")
+        if not isinstance(apps, dict):
+            return None, "readiness needs an 'apps' object"
+        known = repo_names()
+        clean = {}
+        for repo, entry in apps.items():
+            if repo not in known or not isinstance(entry, dict):
+                return None, f"unknown repo {repo!r}"
+            stage = entry.get("stage")
+            if stage is not None and stage not in STAGES:
+                return None, f"unknown stage {stage!r}"
+            checklist = entry.get("checklist") or {}
+            if not isinstance(checklist, dict):
+                return None, "checklist must be an object"
+            item = {"checklist": {k: v for k, v in checklist.items() if k in CHECKS and isinstance(v, bool)}}
+            if stage:
+                item["stage"] = stage
+            notes = entry.get("notes")
+            if isinstance(notes, str) and notes.strip():
+                item["notes"] = notes.strip()[:2000]
+            if item.get("stage") or item["checklist"] or item.get("notes"):
+                clean[repo] = item
+        return {"apps": clean}, ""
+    gold = data.get("gold")
+    if not isinstance(gold, dict):
+        return None, "vault_gold needs a 'gold' object"
+    known = repo_names()
+    clean = {}
+    for rel, note in gold.items():
+        if not isinstance(rel, str) or len(rel) > 400 or ".." in rel or rel.split("/")[0] not in known \
+                or not rel.lower().endswith(".onnx"):
+            return None, f"not a brain path in a workspace repo: {rel!r}"
+        clean[rel] = str(note or "")[:200]
+    return {"gold": clean}, ""
+
+
 def recent_runs(limit: int = 5) -> str:
     if not RUNS.is_dir():
         return "No queue has run from this PC yet."
@@ -208,10 +260,23 @@ def do_action(body: dict) -> dict:
 
     if act == "refresh":
         args = [] if body.get("push") else ["-NoPush"]
+        if body.get("push") and body.get("noCrawl"):
+            args = ["-NoCrawl"]
         jid = start_job("refresh", ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
                                     str(HERE / "refresh_and_push.ps1"), *args], WORKSPACE)
         what = "crawl, commit and push (the site redeploys in about 5 minutes)" if body.get("push") else "crawl only"
         return {"ok": True, "output": f"Started the refresh: {what}.", "job": jid}
+
+    if act == "save_config":
+        name = str(body.get("arg") or "")
+        data = body.get("data")
+        cleaned, problem = clean_config(name, data)
+        if cleaned is None:
+            return {"ok": False, "output": problem}
+        target = lh_config_path(name)
+        target.write_text(json.dumps(cleaned, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        saved = f"Saved App_Data/global/config/{target.name}. Push it to show it on the live site."
+        return {"ok": True, "output": saved}
 
     if act == "job_status":
         job = JOBS.get(str(body.get("job")))
