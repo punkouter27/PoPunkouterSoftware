@@ -98,6 +98,10 @@ try
 
     builder.Services.AddSingleton<AzureReportStore>();
     builder.Services.AddSingleton<UptimeSampleStore>();
+    // The GLOBAL snapshot written by scripts/global. App_Data is under the content root, so
+    // these files are never served statically; /api/global/* is the only way in.
+    builder.Services.AddSingleton(sp => new PoPunkouterSoftware.Infrastructure.GlobalDataStore(
+        Path.Combine(sp.GetRequiredService<IWebHostEnvironment>().ContentRootPath, "App_Data", "global")));
     builder.Services.AddSingleton<AppScreenshotStore>();
     builder.Services.AddTransient<AzureReportService>();
     builder.Services.AddTransient<DowntimeDiagnosisService>();
@@ -289,6 +293,7 @@ try
     app.MapDiagEndpoints();
     app.MapPortfolioEndpoints();
     app.MapSignInEndpoints();
+    app.MapGlobalEndpoints();
     app.MapVisitEndpoints();
     app.MapHub<RefreshHub>("/hubs/refresh").RequireAuthorization();
 

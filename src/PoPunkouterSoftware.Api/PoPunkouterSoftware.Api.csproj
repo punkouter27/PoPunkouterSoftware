@@ -53,4 +53,12 @@
     <ProjectReference Include="..\PoPunkouterSoftware.Infrastructure\PoPunkouterSoftware.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- GLOBAL snapshot written by scripts/global/build_global_data.py and read by
+         /api/global/*. Lives under App_Data (content root), never the web root.
+         Update, not Include: the web SDK already lists every *.json as Content. -->
+    <Content Update="App_Data\global\**\*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="App_Data\global\**\*.jsonl" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -1,0 +1,383 @@
+/* ── /global ─────────────────────────────────────────────────────────────────
+   The GLOBAL station, now rendered by the app. One stylesheet for the whole section so the
+   eleven pages share the same card, table, tone and board look; every colour comes from the
+   --po-* tokens, which are defined for both light and dark. */
+
+.global-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--po-space-3);
+    margin-bottom: var(--po-space-3);
+}
+
+.global-head h1 {
+    margin: 0;
+}
+
+.global-stamp {
+    color: var(--po-text-muted);
+    font-size: var(--po-text-xs);
+}
+
+.global-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--po-space-2);
+    margin: var(--po-space-3) 0;
+}
+
+.global-kpi {
+    padding: var(--po-space-3);
+    background: var(--po-surface);
+    border: 1px solid var(--po-border);
+    border-radius: var(--po-radius-md, 10px);
+}
+
+.global-kpi .v {
+    font-size: var(--po-text-xl);
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.global-kpi .l {
+    color: var(--po-text-muted);
+    font-size: var(--po-text-xs);
+}
+
+.global-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--po-space-3);
+}
+
+.global-tile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--po-space-2);
+    padding: var(--po-space-3);
+    background: var(--po-surface);
+    border: 1px solid var(--po-border);
+    border-radius: var(--po-radius-md, 10px);
+    color: inherit;
+    text-decoration: none;
+}
+
+.global-tile:hover,
+.global-tile:focus-visible {
+    border-color: var(--po-accent);
+    text-decoration: none;
+}
+
+.global-tile h2 {
+    margin: 0;
+    font-size: var(--po-text-md);
+}
+
+.global-tile .v {
+    font-size: var(--po-text-lg);
+    font-weight: 700;
+}
+
+.global-tile .n {
+    color: var(--po-text-muted);
+    font-size: var(--po-text-xs);
+}
+
+.global-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--po-space-2);
+    margin: var(--po-space-3) 0;
+}
+
+.global-search {
+    min-width: 220px;
+    flex: 1 1 240px;
+    padding: 6px 10px;
+    color: var(--po-text);
+    background: var(--po-surface);
+    border: 1px solid var(--po-border);
+    border-radius: var(--po-radius-sm, 8px);
+    font: inherit;
+    font-size: var(--po-text-sm);
+}
+
+.global-search:focus-visible {
+    outline: 2px solid var(--po-accent);
+    outline-offset: 1px;
+}
+
+.global-chip {
+    padding: 3px 10px;
+    color: var(--po-text);
+    background: var(--po-surface);
+    border: 1px solid var(--po-border);
+    border-radius: 999px;
+    font-size: var(--po-text-xs);
+    cursor: pointer;
+}
+
+.global-chip.is-on {
+    background: var(--po-accent-soft);
+    border-color: var(--po-accent);
+    color: var(--po-text);
+}
+
+.global-count {
+    color: var(--po-text-muted);
+    font-size: var(--po-text-xs);
+}
+
+/* Tones are a soft background with --po-text on top, never the status colour as text. */
+.global-tone {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: var(--po-text-xs);
+    font-weight: 600;
+    color: var(--po-text);
+}
+
+.global-tone.is-good { background: var(--po-success-soft); }
+.global-tone.is-bad { background: var(--po-danger-soft); }
+.global-tone.is-warn { background: var(--po-warning-soft); }
+.global-tone.is-info { background: var(--po-info-soft); }
+.global-tone.is-muted { background: var(--po-surface-2); }
+
+.global-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--po-border);
+    border-radius: var(--po-radius-md, 10px);
+    background: var(--po-surface);
+}
+
+.global-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--po-text-sm);
+}
+
+.global-table th,
+.global-table td {
+    padding: 7px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--po-border);
+    vertical-align: top;
+}
+
+.global-table th {
+    color: var(--po-text-muted);
+    font-size: var(--po-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.global-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.global-table .is-number {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.global-table .is-nowrap {
+    white-space: nowrap;
+}
+
+.global-mono {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: var(--po-text-xs);
+}
+
+.global-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--po-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.global-item {
+    padding: var(--po-space-3);
+    background: var(--po-surface);
+    border: 1px solid var(--po-border);
+    border-left: 3px solid var(--po-border);
+    border-radius: var(--po-radius-md, 10px);
+}
+
+.global-item.is-trap { border-left-color: var(--po-danger); }
+.global-item.is-rule { border-left-color: var(--po-info); }
+
+.global-item .text { font-size: var(--po-text-sm); }
+.global-item .meta {
+    margin-top: 4px;
+    color: var(--po-text-muted);
+    font-size: var(--po-text-xs);
+}
+
+.global-tags {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-left: 6px;
+}
+
+.global-tag {
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--po-surface-2);
+    color: var(--po-text-muted);
+    font-size: var(--po-text-xs);
+}
+
+/* Ship board */
+.global-board {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(200px, 1fr));
+    gap: var(--po-space-2);
+    overflow-x: auto;
+    padding-bottom: var(--po-space-2);
+}
+
+@media (max-width: 900px) {
+    .global-board { grid-template-columns: repeat(5, 220px); }
+}
+
+.global-col {
+    padding: var(--po-space-2);
+    background: var(--po-surface-2);
+    border: 1px solid var(--po-border);
+    border-radius: var(--po-radius-md, 10px);
+    min-height: 140px;
+}
+
+.global-col h2 {
+    display: flex;
+    justify-content: space-between;
+    margin: 2px 2px 8px;
+    font-size: var(--po-text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--po-text-muted);
+}
+
+.global-app {
+    padding: 8px 9px;
+    margin-bottom: 8px;
+    background: var(--po-surface);
+    border: 1px solid var(--po-border);
+    border-radius: var(--po-radius-sm, 8px);
+    font-size: var(--po-text-xs);
+}
+
+.global-app .hd {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+}
+
+.global-app .why {
+    color: var(--po-text-muted);
+    margin: 3px 0;
+}
+
+.global-progress {
+    height: 5px;
+    margin: 5px 0;
+    background: var(--po-surface-2);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.global-progress span {
+    display: block;
+    height: 100%;
+    background: var(--po-success);
+}
+
+.global-checks {
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.global-checks li {
+    color: var(--po-text-muted);
+}
+
+.global-checks li.is-done {
+    color: var(--po-text);
+}
+
+.global-checks li::before {
+    content: "☐ ";
+}
+
+.global-checks li.is-done::before {
+    content: "☑ ";
+}
+
+.global-error {
+    padding: var(--po-space-3);
+    background: var(--po-danger-soft);
+    border: 1px solid var(--po-danger);
+    border-radius: var(--po-radius-md, 10px);
+    color: var(--po-text);
+}
+
+.global-note {
+    color: var(--po-text-muted);
+    font-size: var(--po-text-sm);
+}
+
+/* UNITE rules document */
+.global-doc {
+    max-width: 78ch;
+    font-size: var(--po-text-sm);
+    line-height: 1.55;
+}
+
+.global-doc h2,
+.global-doc h3,
+.global-doc h4 {
+    margin: var(--po-space-3) 0 var(--po-space-1);
+}
+
+.global-doc p {
+    margin: 0 0 var(--po-space-2);
+}
+
+.global-doc ul {
+    margin: 0 0 var(--po-space-2);
+    padding-left: 1.3em;
+}
+
+.global-code {
+    overflow-x: auto;
+    padding: var(--po-space-2);
+    background: var(--po-surface-2);
+    border-radius: var(--po-radius-sm, 8px);
+    font-size: var(--po-text-xs);
+}
+
+/* RL history chart */
+.global-chart {
+    width: 100%;
+    height: auto;
+    background: var(--po-surface);
+    border: 1px solid var(--po-border);
+    border-radius: var(--po-radius-md, 10px);
+}
+
+.global-chart .axis { stroke: var(--po-border); }
+.global-chart .line { fill: none; stroke: var(--po-accent); stroke-width: 2; }
+.global-chart .dot { fill: var(--po-accent); }
+.global-chart .label { fill: var(--po-text-muted); font-size: 10px; }

@@ -34,6 +34,34 @@ public sealed class PortfolioApiClient
     public Task<SignInReport?> GetSignInsAsync(int days, CancellationToken ct = default) =>
         _http.GetFromJsonAsync($"/api/signins?days={days}", AppJsonContext.Default.SignInReport, ct);
 
+    // ─── GLOBAL snapshot (signed-in only) ────────────────────────────────────
+    // Every one of these reads a committed crawl of the owner's workspace; the API answers
+    // 401 to an anonymous caller, so the pages carry [Authorize] like /azure and /users.
+
+    public Task<GlobalSummaryDto?> GetGlobalSummaryAsync(CancellationToken ct = default) =>
+        _http.GetFromJsonAsync("/api/global/summary", GlobalJsonContext.Default.GlobalSummaryDto, ct);
+
+    public Task<GlobalSnapshotDto?> GetGlobalFleetAsync(CancellationToken ct = default) =>
+        _http.GetFromJsonAsync("/api/global/fleet", GlobalJsonContext.Default.GlobalSnapshotDto, ct);
+
+    public Task<GlobalVaultDto?> GetGlobalVaultAsync(CancellationToken ct = default) =>
+        _http.GetFromJsonAsync("/api/global/vault", GlobalJsonContext.Default.GlobalVaultDto, ct);
+
+    public Task<GlobalLessonsFileDto?> GetGlobalLessonsAsync(CancellationToken ct = default) =>
+        _http.GetFromJsonAsync("/api/global/lessons", GlobalJsonContext.Default.GlobalLessonsFileDto, ct);
+
+    public Task<GlobalReadinessDto?> GetGlobalReadinessAsync(CancellationToken ct = default) =>
+        _http.GetFromJsonAsync("/api/global/readiness", GlobalJsonContext.Default.GlobalReadinessDto, ct);
+
+    public Task<GlobalBriefingDto?> GetGlobalBriefingAsync(CancellationToken ct = default) =>
+        _http.GetFromJsonAsync("/api/global/briefing", GlobalJsonContext.Default.GlobalBriefingDto, ct);
+
+    public Task<GlobalRlDto?> GetGlobalRlAsync(CancellationToken ct = default) =>
+        _http.GetFromJsonAsync("/api/global/rl", GlobalJsonContext.Default.GlobalRlDto, ct);
+
+    public Task<GlobalUniteDto?> GetGlobalUniteAsync(CancellationToken ct = default) =>
+        _http.GetFromJsonAsync("/api/global/unite", GlobalJsonContext.Default.GlobalUniteDto, ct);
+
     public Task<HttpResponseMessage> StartRefreshAsync(CancellationToken ct = default) =>
         _http.PostAsync("/api/diag/refresh", content: null, ct);
 
