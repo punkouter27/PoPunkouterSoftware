@@ -129,8 +129,8 @@ public class GlobalUiTests : IAsyncLifetime
         await page.GotoAsync($"{BaseUrl}/global/queue", new() { WaitUntil = WaitUntilState.NetworkIdle });
 
         await Assertions.Expect(page.GetByText("This PC is connected")).ToBeVisibleAsync(new() { Timeout = 40_000 });
-        var firstReady = page.Locator(".global-list .global-item input[type=checkbox]:not([disabled])").First;
-        await firstReady.CheckAsync();
+        // The planner adds catalog jobs to tonight's queue with "+ Add" (as GLOBAL's gpu_queue.html did).
+        await page.Locator(".queue-catalog button.queue-add").First.ClickAsync();
         await CaptureAsync(page, "global-queue-desktop.png");
 
         await page.GetByRole(AriaRole.Button, new() { Name = "Dry run (starts nothing)" }).ClickAsync();

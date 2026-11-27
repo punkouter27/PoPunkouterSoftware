@@ -207,7 +207,11 @@ public sealed class GlobalReadinessEntryDto
 
 public sealed class GlobalVaultGoldFileDto
 {
-    public Dictionary<string, bool> Gold { get; set; } = [];
+    /// <summary>
+    /// Brain path → note. The old station wrote <c>true</c>; the vault page writes a note string
+    /// ("starred 2026-11-27"). <c>false</c> and <c>null</c> mean "not starred".
+    /// </summary>
+    public Dictionary<string, System.Text.Json.JsonElement> Gold { get; set; } = [];
 }
 
 public sealed class GlobalTrainJobsFileDto
@@ -529,6 +533,9 @@ public sealed class GlobalSocketDto
     public int Obs { get; set; }
     public int Act { get; set; }
     public int Count { get; set; }
+
+    /// <summary>Repos with a policy (not a critic) on this socket.</summary>
+    public List<string> Repos { get; set; } = [];
 }
 
 public sealed class GlobalVaultBrainDto
@@ -543,6 +550,25 @@ public sealed class GlobalVaultBrainDto
     public int? Act { get; set; }
     public string Socket { get; set; } = "";
     public DateTimeOffset? Modified { get; set; }
+    public string? Sha1 { get; set; }
+    public int? Opset { get; set; }
+
+    /// <summary><c>policy</c>, or <c>critic</c> (a value head: name holds critic/value, or one action).</summary>
+    public string Role { get; set; } = "policy";
+    public string? Stack { get; set; }
+
+    /// <summary>How many .onnx files in the fleet have this exact content (same sha).</summary>
+    public int Copies { get; set; } = 1;
+
+    /// <summary>Other repos that run a policy with the same socket.</summary>
+    public List<string> Fits { get; set; } = [];
+
+    /// <summary>The graph's inputs → outputs, e.g. <c>obs [batch, 103] → actions [batch, 21], value [batch, 1]</c>.</summary>
+    public string? Io { get; set; }
+    public string? GoldNote { get; set; }
+
+    /// <summary>The file on GitHub, when the repo's remote is known.</summary>
+    public string? Url { get; set; }
 }
 
 public sealed class GlobalVaultModelDto
@@ -555,6 +581,8 @@ public sealed class GlobalVaultModelDto
     public int? Joints { get; set; }
     public int? Actuators { get; set; }
     public string? Timestep { get; set; }
+    public int? FreeJoints { get; set; }
+    public string? Url { get; set; }
 }
 
 public sealed class GlobalReadinessDto

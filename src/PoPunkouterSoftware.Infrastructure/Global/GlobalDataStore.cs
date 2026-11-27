@@ -310,13 +310,32 @@ public sealed class GlobalDataStore
 
         var brains = new List<GlobalVaultBrainDto>();
         var models = new List<GlobalVaultModelDto>();
+        var repos = fleet.Repos.Values.OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList();
 
-        foreach (var repo in fleet.Repos.Values.OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase))
+        // As the old vault: copies by content, and which repos run a POLICY on each socket.
+        var shaCount = repos.SelectMany(r => r.Onnx)
+            .Where(b => b.Sha1 is { Length: > 0 })
+            .GroupBy(b => b.Sha1!, StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal);
+        var socketRepos = new Dictionary<string, SortedSet<string>>(StringComparer.Ordinal);
+        foreach (var repo in repos)
+        {
+            foreach (var b in repo.Onnx.Where(b => b.Obs is > 0 && b.Act is > 0 && BrainRole(b) == "policy"))
+            {
+                var socket = Socket(b.Obs, b.Act);
+                if (!socketRepos.TryGetValue(socket, out var set))
+                    socketRepos[socket] = set = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+                set.Add(repo.Name);
+            }
+        }
+
+        foreach (var repo in repos)
         {
             foreach (var b in repo.Onnx)
             {
-                var isGold = gold.ContainsKey(b.Rel) || gold.ContainsKey(b.Name)
-                    || (b.Sha1 is { Length: > 0 } sha && gold.ContainsKey(sha));
+                var note = GoldNote(gold, b.Rel) ?? GoldNote(gold, b.Name)
+                    ?? (b.Sha1 is { Length: > 0 } sha ? GoldNote(gold, sha) : null);
+                var socket = Socket(b.Obs, b.Act);
                 brains.Add(new GlobalVaultBrainDto
                 {
                     Repo = repo.Name,
@@ -324,11 +343,22 @@ public sealed class GlobalDataStore
                     Rel = b.Rel,
                     Kb = b.Kb,
                     Shipped = b.Shipped,
-                    Gold = isGold,
+                    Gold = note is not null,
+                    GoldNote = note,
                     Obs = b.Obs,
                     Act = b.Act,
-                    Socket = Socket(b.Obs, b.Act),
+                    Socket = socket,
                     Modified = DateTimeOffset.FromUnixTimeSeconds(b.Mtime),
+                    Sha1 = b.Sha1,
+                    Opset = b.Opset,
+                    Role = BrainRole(b),
+                    Stack = repo.RlStack,
+                    Copies = b.Sha1 is { Length: > 0 } s1 && shaCount.TryGetValue(s1, out var copies) ? copies : 1,
+                    Fits = socketRepos.TryGetValue(socket, out var fits)
+                        ? fits.Where(r => !string.Equals(r, repo.Name, StringComparison.OrdinalIgnoreCase)).ToList()
+                        : [],
+                    Io = BrainIo(b),
+                    Url = GitHubFileUrl(repo, b.Rel),
                 });
             }
 
@@ -344,6 +374,8 @@ public sealed class GlobalDataStore
                     Joints = m.Joints,
                     Actuators = m.Actuators,
                     Timestep = m.Timestep,
+                    FreeJoints = m.FreeJoints,
+                    Url = GitHubFileUrl(repo, m.Rel),
                 });
             }
         }
@@ -356,8 +388,10 @@ public sealed class GlobalDataStore
                 Obs = g.Key.Obs,
                 Act = g.Key.Act,
                 Count = g.Count(),
+                Repos = socketRepos.TryGetValue(g.Key.Socket, out var set) ? set.ToList() : [],
             })
-            .OrderByDescending(s => s.Count)
+            .OrderByDescending(s => s.Repos.Count)
+            .ThenByDescending(s => s.Count)
             .ThenBy(s => s.Socket, StringComparer.Ordinal)
             .ToList();
 
@@ -373,6 +407,65 @@ public sealed class GlobalDataStore
                 .ToList(),
             Models = models,
         };
+    }
+
+    /// <summary>"critic" for a value head (the old vault's rule: name holds critic/value, or a single action), else "policy".</summary>
+    public static string BrainRole(GlobalBrainDto brain) =>
+        brain.Name.Contains("critic", StringComparison.OrdinalIgnoreCase)
+        || brain.Name.Contains("value", StringComparison.OrdinalIgnoreCase)
+        || brain.Act == 1
+            ? "critic"
+            : "policy";
+
+    /// <summary>A vault_gold.json entry's note, or null when the path is not starred (false, null or absent).</summary>
+    private static string? GoldNote(Dictionary<string, JsonElement> gold, string key)
+    {
+        if (!gold.TryGetValue(key, out var value))
+            return null;
+
+        return value.ValueKind switch
+        {
+            JsonValueKind.True => "starred",
+            JsonValueKind.String => value.GetString() is { Length: > 0 } note ? note : "starred",
+            _ => null,
+        };
+    }
+
+    /// <summary>"obs [batch, 103] → actions [batch, 21], value [batch, 1]" from the crawler's [name, dims] pairs.</summary>
+    private static string? BrainIo(GlobalBrainDto brain)
+    {
+        static string Dim(JsonElement d) => d.ValueKind == JsonValueKind.String ? d.GetString() ?? "" : d.ToString();
+
+        static string Side(List<JsonElement> tensors) => string.Join(", ", tensors.Select(t =>
+        {
+            if (t.ValueKind != JsonValueKind.Array || t.GetArrayLength() == 0)
+                return t.ToString();
+
+            var name = Dim(t[0]);
+            var dims = t.GetArrayLength() > 1 && t[1].ValueKind == JsonValueKind.Array
+                ? $" [{string.Join(", ", t[1].EnumerateArray().Select(Dim))}]"
+                : "";
+            return name + dims;
+        }));
+
+        return brain.Inputs.Count == 0 && brain.Outputs.Count == 0
+            ? null
+            : $"{Side(brain.Inputs)} → {Side(brain.Outputs)}";
+    }
+
+    /// <summary>Workspace-relative path (<c>PoBox/Assets/x.onnx</c>) → the file on GitHub, or null without a remote.</summary>
+    public static string? GitHubFileUrl(GlobalRepoDto repo, string rel)
+    {
+        var slug = repo.Git.Slug is { Length: > 0 } s
+            ? s
+            : repo.Git.Remote?.Trim().TrimEnd('/')
+                .Replace("https://github.com/", "", StringComparison.OrdinalIgnoreCase)
+                .Replace(".git", "", StringComparison.OrdinalIgnoreCase);
+        if (string.IsNullOrEmpty(slug) || slug.Contains(':', StringComparison.Ordinal))
+            return null;
+
+        var inRepo = rel.StartsWith(repo.Name + "/", StringComparison.OrdinalIgnoreCase) ? rel[(repo.Name.Length + 1)..] : rel;
+        return $"https://github.com/{slug}/blob/HEAD/{string.Join('/', inRepo.Split('/').Select(Uri.EscapeDataString))}";
     }
 
     public GlobalReadinessDto LoadReadiness()

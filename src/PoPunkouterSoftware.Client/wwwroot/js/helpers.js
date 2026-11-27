@@ -100,6 +100,21 @@ window.copyToClipboard = function (text) {
 };
 
 /**
+ * Save text as a file in the browser's downloads (the GPU queue's "Download queue JSON").
+ * A blob URL, so nothing is sent anywhere; the URL is revoked once the click has started.
+ */
+window.downloadText = function (filename, text, mime) {
+    const url = URL.createObjectURL(new Blob([text], { type: mime || 'text/plain' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+
+/**
  * Scroll the first element matching `selector` to the middle of its scroll containers — every
  * ancestor, so it also works inside the uptime grid's own sideways scroller. Used by
  * the ?focus= deep link that outage notifications carry.

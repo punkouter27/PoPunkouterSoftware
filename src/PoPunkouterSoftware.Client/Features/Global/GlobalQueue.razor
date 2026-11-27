@@ -1,25 +1,32 @@
 @page "/global/queue"
 @attribute [Authorize]
 @rendermode WasmRenderModes.Interactive
+@using System.Globalization
+@using System.Text
+@using System.Text.Json
 @using PoPunkouterSoftware.Shared
 @inject PortfolioApiClient Api
 @inject LocalHelperClient Helper
+@inject IJSRuntime JS
 
-<PageTitle>Training queue · PoPunkouterSoftware</PageTitle>
+<PageTitle>GPU queue · PoPunkouterSoftware</PageTitle>
 
-@* Replaces GLOBAL/station/pages/gpu_queue.html. The list is the committed snapshot, so it
-   reads anywhere. Starting anything needs the PC: a job is a command on the owner's machine
-   (GPU, venvs, Unity), or a tarball shipped from it to the cloud GPU, so the launch buttons
-   appear only when the local helper is connected. The page sends job ids and hours; the
-   helper takes every command from its own catalog. "Ready" is the crawl's check that every
-   path in `requires` existed on the PC when the snapshot was taken. *@
+@* The old GLOBAL/station/pages/gpu_queue.html planner, in three steps: what needs training
+   most (the RL triage list, config/behaviors.json, ranked by urgency), the job catalog
+   (config/train_jobs.json), and tonight's queue, plus the past runs. The plan lives in this
+   browser (localStorage) and can be downloaded as the JSON run_gpu_queue.ps1 reads, so it works
+   anywhere. Saving and starting it need the PC: those buttons appear only when the local helper
+   is connected, and the page sends job ids and hours only — the helper takes every command from
+   its own catalog. "Ready" is the crawl's check that every path in `requires` existed. *@
 <main id="main-content" class="app-page global-page" tabindex="-1">
     <GlobalTabs />
     <header class="global-head">
         <div>
-            <h1>Training queue</h1>
+            <h1>Plan tonight's training</h1>
             <p class="app-note">
-                Every training job, from <code>App_Data/global/config/train_jobs.json</code>. Jobs run on the PC's GPU or on the cloud GPU.
+                The most urgent behaviors on the left, each linked to the training jobs its repo documents. Add jobs, set hours, then
+                save or start the queue: <code>run_gpu_queue.ps1</code> runs them one after another, waits for the GPU to cool before
+                each GPU job, keeps the PC awake, and writes a morning report.
             </p>
         </div>
         @if (_queue?.Generated is not null)
@@ -45,193 +52,413 @@
     else
     {
         <section class="global-kpis" aria-label="Job totals">
-            <div class="global-kpi"><div class="v">@_queue.Jobs.Count</div><div class="l">jobs</div></div>
+            <div class="global-kpi"><div class="v">@_queue.Jobs.Count</div><div class="l">jobs in the catalog</div></div>
             <div class="global-kpi"><div class="v">@_queue.Jobs.Count(IsReady)</div><div class="l">ready to run</div></div>
             <div class="global-kpi"><div class="v">@_queue.Jobs.Count(IsBlocked)</div><div class="l">blocked</div></div>
             <div class="global-kpi"><div class="v">@_queue.Jobs.Count(NeedsGpu)</div><div class="l">need the GPU</div></div>
         </section>
 
-        @if (Helper.IsConnected)
-        {
-            <section class="global-item" aria-label="Run on this PC">
-                <div class="text"><strong>Run on this PC</strong> · @Picked.Count picked · @Hours(PickedHours) h</div>
-                <p class="global-note">
-                    Tick jobs below and set their hours. They run one after another in a new window on the PC; before each GPU job the
-                    queue waits for the GPU to cool, and it keeps the PC awake.
-                </p>
-                <div class="global-actions">
-                    <label class="global-field">Cool to °C
-                        <input class="global-search global-num" type="number" min="40" max="90" value="@_coolTemp" @onchange="e => _coolTemp = Number(e, 70)" />
-                    </label>
-                    <label class="global-field">Gap between jobs, min
-                        <input class="global-search global-num" type="number" min="0" max="120" value="@_gapMin" @onchange="e => _gapMin = Number(e, 5)" />
-                    </label>
-                    <label class="global-field">
-                        <input type="checkbox" checked="@_refreshAfter" @onchange="e => _refreshAfter = e.Value is true" />
-                        Refresh and push the snapshot when done
-                    </label>
-                </div>
-                <div class="global-actions">
-                    <button type="button" class="global-chip" disabled="@(_busy || Picked.Count == 0)" @onclick="() => Launch(dry: true)">Dry run (starts nothing)</button>
-                    @if (_confirmLaunch)
+        <p class="global-note">
+            Training commands come from each repo's own docs (the source is shown on every job). A <span class="global-tone is-bad">Blocked</span>
+            job is missing something it needs, such as a headless player that has not been built; the runner skips it. Close Unity and
+            Unreal before a night of GPU jobs.
+        </p>
+
+        <div class="queue-grid">
+            <div class="queue-plan">
+                <h2>1 · What needs training most</h2>
+                @if (_queue.Behaviors.Count == 0)
+                {
+                    <p class="global-note">No triage list yet: add behaviors to <code>App_Data/global/config/behaviors.json</code>.</p>
+                }
+                else
+                {
+                    <ol class="queue-urgent" aria-label="Behaviors ranked by urgency">
+                        @foreach (var behavior in _queue.Behaviors.Take(12))
+                        {
+                            var exact = _queue.Jobs.Where(j => j.BehaviorId == behavior.Id).ToList();
+                            var other = exact.Count > 0 ? new List<GlobalTrainJobDto>() : _queue.Jobs.Where(j => j.Repo == behavior.Repo).ToList();
+                            <li class="queue-urg">
+                                <span class="queue-score is-@UrgencyTone(behavior.Urgency)"
+                                      title="urgency = importance × (100 − quality) / 10">@behavior.Urgency</span>
+                                <div class="queue-urg-text">
+                                    <strong>@behavior.Behavior</strong> <span class="global-note">· @behavior.Repo</span>
+                                    @if (behavior.QuickWin)
+                                    {
+                                        <span class="global-tag">quick win</span>
+                                    }
+                                    @if (behavior.NextAction is { Length: > 0 })
+                                    {
+                                        <div class="queue-next">@behavior.NextAction</div>
+                                    }
+                                    <div class="global-note">
+                                        importance @behavior.Importance/10 · quality @behavior.Quality% @(behavior.EstTime is { Length: > 0 } est ? $"· est. {est}" : "")
+                                    </div>
+                                </div>
+                                <div class="queue-urg-jobs">
+                                    @foreach (var job in exact)
+                                    {
+                                        var id = job.Id ?? "";
+                                        <button type="button" class="global-chip" title="@(IsBlocked(job) ? $"blocked: {string.Join(", ", job.Missing!)}" : "job built for this behavior")"
+                                                @onclick="() => Add(id)">+ @id</button>
+                                    }
+                                    @foreach (var job in other)
+                                    {
+                                        var id = job.Id ?? "";
+                                        <button type="button" class="global-chip queue-repo-job" title="Not specific to this behavior: the repo's general @id job"
+                                                @onclick="() => Add(id)">repo job: @id</button>
+                                    }
+                                    @if (exact.Count == 0 && other.Count == 0)
+                                    {
+                                        <span class="global-note">no documented job</span>
+                                    }
+                                </div>
+                            </li>
+                        }
+                    </ol>
+                }
+
+                <h2>2 · Job catalog</h2>
+                <div class="global-actions" role="group" aria-label="Filter the job catalog">
+                    @foreach (var (key, label) in Filters)
                     {
-                        <button type="button" class="global-chip is-on" disabled="@(_busy || Picked.Count == 0)" @onclick="() => Launch(dry: false)">
-                            Yes, start @Picked.Count job(s) for @Hours(PickedHours) h
-                        </button>
-                        <button type="button" class="global-chip" @onclick="() => _confirmLaunch = false">Cancel</button>
+                        var k = key;
+                        <button type="button" class="global-chip @(_filter == k ? "is-on" : null)" aria-pressed="@(_filter == k ? "true" : "false")"
+                                @onclick="() => _filter = k">@label</button>
+                    }
+                </div>
+                <ul class="global-list queue-catalog">
+                    @foreach (var job in CatalogJobs)
+                    {
+                        var id = job.Id ?? "";
+                        <li class="global-item @(IsBlocked(job) ? "is-blocked" : null)">
+                            <div class="text queue-job-head">
+                                <span>
+                                    <strong>@(job.Label ?? job.Id)</strong> <span class="global-note">· @job.Repo</span>
+                                </span>
+                                <span class="queue-job-tags">
+                                    @if (IsBlocked(job))
+                                    {
+                                        <span class="global-tone is-bad">Blocked</span>
+                                    }
+                                    else if (IsReady(job))
+                                    {
+                                        <span class="global-tone is-good">Ready</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="global-tone is-muted">Not checked</span>
+                                    }
+                                    @if (job.Device is { Length: > 0 })
+                                    {
+                                        <span class="global-tag">@job.Device.ToUpperInvariant()</span>
+                                    }
+                                    <button type="button" class="global-chip queue-add" @onclick="() => Add(id)"
+                                            aria-label="@($"Add {job.Label ?? id} to tonight's queue")">+ Add</button>
+                                </span>
+                            </div>
+                            @if (job.Command is { Length: > 0 })
+                            {
+                                <pre class="global-code"><code>@(job.Cwd)&gt; @job.Command</code></pre>
+                            }
+                            <div class="meta">
+                                @(job.SelfLimiting ? "Stops itself at {hours}" : "Stopped by the runner at the time limit")
+                                @if (!job.SelfLimiting && job.StopFile is { Length: > 0 })
+                                {
+                                    <text> (stop file <span class="global-mono">@job.StopFile</span> first)</text>
+                                }
+                                @if (job.DefaultHours is { } hours)
+                                {
+                                    <text> · @Hours(hours) h default</text>
+                                }
+                                @if (job.Source is { Length: > 0 })
+                                {
+                                    <text> · source </text>
+                                    @if (SourceUrl(job.Source) is { } href)
+                                    {
+                                        <a href="@href" rel="noopener noreferrer" class="global-mono">@job.Source</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="global-mono">@job.Source</span>
+                                    }
+                                }
+                            </div>
+                            @if (job.Missing is { Count: > 0 })
+                            {
+                                <div class="meta queue-missing">Missing on the PC: <span class="global-mono">@string.Join(", ", job.Missing)</span></div>
+                            }
+                            @if (job.After is { Length: > 0 })
+                            {
+                                <div class="meta">Afterwards: <span class="global-mono">@job.After</span></div>
+                            }
+                        </li>
+                    }
+                </ul>
+                <p class="global-note">Add or edit jobs in <code>App_Data/global/config/train_jobs.json</code>.</p>
+
+                @if (_queue.CloudJobs.Count > 0)
+                {
+                    <h2>Google Cloud GPU</h2>
+                    <p class="global-note">
+                        The same trainers on a rented NVIDIA L4, from <code>scripts/gcp/cloud_jobs.json</code>. The PC packs the repo and ships it,
+                        so this also needs the PC. A cloud run costs money for as long as the VM is up; stop the VM on
+                        <a href="/global/pc">This PC</a> when the job has finished.
+                    </p>
+                    <ul class="global-list">
+                        @foreach (var job in _queue.CloudJobs)
+                        {
+                            var id = job.Id;
+                            <li class="global-item">
+                                <div class="text"><strong>@id</strong> <span class="global-tone is-info">Cloud</span></div>
+                                <div class="meta">
+                                    <strong>@job.Source</strong>
+                                    @if (job.Hours is { } hours)
+                                    {
+                                        <span class="global-tags"><span class="global-tag">@Hours(hours) h default</span></span>
+                                    }
+                                </div>
+                                @if (job.Command is { Length: > 0 })
+                                {
+                                    <pre class="global-code"><code>@job.Command</code></pre>
+                                }
+                                @if (Helper.IsConnected)
+                                {
+                                    <div class="global-actions">
+                                        <label class="global-field">Hours
+                                            <input class="global-search global-num" type="number" min="0.1" max="24" step="0.5"
+                                                   value="@Hours(CloudHoursFor(job))" @onchange="e => _cloudHours[id] = Number(e, CloudHoursFor(job))" />
+                                        </label>
+                                        <button type="button" class="global-chip" disabled="@_busy" @onclick="() => SendToCloud(job, dry: true)">Dry run (prints the commands)</button>
+                                        @if (_confirmCloud == id)
+                                        {
+                                            <button type="button" class="global-chip is-on" disabled="@_busy" @onclick="() => SendToCloud(job, dry: false)">
+                                                Yes, run @id on the cloud GPU for @Hours(CloudHoursFor(job)) h (costs money)
+                                            </button>
+                                            <button type="button" class="global-chip" @onclick="() => _confirmCloud = null">Cancel</button>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="global-chip" disabled="@_busy" @onclick="() => _confirmCloud = id">Send to the cloud GPU…</button>
+                                        }
+                                    </div>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+
+            <aside class="queue-side" aria-label="Tonight's queue">
+                <h2>3 · Tonight's queue</h2>
+                <section class="global-item queue-panel">
+                    @if (_plan.Jobs.Count == 0)
+                    {
+                        <p class="global-note">Add jobs from the urgency list or the catalog.</p>
                     }
                     else
                     {
-                        <button type="button" class="global-chip" disabled="@(_busy || Picked.Count == 0)" @onclick="() => _confirmLaunch = true">Start on this PC…</button>
+                        <ol class="queue-items">
+                            @for (var i = 0; i < _plan.Jobs.Count; i++)
+                            {
+                                var index = i;
+                                var item = _plan.Jobs[i];
+                                var job = Job(item.Id);
+                                <li class="queue-item">
+                                    <div class="queue-item-name">
+                                        <strong>@(index + 1). @(job?.Label ?? item.Id)</strong>
+                                        <div class="global-note">
+                                            @(job?.Repo) · @(job?.Device?.ToUpperInvariant())
+                                            @if (job is not null && IsBlocked(job))
+                                            {
+                                                <span class="global-tone is-bad">blocked: will be skipped</span>
+                                            }
+                                            @if (job is null)
+                                            {
+                                                <span class="global-tone is-bad">no longer in the catalog</span>
+                                            }
+                                        </div>
+                                    </div>
+                                    <label class="global-field">
+                                        <span class="app-sr-only">Hours for @item.Id</span>
+                                        <input class="global-search global-num" type="number" min="0.25" max="24" step="0.25"
+                                               value="@Hours(item.Hours)" @onchange="e => SetHours(index, e)" />
+                                        h
+                                    </label>
+                                    <span class="queue-item-moves">
+                                        <button type="button" class="global-chip" disabled="@(index == 0)" @onclick="() => MoveUp(index)"
+                                                aria-label="@($"Move {item.Id} up")">↑</button>
+                                        <button type="button" class="global-chip" @onclick="() => Remove(index)"
+                                                aria-label="@($"Remove {item.Id}")">✕</button>
+                                    </span>
+                                </li>
+                            }
+                        </ol>
                     }
-                    <button type="button" class="global-chip" disabled="@_busy" @onclick="ShowRuns">Recent runs</button>
-                </div>
-            </section>
-        }
 
-        @if (_output is not null)
-        {
-            <pre class="global-code global-output" role="status" aria-live="polite"><code>@_output</code></pre>
-        }
+                    <div class="queue-settings">
+                        <label class="global-field">Cool GPU to °C
+                            <input class="global-search global-num" type="number" min="40" max="95" value="@_plan.CoolTemp"
+                                   @onchange="e => { _plan.CoolTemp = (int)Number(e, 70); Changed(); }" />
+                        </label>
+                        <label class="global-field">Gap between jobs, min
+                            <input class="global-search global-num" type="number" min="0" max="120" value="@_plan.GapMin"
+                                   @onchange="e => { _plan.GapMin = (int)Number(e, 5); Changed(); }" />
+                        </label>
+                        <label class="global-field">Queue name
+                            <input class="global-search queue-name" type="text" maxlength="40" value="@_plan.Name"
+                                   @onchange="e => { _plan.Name = SafeName(e.Value?.ToString()); Changed(); }" />
+                        </label>
+                        <label class="global-field">
+                            <input type="checkbox" checked="@_plan.RefreshAfter" @onchange="e => { _plan.RefreshAfter = e.Value is true; Changed(); }" />
+                            Refresh and push the snapshot when the queue ends
+                        </label>
+                    </div>
 
-        <ul class="global-list">
-            @foreach (var job in _queue.Jobs)
-            {
-                var id = job.Id ?? "";
-                <li class="global-item">
-                    <div class="text">
+                    @if (_plan.Jobs.Count > 0)
+                    {
+                        <p class="queue-eta">
+                            Total ≈ <strong>@TotalHours.ToString("0.0", CultureInfo.InvariantCulture) h</strong> (+ cooldowns).
+                            Started now, it ends around <strong>@DateTime.Now.AddHours(TotalHours).ToString("ddd HH:mm", CultureInfo.CurrentCulture)</strong>.
+                        </p>
+                    }
+
+                    <div class="global-actions">
+                        <button type="button" class="global-chip" disabled="@(_plan.Jobs.Count == 0)" @onclick="Download">Download queue JSON</button>
                         @if (Helper.IsConnected)
                         {
-                            <input type="checkbox" checked="@_picked.Contains(id)" disabled="@IsBlocked(job)"
-                                   @onchange="e => Pick(id, e.Value is true)" aria-label="@($"Add {job.Label ?? id} to the queue")" />
-                        }
-                        <strong>@(job.Label ?? job.Id)</strong>
-                        @if (IsBlocked(job))
-                        {
-                            <span class="global-tone is-bad">Blocked</span>
-                        }
-                        else if (IsReady(job))
-                        {
-                            <span class="global-tone is-good">Ready</span>
-                        }
-                        else
-                        {
-                            <span class="global-tone is-muted">Not checked</span>
+                            <button type="button" class="global-chip" disabled="@(_busy || _plan.Jobs.Count == 0)" @onclick="Save">Save on this PC</button>
+                            <button type="button" class="global-chip" disabled="@(_busy || _plan.Jobs.Count == 0)" @onclick="() => Launch(dry: true)">Dry run (starts nothing)</button>
+                            @if (_confirmLaunch)
+                            {
+                                <button type="button" class="global-chip is-on" disabled="@(_busy || _plan.Jobs.Count == 0)" @onclick="() => Launch(dry: false)">
+                                    Yes, start @_plan.Jobs.Count job(s) for @Hours(_plan.Jobs.Sum(j => j.Hours)) h
+                                </button>
+                                <button type="button" class="global-chip" @onclick="() => _confirmLaunch = false">Cancel</button>
+                            }
+                            else
+                            {
+                                <button type="button" class="global-chip" disabled="@(_busy || _plan.Jobs.Count == 0)" @onclick="() => _confirmLaunch = true">Start on this PC…</button>
+                            }
                         }
                     </div>
-                    <div class="meta">
-                        <strong>@job.Repo</strong>
-                        <span class="global-tags">
-                            @if (job.Device is { Length: > 0 })
-                            {
-                                <span class="global-tag">@job.Device.ToUpperInvariant()</span>
-                            }
-                            @if (job.DefaultHours is { } hours)
-                            {
-                                <span class="global-tag">@Hours(hours) h default</span>
-                            }
-                            <span class="global-tag">@(job.SelfLimiting ? "stops itself" : "stopped by the queue")</span>
-                        </span>
-                        @if (Helper.IsConnected && _picked.Contains(id))
-                        {
-                            <label class="global-field">Hours
-                                <input class="global-search global-num" type="number" min="0.1" max="24" step="0.5"
-                                       value="@Hours(HoursFor(job))" @onchange="e => _hours[id] = Number(e, HoursFor(job))" />
-                            </label>
-                        }
-                    </div>
-                    @if (job.Command is { Length: > 0 })
-                    {
-                        <pre class="global-code"><code>@CommandText(job)</code></pre>
-                    }
-                    @if (job.Missing is { Count: > 0 })
-                    {
-                        <div class="meta">Missing on the PC: <span class="global-mono">@string.Join(", ", job.Missing)</span></div>
-                    }
-                    @if (job.After is { Length: > 0 })
-                    {
-                        <div class="meta">Afterwards: <span class="global-mono">@job.After</span></div>
-                    }
-                    @if (job.Source is { Length: > 0 })
-                    {
-                        <div class="meta">Command taken from <span class="global-mono">@job.Source</span></div>
-                    }
-                </li>
-            }
-        </ul>
 
-        @if (_queue.CloudJobs.Count > 0)
-        {
-            <h2>Google Cloud GPU</h2>
-            <p class="global-note">
-                The same trainers on a rented NVIDIA L4, from <code>scripts/gcp/cloud_jobs.json</code>. The PC packs the repo and ships it,
-                so this also needs the PC. A cloud run costs money for as long as the VM is up; stop the VM on
-                <a href="/global/pc">This PC</a> when the job has finished.
-            </p>
-            <ul class="global-list">
-                @foreach (var job in _queue.CloudJobs)
+                    <div class="global-note">Or save the JSON to <code>scripts\global\.local\queues\</code> and run, from the PoPunkouterSoftware folder:</div>
+                    <div class="queue-cmd">
+                        <code>@RunCommand</code>
+                        <button type="button" class="global-chip" @onclick="CopyRunCommand">Copy</button>
+                    </div>
+                    @if (_plan.Jobs.Count > 0)
+                    {
+                        <details>
+                            <summary class="global-note">Queue JSON</summary>
+                            <pre class="global-code queue-json"><code>@QueueJson()</code></pre>
+                        </details>
+                    }
+                </section>
+
+                @if (_output is not null)
                 {
-                    var id = job.Id;
-                    <li class="global-item">
-                        <div class="text"><strong>@id</strong> <span class="global-tone is-info">Cloud</span></div>
-                        <div class="meta">
-                            <strong>@job.Source</strong>
-                            @if (job.Hours is { } hours)
-                            {
-                                <span class="global-tags"><span class="global-tag">@Hours(hours) h default</span></span>
-                            }
-                        </div>
-                        @if (job.Command is { Length: > 0 })
-                        {
-                            <pre class="global-code"><code>@job.Command</code></pre>
-                        }
-                        @if (Helper.IsConnected)
-                        {
-                            <div class="global-actions">
-                                <label class="global-field">Hours
-                                    <input class="global-search global-num" type="number" min="0.1" max="24" step="0.5"
-                                           value="@Hours(CloudHoursFor(job))" @onchange="e => _cloudHours[id] = Number(e, CloudHoursFor(job))" />
-                                </label>
-                                <button type="button" class="global-chip" disabled="@_busy" @onclick="() => SendToCloud(job, dry: true)">Dry run (prints the commands)</button>
-                                @if (_confirmCloud == id)
+                    <pre class="global-code global-output" role="status" aria-live="polite"><code>@_output</code></pre>
+                }
+
+                <h2>Past queue runs</h2>
+                @if (_queue.PastRuns.Count == 0)
+                {
+                    <p class="global-note">No queue has run from this PC yet.</p>
+                }
+                else
+                {
+                    @foreach (var run in _queue.PastRuns)
+                    {
+                        <section class="global-item queue-run">
+                            <div class="text">
+                                <strong>@RunStamp(run.Stamp)</strong>
+                                @if (run.Queue is { Length: > 0 })
                                 {
-                                    <button type="button" class="global-chip is-on" disabled="@_busy" @onclick="() => SendToCloud(job, dry: false)">
-                                        Yes, run @id on the cloud GPU for @Hours(CloudHoursFor(job)) h (costs money)
-                                    </button>
-                                    <button type="button" class="global-chip" @onclick="() => _confirmCloud = null">Cancel</button>
+                                    <span class="global-note">· @run.Queue</span>
                                 }
-                                else
+                                @if (!run.HasSummary)
                                 {
-                                    <button type="button" class="global-chip" disabled="@_busy" @onclick="() => _confirmCloud = id">Send to the cloud GPU…</button>
+                                    <span class="global-tone is-warn">no summary</span>
                                 }
                             </div>
-                        }
-                    </li>
+                            @if (run.Jobs.Count > 0)
+                            {
+                                <div class="global-table-wrap">
+                                    <table class="global-table">
+                                        <caption class="app-sr-only">Jobs in the queue run @run.Stamp</caption>
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Job</th>
+                                                <th scope="col">Repo</th>
+                                                <th scope="col">Outcome</th>
+                                                <th scope="col" class="is-number">Ran</th>
+                                                <th scope="col" class="is-number">New brains</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var job in run.Jobs)
+                                            {
+                                                <tr>
+                                                    <th scope="row">@job.Id</th>
+                                                    <td>@job.Repo</td>
+                                                    <td>@job.Outcome</td>
+                                                    <td class="is-number">@job.Minutes min</td>
+                                                    <td class="is-number">@job.NewOnnx.Count</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+                            @if (!run.HasSummary && run.Log.Count > 0)
+                            {
+                                <details>
+                                    <summary class="global-note">Last lines of queue.log (still running, or stopped early)</summary>
+                                    <pre class="global-code"><code>@string.Join("\n", run.Log)</code></pre>
+                                </details>
+                            }
+                        </section>
+                    }
                 }
-            </ul>
-        }
+            </aside>
+        </div>
     }
 </main>
 
 @code {
-    private readonly HashSet<string> _picked = new(StringComparer.Ordinal);
-    private readonly Dictionary<string, double> _hours = new(StringComparer.Ordinal);
+    private const string PlanKey = "po.global.queue";
+
+    // Every Po repo lives under this GitHub account (as GlobalUnite assumes); job sources are workspace-relative.
+    private const string GitHubOwner = "punkouter27";
+
+    private static readonly (string Key, string Label)[] Filters =
+        [("all", "All"), ("ready", "Ready"), ("gpu", "GPU"), ("cpu", "CPU")];
+
     private readonly Dictionary<string, double> _cloudHours = new(StringComparer.Ordinal);
     private GlobalQueueDto? _queue;
+    private GlobalQueuePlanDto _plan = new();
     private bool _loading = true;
     private string? _error;
     private string? _output;
     private string? _confirmCloud;
+    private string _filter = "all";
     private bool _busy;
     private bool _confirmLaunch;
-    private bool _refreshAfter = true;
-    private double _coolTemp = 70;
-    private double _gapMin = 5;
 
-    private List<GlobalTrainJobDto> Picked =>
-        _queue?.Jobs.Where(j => j.Id is { } id && _picked.Contains(id)).ToList() ?? [];
+    private IEnumerable<GlobalTrainJobDto> CatalogJobs => _queue!.Jobs.Where(j => _filter switch
+    {
+        "ready" => !IsBlocked(j),
+        "gpu" => string.Equals(j.Device, "gpu", StringComparison.OrdinalIgnoreCase),
+        "cpu" => string.Equals(j.Device, "cpu", StringComparison.OrdinalIgnoreCase),
+        _ => true,
+    });
 
-    private double PickedHours => Picked.Sum(HoursFor);
+    private double TotalHours => _plan.Jobs.Sum(j => j.Hours) + _plan.Jobs.Count * _plan.GapMin / 60.0;
+
+    private string RunCommand =>
+        $@"powershell -ExecutionPolicy Bypass -File scripts\global\run_gpu_queue.ps1 -QueueFile scripts\global\.local\queues\{SafeName(_plan.Name)}.json";
 
     private static bool IsReady(GlobalTrainJobDto job) => job.Missing is { Count: 0 };
 
@@ -240,30 +467,191 @@
     private static bool NeedsGpu(GlobalTrainJobDto job) =>
         string.Equals(job.Device, "gpu", StringComparison.OrdinalIgnoreCase);
 
-    private static string Hours(double hours) =>
-        hours.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+    private static string UrgencyTone(int urgency) => urgency >= 60 ? "high" : urgency >= 35 ? "mid" : "low";
 
-    private static string CommandText(GlobalTrainJobDto job) =>
-        job.Cwd is { Length: > 0 } ? $"cd {job.Cwd}\n{job.Command}" : job.Command ?? "";
+    private static string Hours(double hours) => hours.ToString("0.##", CultureInfo.InvariantCulture);
 
     private static double Number(ChangeEventArgs e, double fallback) =>
-        double.TryParse(e.Value?.ToString(), System.Globalization.NumberStyles.Float,
-            System.Globalization.CultureInfo.InvariantCulture, out var value) ? value : fallback;
+        double.TryParse(e.Value?.ToString(), NumberStyles.Float, CultureInfo.InvariantCulture, out var value) ? value : fallback;
 
-    private double HoursFor(GlobalTrainJobDto job) =>
-        job.Id is { } id && _hours.TryGetValue(id, out var hours) ? hours : job.DefaultHours ?? 1;
+    private static string SafeName(string? name)
+    {
+        var clean = new string((name ?? "").Select(c => char.IsAsciiLetterOrDigit(c) || c is '_' or '-' ? c : '_').ToArray());
+        return clean.Length == 0 ? "tonight" : clean[..Math.Min(40, clean.Length)];
+    }
+
+    private static string RunStamp(string stamp) =>
+        DateTime.TryParseExact(stamp, "yyyyMMdd_HHmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var when)
+            ? when.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)
+            : stamp;
+
+    private static string? SourceUrl(string source)
+    {
+        var parts = source.Replace('\\', '/').Split('/', 2);
+        return parts.Length == 2 && parts[0].StartsWith("Po", StringComparison.Ordinal)
+            ? $"https://github.com/{GitHubOwner}/{parts[0]}/blob/HEAD/{parts[1]}"
+            : null;
+    }
+
+    private GlobalTrainJobDto? Job(string id) => _queue?.Jobs.FirstOrDefault(j => j.Id == id);
 
     private double CloudHoursFor(GlobalCloudJobDto job) =>
         _cloudHours.TryGetValue(job.Id, out var hours) ? hours : job.Hours ?? 1;
 
-    private void Pick(string id, bool on)
+    // ─── tonight's queue (kept in this browser) ───────────────────────────────
+
+    private void Add(string id)
+    {
+        if (Job(id) is not { } job)
+            return;
+
+        _plan.Jobs.Add(new LocalHelperQueueItem { Id = id, Hours = job.DefaultHours ?? 1 });
+        Changed();
+    }
+
+    private void SetHours(int index, ChangeEventArgs e)
+    {
+        _plan.Jobs[index].Hours = Math.Clamp(Number(e, _plan.Jobs[index].Hours), 0.1, 24);
+        Changed();
+    }
+
+    private void MoveUp(int index)
+    {
+        if (index <= 0)
+            return;
+
+        (_plan.Jobs[index - 1], _plan.Jobs[index]) = (_plan.Jobs[index], _plan.Jobs[index - 1]);
+        Changed();
+    }
+
+    private void Remove(int index)
+    {
+        _plan.Jobs.RemoveAt(index);
+        Changed();
+    }
+
+    private void Changed()
     {
         _confirmLaunch = false;
-        if (on)
-            _picked.Add(id);
-        else
-            _picked.Remove(id);
+        _ = SavePlanAsync();
     }
+
+    private async Task SavePlanAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", PlanKey,
+                JsonSerializer.Serialize(_plan, GlobalJsonContext.Default.GlobalQueuePlanDto));
+        }
+        catch (JSException)
+        {
+            // Storage blocked: the plan still works until the tab closes.
+        }
+    }
+
+    private async Task LoadPlanAsync()
+    {
+        try
+        {
+            var saved = await JS.InvokeAsync<string?>("localStorage.getItem", PlanKey);
+            if (saved is { Length: > 0 } && JsonSerializer.Deserialize(saved, GlobalJsonContext.Default.GlobalQueuePlanDto) is { } plan)
+            {
+                plan.Jobs ??= [];
+                plan.Jobs.RemoveAll(j => string.IsNullOrEmpty(j.Id));
+                plan.Name = SafeName(plan.Name);
+                _plan = plan;
+            }
+        }
+        catch (Exception ex) when (ex is JSException or JsonException)
+        {
+            _plan = new GlobalQueuePlanDto();
+        }
+    }
+
+    /// <summary>The queue file in the shape run_gpu_queue.ps1 reads (the same one the helper writes).</summary>
+    private string QueueJson()
+    {
+        using var stream = new MemoryStream();
+        using (var w = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
+        {
+            w.WriteStartObject();
+            w.WriteString("name", SafeName(_plan.Name));
+            w.WriteString("created", DateTimeOffset.Now.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture));
+            w.WriteNumber("cool_temp", _plan.CoolTemp);
+            w.WriteNumber("cool_max_wait_min", 20);
+            w.WriteNumber("gap_min", _plan.GapMin);
+            w.WriteBoolean("refresh_after", _plan.RefreshAfter);
+            w.WriteStartArray("jobs");
+            foreach (var item in _plan.Jobs)
+            {
+                if (Job(item.Id) is not { } job)
+                    continue;
+
+                w.WriteStartObject();
+                w.WriteString("id", job.Id);
+                w.WriteString("repo", job.Repo);
+                w.WriteString("cwd", job.Cwd);
+                w.WriteString("command", job.Command);
+                w.WriteBoolean("self_limiting", job.SelfLimiting);
+                if (job.StopFile is { Length: > 0 } stop)
+                    w.WriteString("stop_file", stop);
+                else
+                    w.WriteNull("stop_file");
+                w.WriteString("device", job.Device);
+                w.WriteStartArray("requires");
+                foreach (var path in job.Requires)
+                    w.WriteStringValue(path);
+                w.WriteEndArray();
+                w.WriteNumber("hours", Math.Clamp(item.Hours, 0.1, 24));
+                w.WriteEndObject();
+            }
+
+            w.WriteEndArray();
+            w.WriteEndObject();
+        }
+
+        return Encoding.UTF8.GetString(stream.ToArray());
+    }
+
+    private async Task Download()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("downloadText", $"{SafeName(_plan.Name)}.json", QueueJson(), "application/json");
+            _output = $"Downloaded {SafeName(_plan.Name)}.json. Move it into scripts\\global\\.local\\queues\\ and run:\n{RunCommand}";
+        }
+        catch (JSException)
+        {
+            _output = "The browser blocked the download. Copy the JSON from \"Queue JSON\" below instead.";
+        }
+    }
+
+    private async Task CopyRunCommand()
+    {
+        bool copied;
+        try
+        {
+            copied = await JS.InvokeAsync<bool>("copyToClipboard", RunCommand);
+        }
+        catch (JSException)
+        {
+            copied = false;
+        }
+
+        _output = copied ? "Run command copied." : $"Copy failed. The command:\n{RunCommand}";
+    }
+
+    // ─── the PC (local helper) ─────────────────────────────────────────────────
+
+    private LocalHelperRequest PlanRequest(string action) => new()
+    {
+        Action = action,
+        Name = SafeName(_plan.Name),
+        CoolTemp = _plan.CoolTemp,
+        GapMin = _plan.GapMin,
+        RefreshAfter = _plan.RefreshAfter,
+        Jobs = _plan.Jobs.Select(j => new LocalHelperQueueItem { Id = j.Id, Hours = Math.Clamp(j.Hours, 0.1, 24) }).ToList(),
+    };
 
     private async Task Send(LocalHelperRequest request)
     {
@@ -280,22 +668,15 @@
         }
     }
 
+    private Task Save() => Send(PlanRequest("save_queue"));
+
     private async Task Launch(bool dry)
     {
         _confirmLaunch = false;
-        await Send(new LocalHelperRequest
-        {
-            Action = "launch_queue",
-            Name = "tonight",
-            Dry = dry,
-            CoolTemp = (int)_coolTemp,
-            GapMin = (int)_gapMin,
-            RefreshAfter = _refreshAfter,
-            Jobs = Picked.Select(j => new LocalHelperQueueItem { Id = j.Id ?? "", Hours = HoursFor(j) }).ToList(),
-        });
+        var request = PlanRequest("launch_queue");
+        request.Dry = dry;
+        await Send(request);
     }
-
-    private Task ShowRuns() => Send(new LocalHelperRequest { Action = "queue_runs" });
 
     private async Task SendToCloud(GlobalCloudJobDto job, bool dry)
     {
@@ -309,6 +690,7 @@
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             _queue = await Api.GetGlobalQueueAsync(cts.Token);
+            await LoadPlanAsync();
         }
         catch (Exception ex)
         {
