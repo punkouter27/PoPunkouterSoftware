@@ -1,0 +1,208 @@
+@page "/global/incubator"
+@attribute [Authorize]
+@rendermode WasmRenderModes.Interactive
+@using PoPunkouterSoftware.Shared
+@inject PortfolioApiClient Api
+
+<PageTitle>Incubator · PoPunkouterSoftware</PageTitle>
+
+@* The incubator: answer five questions about a new idea and get the repos that make the best
+   starting point, with what carries over on day one. The ranking is a transparent score over
+   the crawl (stack, live URL, brains, tests, recency) — no model, no guessing. *@
+<main id="main-content" class="app-page global-page" tabindex="-1">
+    <header class="global-head">
+        <div>
+            <h1>Incubator</h1>
+            <p class="app-note">Five questions → which repo to start from, what to bring, and how to clone it.</p>
+        </div>
+    </header>
+
+    @if (_loading)
+    {
+        <LoadingSkeleton Variant="summary" TileCount="3" AriaLabel="Loading the fleet" />
+    }
+    else if (_error is not null)
+    {
+        <div class="global-error" role="alert">@_error</div>
+    }
+    else if (_fleet is null || _fleet.Repos.Count == 0)
+    {
+        <p class="app-empty-state">No crawl yet.</p>
+    }
+    else
+    {
+        <div class="global-grid">
+            <section class="global-tile" aria-label="Questions">
+                <h2>What are you making?</h2>
+
+                <label class="global-note" for="inc-type">Shape</label>
+                <select id="inc-type" class="global-search" @bind="_type">
+                    <option value="game">A game or sim</option>
+                    <option value="app">An app or dashboard</option>
+                    <option value="tool">A tool or library</option>
+                </select>
+
+                <label class="global-note" for="inc-cast">Who moves?</label>
+                <select id="inc-cast" class="global-search" @bind="_cast">
+                    <option value="single">One controllable body</option>
+                    <option value="crowd">Many bodies, one brain</option>
+                    <option value="none">Nothing simulated</option>
+                </select>
+
+                <label class="global-note" for="inc-mode">How is it played?</label>
+                <select id="inc-mode" class="global-search" @bind="_mode">
+                    <option value="solo">Single player</option>
+                    <option value="selfplay">Self-play / training</option>
+                    <option value="multi">Online multiplayer</option>
+                </select>
+
+                <label class="global-note" for="inc-target">Where does it run?</label>
+                <select id="inc-target" class="global-search" @bind="_target">
+                    <option value="browser">Browser</option>
+                    <option value="desktop">Desktop / native</option>
+                    <option value="phone">Phone</option>
+                </select>
+
+                <label class="global-note" for="inc-speed">How fast do you need it?</label>
+                <select id="inc-speed" class="global-search" @bind="_speed">
+                    <option value="fast">Playable this week</option>
+                    <option value="deep">Worth a long build</option>
+                </select>
+            </section>
+
+            <section aria-label="Recommendations">
+                <h2>Start here</h2>
+                @foreach (var candidate in Ranked.Take(3))
+                {
+                    <article class="global-item">
+                        <div class="is-nowrap">
+                            <strong>@candidate.Repo.Name</strong>
+                            <span class="global-tone is-info">@candidate.Score points</span>
+                            <span class="global-count">@candidate.Repo.Kind@(candidate.Repo.IsRl ? " · RL" : "")</span>
+                        </div>
+                        <ul class="global-checks">
+                            @foreach (var reason in candidate.Reasons)
+                            {
+                                <li class="is-done">@reason</li>
+                            }
+                        </ul>
+                        @if (candidate.Repo.Onnx.Count > 0)
+                        {
+                            <div class="global-count">
+                                Brains to bring: @string.Join(", ", candidate.Repo.Onnx.Where(b => b.Shipped).Select(b => b.Name).Distinct().Take(4))
+                            </div>
+                        }
+                        @if (candidate.Repo.Git.Remote is { Length: > 0 } remote)
+                        {
+                            <div class="global-mono">git clone @remote</div>
+                        }
+                    </article>
+                }
+            </section>
+        </div>
+    }
+</main>
+
+@code {
+    private GlobalSnapshotDto? _fleet;
+    private bool _loading = true;
+    private string? _error;
+
+    private string _type = "game";
+    private string _cast = "single";
+    private string _mode = "solo";
+    private string _target = "browser";
+    private string _speed = "fast";
+
+    private sealed record Candidate(GlobalRepoDto Repo, int Score, List<string> Reasons);
+
+    private List<Candidate> Ranked
+    {
+        get
+        {
+            if (_fleet is null)
+                return [];
+
+            var candidates = new List<Candidate>();
+            foreach (var repo in _fleet.Repos.Where(r => r.Git.IsGit))
+            {
+                var score = 0;
+                var reasons = new List<string>();
+
+                var isGame = repo.Kind is "unity" or "unreal";
+                if (_type == "game" && isGame)
+                {
+                    score += 3;
+                    reasons.Add($"already a {repo.Kind} game");
+                }
+                else if (_type != "game" && repo.Kind == "blazor")
+                {
+                    score += 3;
+                    reasons.Add("already a Blazor app");
+                }
+
+                if (_cast != "none" && repo.IsRl)
+                {
+                    score += 3;
+                    reasons.Add($"RL stack: {repo.RlStack}");
+                }
+
+                if (_mode == "selfplay" && repo.Onnx.Count > 0)
+                {
+                    score += 2;
+                    reasons.Add($"{repo.Onnx.Count} brains to learn from");
+                }
+
+                if (_target == "browser" && repo.Docs.LiveUrl is { Length: > 0 })
+                {
+                    score += 2;
+                    reasons.Add("deploys to a live URL");
+                }
+
+                if (repo.Docs.Tests.Count > 0)
+                {
+                    score += 1;
+                    reasons.Add("has a test project");
+                }
+
+                if (_speed == "fast" && repo.Git.DaysSinceCommit is { } days && days < 7)
+                {
+                    score += 2;
+                    reasons.Add("committed this week, so the tooling still runs");
+                }
+
+                if (repo.Media.Count >= 5)
+                {
+                    score += 1;
+                    reasons.Add("captures a before/after page can point at");
+                }
+
+                if (score > 0)
+                    candidates.Add(new Candidate(repo, score, reasons));
+            }
+
+            return candidates
+                .OrderByDescending(c => c.Score)
+                .ThenByDescending(c => c.Repo.Git.Commits30d)
+                .ThenBy(c => c.Repo.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            _fleet = await Api.GetGlobalFleetAsync(cts.Token);
+        }
+        catch (Exception ex)
+        {
+            _error = FriendlyError.Describe(ex);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}
