@@ -102,15 +102,26 @@
                                 <h2 class="signins-panel__title">Everyone who has signed in</h2>
                                 <div class="signins-panel__subtitle" aria-hidden="true">Most recent first</div>
                             </div>
-                            <div class="signins-search-wrap">
-                                <span class="material-symbols-outlined signins-search-icon" aria-hidden="true">search</span>
-                                <RadzenTextBox class="signins-search-input" Placeholder="Filter person or app..."
-                                               Value="@_personSearch" @oninput="OnSearchInput" aria-label="Filter people or apps"
-                                               aria-invalid="@(_searchValidationError is not null ? "true" : "false")" />
-                                @if (!string.IsNullOrWhiteSpace(_personSearch))
+                            <div class="signins-panel__controls">
+                                @if (AnonymousCount > 0)
                                 {
-                                    <RadzenButton ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat" class="ppk-plain signins-search-clear" aria-label="Clear filter" Click="ClearSearch">×</RadzenButton>
+                                    <RadzenButton ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat"
+                                                  class="@(_hideAnonymous ? "ppk-plain signins-filter-toggle is-active" : "ppk-plain signins-filter-toggle")"
+                                                  aria-pressed="@(_hideAnonymous ? "true" : "false")"
+                                                  Click="ToggleHideAnonymous">
+                                        @(_hideAnonymous ? $"Signed-in only ({AnonymousCount} hidden)" : $"Hide anonymous ({AnonymousCount})")
+                                    </RadzenButton>
                                 }
+                                <div class="signins-search-wrap">
+                                    <span class="material-symbols-outlined signins-search-icon" aria-hidden="true">search</span>
+                                    <RadzenTextBox class="signins-search-input" Placeholder="Filter person, device or app..."
+                                                   Value="@_personSearch" @oninput="OnSearchInput" aria-label="Filter people, devices or apps"
+                                                   aria-invalid="@(_searchValidationError is not null ? "true" : "false")" />
+                                    @if (!string.IsNullOrWhiteSpace(_personSearch))
+                                    {
+                                        <RadzenButton ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat" class="ppk-plain signins-search-clear" aria-label="Clear filter" Click="ClearSearch">×</RadzenButton>
+                                    }
+                                </div>
                             </div>
                         </div>
                         @if (_searchValidationError is not null)
@@ -128,9 +139,13 @@
                              aria-label="Sign-in roster. Scrolls sideways when the table is wider than this window.">
                             <SignInRoster People="@FilteredPeople" />
                         </div>
-                        @if (FilteredPeople.Count == 0 && !string.IsNullOrWhiteSpace(_personSearch))
+                        @if (FilteredPeople.Count == 0 && (!string.IsNullOrWhiteSpace(_personSearch) || _hideAnonymous))
                         {
-                            <p class="signin-empty" role="status">No one matches “@_personSearch”.</p>
+                            <p class="signin-empty" role="status">
+                                @(!string.IsNullOrWhiteSpace(_personSearch)
+                                    ? $"No one matches “{_personSearch}”."
+                                    : "Only anonymous visits in this window.")
+                            </p>
                         }
                     </article>
 
@@ -177,7 +192,7 @@
                 </section>
 
                 <SignInTrend Series="@report.Trend" WindowDays="@report.WindowDays" />
-                <SignInFeed Events="@report.Recent" />
+                <SignInFeed Events="@FilteredEvents" />
             }
         }
     }

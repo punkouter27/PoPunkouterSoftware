@@ -41,12 +41,14 @@
                             <td><span class="signin-chip">@e.App</span></td>
                             <th scope="row">
                                 <span class="signin-person__name">@e.DisplayName</span>
-                                @* Providers that send no real name send the address as the
-                                   display name, so both fields mask to the same string and the
-                                   cell printed it twice. One line, not two. *@
-                                @if (e.MaskedEmail != e.DisplayName)
+                                @{
+                                    var subtitle = e.MaskedEmail == "(unknown)" && !string.IsNullOrWhiteSpace(e.ClientInfo)
+                                        ? e.ClientInfo
+                                        : e.MaskedEmail;
+                                }
+                                @if (subtitle != e.DisplayName)
                                 {
-                                    <span class="signin-person__email">@e.MaskedEmail</span>
+                                    <span class="signin-person__email">@subtitle</span>
                                 }
                             </th>
                             <td>@(string.IsNullOrWhiteSpace(e.Provider) ? "—" : e.Provider)</td>

@@ -291,4 +291,19 @@ public class VisitEndpointTests
 
         response.StatusCode.Should().Be(expected);
     }
+
+    [Fact]
+    public async Task PostVisit_AcceptsForwardedIpAndBotUserAgentWithoutError()
+    {
+        using var req = new HttpRequestMessage(HttpMethod.Post, "/api/visit")
+        {
+            Content = JsonContent.Create(new { visitorId = "0123456789abcdef", initials = (string?)null }),
+        };
+        req.Headers.TryAddWithoutValidation("User-Agent", "Mozilla/5.0 (compatible; Googlebot/2.1)");
+        req.Headers.TryAddWithoutValidation("X-Forwarded-For", "73.12.34.56:54321");
+
+        var response = await _client.SendAsync(req);
+
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
 }

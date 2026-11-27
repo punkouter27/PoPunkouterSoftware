@@ -139,4 +139,32 @@ public class SignInReportBuilderTests
         broken.People.Should().BeEmpty();
         broken.GeneratedAt.Should().Be(Now.UtcDateTime);
     }
+
+    [Fact]
+    public void Build_PropagatesLatestClientInfoForAnonymousVisitors()
+    {
+        SignInRecord[] anonymous =
+        [
+            new(new DateTime(2026, 9, 10, 8, 0, 0, DateTimeKind.Utc), "PoPunkouterSoftware", "visitor:abcdef1234567890",
+                "", "Visitor abcdef", "anonymous", "Chrome · Windows · 73.12.*.*"),
+            new(new DateTime(2026, 9, 12, 9, 0, 0, DateTimeKind.Utc), "PoPunkouterSoftware", "visitor:abcdef1234567890",
+                "", "Visitor abcdef", "anonymous", "Edge · Windows · 73.12.*.*"),
+            new(new DateTime(2026, 9, 11, 9, 0, 0, DateTimeKind.Utc), "PoPunkouterSoftware", "visitor:1122334455667788",
+                "", "Visitor 112233", "anonymous"),
+        ];
+
+        var report = SignInReportBuilder.Build(anonymous, Now, windowDays: 7, truncated: false);
+
+        report.People.Should().HaveCount(2);
+        var updated = report.People.Single(p => p.DisplayName == "Visitor abcdef");
+        updated.SignIns.Should().Be(2);
+        updated.MaskedEmail.Should().Be("(unknown)");
+        updated.ClientInfo.Should().Be("Edge · Windows · 73.12.*.*",
+            because: "the most recent non-blank device/network summary wins");
+
+        var legacy = report.People.Single(p => p.DisplayName == "Visitor 112233");
+        legacy.ClientInfo.Should().BeEmpty();
+
+        report.Recent[0].ClientInfo.Should().Be("Edge · Windows · 73.12.*.*");
+    }
 }

@@ -1,9 +1,11 @@
 // One anonymous visit per browser per day → POST /api/visit → the fleet's UserSignedIn record,
 // so this login-free site shows on /users (owner's ask, 2026-11-23). The id is random and lives
-// only in this browser; nothing about the visitor is sent. Storage blocked (private mode, site
-// data cleared) means no id and no record — a missed visit, never an error.
+// only in this browser; automated browsers (Playwright/Selenium) are skipped so test runs do not
+// invent one-off visitors. Storage blocked (private mode, site data cleared) means no id and no
+// record — a missed visit, never an error.
 (function () {
     'use strict';
+    if (typeof navigator !== 'undefined' && navigator.webdriver) return;
     var ID_KEY = 'po:visitor-id', DAY_KEY = 'po:visit-day';
     try {
         var id = localStorage.getItem(ID_KEY);

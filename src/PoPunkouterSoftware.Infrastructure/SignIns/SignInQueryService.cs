@@ -153,8 +153,9 @@ public sealed partial class SignInQueryService
     }
 
     /// <summary>
-    /// Projects only the six fields the page renders. Ordering and the row cap happen in the
-    /// workspace so the wire payload is bounded regardless of how much history exists.
+    /// Projects only the public-safe fields the page renders (deliberately omitting <c>ClientIp</c>,
+    /// which stays private in Log Analytics). Ordering and the row cap happen in the workspace so
+    /// the wire payload is bounded regardless of how much history exists.
     /// </summary>
     private static string BuildQuery(string eventName) =>
         $$"""
@@ -165,7 +166,8 @@ public sealed partial class SignInQueryService
                   UserId      = tostring(customDimensions.UserId),
                   Email       = tostring(customDimensions.Email),
                   DisplayName = tostring(customDimensions.DisplayName),
-                  Provider    = tostring(customDimensions.Provider)
+                  Provider    = tostring(customDimensions.Provider),
+                  ClientInfo  = tostring(customDimensions.ClientInfo)
         | order by timestamp desc
         | take {{MaxRows}}
         """;
@@ -185,7 +187,8 @@ public sealed partial class SignInQueryService
                 UserId: row.GetString("UserId") ?? "",
                 Email: row.GetString("Email") ?? "",
                 DisplayName: row.GetString("DisplayName") ?? "",
-                Provider: row.GetString("Provider") ?? ""));
+                Provider: row.GetString("Provider") ?? "",
+                ClientInfo: row.GetString("ClientInfo") ?? ""));
         }
 
         return records;

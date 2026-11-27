@@ -34,10 +34,16 @@
             <tr @key="person.MaskedEmail + person.DisplayName">
                 <th scope="row">
                     <span class="signin-person__name">@BreakAtSign(person.DisplayName)</span>
-                    @* Same string twice when the provider sent no real name — see SignInFeed. *@
-                    @if (person.MaskedEmail != person.DisplayName)
+                    @* Anonymous visits carry no email; show their coarse browser/OS + masked subnet
+                       when present instead of "(unknown)". Signed-in people show their masked email. *@
+                    @{
+                        var subtitle = person.MaskedEmail == "(unknown)" && !string.IsNullOrWhiteSpace(person.ClientInfo)
+                            ? person.ClientInfo
+                            : person.MaskedEmail;
+                    }
+                    @if (subtitle != person.DisplayName)
                     {
-                        <span class="signin-person__email">@BreakAtSign(person.MaskedEmail)</span>
+                        <span class="signin-person__email">@BreakAtSign(subtitle)</span>
                     }
                     @* Phone-only stand-in for the two columns hidden below 640px. The
                        sr-only prefixes are what stop these reading as two bare relative

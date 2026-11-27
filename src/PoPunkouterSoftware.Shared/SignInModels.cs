@@ -70,6 +70,9 @@ public sealed record SignInPerson
     /// <summary>Local part elided, domain kept — see <c>SecretMasking.MaskEmail</c>.</summary>
     public string MaskedEmail { get; init; } = "";
 
+    /// <summary>Coarse browser/OS and masked subnet for anonymous visits (e.g. "Chrome · Windows · 73.12.*.*"). Never a raw IP.</summary>
+    public string ClientInfo { get; init; } = "";
+
     public List<string> Apps { get; init; } = new();
 
     public List<string> Providers { get; init; } = new();
@@ -139,6 +142,9 @@ public sealed record SignInEvent
     public string DisplayName { get; init; } = "";
 
     public string MaskedEmail { get; init; } = "";
+
+    /// <summary>Coarse browser/OS and masked subnet for anonymous visits. Never a raw IP.</summary>
+    public string ClientInfo { get; init; } = "";
 
     public string Provider { get; init; } = "";
 }

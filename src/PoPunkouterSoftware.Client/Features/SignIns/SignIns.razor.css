@@ -124,6 +124,39 @@
     margin-bottom: var(--app-space-xs);
 }
 
+.signins-page ::deep .signins-panel__controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--app-space-xs);
+}
+
+.signins-page ::deep .signins-filter-toggle {
+    height: 32px;
+    padding: 0 var(--app-space-sm);
+    border: 1px solid var(--app-border);
+    border-radius: var(--app-radius-pill);
+    background: var(--app-surface-soft);
+    color: var(--app-text-muted);
+    font-size: var(--app-step--2);
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.signins-page ::deep .signins-filter-toggle:hover,
+.signins-page ::deep .signins-filter-toggle:focus-visible {
+    border-color: var(--app-accent);
+    color: var(--app-text);
+}
+
+.signins-page ::deep .signins-filter-toggle.is-active {
+    border-color: var(--app-accent);
+    background: var(--app-accent-soft, var(--app-surface-soft));
+    color: var(--app-text);
+    font-weight: 600;
+}
+
 .signins-page ::deep .signins-search-wrap {
     display: flex;
     align-items: center;

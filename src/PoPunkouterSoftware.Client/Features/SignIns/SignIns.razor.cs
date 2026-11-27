@@ -27,6 +27,7 @@ public partial class SignIns
     private int _windowDays = 30;
     private string _personSearch = string.Empty;
     private string? _searchValidationError;
+    private bool _hideAnonymous;
 
     private void OnSearchInput(ChangeEventArgs e)
     {
@@ -42,13 +43,44 @@ public partial class SignIns
         _searchValidationError = null;
     }
 
-    private IReadOnlyList<SignInPerson> FilteredPeople =>
-        _report?.People is null ? []
-        : string.IsNullOrWhiteSpace(_personSearch) ? _report.People
-        : _report.People.Where(p =>
-            (!string.IsNullOrEmpty(p.DisplayName) && p.DisplayName.Contains(_personSearch, StringComparison.OrdinalIgnoreCase)) ||
-            (!string.IsNullOrEmpty(p.MaskedEmail) && p.MaskedEmail.Contains(_personSearch, StringComparison.OrdinalIgnoreCase)) ||
-            p.Apps.Any(a => a.Contains(_personSearch, StringComparison.OrdinalIgnoreCase))).ToList();
+    private void ToggleHideAnonymous() => _hideAnonymous = !_hideAnonymous;
+
+    private static bool IsAnonymous(SignInPerson person) =>
+        person.Providers.Count > 0
+        && person.Providers.All(p => p.Equals("anonymous", StringComparison.OrdinalIgnoreCase));
+
+    private int AnonymousCount => _report?.People.Count(IsAnonymous) ?? 0;
+
+    private IReadOnlyList<SignInPerson> FilteredPeople
+    {
+        get
+        {
+            if (_report?.People is null)
+                return [];
+
+            IEnumerable<SignInPerson> query = _report.People;
+            if (_hideAnonymous)
+                query = query.Where(p => !IsAnonymous(p));
+
+            if (!string.IsNullOrWhiteSpace(_personSearch))
+            {
+                query = query.Where(p =>
+                    (!string.IsNullOrEmpty(p.DisplayName) && p.DisplayName.Contains(_personSearch, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(p.MaskedEmail) && p.MaskedEmail.Contains(_personSearch, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(p.ClientInfo) && p.ClientInfo.Contains(_personSearch, StringComparison.OrdinalIgnoreCase)) ||
+                    p.Apps.Any(a => a.Contains(_personSearch, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            return !_hideAnonymous && string.IsNullOrWhiteSpace(_personSearch)
+                ? _report.People
+                : query.ToList();
+        }
+    }
+
+    private IReadOnlyList<SignInEvent> FilteredEvents =>
+        _report?.Recent is null ? []
+        : !_hideAnonymous ? _report.Recent
+        : _report.Recent.Where(e => !e.Provider.Equals("anonymous", StringComparison.OrdinalIgnoreCase)).ToList();
 
     /// <summary>The $/person column only when some app's own group billed something — on the
     /// live estate every value was $0.00, a column of zeros.</summary>

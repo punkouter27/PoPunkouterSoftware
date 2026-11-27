@@ -12,4 +12,5 @@ public sealed record SignInRecord(
     string UserId,
     string Email,
     string DisplayName,
-    string Provider);
+    string Provider,
+    string ClientInfo = "");

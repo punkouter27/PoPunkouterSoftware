@@ -113,6 +113,7 @@ public static class SignInReportBuilder
         Email = r.Email?.Trim() ?? "",
         DisplayName = r.DisplayName?.Trim() ?? "",
         Provider = r.Provider?.Trim() ?? "",
+        ClientInfo = r.ClientInfo?.Trim() ?? "",
     };
 
     private static bool Blank(string? s) => string.IsNullOrWhiteSpace(s);
@@ -136,6 +137,9 @@ public static class SignInReportBuilder
                 DisplayName = BestDisplayName(g),
                 MaskedEmail = SecretMasking.MaskEmail(
                     g.Select(r => r.Email).FirstOrDefault(e => !Blank(e))),
+                ClientInfo = g.OrderByDescending(r => r.Timestamp)
+                              .Select(r => r.ClientInfo)
+                              .FirstOrDefault(c => !Blank(c)) ?? "",
                 Apps = g.Select(r => r.App)
                         .Distinct(StringComparer.OrdinalIgnoreCase)
                         .OrderBy(a => a, StringComparer.OrdinalIgnoreCase)
@@ -250,6 +254,7 @@ public static class SignInReportBuilder
                     ? SecretMasking.MaskEmail(Blank(r.DisplayName) ? r.Email : r.DisplayName)
                     : r.DisplayName,
                 MaskedEmail = SecretMasking.MaskEmail(r.Email),
+                ClientInfo = r.ClientInfo,
                 Provider = r.Provider,
             })
             .ToList();
