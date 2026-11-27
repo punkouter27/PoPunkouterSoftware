@@ -11,6 +11,15 @@ namespace PoPunkouterSoftware.E2EAPI;
 /// </summary>
 public sealed class ApiSmokeFixture : IDisposable
 {
+    public ApiSmokeFixture()
+    {
+        if (Client.BaseAddress!.IsLoopback)
+        {
+            Client.DefaultRequestHeaders.Add("X-Fake-User", "http-test");
+            Client.DefaultRequestHeaders.Add("X-Management-Request", "1");
+        }
+    }
+
     public HttpClient Client { get; } = new()
     {
         BaseAddress = new Uri(Environment.GetEnvironmentVariable("BASE_URL") ?? "http://localhost:8000"),

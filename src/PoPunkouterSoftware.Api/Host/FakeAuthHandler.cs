@@ -53,9 +53,9 @@ public sealed class FakeAuthHandler : AuthenticationHandler<AuthenticationScheme
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        // Default = anonymous guest. This matches NET_RULES's "no real auth"
-        // stance: the site is publicly browsable; the headers only opt a
-        // caller into elevated roles (e.g. management).
+        if (!Request.Headers.TryGetValue(UserHeader, out var explicitUser) || string.IsNullOrWhiteSpace(explicitUser))
+            return Task.FromResult(AuthenticateResult.NoResult());
+
         var user = AnonymousUser;
         var roles = new List<string>();
 

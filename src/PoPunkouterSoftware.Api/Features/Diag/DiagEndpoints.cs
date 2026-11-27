@@ -36,9 +36,7 @@ internal static class DiagEndpoints
         .WithName("GetDiag")
         .Produces<DiagReportDto>(StatusCodes.Status200OK);
 
-        // Anonymous by necessity — the Advanced diagnostics panel is WASM with no credential —
-        // so the subscription id is masked out of every resource id on the way out. See
-        // SecretMasking.MaskSubscriptionIds for why that field and not the rest.
+        // Keep subscription IDs masked even for authenticated readers.
         diag.MapGet("/report", async (HttpContext http, IWebHostEnvironment env, AzureReportStore store, ILogger<Program> logger) =>
         {
             var reportResult = await store.LoadAsync();
@@ -68,7 +66,7 @@ internal static class DiagEndpoints
             }
 
             return Results.Problem(detail: "No report found. Refresh from Azure to generate one.", statusCode: 404);
-        });
+        }).RequireAuthorization();
 
         diag.MapGet("/summary", async (
             IWebHostEnvironment env, AzureReportStore store, UptimeSampleStore uptimeSamples,
@@ -90,7 +88,7 @@ internal static class DiagEndpoints
                 with
             { RefreshInProgress = runner.IsRunning });
         })
-        .WithName("GetOpsSummary");
+        .WithName("GetOpsSummary").RequireAuthorization();
 
         diag.MapPost("/refresh", (ReportRefreshRunner runner) =>
             runner.TryStart("manual")
@@ -174,6 +172,7 @@ internal static class DiagEndpoints
             return Results.Json(result);
         })
         .RequireRateLimiting(RateLimits.AiRewrite)
+        .RequireAuthorization()
         .WithName("AiTriage")
         .Produces<AiTriageResult>(StatusCodes.Status200OK)
         .ProducesValidationProblem()

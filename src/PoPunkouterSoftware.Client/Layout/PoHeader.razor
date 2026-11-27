@@ -1,14 +1,26 @@
 @namespace PoPunkouterSoftware.Client
 
-@* The Po header (.po-header, po-tokens.css): the app name upper-left, linking to /. Nothing upper-right:
-   this app has no visitor sign-in, so there is no email or Sign in button (no fake identity chip), and the
-   owner removed the settings gear from the top bar on 2026-11-18 (/settings is still reachable from Ctrl+K). *@
 @* The × on the home page only (owner's ask, 2026-11-23): drops every visible letter to the
    bottom of the screen (js/letter-fall.js, which also fires after 30 s idle). This header is
    statically rendered, so the click is wired in that script by delegation, not @onclick. *@
 @inject NavigationManager Nav
 <nav class="app-topbar" aria-label="Primary navigation">
     <a href="/" class="app-topbar-brand po-header__title">PoPunkouterSoftware</a>
+    <div class="po-header__actions">
+        <AuthorizeView>
+            <Authorized Context="session">
+                <span class="po-header__email">@session.User.Identity?.Name</span>
+                <form method="post" action="/auth/logout" data-enhance="false">
+                    <AntiforgeryToken />
+                    <RadzenButton ButtonType="ButtonType.Submit" ButtonStyle="ButtonStyle.Base" Variant="Variant.Flat"
+                                  class="ppk-plain po-link-btn small" Text="Sign out" />
+                </form>
+            </Authorized>
+            <NotAuthorized>
+                <a href="/auth/login/microsoft" data-enhance-nav="false" class="po-link-btn filled small">Sign in with Microsoft</a>
+            </NotAuthorized>
+        </AuthorizeView>
+    </div>
     @if (Nav.ToBaseRelativePath(Nav.Uri).Split('?', '#')[0].Length == 0)
     {
         @* A Radzen button like every other control (Po rule a_radzen); ppk-plain strips the theme and

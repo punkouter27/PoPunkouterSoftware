@@ -19,7 +19,7 @@ public class ApiSchemaContractTests
 {
     private readonly HttpClient _client;
 
-    public ApiSchemaContractTests(TestWebApp factory) => _client = factory.CreateClient();
+    public ApiSchemaContractTests(TestWebApp factory) => _client = factory.CreateSignedInClient();
 
     private static readonly string[] HealthProperties = ["status", "application", "timestamp", "checks", "environment", "config"];
     private static readonly string[] SummaryProperties = ["generatedAt", "isStale", "healthPercent", "attentionCount"];

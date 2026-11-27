@@ -6,12 +6,22 @@
     @foreach (var item in Items)
     {
         var active = IsActive(item.Href);
-        <a href="@item.Href"
+        <AuthorizeView>
+            <Authorized>
+                <a href="@item.Href"
            class="app-bottom-nav__item @(active ? "is-active" : null)"
            aria-current="@(active ? "page" : null)">
             <span class="material-symbols-outlined app-bottom-nav__icon" aria-hidden="true">@item.Icon</span>
             <span class="app-bottom-nav__label">@item.Label</span>
-        </a>
+                </a>
+            </Authorized>
+            <NotAuthorized>
+                @if (item.Href == "/")
+                {
+                    <a href="/" class="app-bottom-nav__item is-active"><span class="app-bottom-nav__label">Apps</span></a>
+                }
+            </NotAuthorized>
+        </AuthorizeView>
     }
 </nav>
 

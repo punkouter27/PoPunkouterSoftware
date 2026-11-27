@@ -16,6 +16,8 @@ public static class LiveApp
     {
         using (var http = new HttpClient { Timeout = TimeSpan.FromSeconds(BaseUrl.Contains("localhost") ? 5 : 90) })
         {
+            if (new Uri(BaseUrl).IsLoopback)
+                http.DefaultRequestHeaders.Add("X-Fake-User", "browser-test");
             try
             {
                 if (!http.GetAsync($"{BaseUrl}/health/live").GetAwaiter().GetResult().IsSuccessStatusCode)
@@ -31,7 +33,10 @@ public static class LiveApp
             // can never render. One clear skip instead.
             try
             {
-                if (http.GetAsync($"{BaseUrl}/api/diag/summary").GetAwaiter().GetResult().StatusCode == System.Net.HttpStatusCode.NotFound)
+                var summary = http.GetAsync($"{BaseUrl}/api/diag/summary").GetAwaiter().GetResult();
+                if (summary.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                    return "The private Azure pages require Microsoft sign-in. Run this tier against a local Development host.";
+                if (summary.StatusCode == System.Net.HttpStatusCode.NotFound)
                     return NoScan;
             }
             catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)

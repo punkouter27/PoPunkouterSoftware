@@ -9,6 +9,9 @@ using Radzen;
 // GoF:   Builder — WebAssemblyHostBuilder assembles the WASM app before Run().
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.Services.AddAuthorizationCore();
+builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddAuthenticationStateDeserialization();
 
 // ─── HttpClient + Dev persona & retry pipeline ──────────────────────────────
 builder.Services.AddSingleton<DevPersonaState>();

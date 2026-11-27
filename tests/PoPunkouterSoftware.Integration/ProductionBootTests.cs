@@ -89,12 +89,13 @@ public class ProductionBootTests : IClassFixture<ProductionApp>
     /// 429 with a Retry-After — not a 500, and not an unlimited Log Analytics bill.
     /// </summary>
     [Fact]
-    public async Task AnonymousLiveQueryEndpoint_IsRateLimited_WithRetryAfter()
+    public async Task SignedInLiveQueryEndpoint_IsRateLimited_WithRetryAfter()
     {
-        (await _client.GetAsync("/api/signins")).StatusCode.Should().Be(HttpStatusCode.OK);
-        (await _client.GetAsync("/api/signins")).StatusCode.Should().Be(HttpStatusCode.OK);
+        using var client = _factory.CreateSignedInClient();
+        (await client.GetAsync("/api/signins")).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await client.GetAsync("/api/signins")).StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var limited = await _client.GetAsync("/api/signins");
+        var limited = await client.GetAsync("/api/signins");
         limited.StatusCode.Should().Be(HttpStatusCode.TooManyRequests);
         limited.Headers.RetryAfter?.Delta.Should().BeGreaterThan(TimeSpan.Zero);
     }
@@ -109,7 +110,7 @@ public class ProductionBootTests : IClassFixture<ProductionApp>
         const string path = "/api/diag/refresh";
         var response = await _client.PostAsync(path, content: null);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 
     /// <summary>
@@ -218,7 +219,8 @@ public class ProductionBootTests : IClassFixture<ProductionApp>
         // The Rewrite button's FluentValidation rules also guard the endpoint: an oversized
         // list is a 400 validation problem, never a paid completion.
         var tooMany = Enumerable.Repeat("x", AiTriageAdHocRequestValidator.MaxItems + 1).ToArray();
-        var rewrite = await _client.PostAsJsonAsync("/api/diag/ai", new { attentionItems = tooMany });
+        using var signedIn = _factory.CreateSignedInClient();
+        var rewrite = await signedIn.PostAsJsonAsync("/api/diag/ai", new { attentionItems = tooMany });
         rewrite.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         (await rewrite.Content.ReadAsStringAsync()).Should().Contain("\"errors\"").And.Contain("AttentionItems");
     }
@@ -236,6 +238,6 @@ public class ProductionBootTests : IClassFixture<ProductionApp>
 
         var response = await _client.SendAsync(request);
 
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 }

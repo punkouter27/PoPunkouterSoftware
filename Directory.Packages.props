@@ -12,6 +12,8 @@
     <PackageVersion Include="Azure.ResourceManager.AppService" Version="1.5.0" />
     <PackageVersion Include="Azure.ResourceManager.Resources" Version="1.12.0" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="10.0.15" />
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.15" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="10.0.15" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.15" />
     <!-- SECURITY PIN, transitive via Microsoft.AspNetCore.SignalR.Client. 10.0.8 carries a

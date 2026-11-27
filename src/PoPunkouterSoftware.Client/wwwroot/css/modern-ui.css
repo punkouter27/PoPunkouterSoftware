@@ -483,6 +483,8 @@ a {
 
 .app-topbar-brand {
     min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
     text-decoration: none;
     /* WCAG 2.2 2.5.8: 24x24 CSS px minimum for a pointer target. The wordmark is one line
        of text, so it measured 169x23 on a phone and 501x23 on a desktop — a 23px-tall band,
@@ -490,6 +492,16 @@ a {
        is vertical only: horizontal padding would move the wordmark off the shell's left edge. */
     padding-block: 2px;
     align-self: center;
+}
+
+.app-topbar .po-header__actions {
+    margin-left: auto;
+    flex-shrink: 1;
+}
+
+.app-topbar .po-header__actions form {
+    flex-shrink: 0;
+    margin: 0;
 }
 
 .app-topbar-brand:hover {

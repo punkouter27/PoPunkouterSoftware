@@ -71,7 +71,8 @@ try
     builder.WebHost.UseStaticWebAssets();
 
     builder.Services.AddRazorComponents()
-        .AddInteractiveWebAssemblyComponents();
+        .AddInteractiveWebAssemblyComponents()
+        .AddAuthenticationStateSerialization();
 
     builder.Services.AddRadzenComponents();
     builder.Services.AddScoped<DialogService>();
@@ -82,45 +83,7 @@ try
     // so there is no cross-origin caller to authorize. Adding CORS here would be
     // dead configuration and needless attack surface.
 
-    // ─── Authentication / Authorization (NET_RULES §3) ───────────────────────
-    // FakeAuthHandler reads X-Fake-User / X-Fake-Roles and is registered ONLY
-    // outside Production. The handler constructor itself throws on Production
-    // initialization — a guardrail against environmental misconfiguration.
-    //
-    // That guardrail only works if the registration is actually conditional. It was
-    // not: the scheme was added unconditionally AND named as the default, so
-    // UseAuthentication resolved it on EVERY request and the constructor threw —
-    // turning the guardrail into a site-wide 500 in Production instead of a
-    // fail-closed management gate.
-    //
-    // In Production no scheme is registered at all, so the default-scheme lookup
-    // returns null and UseAuthentication no-ops. The Management policy must not name
-    // the absent scheme either: AddAuthenticationSchemes("Fake") with no handler
-    // throws "No authentication handler is registered" (another 500). It denies
-    // outright instead, which is the same answer a real fail-closed gate would give.
-    var isProduction = builder.Environment.IsProduction();
-    if (isProduction)
-    {
-        builder.Services.AddAuthentication();
-    }
-    else
-    {
-        builder.Services
-            .AddAuthentication(FakeAuthHandler.SchemeName)
-            .AddScheme<Microsoft.AspNetCore.Authentication.AuthenticationSchemeOptions, FakeAuthHandler>(FakeAuthHandler.SchemeName, _ => { });
-    }
-    builder.Services.AddAuthorization(options =>
-    {
-        options.AddPolicy("Management", p =>
-        {
-            if (isProduction)
-                p.RequireAssertion(_ => false);
-            else
-                p.AddAuthenticationSchemes(FakeAuthHandler.SchemeName)
-                    .RequireAuthenticatedUser()
-                    .RequireRole(FakeAuthHandler.ManagementRole);
-        });
-    });
+    builder.AddMicrosoftAuthentication();
 
     // ─── Named HttpClients — which get resilience and which deliberately do not ───
     builder.Services.AddAppHttpClients(builder.Configuration);
@@ -279,9 +242,9 @@ try
     // pipeline (MapStaticAssets, .br / .gz) is not double-compressed. JSON-only policy
     // above is the second guard rail; ordering is the first.
     app.UseResponseCompression();
-    app.UseAntiforgery();
     app.UseAuthentication();
     app.UseAuthorization();
+    app.UseAntiforgery();
     app.UseRateLimiter();
 
     // MapStaticAssets serves compressed + fingerprinted static web assets from the client WASM project.
@@ -318,6 +281,7 @@ try
 
     // ─── Feature slices ───────────────────────────────────────────────
     app.MapConfigEndpoints();
+    app.MapAuthEndpoints();
     app.MapHealthEndpoints();
     // Liveness probe (see PoPlatform): the deploy checks its X-Commit header, and this app's
     // own pinger polls the same path on every Po app for the uptime grid.
@@ -326,7 +290,7 @@ try
     app.MapPortfolioEndpoints();
     app.MapSignInEndpoints();
     app.MapVisitEndpoints();
-    app.MapHub<RefreshHub>("/hubs/refresh");
+    app.MapHub<RefreshHub>("/hubs/refresh").RequireAuthorization();
 
     // Unmatched API route. Every /api/* path is a JSON contract — the WASM client reads
     // these bodies and UnknownApiRoute_Returns404_WithJsonStatusAndPath pins the shape — so

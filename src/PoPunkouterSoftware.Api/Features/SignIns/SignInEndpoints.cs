@@ -6,20 +6,7 @@ namespace PoPunkouterSoftware.Api;
 /// The read contract behind <c>/users</c>: who has signed in to any Po app, from the shared
 /// Application Insights component. One endpoint, one consumer — the <c>SignIns</c> page.
 /// </summary>
-/// <remarks>
-/// <para>Anonymous, like <c>/api/diag/report</c> and for the same reason: the page is a WASM
-/// island with no credential, and this app deliberately has no identity provider. That is
-/// precisely why the payload is masked before it leaves the server — see
-/// <c>SecretMasking.MaskEmail</c>. The roster contains the addresses of real people,
-/// including people who are not the owner, and an unmasked one would publish third-party PII
-/// to any visitor.</para>
-/// <para>Unprivileged rather than behind <c>.RequireManagementActions()</c>: it mutates
-/// nothing and costs one Log Analytics query, which puts it alongside <c>/api/diag/ai</c>.
-/// Being anonymous AND a live query is why it is rate-limited — see
-/// <c>RateLimits</c>. A management gate would also make it unreachable from the page —
-/// the WASM client cannot present the <c>X-Management-Key</c> header — leaving an endpoint
-/// whose only caller is its own test, which is the exact shape docs/architecture.md forbids.</para>
-/// </remarks>
+/// <remarks>Requires sign-in; email masking and query rate limits remain in place.</remarks>
 internal static class SignInEndpoints
 {
     internal static WebApplication MapSignInEndpoints(this WebApplication app)
@@ -46,6 +33,7 @@ internal static class SignInEndpoints
             return Results.Ok(SignInReportBuilder.AttachCosts(await rosterTask, inventory));
         })
         .RequireRateLimiting(RateLimits.SignIns)
+        .RequireAuthorization()
         .WithName("GetSignIns").WithTags("SignIns");
 
         return app;

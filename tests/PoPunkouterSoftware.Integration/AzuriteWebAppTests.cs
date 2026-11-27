@@ -105,7 +105,7 @@ public class AzuriteWebAppTests : IClassFixture<AzuriteWebApp>
     public async Task SeededReport_IsServedBy_DiagReportEndpoint()
     {
         await SeedReportAsync();
-        var client = _app.CreateClient();
+        var client = _app.CreateSignedInClient();
 
         var resp = await client.GetAsync("/api/diag/report");
 
@@ -120,7 +120,7 @@ public class AzuriteWebAppTests : IClassFixture<AzuriteWebApp>
     public async Task DiagSummary_Returns200_WithComputedHealthPercent()
     {
         await SeedReportAsync();
-        var client = _app.CreateClient();
+        var client = _app.CreateSignedInClient();
 
         var resp = await client.GetAsync("/api/diag/summary");
 

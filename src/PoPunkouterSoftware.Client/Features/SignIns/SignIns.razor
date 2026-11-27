@@ -1,5 +1,6 @@
 @namespace PoPunkouterSoftware.Client
 @page "/users"
+@attribute [Authorize]
 @rendermode WasmRenderModes.Interactive
 @using FluentValidation
 @using PoPunkouterSoftware.Shared
@@ -22,7 +23,7 @@
         <div class="signins-title">
             <h1>Who signed in</h1>
             <AppHint Focusable="true"
-                     Text="Every Po app writes the same UserSignedIn record to one shared Application Insights workspace, so this is the whole estate in a single list — the same data as the “Po Sign-ins” workbook in Azure. Addresses are partially hidden, because this page has no login." />
+                     Text="Every Po app writes the same UserSignedIn record to one shared Application Insights workspace, so this is the whole estate in a single list — the same data as the “Po Sign-ins” workbook in Azure. Microsoft sign-in is required; addresses remain partially hidden." />
         </div>
 
         @* The totals are one line under the title, not three KPI tiles: each tile spent a

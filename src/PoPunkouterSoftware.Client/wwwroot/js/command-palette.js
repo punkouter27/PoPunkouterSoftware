@@ -60,7 +60,7 @@
             if (res[1].managementActionsEnabled) {
                 cmds.push({ id: 'act-rescan', title: 'Rescan Azure now', icon: 'sync', category: 'Actions',
                     action: function () {
-                        fetch('/api/diag/refresh', { method: 'POST' }).finally(function () { navigate('/azure'); });
+                        fetch('/api/diag/refresh', { method: 'POST', headers: { 'X-Management-Request': '1' } }).finally(function () { navigate('/azure'); });
                     } });
             }
             appCommands = cmds;

@@ -122,7 +122,7 @@ for ruff; Docker Desktop for Azurite).
 
 | Deviation | Why | Commit sha / date | How to undo |
 | --- | --- | --- | --- |
-| Header right side is empty: no visitor sign-in, no email; settings gear removed (`/settings` still reached from Ctrl+K) | owner rule for this app; gear removed by the owner | 2026-11-18 | owner asks to re-add |
+| Portfolio remains public; Azure and Users require Microsoft sign-in. Header shows the session and sign-out; settings gear stays removed | owner approved Microsoft authorization for Azure, Users, and the upcoming GLOBAL/RL migration | 2026-11-27 | owner-approved access change |
 | Azure names predate the naming rule: `app-popunkoutersoftware2` on `asp-PoPunkouterSoftware-f1`, with `stpopunkoutersoftware2`, all in RG `PoShared` (moved from the deleted `PoPunkouterSoftware` group 2026-11-23; CI holds Website Contributor on the site only) | renaming or moving means recreating the site | — | owner-approved recreate |
 | Extra `src/PoPunkouterSoftware.Infrastructure` project (Azure adapters) | keeps Api/Client/Shared as the skeleton has them | — | fold it into Api |
 | Reads other Po apps' public `/health/live`, pages and repos (`wwwroot/data/apps.json`) | that is the product; data, not shared code | — | — |

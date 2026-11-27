@@ -1,7 +1,14 @@
 <Router AppAssembly="@typeof(Program).Assembly"
         AdditionalAssemblies="@([typeof(PoPunkouterSoftware.Client.MainLayout).Assembly])">
     <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(PoPunkouterSoftware.Client.MainLayout)" />
+        <Microsoft.AspNetCore.Components.Authorization.AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(PoPunkouterSoftware.Client.MainLayout)">
+            <NotAuthorized>
+                <main id="main-content" class="app-page">
+                    <h1>Microsoft sign-in required</h1>
+                    <a class="po-link-btn filled" href="/auth/login/microsoft" data-enhance-nav="false">Sign in with Microsoft</a>
+                </main>
+            </NotAuthorized>
+        </Microsoft.AspNetCore.Components.Authorization.AuthorizeRouteView>
         <FocusOnNavigate RouteData="@routeData" Selector="h1" />
     </Found>
     @* Reachable only from client-side navigation, which this app barely does — a real

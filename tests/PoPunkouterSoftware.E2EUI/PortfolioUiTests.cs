@@ -61,6 +61,9 @@ public class PortfolioUiTests : IAsyncLifetime
             ViewportSize = new() { Width = width, Height = height },
             IsMobile = isMobile,
             HasTouch = isMobile,
+            ExtraHTTPHeaders = new Uri(BaseUrl).IsLoopback
+                ? new Dictionary<string, string> { ["X-Fake-User"] = "browser-test", ["X-Management-Request"] = "1" }
+                : null,
         });
         _guards.Add(PlaywrightErrorGuard.Watch(page));
         return page;
@@ -77,10 +80,10 @@ public class PortfolioUiTests : IAsyncLifetime
         response!.Ok.Should().BeTrue();
         (await page.TitleAsync()).Should().Contain("PoPunkouterSoftware");
         await Assertions.Expect(page.GetByText("PoPunkouterSoftware").First).ToBeVisibleAsync();
-        // The header is the estate's (Po web standard, 2026-11-18): the brand upper-left, no auth
-        // and no settings icon on PoPunkouterSoftware.
+        // Authenticated local tests get session controls; the settings gear stays removed.
         await Assertions.Expect(page.Locator(".app-topbar a")).ToHaveCountAsync(1);
         await Assertions.Expect(page.Locator(".po-header .po-header__settings")).ToHaveCountAsync(0);
+        await Assertions.Expect(page.GetByRole(AriaRole.Button, new() { Name = "Sign out", Exact = true })).ToBeVisibleAsync();
         var brand = (await page.Locator(".po-header__title").BoundingBoxAsync())!;
         brand.X.Should().BeLessThan(width * 0.2f, $"the app name sits upper-left at {label}");
         // 40s, not the 5s default: a cold /api/portfolio (first call after start) took ~10s.

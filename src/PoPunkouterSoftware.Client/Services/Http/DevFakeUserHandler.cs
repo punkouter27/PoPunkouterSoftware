@@ -12,6 +12,9 @@ internal sealed class DevFakeUserHandler : DelegatingHandler
 
     protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
+        if (request.Method == HttpMethod.Post && request.RequestUri?.AbsolutePath.StartsWith("/api/diag/", StringComparison.Ordinal) == true)
+            request.Headers.TryAddWithoutValidation("X-Management-Request", "1");
+
         if (_personaState.FakeUser is { } user)
         {
             request.Headers.Remove("X-Fake-User");

@@ -119,7 +119,7 @@ follows that scan. Before, the page showed an idle Rescan button that could only
 running". Rescan is the only scan button: the home page had a **Sync** button (2026-10-19)
 that started the same scan, removed 2026-11-23 (owner's call) so /azure is the one place to
 start one. Rescan renders only when `/api/config` reports `managementActionsEnabled`, so in
-Production (where the endpoint also wants a management key the browser lacks) it is hidden.
+Production it is available only to authenticated browsers while the feature flag is on.
 
 **Degradation is a designed path, not an error path.** Table Storage unavailable falls back to a
 local JSON report file (`ReportFileCache`); a corrupt cache degrades to "no report", never a 500.
@@ -512,16 +512,15 @@ proves a context and program were created, not that anything reached the screen.
 - **Every endpoint needs a consumer.** An endpoint whose only caller is its own test is dead code
   with a green check mark. Three whole slices (GitHub, Infra, Pinger) were deleted in 2026-07 for
   exactly that — all tested, none reachable from the UI. Before adding a route, know what calls it.
-- **No real login, by design.** No `/auth/*`, no `AuthenticationStateProvider`, no OAuth, no login
-  UI. [Host/FakeAuthHandler.cs](../src/PoPunkouterSoftware.Api/Host/FakeAuthHandler.cs) reads
-  `X-Fake-User` / `X-Fake-Roles` to build a `ClaimsPrincipal` purely so a caller can opt into the
-  `management` role; it is registered **only outside Production** and throws in its own constructor
-  under Production. In Production no scheme is registered at all and the `Management` policy denies
-  outright rather than challenging (a challenge with no handler is a 500). Nothing exposes the
-  principal over HTTP any more: `/api/whoami`, `/api/logout` and `/api/impersonate` were affordances
-  of the deleted Session/Logout slot, had no caller left, and were removed under the
-  "every endpoint needs a consumer" rule — `/api/config` is now the only route in the Config slice.
-  Do not add a real identity provider unless the owner reverses this.
+- **Microsoft sign-in (owner-approved 2026-11-27).** The portfolio, settings and friendly diagnostics
+  remain public; Azure, Users, their data/control APIs and refresh hub require authentication.
+  `Host/MicrosoftAuthentication.cs` configures OIDC code + PKCE with an HttpOnly session cookie.
+  `MicrosoftAuth` is app-specific to avoid picking up another app's `AzureAd` secrets from the vault.
+  Server authentication state is serialized to the WASM islands, and protected pages use `[Authorize]`.
+  Private APIs return JSON 401 rather than redirects; page requests go to Microsoft sign-in.
+  Only explicit `X-Fake-User` requests in Development/Test/Testing use FakeAuth; absent headers
+  never create an authenticated guest. All admitted Microsoft users have the same access.
+  GLOBAL/RL pages have not yet migrated and must use this boundary when they do.
 - **The header is the brand, at every width.** The four page links were
   hidden on 2026-10-20 and removed from `MainLayout` on 2026-10-30. The other pages are reached
   from the brand link home, the 404 page's list, Ctrl+K, the phone bottom nav, or a typed URL.
@@ -533,8 +532,8 @@ proves a context and program were created, not that anything reached the screen.
   at the top of `modern-ui.css` aliases every `--app-*` colour, radius and font to its `--po-*`
   tokens (one indigo accent, light/dark from the device, Inter text, Space Grotesk titles; the
   Material Symbols subset stays the only other face). The header is `.po-header` (RadzenHeader,
-  a full-width bar, no longer the floating pill): the brand is `.po-header__title`, with nothing on
-  the right (no visitor sign-in, and the owner removed the gear). The build stamp is the one
+  a full-width bar, no longer the floating pill): the brand is `.po-header__title`, with Microsoft
+  session controls on the right (the settings gear remains removed). The build stamp is the one
   `.po-version`. `/diag` draws each dependency as a `.po-diag__card` with a `.po-badge--ok|warn|bad`
   (`--po-text` on the `--po-*-soft` backgrounds), grouped API / Data / Services.
   **Tab with nothing focused opens `/po-dev.html`** in its own window (po-devwindow.js), which
@@ -542,11 +541,9 @@ proves a context and program were created, not that anything reached the screen.
   script is a file, so `script-src 'self'` holds. The developer persona dropdown that sat in the
   header went with `AccountMenu`: no endpoint uses the "Management" policy, so it gated nothing;
   `Program.cs` still restores a persona saved under `DevPersonaState.StorageKey`.
-- **No login UI in the header, deliberately.** `MainLayout.razor` is statically server-rendered
-  (`<Routes />` carries no render mode), so `@onclick` never fires and its injected `HttpClient` has
-  no `BaseAddress`. A Session/Logout slot and "MOCK DATA" banner were built, could never render, and
-  were deleted rather than kept as chrome that only looks functional (2026-08-03). Reinstating either
-  requires a small `InteractiveWebAssembly` island in the header, not a change to `MainLayout`.
+- **Session controls use static SSR.** `MainLayout.razor` stays statically rendered. `AuthorizeView`
+  reads server authentication state; sign-in is a full-navigation link and sign-out is a POST form
+  with an antiforgery token. Neither depends on an inert static `@onclick`.
 - **`<RadzenComponents />` in `MainLayout` carries its own `@rendermode`, and must.** It hosts the
   notification/dialog/tooltip outlets that `NotificationService` pushes into. Without a render mode
   it inherits the layout's static SSR: the `.rz-notification` container sits in the DOM but can
@@ -636,12 +633,10 @@ proves a context and program were created, not that anything reached the screen.
 - **Management gate.** Mutating/expensive endpoints (`/api/diag/refresh`, `/api/diag/cancel-refresh`,
   `/api/diag/restart/{name}` — the Restart button on Reliability rows of the priority queue)
   carry `.RequireManagementActions()`, which enforces `FeatureFlags:EnableManagementActions` (on in
-  Development/Testing, otherwise opt-in) plus, **in Production only**, `Security:ManagementApiKey`
-  via the `X-Management-Key` header (Key Vault `PoPunkouterSoftware--Security--ManagementApiKey`).
-  Production only because a local run loads the whole shared vault through `az login`, key
-  included, and would 401 its own Rescan. `/api/config` reports `managementActionsEnabled: false`
-  in Production whatever the flag says — the browser never holds the key. `/api/diag/ai` is
-  deliberately unprivileged.
+  Development/Testing, otherwise opt-in), authenticated access, and `X-Management-Request: 1`.
+  Cross-site forms cannot set that header, CORS is disabled, and any supplied Origin must match
+  the host. `/api/config` reports controls available only to authenticated users.
+  The former `X-Management-Key` gate is no longer used. `/api/diag/ai` also requires sign-in.
   Restart resolves the site from the STORED report, never from the caller, so it can only touch
   a site the scan found; it starts a stopped site and restarts a running one. In Azure it also
   needs Website Contributor, which infra deliberately does not grant — it 403s cleanly there.
@@ -717,8 +712,7 @@ proves a context and program were created, not that anything reached the screen.
   own verdict. The masked `config` block is a development diagnostic and is **omitted in
   Production** — `/health` is anonymous, and it was publishing the environment name and a
   masked-but-suffixed vault URI whose last four characters name the vault.
-- **`/api/diag/report` masks the subscription id.** It is anonymous by necessity (the Advanced
-  diagnostics panel is WASM with no credential) and returns every resource id in the estate.
+- **`/api/diag/report` masks the subscription id.** It requires sign-in and returns every resource id in the estate.
   `SecretMasking.MaskSubscriptionIds` rewrites `/subscriptions/<guid>` to `/subscriptions/****` on
   the serialized JSON — on the JSON, not the object graph, because the id appears inside free-text
   strings across a dozen nested record types and a per-record rewrite would miss whichever one is
@@ -727,8 +721,7 @@ proves a context and program were created, not that anything reached the screen.
 - **`/api/signins` masks every email address, and the mask keeps the last character on
   purpose.** The `/users` roster is the app's only payload containing personal data about
   *other people* — the live data includes an address at a customer domain, not just the
-  owner's. The endpoint is anonymous for the same unavoidable reason `/api/diag/report` is
-  (the page is WASM with no credential, and this app has no identity provider), so masking
+  owner's. The endpoint now requires sign-in, but masking is retained and
   happens server-side in `SecretMasking.MaskEmail` before anything reaches the wire, and
   `SignInReportBuilderTests` asserts it over the whole serialized payload rather than field by
   field so a field added later cannot quietly bypass it. **The display name is masked too**

@@ -20,6 +20,7 @@
   <ItemGroup>
     <!-- Blazor WASM hosting -->
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
     <PackageReference Include="MinVer" PrivateAssets="All" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
 

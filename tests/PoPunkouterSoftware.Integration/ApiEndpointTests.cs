@@ -87,7 +87,7 @@ public class DiagReportEndpointTests
 {
     private readonly HttpClient _client;
 
-    public DiagReportEndpointTests(TestWebApp factory) => _client = factory.CreateClient();
+    public DiagReportEndpointTests(TestWebApp factory) => _client = factory.CreateSignedInClient();
 
     /// <summary>
     /// The report endpoint is anonymous — the Advanced diagnostics panel is a WASM client
@@ -126,7 +126,7 @@ public class OpsSummaryEndpointTests
 {
     private readonly HttpClient _client;
 
-    public OpsSummaryEndpointTests(TestWebApp factory) => _client = factory.CreateClient();
+    public OpsSummaryEndpointTests(TestWebApp factory) => _client = factory.CreateSignedInClient();
 
     [Fact]
     public async Task GetSummary_ReturnsCompactStatusContract()

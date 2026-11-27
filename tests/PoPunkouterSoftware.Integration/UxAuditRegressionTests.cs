@@ -59,7 +59,7 @@ public class OpsSummaryProjectionRegressionTests
 {
     private readonly HttpClient _client;
 
-    public OpsSummaryProjectionRegressionTests(TestWebApp factory) => _client = factory.CreateClient();
+    public OpsSummaryProjectionRegressionTests(TestWebApp factory) => _client = factory.CreateSignedInClient();
 
     private async Task<JsonElement?> LoadSummaryAsync()
     {
