@@ -14,14 +14,18 @@ boundary on 2026-11-27.
 | `rl_training/scripts/` crawler + history recorder | [`scripts/global/`](../scripts/global) |
 | `station/*.html` (fleet health, briefing, vault, showroom, ship board, lessons, disk, incubator) | Blazor pages under `/global` |
 | `rl_training/*.html` (overview, progress over time) | `/global/rl` |
-| `index.html` hub, `RUN_ME.bat`, `BENCHMARK.*` | `/global` and `scripts/global/build_global_data.py` |
+| `index.html` hub, `RUN_ME.bat` | `/global` and `scripts/global/refresh_and_push.ps1` (crawl, commit, push) |
+| `station/automation/station_server.py` (the :5050 launcher) | `scripts/global/local_helper.py` — same port, no file serving, token + origin checked |
+| `rl_training/gpu_queue/run_gpu_queue.ps1` + `gpu_queue.html` | `scripts/global/run_gpu_queue.ps1`, launched from `/global/queue` |
+| `BENCHMARK.bat` / `BENCHMARK.ps1` | `scripts/global/run_benchmarks.ps1`, launched from `/global/pc` |
+| `rl_training/standards/vault_import.py` | `scripts/global/vault_import.py`, run from `/global/pc` (check first, then copy) |
+| `blazor_apps/` and `rl_training/` standards + prompts | `docs/global-standards/`, shown at `/global/standards` |
+| the 07:00 task "CODEMATT Morning Briefing" | same task, now `refresh_and_push.ps1` (`scripts/global/register_daily_refresh.ps1`) |
 | `station/config/*.json` | `src/PoPunkouterSoftware.Api/App_Data/global/config/` |
-| `PoStation` (the local command centre at :5050) | unchanged — it is its own repo, not part of this move |
 
-The one thing deliberately **not** carried over is `station/scripts/vault_import.py`: it is the
-only tool that wrote into a repo, and copying a brain stays a manual step.
+The `_CODEMATT/GLOBAL` folder itself was archived to `_CODEMATT/GLOBAL-archive-20261127.zip` and removed.
 
-## The twelve pages
+## The fourteen pages
 
 | Route | What it shows |
 | --- | --- |
@@ -34,8 +38,10 @@ only tool that wrote into a repo, and copying a brain stays a manual step.
 | `/global/lessons` | Traps and rules harvested from every repo's docs, with search, repo and kind filters |
 | `/global/disk` | Space per repo and folder type, heaviest folders, how safe each is to delete |
 | `/global/rl` | Shipped brains, benchmark facts, and the recorded history chart |
-| `/global/queue` | Training queue (read-only): every job in `config/train_jobs.json`, its command, and whether the crawl found everything it needs on the PC |
+| `/global/queue` | Training queue: every job in `config/train_jobs.json`, whether the crawl found what it needs, and (with the helper connected) dry run / start on the PC's GPU or send to the Google Cloud GPU |
 | `/global/unite` | The 6 prefabs, the document list, and the rules |
+| `/global/pc` | This PC: refresh and push the snapshot, run benchmarks, copy a brain, drive the cloud GPU VM |
+| `/global/standards` | The Blazor and RL standards, the portability contract and the saved prompts |
 | `/global/incubator` | Five questions → which repo to start from, brains to bring, clone command |
 
 ## How the data gets there
@@ -80,14 +86,61 @@ header links to Azure, Users and Fleet & training never render for anyone else. 
 configured, Production refuses everybody. One-time setup:
 `pwsh ./scripts/setup-microsoft-signin.ps1 -OwnerEmail <owner address>`.
 
+## Actions on the PC (the local helper)
+
+The site runs in Azure and cannot reach the owner's PC, so everything that has to happen there
+goes from the browser straight to `scripts/global/local_helper.py` on `http://127.0.0.1:5050`:
+
+```
+signed-in /global page (browser on the PC)
+        │  fetch, with the token from this browser's localStorage
+        ▼
+local_helper.py on 127.0.0.1:5050     (start: scripts\global\start_local_helper.bat)
+        │  fixed list of actions; commands come from the catalogs, never from the page
+        ▼
+VS Code / Explorer / Unity / Unreal · run_gpu_queue.ps1 · run_benchmarks.ps1 ·
+vault_import.py · refresh_and_push.ps1 · scripts/gcp/gcp_queue.py
+```
+
+| Where | Buttons |
+| --- | --- |
+| `/global/fleet` | per repo: Code, Folder, Status (git), Engine (Unity / Unreal) |
+| `/global/queue` | tick jobs + hours → Dry run / Start on this PC; Recent runs; per cloud job: Dry run / Send to the cloud GPU |
+| `/global/pc` | Crawl only / Crawl, commit and push; Benchmarks; Copy a brain (check fit, then copy); cloud VM Status / Check setup / Start / Stop |
+
+Rules the helper enforces (tested in `scripts/global/test_local_helper.py`):
+
+- listens on 127.0.0.1 only, and refuses a request whose `Host` is not that address;
+- a browser request must carry this site's `Origin` (the live site or `localhost:8000`);
+- every action needs the token it prints on start (`scripts/global/.local/helper_token.txt`,
+  git-ignored). The owner pastes it once on the site; it stays in that browser;
+- the page sends names only — a repo, job ids, hours. Repos must be git folders in the
+  workspace, job ids must be in `train_jobs.json` / `cloud_jobs.json`, and the command is
+  always the catalog's;
+- it serves no files and deletes nothing.
+
+Away from the PC, or with the helper stopped, the pages still read and the buttons are not
+rendered. Anything that starts real work (training, a cloud run, the cloud VM, a brain copy)
+takes a second, explicit click that says what will happen; cloud actions say they cost money.
+The site's CSP allows exactly `http://127.0.0.1:5050` in `connect-src` for this.
+
+Local state — the token, saved queues, queue runs, benchmark logs, refresh log — lives in
+`scripts/global/.local/` and is never committed.
+
+### The daily refresh
+
+`scripts/global/refresh_and_push.ps1` crawls, commits **only** `App_Data/global` when it
+changed, rebases onto `origin/master` and pushes (which deploys). The Windows task
+"CODEMATT Morning Briefing" runs it at 07:00; point the task at this repo with
+`powershell -ExecutionPolicy Bypass -File scripts\global\register_daily_refresh.ps1`.
+
 ## Not carried over
 
-- **Starting or stopping training from the page.** `run_gpu_queue.ps1` and the hub buttons of
-  `station_server.py` (open VS Code / folder / engine, git status, update all, save and launch
-  a queue) run programs on the owner's PC. This site runs in Azure, so `/global/queue` is a
-  read-only list; the old scripts stay in `_CODEMATT/GLOBAL`.
-- **The 07:00 scheduled refresh** and `BENCHMARK.ps1` (each RL repo keeps its own benchmark kit).
-- **`blazor_apps/` standards prose** (each repo's AGENTS.md carries its own standard).
+- Editing the ship-board stage and the vault's gold stars from a page (`save_config`). Both
+  files were empty in GLOBAL; edit `App_Data/global/config/readiness.json` and
+  `vault_gold.json` by hand.
+- `quick_transfer_actions.py`, `train_next_explorer.py` and the HTML generators: they only
+  produced static pages the app now renders itself.
 
 The recorded history did come across: `history/station_timeline.jsonl` and
 `rl/rl_timeline.jsonl` start with GLOBAL's 16 fleet crawls and 15 RL records.
@@ -97,6 +150,11 @@ The recorded history did come across: `history/station_timeline.jsonl` and
 - Unit: `tests/PoPunkouterSoftware.Unit/GlobalDataStoreTests.cs` — parses the real committed
   snapshot (so a crawler/API drift fails the build), plus missing-file, corrupt-file, briefing-delta,
   socket grouping, gold stars and readiness-suggestion cases.
+- Helper: `python -m unittest scripts/global/test_local_helper.py` — who may call it, and that a page
+  can never supply a command (15 tests; nothing is started on the PC).
+- Browser: `tests/PoPunkouterSoftware.E2EUI/GlobalUiTests.cs` — the PC buttons appear only when the
+  helper is connected, a start needs a confirmation, and only ids and hours are sent (the helper
+  is a Playwright route, so nothing runs).
 - Integration: `tests/PoPunkouterSoftware.Integration/GlobalEndpointsTests.cs` — every route 401s
   anonymously, answers signed in, and the snapshot is deployed beside the app.
 

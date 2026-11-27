@@ -33,7 +33,10 @@ internal static class SecurityHeaders
         "script-src 'self' 'wasm-unsafe-eval'; " +
         "worker-src 'self' blob:; " +
         "manifest-src 'self'; " +
-        "connect-src 'self'";
+        // 127.0.0.1:5050 is the owner's local helper (scripts/global/local_helper.py): the signed-in
+        // /global pages call it from the browser for the actions that must run on the PC. It is
+        // loopback only, so for every other visitor it is a closed port on their own machine.
+        "connect-src 'self' http://127.0.0.1:5050";
 
     internal static WebApplication UseSecurityHeaders(this WebApplication app)
     {

@@ -242,6 +242,76 @@ public sealed class GlobalQueueDto
 {
     public DateTimeOffset? Generated { get; set; }
     public List<GlobalTrainJobDto> Jobs { get; set; } = [];
+
+    /// <summary>The jobs <c>scripts/gcp/cloud_jobs.json</c> can run on the Google Cloud GPU.</summary>
+    public List<GlobalCloudJobDto> CloudJobs { get; set; } = [];
+}
+
+public sealed class GlobalCloudJobDto
+{
+    public string Id { get; set; } = "";
+    public string? Source { get; set; }
+    public string? Cwd { get; set; }
+    public string? Command { get; set; }
+    public double? Hours { get; set; }
+}
+
+/// <summary><c>/api/global/standards</c>: the prose under <c>docs/global-standards</c>.</summary>
+public sealed class GlobalStandardsDto
+{
+    public DateTimeOffset? Generated { get; set; }
+    public List<GlobalStandardDocDto> Documents { get; set; } = [];
+}
+
+public sealed class GlobalStandardDocDto
+{
+    public string Path { get; set; } = "";
+    public string Title { get; set; } = "";
+    public string Group { get; set; } = "";
+    public string Markdown { get; set; } = "";
+}
+
+/// <summary>
+/// One request from a /global page to the helper on the owner's PC
+/// (<c>scripts/global/local_helper.py</c>, <c>POST http://127.0.0.1:5050/api/action</c>).
+/// The page only names things (a repo, job ids, hours); the helper owns every command.
+/// </summary>
+public sealed class LocalHelperRequest
+{
+    public string Action { get; set; } = "";
+    public string? Repo { get; set; }
+    public string? Job { get; set; }
+    public string? Name { get; set; }
+    public string? Brain { get; set; }
+    public string? Target { get; set; }
+    public string? Dest { get; set; }
+    public string? Command { get; set; }
+    public string? Id { get; set; }
+    public double? Hours { get; set; }
+    public bool? Dry { get; set; }
+    public bool? Push { get; set; }
+    public int? CoolTemp { get; set; }
+    public int? GapMin { get; set; }
+    public bool? RefreshAfter { get; set; }
+    public List<LocalHelperQueueItem>? Jobs { get; set; }
+    public List<string>? Repos { get; set; }
+}
+
+public sealed class LocalHelperQueueItem
+{
+    public string Id { get; set; } = "";
+    public double Hours { get; set; }
+}
+
+public sealed class LocalHelperResult
+{
+    public bool Ok { get; set; }
+    public bool Authorized { get; set; }
+    public string? Output { get; set; }
+
+    /// <summary>Id of a background job the helper started; poll it with <c>job_status</c>.</summary>
+    public string? Job { get; set; }
+    public bool? Done { get; set; }
 }
 
 /// <summary>One line of <c>history/station_timeline.jsonl</c>.</summary>

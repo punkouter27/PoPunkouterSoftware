@@ -388,3 +388,45 @@
 .global-chart .line { fill: none; stroke: var(--po-accent); stroke-width: 2; }
 .global-chart .dot { fill: var(--po-accent); }
 .global-chart .label { fill: var(--po-text-muted); font-size: 10px; }
+
+/* Local helper (This PC): status strip, action rows, and the reply console */
+.global-local {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--po-space-2);
+    margin-bottom: var(--po-space-3);
+    padding: var(--po-space-2) var(--po-space-3);
+    background: var(--po-surface);
+    border: 1px solid var(--po-border);
+    border-radius: var(--po-radius);
+}
+
+.global-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--po-space-2);
+    margin-top: var(--po-space-2);
+}
+
+.global-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--po-text-muted);
+    font-size: var(--po-text-xs);
+}
+
+.global-search.global-num { flex: 0 0 auto; width: 6.5em; min-width: 0; }
+.global-search.global-wide { flex: 1 1 28ch; min-width: 0; }
+
+.global-output {
+    max-height: 22em;
+    margin: 0 0 var(--po-space-3);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.global-row-actions { flex-wrap: nowrap; gap: 4px; margin-top: 4px; }
+.global-row-actions .global-chip { padding: 1px 8px; font-size: var(--po-text-xs); text-transform: none; letter-spacing: 0; }

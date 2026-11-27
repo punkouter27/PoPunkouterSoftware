@@ -62,6 +62,9 @@ public sealed class PortfolioApiClient
     public Task<GlobalQueueDto?> GetGlobalQueueAsync(CancellationToken ct = default) =>
         _http.GetFromJsonAsync("/api/global/queue", GlobalJsonContext.Default.GlobalQueueDto, ct);
 
+    public Task<GlobalStandardsDto?> GetGlobalStandardsAsync(CancellationToken ct = default) =>
+        _http.GetFromJsonAsync("/api/global/standards", GlobalJsonContext.Default.GlobalStandardsDto, ct);
+
     public Task<GlobalUniteDto?> GetGlobalUniteAsync(CancellationToken ct = default) =>
         _http.GetFromJsonAsync("/api/global/unite", GlobalJsonContext.Default.GlobalUniteDto, ct);
 

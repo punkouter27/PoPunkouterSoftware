@@ -3,11 +3,13 @@
 @rendermode WasmRenderModes.Interactive
 @using PoPunkouterSoftware.Shared
 @inject PortfolioApiClient Api
+@inject LocalHelperClient Helper
 
 <PageTitle>Fleet health · PoPunkouterSoftware</PageTitle>
 
 @* Fleet health: the git, CI and size state of every repo in the workspace, from the same
-   crawl the old GLOBAL/station/fleet_health.html used. Read-only — nothing here writes. *@
+   crawl the old GLOBAL/station/fleet_health.html used. The table is read-only; with the local
+   helper connected each row also gets buttons that open the repo on this PC. *@
 <main id="main-content" class="app-page global-page" tabindex="-1">
     <header class="global-head">
         <div>
@@ -19,6 +21,13 @@
             <span class="global-stamp">Crawled @generated.ToLocalTime().ToString("yyyy-MM-dd HH:mm") · @GlobalFormat.Ago(_fleet.Generated)</span>
         }
     </header>
+
+    <LocalHelperBar OnChanged="StateHasChanged" />
+
+    @if (_output is not null)
+    {
+        <pre class="global-code global-output" role="status" aria-live="polite"><code>@_output</code></pre>
+    }
 
     @if (_loading)
     {
@@ -62,7 +71,24 @@
                     @foreach (var repo in Visible)
                     {
                         <tr>
-                            <th scope="row">@repo.Name</th>
+                            <th scope="row">
+                                @repo.Name
+                                @if (Helper.IsConnected && repo.Git.IsGit)
+                                {
+                                    @* Under the name, not in a column of their own: a ninth column pushed
+                                       the table past the page width. *@
+                                    var name = repo.Name;
+                                    <div class="global-actions global-row-actions">
+                                        <button type="button" class="global-chip" disabled="@_busy" @onclick='() => Run("open_vscode", name)'>Code</button>
+                                        <button type="button" class="global-chip" disabled="@_busy" @onclick='() => Run("open_folder", name)'>Folder</button>
+                                        <button type="button" class="global-chip" disabled="@_busy" @onclick='() => Run("git_status", name)'>Status</button>
+                                        @if (repo.Kind.Contains("unity", StringComparison.OrdinalIgnoreCase) || repo.Kind.Contains("unreal", StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            <button type="button" class="global-chip" disabled="@_busy" @onclick='() => Run("open_engine", name)'>Engine</button>
+                                        }
+                                    </div>
+                                }
+                            </th>
                             <td class="is-nowrap">@repo.Kind@(repo.IsRl ? " · RL" : "")</td>
                             <td>
                                 @if (!repo.Git.IsGit)
@@ -142,6 +168,22 @@
     private bool _onlyDirty;
     private bool _onlyFailing;
     private bool _onlyRl;
+    private bool _busy;
+    private string? _output;
+
+    private async Task Run(string action, string repo)
+    {
+        _busy = true;
+        try
+        {
+            var reply = await Helper.SendAsync(new LocalHelperRequest { Action = action, Repo = repo });
+            _output = $"{repo}: {reply.Output}";
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
 
     private IEnumerable<GlobalRepoDto> Visible
     {

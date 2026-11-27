@@ -23,6 +23,7 @@ public class GlobalEndpointsTests(TestWebApp app) : IClassFixture<TestWebApp>
         "/api/global/briefing",
         "/api/global/rl",
         "/api/global/queue",
+        "/api/global/standards",
         "/api/global/unite",
     ];
 
@@ -42,6 +43,7 @@ public class GlobalEndpointsTests(TestWebApp app) : IClassFixture<TestWebApp>
     [InlineData("/api/global/briefing")]
     [InlineData("/api/global/rl")]
     [InlineData("/api/global/queue")]
+    [InlineData("/api/global/standards")]
     [InlineData("/api/global/unite")]
     public async Task GlobalEndpoints_RejectAnonymousRequests(string path)
     {
@@ -136,6 +138,57 @@ public class GlobalEndpointsTests(TestWebApp app) : IClassFixture<TestWebApp>
         queue.Jobs.Should().NotBeEmpty();
         queue.Jobs.Should().OnlyContain(j => !string.IsNullOrEmpty(j.Id) && !string.IsNullOrEmpty(j.Command));
         queue.Jobs.Should().OnlyContain(j => j.Missing != null, "the crawl checks every job's requirements");
+    }
+
+    [Fact]
+    public async Task Queue_ListsTheCloudJobs()
+    {
+        using var client = SignedIn(app);
+
+        var queue = await client.GetFromJsonAsync("/api/global/queue", GlobalJsonContext.Default.GlobalQueueDto);
+
+        queue!.CloudJobs.Should().NotBeEmpty();
+        queue.CloudJobs.Should().OnlyContain(j => j.Id.Length > 0 && !string.IsNullOrEmpty(j.Command));
+    }
+
+    [Fact]
+    public async Task Standards_ReturnTheCommittedDocuments()
+    {
+        using var client = SignedIn(app);
+
+        var standards = await client.GetFromJsonAsync("/api/global/standards", GlobalJsonContext.Default.GlobalStandardsDto);
+
+        standards!.Documents.Should().NotBeEmpty();
+        standards.Documents.Should().OnlyContain(d => d.Title.Length > 0 && d.Markdown.Length > 0 && d.Group.Length > 0);
+    }
+
+    [Theory]
+    [InlineData("/global/pc")]
+    [InlineData("/global/queue")]
+    [InlineData("/global/standards")]
+    [InlineData("/global/fleet")]
+    public async Task OwnerPages_RedirectAnonymousVisitorsToSignIn(string path)
+    {
+        using var anonymous = app.CreateClient(new() { AllowAutoRedirect = false });
+
+        var response = await anonymous.GetAsync(path);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Redirect);
+        response.Headers.Location!.OriginalString.Should().Contain("/auth/login/microsoft");
+    }
+
+    // The signed-in /global pages call the owner's local helper from the browser; the CSP has to
+    // allow exactly that loopback address and nothing wider.
+    [Fact]
+    public async Task ContentSecurityPolicy_AllowsOnlyTheLoopbackHelperBeyondSelf()
+    {
+        using var client = app.CreateClient(new() { AllowAutoRedirect = false });
+
+        var response = await client.GetAsync("/");
+
+        var csp = string.Join(" ", response.Headers.GetValues("Content-Security-Policy"));
+        csp.Should().Contain("connect-src 'self' http://127.0.0.1:5050");
+        csp.Should().NotContain("connect-src *").And.NotContain("http://localhost");
     }
 
     [Fact]

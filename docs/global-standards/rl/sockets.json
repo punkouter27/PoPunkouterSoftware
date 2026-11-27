@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "recommended_opset": 17,
+  "recommended_control_hz": 50,
+  "recommended_tensors": {
+    "input": "obs",
+    "output": "actions",
+    "dtype": "float32"
+  },
+  "sockets": [
+    {
+      "socket": "131->28",
+      "body_family": "UNITE Canonical Humanoid / Unitree R1 A5 (MuJoCo)",
+      "cross_engine": true,
+      "engines": ["Unity (org.mujoco + Sentis)", "Unreal (URLab + NNE ORT)", "Python / Jetson"],
+      "repos": ["PoRobotTrain"],
+      "opsets": [17],
+      "input_tensor": "obs [batch, 131]",
+      "output_tensor": "actions [batch, 28]",
+      "notes": "Canonical UNITE role-ordered portable contract (unite/creatures/unitree_r1_a5/contract.json). Raw physical obs (no baked obs_norm, R9). First conforming skill: PoRobotTrain hold_centre v2."
+    },
+    {
+      "socket": "103->29",
+      "body_family": "Unitree G1 / 29-DoF Humanoid (MuJoCo)",
+      "cross_engine": true,
+      "engines": ["Unity (org.mujoco + Sentis)", "Unreal (URLab + NNE ORT)"],
+      "repos": ["PoHillKing", "PoRaceUnreal"],
+      "opsets": [17],
+      "input_tensor": "obs [1, 103]",
+      "output_tensor": "actions [1, 29]",
+      "notes": "Shared socket across Unity and Unreal. Verify observation feature order (e.g. gait clock) before direct drop-in."
+    },
+    {
+      "socket": "125->29",
+      "body_family": "29-DoF Humanoid + Ball (MuJoCo)",
+      "cross_engine": false,
+      "engines": ["Unreal (URLab + NNE ORT)"],
+      "repos": ["PoBasketball"],
+      "opsets": [17],
+      "input_tensor": "obs [1, 125]",
+      "output_tensor": "action [1, 29]",
+      "notes": "29-DoF humanoid with basketball-specific observation tail (dribble/ball state)."
+    },
+    {
+      "socket": "112->29",
+      "body_family": "29-DoF Brawler Humanoid (MuJoCo)",
+      "cross_engine": false,
+      "engines": ["Unity (org.mujoco + Sentis)"],
+      "repos": ["PoHillKing"],
+      "opsets": [17, 18],
+      "input_tensor": "obs [1, 112]",
+      "output_tensor": "actions [1, 29]",
+      "notes": "29-DoF fighter policy with opponent/hill context."
+    },
+    {
+      "socket": "84->23",
+      "body_family": "23-DoF Athlete Humanoid (MuJoCo)",
+      "cross_engine": false,
+      "engines": ["Unity (org.mujoco + Sentis)"],
+      "repos": ["PoOlympic"],
+      "opsets": [17],
+      "input_tensor": "obs [1, 84]",
+      "output_tensor": "ctrl [1, 23]",
+      "notes": "Shared across multiple PoOlympic athlete bodies (matt, kim, grandma, zombie)."
+    },
+    {
+      "socket": "103->21",
+      "body_family": "21-DoF Boxer Humanoid (MuJoCo)",
+      "cross_engine": false,
+      "engines": ["Unity (org.mujoco + Sentis)"],
+      "repos": ["PoBox"],
+      "opsets": [17],
+      "input_tensor": "obs [batch, 103]",
+      "output_tensor": "actions [batch, 21]",
+      "notes": "Shared across all 5 PoBox boxers (Nick, Timmy, Trump, Zombie, Grandpa)."
+    },
+    {
+      "socket": "136->30",
+      "body_family": "30-DoF Slap Fighter Humanoid (MuJoCo)",
+      "cross_engine": false,
+      "engines": ["Unreal (URLab + NNE ORT)"],
+      "repos": ["PoSlapUnreal"],
+      "opsets": [17],
+      "input_tensor": "obs [1, 136]",
+      "output_tensor": "actions [1, 30]",
+      "notes": "30-DoF humanoid variants (136/140/142 obs depending on curriculum stage)."
+    },
+    {
+      "socket": "48->12",
+      "body_family": "Unitree Go2 Quadruped 12-DoF (MuJoCo)",
+      "cross_engine": false,
+      "engines": ["Unreal (URLab + NNE ORT)"],
+      "repos": ["PoRaceUnreal"],
+      "opsets": [17],
+      "input_tensor": "obs [1, 48]",
+      "output_tensor": "action [1, 12]",
+      "notes": "Go2 MJCF also exists in PoRobotTrain; portable to any Unreal/Unity MuJoCo arena at 50 Hz."
+    },
+    {
+      "socket": "83->24",
+      "body_family": "Unitree R1 Humanoid 24-DoF (MuJoCo)",
+      "cross_engine": false,
+      "engines": ["Unreal (URLab + NNE ORT)"],
+      "repos": ["PoRobotTrain"],
+      "opsets": [18],
+      "input_tensor": "obs [1, 83]",
+      "output_tensor": "actions [1, 24]",
+      "notes": "Hardware-safe Unitree R1 twin with upper-body/head joint caps."
+    }
+  ]
+}

@@ -32,7 +32,9 @@
     [
         new("/", "home", "Apps"),
         new("/azure", "monitor_heart", "Azure"),
-        new("/global", "dns", "Fleet"),
+        // "speed" is in the icon-font subset (scripts/Build-IconFontSubset.py); "dns" was not, so the
+        // phone nav printed the ligature text instead of a glyph.
+        new("/global", "speed", "Fleet"),
         new("/users", "group", "Users"),
         // No Settings slot (Po standard, 2026-11-18): settings is the gear in the header, on
         // every width, so a second settings control here was a duplicate.
@@ -52,7 +54,9 @@
             current = "/";
         }
 
-        return string.Equals(current, href, StringComparison.OrdinalIgnoreCase);
+        // A section stays lit on its sub-pages (/global/queue lights Fleet); "/" matches only itself.
+        return string.Equals(current, href, StringComparison.OrdinalIgnoreCase)
+            || (href.Length > 1 && current.StartsWith(href + "/", StringComparison.OrdinalIgnoreCase));
     }
 
     public void Dispose() =>

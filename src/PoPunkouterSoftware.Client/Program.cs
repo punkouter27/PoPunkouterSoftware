@@ -27,6 +27,9 @@ builder.Services.AddScoped(sp =>
     };
 });
 builder.Services.AddScoped<PortfolioApiClient>();
+// The helper on the owner's PC (scripts/global/local_helper.py) that the /global pages call for
+// the things Azure cannot do: open an editor, launch training, refresh the snapshot.
+builder.Services.AddScoped<LocalHelperClient>();
 // Registered one by one, never by assembly scan: the published WASM bundle is trimmed, and a scan
 // reaches each validator only through reflection, so the trimmer dropped SignInSearchFilterValidator's
 // constructor and /users rendered nothing in production ("NoConstructorMatch"). A generic registration

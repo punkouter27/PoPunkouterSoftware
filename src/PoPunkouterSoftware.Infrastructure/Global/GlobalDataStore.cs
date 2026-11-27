@@ -145,10 +145,20 @@ public sealed class GlobalDataStore
         var queue = Load("queue.json", GlobalCrawlerJsonContext.Default.GlobalQueueDto,
             () => new GlobalQueueDto { Jobs = LoadTrainJobs().Jobs });
         queue.Jobs ??= [];
+        queue.CloudJobs ??= [];
         foreach (var job in queue.Jobs)
             job.Requires ??= [];
 
         return queue;
+    }
+
+    /// <summary>The standards prose the crawl copied from <c>docs/global-standards</c>.</summary>
+    public GlobalStandardsDto LoadStandards()
+    {
+        var standards = Load("standards.json", GlobalCrawlerJsonContext.Default.GlobalStandardsDto,
+            static () => new GlobalStandardsDto());
+        standards.Documents ??= [];
+        return standards;
     }
 
     public List<GlobalLessonDto> LoadLessons()

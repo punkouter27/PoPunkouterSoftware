@@ -10,6 +10,7 @@ PoPunkouterSoftware (Blazor, behind Microsoft sign-in), so this script produces 
   App_Data/global/rl/rl_timeline.jsonl          (record_rl_history.py)
   App_Data/global/unite.json                  UNITE prefab catalogue (this file)
   App_Data/global/queue.json                  training jobs + missing requirements (this file)
+  App_Data/global/standards.json              docs/global-standards prose (this file)
 
 Usage (from the repo root):
   python scripts/global/build_global_data.py              # everything
@@ -108,17 +109,45 @@ def build_queue() -> Path:
     jobs = json.loads(source.read_text(encoding="utf-8")).get("jobs", []) if source.exists() else []
     for job in jobs:
         job["missing"] = [p for p in job.get("requires", []) if not (sc.WORKSPACE / p).exists()]
+    cloud = sc.load_json(sc.REPO / "scripts" / "gcp" / "cloud_jobs.json", {}).get("jobs", [])
+    cloud_jobs = [{key: job.get(key) for key in ("id", "source", "cwd", "command", "hours")} for job in cloud]
     out = sc.OUT / "queue.json"
-    payload = {"generated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "jobs": jobs}
+    payload = {"generated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "jobs": jobs,
+               "cloud_jobs": cloud_jobs}
     out.write_text(json.dumps(payload, indent=1) + "\n", encoding="utf-8")
     blocked = sum(1 for job in jobs if job["missing"])
     print(f"queue: {len(jobs)} jobs, {blocked} blocked -> {out}")
     return out
 
 
+def build_standards() -> Path:
+    """Copy the standards prose (docs/global-standards/**/*.md) into standards.json."""
+    import json
+
+    root = sc.REPO / "docs" / "global-standards"
+    groups = {"blazor": "Blazor apps", "rl": "RL training"}
+    documents = []
+    for path in sorted(root.rglob("*.md")) if root.is_dir() else []:
+        text = path.read_text(encoding="utf-8")
+        heading = next((line[2:].strip() for line in text.splitlines() if line.startswith("# ")), path.stem)
+        documents.append({
+            "path": path.relative_to(sc.REPO).as_posix(),
+            "title": heading,
+            "group": groups.get(path.parent.name, path.parent.name),
+            "markdown": text,
+        })
+    out = sc.OUT / "standards.json"
+    generated = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+    payload = {"generated": generated, "documents": documents}
+    out.write_text(json.dumps(payload, indent=1) + "\n", encoding="utf-8")
+    print(f"standards: {len(documents)} documents -> {out}")
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Refresh the GLOBAL data snapshot the app serves.")
-    parser.add_argument("--only", choices=["fleet", "lessons", "rl", "unite", "queue"], help="run a single step")
+    steps = ["fleet", "lessons", "rl", "unite", "queue", "standards"]
+    parser.add_argument("--only", choices=steps, help="run a single step")
     parser.add_argument("--no-gh", action="store_true", help="skip GitHub CI lookups (offline / rate limited)")
     args = parser.parse_args()
 
@@ -136,6 +165,8 @@ def main() -> int:
         build_unite()
     if only in (None, "queue"):
         build_queue()
+    if only in (None, "standards"):
+        build_standards()
 
     print("\nDone. Restart the app (or reload /global) to see the new snapshot.")
     return 0

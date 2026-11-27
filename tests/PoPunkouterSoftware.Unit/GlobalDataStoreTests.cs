@@ -174,6 +174,52 @@ public sealed class GlobalDataStoreTests
     }
 
     [Fact]
+    public void Queue_CarriesTheCloudJobs()
+    {
+        var queue = Store().LoadQueue();
+
+        queue.CloudJobs.Should().NotBeEmpty();
+        queue.CloudJobs.Select(j => j.Id).Should().OnlyHaveUniqueItems();
+    }
+
+    [Fact]
+    public void Standards_ReadTheCommittedDocuments()
+    {
+        var standards = Store().LoadStandards();
+
+        standards.Documents.Should().NotBeEmpty();
+        standards.Documents.Should().OnlyContain(d => d.Path.StartsWith("docs/global-standards/", StringComparison.Ordinal));
+        standards.Documents.Select(d => d.Group).Distinct().Should().BeEquivalentTo(["Blazor apps", "RL training"]);
+    }
+
+    [Fact]
+    public void LocalHelperRequest_SerializesAsTheHelperExpects()
+    {
+        var json = JsonSerializer.Serialize(new LocalHelperRequest
+        {
+            Action = "launch_queue",
+            Dry = true,
+            CoolTemp = 65,
+            RefreshAfter = false,
+            Jobs = [new LocalHelperQueueItem { Id = "a", Hours = 2.5 }],
+        }, GlobalJsonContext.Default.LocalHelperRequest);
+
+        json.Should().Be("""{"action":"launch_queue","dry":true,"coolTemp":65,"refreshAfter":false,"jobs":[{"id":"a","hours":2.5}]}""");
+    }
+
+    [Fact]
+    public void LocalHelperResult_ReadsTheHelperReply()
+    {
+        var reply = JsonSerializer.Deserialize("""{"ok": true, "output": "Started", "job": "refresh_1", "authorized": true, "ids": ["x"]}""",
+            GlobalJsonContext.Default.LocalHelperResult);
+
+        reply!.Ok.Should().BeTrue();
+        reply.Authorized.Should().BeTrue();
+        reply.Job.Should().Be("refresh_1");
+        reply.Done.Should().BeNull();
+    }
+
+    [Fact]
     public void Queue_WithoutACrawl_FallsBackToTheJobListUnchecked()
     {
         var dir = Path.Combine(Path.GetTempPath(), "po-global-queue", Guid.NewGuid().ToString("N"));

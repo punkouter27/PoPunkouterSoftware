@@ -117,7 +117,7 @@ Local tests may explicitly send `X-Fake-User`; those headers never authenticate 
 - Integration tests (`PoPunkouterSoftware.Integration`) cover host configuration, diagnostics endpoints, and Azure Table Storage behavior via `WebApplicationFactory` + Testcontainers Azurite.
 - E2E tests (`PoPunkouterSoftware.E2EAPI`, `PoPunkouterSoftware.E2EUI`) cover the HTTP contract and browser flows against a live instance; on demand, not in CI, and they skip with a clear message when no app answers at `BASE_URL`. E2EUI runs axe-core's WCAG 2.1 A/AA rules over every page (`Deque.AxeCore.Playwright`) and fails on serious or critical violations.
 - Integration runs in CI; locally its 6 Azurite tests skip with a clear message when Docker is not running.
-- Current counts: Unit 113, Integration 82 (6 need Docker), E2E API 22, E2E UI 32 (see [docs/testing.md](docs/testing.md)).
+- Current counts: Unit 117, Integration 90 (6 need Docker), E2E API 22, E2E UI 40 (see [docs/testing.md](docs/testing.md)).
 
 ## Developer Guidance
 

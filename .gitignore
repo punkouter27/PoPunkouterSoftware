@@ -162,3 +162,6 @@ scripts/gcp/runs/
 __pycache__/
 *.py[cod]
 
+
+# Local helper state: token, logs, saved queues, queue and benchmark runs (never committed)
+scripts/global/.local/

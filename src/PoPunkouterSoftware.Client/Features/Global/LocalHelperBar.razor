@@ -1,0 +1,81 @@
+@namespace PoPunkouterSoftware.Client
+@inject LocalHelperClient Helper
+
+@* The strip that says whether this browser can act on the owner's PC. The site runs in Azure,
+   so the buttons that open editors, launch training or refresh the snapshot talk to a helper
+   on 127.0.0.1 (scripts/global/local_helper.py). Away from the PC, or with the helper stopped,
+   those buttons are simply not rendered and this strip says why. *@
+<section class="global-local is-@Helper.State.ToString().ToLowerInvariant()" aria-label="This PC">
+    @switch (Helper.State)
+    {
+        case LocalHelperState.Connected:
+            <span class="global-tone is-good">This PC is connected</span>
+            <span class="global-note global-mono">@Helper.Workspace</span>
+            break;
+
+        case LocalHelperState.NeedsToken:
+            <span class="global-tone is-warn">Helper found</span>
+            <label class="global-note" for="local-helper-token">Paste the token its window shows:</label>
+            <input id="local-helper-token" class="global-search" type="password" autocomplete="off"
+                   value="@_token" @oninput="e => _token = e.Value?.ToString() ?? string.Empty" />
+            <button type="button" class="global-chip" disabled="@(_busy || _token.Length == 0)" @onclick="SaveToken">Connect</button>
+            break;
+
+        case LocalHelperState.Offline:
+            <span class="global-tone is-muted">This PC is not connected</span>
+            <span class="global-note">
+                Actions that run on the PC are hidden. Start <code>scripts\global\start_local_helper.bat</code> on the PC, then
+            </span>
+            <button type="button" class="global-chip" disabled="@_busy" @onclick="Connect">try again</button>
+            break;
+
+        default:
+            <span class="global-tone is-muted">Looking for the helper on this PC…</span>
+            break;
+    }
+</section>
+
+@code {
+    /// <summary>Raised after every state change so the page can show or hide its PC buttons.</summary>
+    [Parameter] public EventCallback OnChanged { get; set; }
+
+    private string _token = "";
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Helper.State == LocalHelperState.Unknown)
+            await Connect();
+    }
+
+    private async Task Connect()
+    {
+        _busy = true;
+        try
+        {
+            await Helper.ConnectAsync();
+        }
+        finally
+        {
+            _busy = false;
+        }
+
+        await OnChanged.InvokeAsync();
+    }
+
+    private async Task SaveToken()
+    {
+        _busy = true;
+        try
+        {
+            await Helper.SaveTokenAsync(_token);
+            _token = "";
+        }
+        finally
+        {
+            _busy = false;
+        }
+
+        await OnChanged.InvokeAsync();
+    }
+}

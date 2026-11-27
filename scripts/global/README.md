@@ -20,15 +20,32 @@ Then reload `/global` — the API re-reads a file when its timestamp changes, so
 | `lessons` | `harvest_lessons.py` | `lessons.json` | `/api/global/lessons` |
 | `rl` | `collect_rl_facts.py`, `record_rl_history.py` | `rl_facts.json`, `rl/rl_timeline.jsonl` | `/api/global/rl` |
 | `unite` | `build_global_data.py` (inline) | `unite.json` | `/api/global/unite` |
+| `queue` | `build_global_data.py` (inline) | `queue.json` (jobs, missing requirements, cloud jobs) | `/api/global/queue` |
+| `standards` | `build_global_data.py` (inline) | `standards.json` (from `docs/global-standards`) | `/api/global/standards` |
 
 `config/` holds the hand-edited inputs the previous station kept: `train_jobs.json`,
 `readiness.json`, `vault_gold.json`, `lessons_manual.json`. Edit those directly.
 
-## Read-only
+## Read-only crawlers, and the one tool that writes
 
-Every crawler only reads the sibling repos. The one that writes into a repo was `vault_import.py`,
-which is **not** vendored: copying a brain between repos stays a manual step. Nothing here deletes
-anything.
+Every crawler only reads the sibling repos. `vault_import.py` is the exception: it copies one
+`.onnx` into another repo's `vault_imports/` folder. It never overwrites, never commits, and
+`--dry-run` only reports whether the brain's socket fits. Nothing here deletes anything.
+
+## Things that run on the PC
+
+| Script | What it does |
+| --- | --- |
+| `start_local_helper.bat` → `local_helper.py` | The helper on `127.0.0.1:5050` that the signed-in `/global` pages call. Prints a token to paste once on the site. See [docs/global-migration.md](../../docs/global-migration.md#actions-on-the-pc-the-local-helper) |
+| `refresh_and_push.ps1` | Crawl, commit only `App_Data/global`, rebase, push. `-NoPush` crawls only |
+| `register_daily_refresh.ps1` | Points the 07:00 task "CODEMATT Morning Briefing" at `refresh_and_push.ps1` |
+| `run_gpu_queue.ps1` | Runs a saved queue on this PC's GPU (cool-down, time limits, summary per run) |
+| `run_benchmarks.ps1` | Runs each RL repo's own `benchmark.ps1 -Run`, then refreshes |
+| `vault_import.py` | Copies a brain between repos (above) |
+| `test_local_helper.py` | `python -m unittest scripts/global/test_local_helper.py` |
+
+`.local/` (git-ignored) holds the helper token, saved queues, queue runs, benchmark logs and
+the refresh log.
 
 ## Where the workspace is
 

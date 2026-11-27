@@ -1,0 +1,77 @@
+@page "/global/standards"
+@attribute [Authorize]
+@rendermode WasmRenderModes.Interactive
+@using PoPunkouterSoftware.Shared
+@inject PortfolioApiClient Api
+
+<PageTitle>Standards · PoPunkouterSoftware</PageTitle>
+
+@* The prose that lived in GLOBAL/blazor_apps and GLOBAL/rl_training: the Blazor standards,
+   the cross-engine RL portability contract and the two saved analysis prompts. The files are
+   docs/global-standards/*.md in this repo; the crawl copies their text into the snapshot. *@
+<main id="main-content" class="app-page global-page" tabindex="-1">
+    <header class="global-head">
+        <div>
+            <h1>Standards</h1>
+            <p class="app-note">
+                The Blazor and RL standards and the saved analysis prompts. Edit them in <code>docs/global-standards/</code>.
+            </p>
+        </div>
+        @if (_standards is { Documents.Count: > 0 })
+        {
+            <span class="global-stamp">@_standards.Documents.Count documents</span>
+        }
+    </header>
+
+    @if (_loading)
+    {
+        <LoadingSkeleton Variant="cards" TileCount="4" AriaLabel="Loading the standards" />
+    }
+    else if (_error is not null)
+    {
+        <div class="global-error" role="alert">@_error</div>
+    }
+    else if (_standards is null || _standards.Documents.Count == 0)
+    {
+        <p class="app-empty-state">No documents yet. Run <code>python scripts/global/build_global_data.py --only standards</code>.</p>
+    }
+    else
+    {
+        @foreach (var group in _standards.Documents.GroupBy(d => d.Group))
+        {
+            <h2>@group.Key</h2>
+            @foreach (var doc in group)
+            {
+                <details class="global-item">
+                    <summary><strong>@doc.Title</strong> <span class="global-note global-mono">@doc.Path</span></summary>
+                    <div class="global-doc">
+                        @((MarkupString)GlobalMarkdown.ToHtml(doc.Markdown))
+                    </div>
+                </details>
+            }
+        }
+    }
+</main>
+
+@code {
+    private GlobalStandardsDto? _standards;
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            _standards = await Api.GetGlobalStandardsAsync(cts.Token);
+        }
+        catch (Exception ex)
+        {
+            _error = FriendlyError.Describe(ex);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

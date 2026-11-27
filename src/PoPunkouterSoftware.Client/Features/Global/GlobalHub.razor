@@ -94,11 +94,15 @@
             new("/global/rl", "RL dashboard", $"{GlobalFormat.Number(s.ShippedBrainsRl)} shipped",
                 $"{GlobalFormat.Number(s.PeakSps)} peak env-steps/s · history chart"),
             new("/global/queue", "Training queue", $"{s.JobsTotal} jobs",
-                "Every training job, its command, and whether it can start"),
+                "Start jobs on this PC's GPU or the cloud GPU, with a dry run first"),
             new("/global/unite", "UNITE", $"{s.CreaturesCount} creatures",
                 "Portable MJCF prefabs, the 28 rules and the contract schema"),
             new("/global/incubator", "Incubator", "5 questions",
                 "Which repo to start a new idea from, and what carries over"),
+            new("/global/pc", "This PC", "Local actions",
+                "Refresh and push the snapshot, run benchmarks, copy a brain, drive the cloud VM"),
+            new("/global/standards", "Standards", "Blazor & RL",
+                "The shared standards, the portability contract and the saved prompts"),
         ];
     }
 

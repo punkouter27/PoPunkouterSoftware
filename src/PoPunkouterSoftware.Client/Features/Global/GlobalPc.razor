@@ -1,0 +1,232 @@
+@page "/global/pc"
+@attribute [Authorize]
+@rendermode WasmRenderModes.Interactive
+@using PoPunkouterSoftware.Shared
+@inject PortfolioApiClient Api
+@inject LocalHelperClient Helper
+
+<PageTitle>This PC · PoPunkouterSoftware</PageTitle>
+
+@* The actions the old GLOBAL hub ran through station_server.py: refresh everything, run the
+   benchmarks, copy a brain between repos, and drive the cloud GPU VM. They all happen on the
+   owner's PC through the local helper; this page only sends the request and shows the reply. *@
+<main id="main-content" class="app-page global-page" tabindex="-1">
+    <header class="global-head">
+        <div>
+            <h1>This PC</h1>
+            <p class="app-note">
+                Things that have to happen on the PC: refresh the snapshot, run benchmarks, copy a brain, drive the cloud GPU.
+                Per-repo buttons are on <a href="/global/fleet">Fleet health</a>; training is on the <a href="/global/queue">Training queue</a>.
+            </p>
+        </div>
+    </header>
+
+    <LocalHelperBar OnChanged="StateHasChanged" />
+
+    @if (!Helper.IsConnected)
+    {
+        <section class="global-item">
+            <div class="text"><strong>How to connect</strong></div>
+            <ol class="global-doc">
+                <li>On the PC, run <code>scripts\global\start_local_helper.bat</code> from the PoPunkouterSoftware folder and leave its window open.</li>
+                <li>Copy the token that window prints and paste it in the box above. This browser remembers it.</li>
+                <li>If the browser asks whether this site may reach devices on your local network, allow it.</li>
+            </ol>
+            <p class="global-note">The helper only listens on this PC (127.0.0.1) and only answers this site with that token.</p>
+        </section>
+    }
+    else
+    {
+        <section class="global-item">
+            <div class="text"><strong>Refresh the snapshot</strong></div>
+            <p class="global-note">
+                Crawls every repo (about 2 minutes). Pushing commits the snapshot and redeploys the site (about 5 more minutes).
+                The 07:00 scheduled task does the same every morning.
+            </p>
+            <div class="global-actions">
+                <button type="button" class="global-chip" disabled="@_busy" @onclick="() => Refresh(push: false)">Crawl only</button>
+                <button type="button" class="global-chip" disabled="@_busy" @onclick="() => Refresh(push: true)">Crawl, commit and push</button>
+            </div>
+        </section>
+
+        <section class="global-item">
+            <div class="text"><strong>Benchmarks</strong></div>
+            <p class="global-note">
+                Runs each picked repo's own <code>benchmark.ps1 -Run</code>, one at a time, in a new window, then refreshes and pushes.
+                Close Unity and Unreal first: they use the GPU and skew the numbers.
+            </p>
+            <div class="global-actions">
+                @foreach (var repo in _rlRepos)
+                {
+                    var name = repo;
+                    <button type="button" class="global-chip @(_benchRepos.Contains(name) ? "is-on" : null)" @onclick="() => Toggle(_benchRepos, name)">@name</button>
+                }
+            </div>
+            <div class="global-actions">
+                <button type="button" class="global-chip" disabled="@_busy" @onclick="RunBenchmarks">
+                    Run @(_benchRepos.Count == 0 ? "all RL repos" : $"{_benchRepos.Count} picked")
+                </button>
+            </div>
+        </section>
+
+        <section class="global-item">
+            <div class="text"><strong>Copy a brain into another repo</strong></div>
+            <p class="global-note">
+                Adds one <code>.onnx</code> under the target's <code>vault_imports/</code> with a note of where it came from.
+                It never overwrites and never commits. Check first: it reports whether the brain's socket fits the target.
+            </p>
+            <div class="global-actions">
+                <input class="global-search global-wide" type="text" list="pc-brains" placeholder="Brain path, e.g. PoOlympic/Assets/…/sprint.onnx"
+                       value="@_brain" @oninput="e => _brain = e.Value?.ToString() ?? string.Empty" aria-label="Brain path" />
+                <datalist id="pc-brains">
+                    @foreach (var brain in _brains)
+                    {
+                        <option value="@brain"></option>
+                    }
+                </datalist>
+                <select class="global-search" value="@_target" @onchange="e => _target = e.Value?.ToString() ?? string.Empty" aria-label="Target repo">
+                    <option value="">Target repo…</option>
+                    @foreach (var repo in _repos)
+                    {
+                        <option value="@repo">@repo</option>
+                    }
+                </select>
+            </div>
+            <div class="global-actions">
+                <button type="button" class="global-chip" disabled="@(_busy || !CanImport)" @onclick="() => ImportBrain(dry: true)">Check fit (copies nothing)</button>
+                @if (_confirmImport)
+                {
+                    <button type="button" class="global-chip is-on" disabled="@(_busy || !CanImport)" @onclick="() => ImportBrain(dry: false)">Yes, copy it into @_target</button>
+                    <button type="button" class="global-chip" @onclick="() => _confirmImport = false">Cancel</button>
+                }
+                else
+                {
+                    <button type="button" class="global-chip" disabled="@(_busy || !CanImport)" @onclick="() => _confirmImport = true">Copy…</button>
+                }
+            </div>
+        </section>
+
+        <section class="global-item">
+            <div class="text"><strong>Cloud GPU (Google Cloud)</strong></div>
+            <p class="global-note">
+                The rented GPU VM that cloud training jobs run on. It costs money while it is running, so stop it when a job has finished.
+                Jobs are sent from the <a href="/global/queue">Training queue</a>.
+            </p>
+            <div class="global-actions">
+                <button type="button" class="global-chip" disabled="@_busy" @onclick='() => Cloud("status")'>Status</button>
+                <button type="button" class="global-chip" disabled="@_busy" @onclick='() => Cloud("doctor")'>Check setup</button>
+                <button type="button" class="global-chip" disabled="@_busy" @onclick='() => Cloud("down")'>Stop the VM</button>
+                @if (_confirmUp)
+                {
+                    <button type="button" class="global-chip is-on" disabled="@_busy" @onclick='() => Cloud("up")'>Yes, start the VM (costs money)</button>
+                    <button type="button" class="global-chip" @onclick="() => _confirmUp = false">Cancel</button>
+                }
+                else
+                {
+                    <button type="button" class="global-chip" disabled="@_busy" @onclick="() => _confirmUp = true">Start the VM…</button>
+                }
+            </div>
+        </section>
+    }
+
+    @if (_output is not null)
+    {
+        <pre class="global-code global-output" role="status" aria-live="polite"><code>@_output</code></pre>
+    }
+</main>
+
+@code {
+    private readonly HashSet<string> _benchRepos = new(StringComparer.OrdinalIgnoreCase);
+    private List<string> _repos = [];
+    private List<string> _rlRepos = [];
+    private List<string> _brains = [];
+    private string _brain = "";
+    private string _target = "";
+    private string? _output;
+    private bool _busy;
+    private bool _confirmImport;
+    private bool _confirmUp;
+
+    private bool CanImport => _brain.Trim().Length > 0 && _target.Length > 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+            var fleet = await Api.GetGlobalFleetAsync(cts.Token);
+            var repos = fleet?.Repos.Where(r => r.Git.IsGit).OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase).ToList() ?? [];
+            _repos = repos.Select(r => r.Name).ToList();
+            _rlRepos = repos.Where(r => r.IsRl).Select(r => r.Name).ToList();
+            _brains = repos.SelectMany(r => r.Onnx).Select(b => b.Rel).Where(rel => rel.Length > 0).Take(600).ToList();
+        }
+        catch (Exception ex)
+        {
+            _output = FriendlyError.Describe(ex);
+        }
+    }
+
+    private static void Toggle(HashSet<string> set, string name)
+    {
+        if (!set.Add(name))
+            set.Remove(name);
+    }
+
+    private async Task<LocalHelperResult> Send(LocalHelperRequest request)
+    {
+        _busy = true;
+        _output = "Working…";
+        StateHasChanged();
+        try
+        {
+            var reply = await Helper.SendAsync(request);
+            _output = reply.Output;
+            return reply;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task Refresh(bool push)
+    {
+        var reply = await Send(new LocalHelperRequest { Action = "refresh", Push = push });
+        if (reply.Job is not { Length: > 0 } job)
+            return;
+
+        // The crawl takes minutes: poll its log until the helper says it ended.
+        _busy = true;
+        try
+        {
+            for (var i = 0; i < 400; i++)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(3));
+                var status = await Helper.SendAsync(new LocalHelperRequest { Action = "job_status", Job = job });
+                _output = status.Output;
+                StateHasChanged();
+                if (status.Done != false)
+                    break;
+            }
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private Task RunBenchmarks() =>
+        Send(new LocalHelperRequest { Action = "benchmark", Repos = _benchRepos.OrderBy(r => r).ToList() });
+
+    private async Task ImportBrain(bool dry)
+    {
+        _confirmImport = false;
+        await Send(new LocalHelperRequest { Action = "vault_import", Brain = _brain.Trim(), Target = _target, Dry = dry });
+    }
+
+    private async Task Cloud(string command)
+    {
+        _confirmUp = false;
+        await Send(new LocalHelperRequest { Action = "cloud", Command = command });
+    }
+}

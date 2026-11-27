@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-27T18:33:50+00:00",
+ "generated": "2026-11-27T19:57:13+00:00",
  "jobs": [
   {
    "id": "slap_v5_resume",
@@ -203,6 +203,29 @@
    "source_line": 77,
    "after": "Check the ELO curve in TensorBoard (AGENTS.md 4.x)",
    "missing": []
+  }
+ ],
+ "cloud_jobs": [
+  {
+   "id": "bball_queue",
+   "source": "PoBasketball",
+   "cwd": "sim",
+   "command": "uv run python -m streetball.queue --hours {hours}",
+   "hours": 6
+  },
+  {
+   "id": "box_queue",
+   "source": "PoBox",
+   "cwd": "training",
+   "command": "uv run python tools/queue_runner.py",
+   "hours": 6
+  },
+  {
+   "id": "slap_queue",
+   "source": "PoSlapUnreal",
+   "cwd": "training",
+   "command": ".venv/bin/python -u overnight.py --resume --hours {hours} --queue retrain_v5_queue.json",
+   "hours": 6
   }
  ]
 }
