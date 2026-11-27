@@ -80,7 +80,7 @@ try {
         if ($missing.Count) { $rec.outcome = "blocked: missing $($missing -join ', ')"; $results += $rec; Log "SKIP $($job.id): $($rec.outcome)"; Write-Summary; continue }
         if (-not (Test-Path $cwd)) { $rec.outcome = "blocked: cwd $($job.cwd) missing"; $results += $rec; Log "SKIP $($job.id)"; Write-Summary; continue }
 
-        if ($job.device -ne 'cpu') {
+        if ($job.device -ne 'cpu' -and -not $DryRun) {   # a dry run starts nothing, so it does not wait for the GPU
             $waited = 0
             while ($true) {
                 $t = Get-GpuTemp
