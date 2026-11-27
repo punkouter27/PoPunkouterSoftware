@@ -1,20 +1,28 @@
 @page "/global/incubator"
 @attribute [Authorize]
 @rendermode WasmRenderModes.Interactive
+@using System.Globalization
 @using PoPunkouterSoftware.Shared
 @inject PortfolioApiClient Api
+@inject IJSRuntime JS
 
-<PageTitle>Incubator · PoPunkouterSoftware</PageTitle>
+<PageTitle>Idea Incubator · PoPunkouterSoftware</PageTitle>
 
-@* The incubator: answer five questions about a new idea and get the repos that make the best
-   starting point, with what carries over on day one. The ranking is a transparent score over
-   the crawl (stack, live URL, brains, tests, recency) — no model, no guessing. *@
+@* GLOBAL's Idea-to-Repo Incubator, ported as it was: five questions about a new idea rank the
+   existing repos as starting points, with a transparent score (type 4, cast 3, play mode 2,
+   target 2, training speed up to 2, health up to 2). For each pick: why it fits, the brains
+   that carry over on day one, the same-physics siblings whose brains move with at most a joint
+   map, the lessons to read first, and a clone command for a fresh copy with no shared history.
+   The traits per RL repo are the station's own (station/scripts/pages_c.py RL_TRAITS). *@
 <main id="main-content" class="app-page global-page" tabindex="-1">
     <GlobalTabs />
     <header class="global-head">
         <div>
-            <h1>Incubator</h1>
-            <p class="app-note">Five questions → which repo to start from, what to bring, and how to clone it.</p>
+            <h1>Idea Incubator</h1>
+            <p class="app-note">
+                Answer five questions about a new idea. The wizard ranks your existing repos as starting points. For each one you get
+                what carries over on day one: brains, compatible bodies, lessons to read first, and a clone command.
+            </p>
         </div>
     </header>
 
@@ -26,78 +34,107 @@
     {
         <div class="global-error" role="alert">@_error</div>
     }
-    else if (_fleet is null || _fleet.Repos.Count == 0)
+    else if (_templates.Count == 0)
     {
         <p class="app-empty-state">No crawl yet.</p>
     }
     else
     {
-        <div class="global-grid">
-            <section class="global-tile" aria-label="Questions">
-                <h2>What are you making?</h2>
-
-                <label class="global-note" for="inc-type">Shape</label>
-                <select id="inc-type" class="global-search" @bind="_type">
-                    <option value="game">A game or sim</option>
-                    <option value="app">An app or dashboard</option>
-                    <option value="tool">A tool or library</option>
-                </select>
-
-                <label class="global-note" for="inc-cast">Who moves?</label>
-                <select id="inc-cast" class="global-search" @bind="_cast">
-                    <option value="single">One controllable body</option>
-                    <option value="crowd">Many bodies, one brain</option>
-                    <option value="none">Nothing simulated</option>
-                </select>
-
-                <label class="global-note" for="inc-mode">How is it played?</label>
-                <select id="inc-mode" class="global-search" @bind="_mode">
-                    <option value="solo">Single player</option>
-                    <option value="selfplay">Self-play / training</option>
-                    <option value="multi">Online multiplayer</option>
-                </select>
-
-                <label class="global-note" for="inc-target">Where does it run?</label>
-                <select id="inc-target" class="global-search" @bind="_target">
-                    <option value="browser">Browser</option>
-                    <option value="desktop">Desktop / native</option>
-                    <option value="phone">Phone</option>
-                </select>
-
-                <label class="global-note" for="inc-speed">How fast do you need it?</label>
-                <select id="inc-speed" class="global-search" @bind="_speed">
-                    <option value="fast">Playable this week</option>
-                    <option value="deep">Worth a long build</option>
-                </select>
+        <div class="inc-wiz">
+            <section class="inc-panel" aria-label="Questions">
+                @foreach (var question in Questions)
+                {
+                    var q = question;
+                    <div class="inc-q" role="group" aria-labelledby="@($"q-{q.Key}")">
+                        <h2 id="@($"q-{q.Key}")">@q.Title</h2>
+                        <div class="inc-opts">
+                            @foreach (var (value, label) in q.Options)
+                            {
+                                var v = value;
+                                var on = _answers[q.Key] == v;
+                                <button type="button" class="global-chip @(on ? "is-on" : null)" aria-pressed="@(on ? "true" : "false")"
+                                        @onclick="() => Answer(q.Key, v)">@label</button>
+                            }
+                        </div>
+                    </div>
+                }
+                <p class="global-note">
+                    Scores: type match 4, cast 3, play mode 2, target 2, training speed up to 2, plus health (green CI, tests, recent commits) up to 2.
+                </p>
             </section>
 
             <section aria-label="Recommendations">
-                <h2>Start here</h2>
-                @foreach (var candidate in Ranked.Take(3))
+                @{
+                    var rank = 0;
+                }
+                @foreach (var pick in Ranked)
                 {
-                    <article class="global-item">
-                        <div class="is-nowrap">
-                            <strong>@candidate.Repo.Name</strong>
-                            <span class="global-tone is-info">@candidate.Score points</span>
-                            <span class="global-count">@candidate.Repo.Kind@(candidate.Repo.IsRl ? " · RL" : "")</span>
-                        </div>
-                        <ul class="global-checks">
-                            @foreach (var reason in candidate.Reasons)
+                    var top = rank++ == 0;
+                    var siblings = Siblings(pick.Template);
+                    var clone = CloneCommand(pick.Template);
+                    <article class="inc-rec @(top ? "is-top" : null)">
+                        <span class="inc-score" aria-label="score @Score(pick.Score)">@Score(pick.Score)</span>
+                        <h2>
+                            @(top ? "⭐ " : "")Start from @pick.Template.Name
+                            <span class="global-tag">@pick.Template.KindLabel</span>
+                        </h2>
+                        <p class="inc-why-line">@pick.Template.Traits.Why</p>
+                        <ul class="inc-why">
+                            @foreach (var reason in pick.Reasons)
                             {
-                                <li class="is-done">@reason</li>
+                                <li>@reason</li>
+                            }
+                            @if (pick.Template.Ci == "success")
+                            {
+                                <li>CI is green</li>
+                            }
+                            else if (pick.Template.Ci == "failure")
+                            {
+                                <li class="is-bad">CI is failing right now — fix before cloning</li>
                             }
                         </ul>
-                        @if (candidate.Repo.Onnx.Count > 0)
+                        @if (pick.Template.IsRl)
                         {
-                            <div class="global-count">
-                                Brains to bring: @string.Join(", ", candidate.Repo.Onnx.Where(b => b.Shipped).Select(b => b.Name).Distinct().Take(4))
-                            </div>
+                            <p class="inc-line">
+                                <strong>Day-1 brains:</strong> @pick.Template.Brains on disk@(pick.Template.BrainNames.Count > 0 ? " — e.g. " : ".")
+                                @foreach (var brain in pick.Template.BrainNames.Take(5))
+                                {
+                                    <code>@brain</code><text> </text>
+                                }
+                                @if (siblings.Count > 0)
+                                {
+                                    <br />
+                                    <strong>Same physics family</strong>
+                                    <text> (brains move with a joint map at most): @string.Join(", ", siblings.Select(s => $"{s.Name} ({s.Brains})")). </text>
+                                    <a href="/global/vault">Open vault →</a>
+                                }
+                            </p>
                         }
-                        @if (candidate.Repo.Git.Remote is { Length: > 0 } remote)
+                        <p class="inc-line">
+                            <strong>Read first:</strong>
+                            <a href="@($"/global/lessons#repo={Uri.EscapeDataString(pick.Template.Name)}")">@pick.Template.Lessons lessons from @pick.Template.Name</a>
+                            @if (pick.Template.Live is { Length: > 0 } live)
+                            {
+                                <text> · </text><a href="@live" target="_blank" rel="noopener noreferrer">see it live ↗</a>
+                            }
+                            @if (pick.Template.Stage is { Length: > 0 } stage)
+                            {
+                                <text> · stage: @stage</text>
+                            }
+                        </p>
+                        @if (clone is not null)
                         {
-                            <div class="global-mono">git clone @remote</div>
+                            <div class="inc-cmd">
+                                <code>@clone</code>
+                                <button type="button" class="global-chip" @onclick="() => Copy(clone)">Copy</button>
+                            </div>
+                            <p class="global-note">A fresh copy with no shared history — repos stay self-contained.</p>
                         }
                     </article>
+                }
+                @if (_copied is not null)
+                {
+                    <p class="global-note" role="status">@_copied</p>
                 }
             </section>
         </div>
@@ -105,88 +142,208 @@
 </main>
 
 @code {
-    private GlobalFleetDto? _fleet;
+    private const string StorageKey = "po.global.incubator";
+
+    private sealed record Question(string Key, string Title, (string Value, string Label)[] Options);
+
+    private sealed record Traits(string[] Type, string[] Cast, string[] Mode, string[] Target, int Speed, string Why);
+
+    private sealed record Template(string Name, string Kind, string KindLabel, bool IsRl, Traits Traits, string Family,
+        string Ci, bool Tests, string? Live, double? Days, string? Remote, int Brains, List<string> BrainNames, int Lessons, string? Stage);
+
+    private sealed record Pick(Template Template, double Score, List<string> Reasons);
+
+    private static readonly Question[] Questions =
+    [
+        new("type", "1. What kind of thing is it?",
+            [("physics", "Physics game with trained characters"), ("ball", "Ball / team sport"), ("robot", "Real robot / sim-to-real"), ("web", "Web app or tool (no RL)")]),
+        new("cast", "2. Who are the characters?",
+            [("humanoid", "People / humanoids"), ("animal", "Animals / quadrupeds"), ("vehicle", "Vehicles / wheeled"), ("robot", "Robots"), ("2d", "2D top-down players"), ("none", "No characters")]),
+        new("mode", "3. How do they play?",
+            [("solo", "Solo / time trial"), ("1v1", "1 vs 1"), ("ffa", "Free-for-all crowd"), ("team", "Team vs team"), ("none", "Not a game")]),
+        new("target", "4. Where must it run?",
+            [("browser", "Web browser"), ("desktop", "Desktop (high-end)"), ("hardware", "Real hardware")]),
+        new("speed", "5. How fast must training iterate?",
+            [("fast", "Hours — I want to prototype fast"), ("slow", "Overnight / days is fine")]),
+    ];
+
+    // GLOBAL/station/scripts/pages_c.py RL_TRAITS and MJ_FAMILY, grounded in the RL dashboard facts.
+    private static readonly Dictionary<string, Traits> RlTraits = new(StringComparer.Ordinal)
+    {
+        ["PoOlympic"] = new(["physics"], ["humanoid"], ["solo", "ffa"], ["browser", "desktop"], 4, "Best locomotion skill factory: sprint, crawl, ramps, get-up, 4 bodies, 6 parity gates."),
+        ["PoHillKing"] = new(["physics"], ["humanoid"], ["ffa", "1v1"], ["browser", "desktop"], 4, "Crowd shoving / king-of-the-hill sandbox with league training (22k steps/s)."),
+        ["PoBox"] = new(["physics"], ["humanoid"], ["1v1"], ["browser", "desktop"], 3, "Self-play 1v1 combat with footwork → guard → punching exams."),
+        ["PoSlapUnreal"] = new(["physics"], ["humanoid"], ["1v1"], ["desktop"], 5, "Fastest gym in the fleet (32.5k steps/s); 1v1 strike/absorb with overnight queue runner."),
+        ["PoBasketball"] = new(["ball", "physics"], ["humanoid"], ["team", "1v1"], ["desktop", "browser"], 4, "29-DoF humanoid + ball contact on Warp (26k steps/s); browser viewer runs the policy with onnxruntime-web."),
+        ["PoRaceUnreal"] = new(["physics"], ["animal", "vehicle", "humanoid", "robot"], ["solo", "ffa"], ["desktop"], 5, "Mixed cast racing (Go2 dog, stroller, humanoids) with 0.000 cm UE parity; stroller graduated in 16 min."),
+        ["PoRobotTrain"] = new(["robot"], ["robot"], ["solo"], ["hardware", "desktop"], 4, "Sim-to-real Unitree R1 pipeline with hardware safety caps and validation gates."),
+        ["PoFootball"] = new(["ball"], ["2d"], ["team"], ["browser"], 1, "11v11 ML-Agents team play in 2D Rigidbody physics; CPU-bound long campaigns."),
+        ["PoSoccer"] = new(["ball"], ["2d"], ["team", "1v1"], ["browser"], 2, "Small-sided ML-Agents MA-POCA team play with evaluate.ps1 win-rate gate."),
+        ["PoSumo"] = new(["physics"], ["humanoid"], ["1v1"], ["browser"], 2, "ML-Agents self-play ring-out with ELO tracking; simple rules."),
+    };
+
+    private static readonly Dictionary<string, string> MjFamily = new(StringComparer.Ordinal)
+    {
+        ["PoOlympic"] = "unity_mj",
+        ["PoHillKing"] = "unity_mj",
+        ["PoBox"] = "unity_mj",
+        ["PoSlapUnreal"] = "unreal_mj",
+        ["PoBasketball"] = "unreal_mj",
+        ["PoRaceUnreal"] = "unreal_mj",
+        ["PoRobotTrain"] = "unreal_mj",
+        ["PoFootball"] = "mlagents",
+        ["PoSoccer"] = "mlagents",
+        ["PoSumo"] = "mlagents",
+    };
+
+    private readonly Dictionary<string, string> _answers = new(StringComparer.Ordinal)
+    {
+        ["type"] = "physics",
+        ["cast"] = "humanoid",
+        ["mode"] = "1v1",
+        ["target"] = "desktop",
+        ["speed"] = "fast",
+    };
+
+    private List<Template> _templates = [];
     private bool _loading = true;
     private string? _error;
+    private string? _copied;
 
-    private string _type = "game";
-    private string _cast = "single";
-    private string _mode = "solo";
-    private string _target = "browser";
-    private string _speed = "fast";
-
-    private sealed record Candidate(GlobalRepoDto Repo, int Score, List<string> Reasons);
-
-    private List<Candidate> Ranked
+    private static string KindLabel(string? kind) => kind switch
     {
-        get
+        "unity" => "Unity",
+        "unreal" => "Unreal",
+        "blazor" => "Blazor",
+        "dotnet" => ".NET",
+        "python" => "Python",
+        "web" => "Web",
+        "folder" => "Folder",
+        _ => kind ?? "Other",
+    };
+
+    private static string Score(double score) => score.ToString("0.#", CultureInfo.InvariantCulture);
+
+    /// <summary>The old page's score(t), unchanged: the same weights, penalties and rounding.</summary>
+    private Pick Rate(Template t)
+    {
+        var (type, cast, mode, target, speed) = (_answers["type"], _answers["cast"], _answers["mode"], _answers["target"], _answers["speed"]);
+        var tr = t.Traits;
+        var why = new List<string>();
+        double s = 0;
+        if (tr.Type.Contains(type))
         {
-            if (_fleet is null)
-                return [];
-
-            var candidates = new List<Candidate>();
-            foreach (var repo in _fleet.Repos.Where(r => r.Git.IsGit))
+            s += 4;
+            why.Add($"same kind of project ({type})");
+        }
+        if (tr.Cast.Contains(cast))
+        {
+            s += 3;
+            why.Add($"already has {cast} characters");
+        }
+        if (tr.Mode.Contains(mode))
+        {
+            s += 2;
+            why.Add($"already plays {mode}");
+        }
+        if (tr.Target.Contains(target))
+        {
+            s += 2;
+            why.Add($"already runs on {target}");
+        }
+        if (t.IsRl && type != "web")
+        {
+            if (speed == "fast")
             {
-                var score = 0;
-                var reasons = new List<string>();
-
-                var isGame = repo.Kind is "unity" or "unreal";
-                if (_type == "game" && isGame)
-                {
-                    score += 3;
-                    reasons.Add($"already a {repo.Kind} game");
-                }
-                else if (_type != "game" && repo.Kind == "blazor")
-                {
-                    score += 3;
-                    reasons.Add("already a Blazor app");
-                }
-
-                if (_cast != "none" && repo.IsRl)
-                {
-                    score += 3;
-                    reasons.Add($"RL stack: {repo.RlStack}");
-                }
-
-                if (_mode == "selfplay" && repo.Onnx.Count > 0)
-                {
-                    score += 2;
-                    reasons.Add($"{repo.Onnx.Count} brains to learn from");
-                }
-
-                if (_target == "browser" && repo.Docs.LiveUrl is { Length: > 0 })
-                {
-                    score += 2;
-                    reasons.Add("deploys to a live URL");
-                }
-
-                if (repo.Docs.Tests.Count > 0)
-                {
-                    score += 1;
-                    reasons.Add("has a test project");
-                }
-
-                if (_speed == "fast" && repo.Git.DaysSinceCommit is { } days && days < 7)
-                {
-                    score += 2;
-                    reasons.Add("committed this week, so the tooling still runs");
-                }
-
-                if (repo.Media.Count >= 5)
-                {
-                    score += 1;
-                    reasons.Add("captures a before/after page can point at");
-                }
-
-                if (score > 0)
-                    candidates.Add(new Candidate(repo, score, reasons));
+                s += tr.Speed * 0.4;
+                if (tr.Speed >= 4)
+                    why.Add($"fast training gym ({tr.Speed}/5)");
             }
+            else
+            {
+                s += 1;
+            }
+        }
 
-            return candidates
-                .OrderByDescending(c => c.Score)
-                .ThenByDescending(c => c.Repo.Git.Commits30d)
-                .ThenBy(c => c.Repo.Name, StringComparer.OrdinalIgnoreCase)
-                .ToList();
+        double health = 0;
+        if (t.Ci == "success")
+            health += 0.8;
+        if (t.Tests)
+            health += 0.6;
+        if ((t.Days ?? 99) < 7)
+            health += 0.6;
+        s += health;
+        if (type == "web" && t.Kind is not ("blazor" or "dotnet"))
+            s -= 4;
+        if (type != "web" && !t.IsRl)
+            s -= 4;
+        return new Pick(t, Math.Round(s * 10, MidpointRounding.AwayFromZero) / 10, why);
+    }
+
+    private IEnumerable<Pick> Ranked => _templates.Select(Rate).OrderByDescending(p => p.Score).Take(3);
+
+    private List<Template> Siblings(Template t) =>
+        t.Family.Length == 0 ? [] : _templates.Where(x => x.Name != t.Name && x.Family == t.Family).ToList();
+
+    private string? CloneCommand(Template t)
+    {
+        if (t.Remote is not { Length: > 0 } remote)
+            return null;
+        var name = _answers["type"] == "web" ? "PoNewApp" : "PoNewGame";
+        return $"git clone {remote} {name}; Remove-Item {name}\\.git -Recurse -Force; git -C {name} init";
+    }
+
+    private async Task Answer(string key, string value)
+    {
+        _answers[key] = value;
+        _copied = null;
+        try
+        {
+            // "type=physics;cast=humanoid;…" — no serializer needed for five short answers.
+            var saved = string.Join(';', _answers.Select(kv => $"{kv.Key}={kv.Value}"));
+            await JS.InvokeVoidAsync("localStorage.setItem", StorageKey, saved);
+        }
+        catch (JSException)
+        {
+            // localStorage blocked: the answers still hold for this visit.
+        }
+    }
+
+    private async Task Copy(string text)
+    {
+        bool copied;
+        try
+        {
+            copied = await JS.InvokeAsync<bool>("copyToClipboard", text);
+        }
+        catch (JSException)
+        {
+            copied = false;
+        }
+
+        _copied = copied ? "Clone command copied." : "The clipboard is unavailable — select the command and copy it.";
+    }
+
+    private async Task RestoreAnswers()
+    {
+        try
+        {
+            var stored = await JS.InvokeAsync<string?>("localStorage.getItem", StorageKey);
+            if (string.IsNullOrWhiteSpace(stored))
+                return;
+            var saved = stored.Split(';', StringSplitOptions.RemoveEmptyEntries)
+                .Select(pair => pair.Split('=', 2))
+                .Where(pair => pair.Length == 2)
+                .ToDictionary(pair => pair[0], pair => pair[1], StringComparer.Ordinal);
+            foreach (var question in Questions)
+            {
+                if (saved.TryGetValue(question.Key, out var value) && question.Options.Any(o => o.Value == value))
+                    _answers[question.Key] = value;
+            }
+        }
+        catch (JSException)
+        {
+            // Unreadable saved answers: the defaults stand.
         }
     }
 
@@ -195,7 +352,57 @@
         try
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            _fleet = await Api.GetGlobalFleetAsync(cts.Token);
+            var fleetTask = Api.GetGlobalFleetAsync(cts.Token);
+            var lessonsTask = Api.GetGlobalLessonsAsync(cts.Token);
+            var boardTask = Api.GetGlobalReadinessAsync(cts.Token);
+            var fleet = await fleetTask;
+
+            // Lessons and stages enrich the picks; a failed read of either must not hide them.
+            GlobalLessonsFileDto? lessons = null;
+            GlobalReadinessDto? board = null;
+            try
+            {
+                lessons = await lessonsTask;
+            }
+            catch (Exception) when (!cts.IsCancellationRequested)
+            {
+            }
+            try
+            {
+                board = await boardTask;
+            }
+            catch (Exception) when (!cts.IsCancellationRequested)
+            {
+            }
+
+            var lessonCount = (lessons?.Lessons ?? [])
+                .SelectMany(l => l.Repos)
+                .GroupBy(r => r, StringComparer.Ordinal)
+                .ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal);
+            var stages = board?.Apps.ToDictionary(a => a.Name, a => a.Effective, StringComparer.Ordinal) ?? [];
+
+            _templates = (fleet?.Repos ?? [])
+                .Where(r => r.Git.IsGit)
+                .Select(r => new Template(
+                    r.Name,
+                    r.Kind,
+                    KindLabel(r.Kind),
+                    RlTraits.ContainsKey(r.Name),
+                    RlTraits.GetValueOrDefault(r.Name) ?? new Traits(["web"], ["none"], ["none"], ["browser"], 0,
+                        r.Kind == "blazor" ? "Blazor/.NET app with CI deploy" : $"{KindLabel(r.Kind)} project"),
+                    MjFamily.GetValueOrDefault(r.Name) ?? "",
+                    r.Ci.LatestRun?.Conclusion ?? "",
+                    r.Docs.Tests.Count > 0,
+                    r.Docs.LiveUrl,
+                    r.Git.DaysSinceCommit,
+                    r.Git.Remote,
+                    r.Onnx.Count,
+                    r.Onnx.Where(b => b.Shipped).Select(b => b.Name).Distinct(StringComparer.Ordinal).Take(8).ToList(),
+                    lessonCount.GetValueOrDefault(r.Name),
+                    stages.GetValueOrDefault(r.Name)))
+                .ToList();
+
+            await RestoreAnswers();
         }
         catch (Exception ex)
         {

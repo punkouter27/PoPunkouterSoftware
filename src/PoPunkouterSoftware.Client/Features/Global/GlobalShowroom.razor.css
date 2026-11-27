@@ -1,0 +1,168 @@
+.sr-wall {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: var(--po-space-3);
+}
+
+.sr-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
+    background: var(--po-surface);
+    border: 1px solid var(--po-border);
+    border-radius: var(--po-radius);
+}
+
+.sr-hero {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    padding: 0;
+    overflow: hidden;
+    background: var(--po-surface-2);
+    border: 0;
+    cursor: zoom-in;
+}
+
+.sr-hero.is-empty {
+    cursor: default;
+    color: var(--po-text-muted);
+    font-size: var(--po-text-sm);
+}
+
+.sr-hero:focus-visible,
+.sr-thumb:focus-visible {
+    outline: 2px solid var(--po-accent);
+    outline-offset: -2px;
+}
+
+.sr-hero ::deep .sr-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.sr-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: var(--po-space-2) var(--po-space-3);
+    font-size: var(--po-text-sm);
+}
+
+.sr-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--po-space-2);
+    min-width: 0;
+}
+
+.sr-title strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sr-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+}
+
+.sr-thumbs {
+    display: flex;
+    gap: 4px;
+    padding: 0 var(--po-space-3) var(--po-space-2);
+    overflow-x: auto;
+}
+
+.sr-thumb {
+    flex: 0 0 auto;
+    width: 56px;
+    height: 36px;
+    padding: 0;
+    overflow: hidden;
+    background: var(--po-surface-2);
+    border: 1px solid var(--po-border);
+    border-radius: var(--po-radius-sm);
+    cursor: pointer;
+}
+
+.sr-thumb ::deep .sr-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.8;
+}
+
+.sr-thumb:hover ::deep .sr-img { opacity: 1; }
+
+.sr-thumb ::deep .sr-missing {
+    font-size: 0;
+}
+
+::deep .sr-missing {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: var(--po-text-muted);
+    font-size: var(--po-text-xs);
+}
+
+.sr-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--po-space-3);
+    background: rgba(0, 0, 0, 0.88);
+}
+
+.sr-lightbox:focus { outline: none; }
+
+.sr-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--po-space-2);
+    max-width: 100%;
+}
+
+.sr-stage ::deep .sr-img.is-large {
+    max-width: min(96vw, 1400px);
+    max-height: 78vh;
+    border-radius: var(--po-radius-sm);
+}
+
+.sr-stage ::deep .sr-missing {
+    width: min(80vw, 480px);
+    height: 240px;
+    background: var(--po-surface-2);
+    border-radius: var(--po-radius-sm);
+}
+
+/* The lightbox backdrop is black in both themes, so its text is fixed light, not a theme token. */
+.sr-caption {
+    color: #e5e7eb;
+    font-size: var(--po-text-sm);
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.sr-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--po-space-2);
+}
+
+.sr-nav a { text-decoration: none; }

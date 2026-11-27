@@ -612,6 +612,9 @@ public sealed class GlobalReadinessAppDto
     public int Done { get; set; }
     public int Total { get; set; }
     public List<GlobalChecklistItemDto> Checklist { get; set; } = [];
+
+    /// <summary>Captures in the repo's SCREENSHOTS folder (feeds the "has a capture reel" suggestion).</summary>
+    public int MediaCount { get; set; }
 }
 
 public sealed class GlobalChecklistItemDto
@@ -619,6 +622,9 @@ public sealed class GlobalChecklistItemDto
     public string Key { get; set; } = "";
     public string Label { get; set; } = "";
     public bool Done { get; set; }
+
+    /// <summary>Tri-state as readiness.json holds it: true (yes), false (no), null (not answered).</summary>
+    public bool? Value { get; set; }
 }
 
 public sealed class GlobalBriefingDto
