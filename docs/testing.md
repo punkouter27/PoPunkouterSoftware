@@ -6,10 +6,10 @@ cut back were full of one-assertion Facts that each re-fetched the same document
 
 | Tier | Project | Tests | Runs in CI | Needs | Without it |
 | --- | --- | --- | --- | --- | --- |
-| Unit | `tests/PoPunkouterSoftware.Unit` | 117 | yes | nothing | — |
-| Integration | `tests/PoPunkouterSoftware.Integration` | 90 (6 use Docker) | yes | Docker for the Testcontainers Azurite tests | those 6 skip with "Docker is not running…"; the other 84 run |
+| Unit | `tests/PoPunkouterSoftware.Unit` | 152 | yes | nothing | — |
+| Integration | `tests/PoPunkouterSoftware.Integration` | 101 (6 use Docker) | yes | Docker for the Testcontainers Azurite tests | those 6 skip with "Docker is not running…"; the other 95 run |
 | E2E API | `tests/PoPunkouterSoftware.E2EAPI` | 22 | no | an app at `BASE_URL` (default http://localhost:8000) | every test skips with "No app is answering at …" |
-| E2E UI | `tests/PoPunkouterSoftware.E2EUI` | 40 | no | an app at `BASE_URL` with a stored Azure scan + Playwright Chromium | every test skips with the reason |
+| E2E UI | `tests/PoPunkouterSoftware.E2EUI` | 69 | no | an app at `BASE_URL` with a stored Azure scan + Playwright Chromium | every test skips with the reason |
 
 ```powershell
 dotnet build PoPunkouterSoftware.slnx -c Release

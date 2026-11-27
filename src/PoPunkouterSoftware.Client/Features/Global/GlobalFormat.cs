@@ -3,7 +3,7 @@ using System.Globalization;
 namespace PoPunkouterSoftware.Client;
 
 /// <summary>Formatting shared by the <c>/global</c> pages.</summary>
-internal static class GlobalFormat
+public static class GlobalFormat
 {
     public static string Bytes(long? bytes)
     {
@@ -61,7 +61,16 @@ internal static class GlobalFormat
             : remote?.TrimEnd('/')
                 .Replace("https://github.com/", "", StringComparison.OrdinalIgnoreCase)
                 .Replace(".git", "", StringComparison.OrdinalIgnoreCase);
-        return repo is { Length: > 0 } ? $"https://github.com/{repo}/blob/HEAD/{relativePath}" : null;
+        if (repo is not { Length: > 0 })
+            return null;
+
+        // Crawl paths are workspace-relative ("PoBox/SCREENSHOTS/a.gif"); inside the repo on GitHub
+        // the leading repo folder must go, or the link points at PoBox/blob/HEAD/PoBox/….
+        var name = repo[(repo.LastIndexOf('/') + 1)..];
+        var path = relativePath.StartsWith(name + "/", StringComparison.OrdinalIgnoreCase)
+            ? relativePath[(name.Length + 1)..]
+            : relativePath;
+        return $"https://github.com/{repo}/blob/HEAD/{path}";
     }
 
     /// <summary>The repo a workspace-relative path belongs to (<c>PoBox/Assets/x.onnx</c> → <c>PoBox</c>).</summary>
