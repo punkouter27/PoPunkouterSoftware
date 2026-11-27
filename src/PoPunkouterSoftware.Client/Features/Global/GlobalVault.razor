@@ -1,22 +1,33 @@
 @page "/global/vault"
 @attribute [Authorize]
 @rendermode WasmRenderModes.Interactive
+@using System.Globalization
+@using System.Text.Json
 @using PoPunkouterSoftware.Shared
 @inject PortfolioApiClient Api
+@inject LocalHelperClient Helper
+@inject IJSRuntime JS
 
-<PageTitle>Brain vault · PoPunkouterSoftware</PageTitle>
+<PageTitle>Brain &amp; body vault · PoPunkouterSoftware</PageTitle>
 
-@* The vault: every .onnx brain in the fleet, grouped by the socket it plugs into
-   (observation width → action width), plus every MuJoCo MJCF body. This is the page that
-   answers "do I already have a brain for this shape?". *@
+@* The old GLOBAL/station/pages/vault.html: every .onnx brain and MuJoCo body in the fleet. A
+   brain's socket is its observation size → action size; two brains with the same socket plug
+   into the same controller. Stars are vault_gold.json (saved through the local helper, or kept
+   in this browser without it); Import copies a brain into another repo's vault_imports/ through
+   the helper's vault_import.py, which checks the socket first and never overwrites. *@
 <main id="main-content" class="app-page global-page" tabindex="-1">
     <GlobalTabs />
     <header class="global-head">
         <div>
-            <h1>Brain vault</h1>
-            <p class="app-note">Every <code>.onnx</code> in the fleet grouped by socket (obs → action), and every MJCF model the sims load.</p>
+            <h1>Brain &amp; body vault</h1>
+            <p class="app-note">
+                Every <code>.onnx</code> brain and MuJoCo body in the fleet. A brain's <strong>socket</strong> is its observation size →
+                action size: two brains with the same socket plug into the same controller; a different socket needs an adapter or a retrain.
+            </p>
         </div>
     </header>
+
+    <LocalHelperBar OnChanged="StateHasChanged" />
 
     @if (_loading)
     {
@@ -32,134 +43,386 @@
     }
     else
     {
-        <section class="global-kpis" aria-label="Vault totals">
-            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_vault.BrainCount)</div><div class="l">brains</div></div>
-            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_vault.Brains.Count(b => b.Shipped))</div><div class="l">shipped (outside runs/checkpoints)</div></div>
-            <div class="global-kpi"><div class="v">@_vault.GoldCount</div><div class="l">starred in vault_gold.json</div></div>
-            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_vault.ModelCount)</div><div class="l">MJCF models</div></div>
+        <section class="global-kpis vault-kpis" aria-label="Vault totals">
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_vault.Brains.Count)</div><div class="l">.onnx files on disk</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_vault.Brains.Count(IsPolicy))</div><div class="l">policies (critics excluded)</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_vault.Brains.Count(b => b.Shipped && IsPolicy(b)))</div><div class="l">shipped policies</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(UniqueFiles)</div><div class="l">unique files (by content)</div></div>
+            <div class="global-kpi"><div class="v">@PolicySockets.Count</div><div class="l">distinct sockets</div></div>
+            <div class="global-kpi"><div class="v">@SharedSockets.Count</div><div class="l">sockets shared across repos</div></div>
+            <div class="global-kpi"><div class="v">@GlobalFormat.Number(_vault.Models.Count)</div><div class="l">MJCF bodies</div></div>
         </section>
 
-        <div class="global-toolbar">
-            <input class="global-search" type="search" placeholder="Filter by repo, brain name or path…"
-                   value="@_search" @oninput="OnSearch" aria-label="Filter brains" />
-            <button type="button" class="global-chip @(_socketFilter is null ? "is-on" : null)" @onclick="() => _socketFilter = null">
-                All sockets (@_vault.Sockets.Count)
-            </button>
-            @foreach (var socket in _vault.Sockets)
-            {
-                <button type="button" class="global-chip @(_socketFilter == socket.Socket ? "is-on" : null)"
-                        @onclick="() => _socketFilter = socket.Socket">
-                    @socket.Socket (@socket.Count)
-                </button>
-            }
-            <button type="button" class="global-chip @(_onlyGold ? "is-on" : null)" @onclick="() => _onlyGold = !_onlyGold">Only starred</button>
-            <span class="global-count">@VisibleBrains.Count of @_vault.BrainCount</span>
-        </div>
-
-        <div class="global-table-wrap">
-            <table class="global-table">
-                <caption class="app-sr-only">Brains grouped by socket</caption>
-                <thead>
-                    <tr>
-                        <th scope="col">Repo</th>
-                        <th scope="col">Brain</th>
-                        <th scope="col">Socket</th>
-                        <th scope="col" class="is-number">Size</th>
-                        <th scope="col">State</th>
-                        <th scope="col">Modified</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var brain in VisibleBrains)
-                    {
-                        <tr>
-                            <th scope="row">@brain.Repo</th>
-                            <td class="global-mono">@brain.Name</td>
-                            <td class="is-nowrap"><span class="global-tone is-info">@brain.Socket</span></td>
-                            <td class="is-number">@brain.Kb.ToString("0") KB</td>
-                            <td class="is-nowrap">
-                                @if (brain.Gold)
-                                {
-                                    <span class="global-tone is-warn">★ starred</span>
-                                }
-                                <span class="global-tone is-@(brain.Shipped ? "good" : "muted")">@(brain.Shipped ? "shipped" : "run output")</span>
-                            </td>
-                            <td class="is-nowrap">@GlobalFormat.Ago(brain.Modified)</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-
-        <div class="global-toolbar">
-            <h2>MJCF bodies</h2>
-            <button type="button" class="global-chip @(_showModels ? "is-on" : null)" @onclick="() => _showModels = !_showModels">
-                @(_showModels ? "Hide" : "Show") @GlobalFormat.Number(_vault.ModelCount) models
-            </button>
-        </div>
-
-        @if (_showModels)
+        <h2>Sockets shared by more than one repo</h2>
+        @if (SharedSockets.Count == 0)
         {
+            <p class="global-note">No socket is shared across repos yet.</p>
+        }
+        else
+        {
+            <div class="vault-socks">
+                @foreach (var socket in SharedSockets)
+                {
+                    var s = socket.Socket;
+                    <button type="button" class="vault-sockcard @(_socket == s ? "is-on" : null)" @onclick="() => PickSocket(s)"
+                            aria-label="@($"Show brains with socket {s}")">
+                        <span class="vault-sock">@s</span>
+                        <span><strong>@socket.Count</strong> brains</span>
+                        <span class="global-note">@string.Join(", ", socket.Repos)</span>
+                    </button>
+                }
+            </div>
+        }
+
+        <div class="global-actions vault-tabs" role="tablist" aria-label="Brains or bodies">
+            <button type="button" role="tab" class="global-chip @(_tab == "brains" ? "is-on" : null)" aria-selected="@(_tab == "brains" ? "true" : "false")"
+                    @onclick='() => _tab = "brains"'>Brains</button>
+            <button type="button" role="tab" class="global-chip @(_tab == "bodies" ? "is-on" : null)" aria-selected="@(_tab == "bodies" ? "true" : "false")"
+                    @onclick='() => _tab = "bodies"'>Bodies (MJCF)</button>
+        </div>
+
+        @if (_output is not null)
+        {
+            <pre class="global-code global-output" role="status" aria-live="polite"><code>@_output</code></pre>
+        }
+
+        @if (_tab == "brains")
+        {
+            @if (_goldUnpushed && Helper.IsConnected)
+            {
+                <div class="global-actions vault-push">
+                    <span class="global-note">Stars saved to <code>vault_gold.json</code> on this PC; the live site shows them after a push.</span>
+                    <button type="button" class="global-chip" disabled="@_busy" @onclick="PushGold">Push to the live site</button>
+                </div>
+            }
+            else if (!Helper.IsConnected && _localGold.Count > 0)
+            {
+                <p class="global-note">Stars you change here stay in this browser until the helper is connected; then they save to <code>vault_gold.json</code>.</p>
+            }
+
+            @if (_importRel is { } importRel)
+            {
+                <section class="global-item vault-import" aria-label="Import a brain">
+                    <div class="text"><strong>Import</strong> <span class="global-mono">@importRel</span></div>
+                    <div class="global-actions">
+                        <select class="global-search" value="@_importTarget" aria-label="Target repo"
+                                @onchange="e => { _importTarget = e.Value?.ToString() ?? string.Empty; _confirmImport = false; }">
+                            <option value="">Target repo…</option>
+                            @foreach (var repo in _repos.Where(r => r != GlobalFormat.RepoOf(importRel)))
+                            {
+                                <option value="@repo">@repo</option>
+                            }
+                        </select>
+                        <button type="button" class="global-chip" disabled="@(_busy || _importTarget.Length == 0)" @onclick="() => Import(dry: true)">Check fit (copies nothing)</button>
+                        @if (_confirmImport)
+                        {
+                            <button type="button" class="global-chip is-on" disabled="@(_busy || _importTarget.Length == 0)" @onclick="() => Import(dry: false)">Yes, copy it into @_importTarget</button>
+                            <button type="button" class="global-chip" @onclick="() => _confirmImport = false">Cancel</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="global-chip" disabled="@(_busy || _importTarget.Length == 0)" @onclick="() => _confirmImport = true">Copy…</button>
+                        }
+                        <button type="button" class="global-chip" @onclick="() => _importRel = null">Close</button>
+                    </div>
+                    <p class="global-note">Copies into the target's <code>vault_imports/@GlobalFormat.RepoOf(importRel)/</code>, never overwrites, and does not commit.</p>
+                </section>
+            }
+
+            <div class="global-toolbar">
+                <input class="global-search" type="search" placeholder="Search name, repo, socket, sha…"
+                       value="@_search" @oninput="e => _search = e.Value?.ToString() ?? string.Empty" aria-label="Search brains" />
+                <select class="global-search vault-select" value="@_repo" @onchange="e => _repo = e.Value?.ToString() ?? string.Empty" aria-label="Filter by repo">
+                    <option value="">All repos</option>
+                    @foreach (var repo in _repos)
+                    {
+                        <option value="@repo">@repo</option>
+                    }
+                </select>
+                <select class="global-search vault-select" value="@_socket" @onchange="e => _socket = e.Value?.ToString() ?? string.Empty" aria-label="Filter by socket">
+                    <option value="">All sockets</option>
+                    @foreach (var socket in _vault.Sockets)
+                    {
+                        <option value="@socket.Socket">@socket.Socket (@socket.Count)</option>
+                    }
+                </select>
+            </div>
+            <div class="global-actions vault-checks">
+                <label class="global-field"><input type="checkbox" checked="@_policies" @onchange="e => _policies = e.Value is true" /> policies only (hide critics)</label>
+                <label class="global-field"><input type="checkbox" checked="@_shipped" @onchange="e => _shipped = e.Value is true" /> shipped only</label>
+                <label class="global-field"><input type="checkbox" checked="@_dedupe" @onchange="e => _dedupe = e.Value is true" /> hide duplicate copies</label>
+                <label class="global-field"><input type="checkbox" checked="@_goldOnly" @onchange="e => _goldOnly = e.Value is true" /> ★ only</label>
+                <span class="global-count">@VisibleBrains.Count shown</span>
+            </div>
+
             <div class="global-table-wrap">
-                <table class="global-table">
-                    <caption class="app-sr-only">MuJoCo models</caption>
+                <table class="global-table vault-table">
+                    <caption class="app-sr-only">Brains in the fleet</caption>
                     <thead>
                         <tr>
-                            <th scope="col">Repo</th>
-                            <th scope="col">Model</th>
-                            <th scope="col" class="is-number">Bodies</th>
-                            <th scope="col" class="is-number">Joints</th>
-                            <th scope="col" class="is-number">Actuators</th>
-                            <th scope="col">Timestep</th>
+                            <th scope="col"><span class="app-sr-only">Star</span>★</th>
+                            @SortHeader("name", "Brain")
+                            @SortHeader("repo", "Repo")
+                            @SortHeader("socket", "Socket")
+                            @SortHeader("kb", "KB", number: true)
+                            @SortHeader("mtime", "Updated")
+                            @SortHeader("copies", "Copies", number: true)
+                            <th scope="col">Same socket in</th>
+                            <th scope="col">Import</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var model in VisibleModels)
+                        @foreach (var brain in VisibleBrains.Take(600))
                         {
+                            var rel = brain.Rel;
+                            var starred = IsGold(rel);
                             <tr>
-                                <th scope="row">@model.Repo</th>
-                                <td class="global-mono">@model.Name</td>
-                                <td class="is-number">@model.Bodies</td>
-                                <td class="is-number">@model.Joints</td>
-                                <td class="is-number">@model.Actuators</td>
-                                <td class="is-nowrap">@(string.IsNullOrEmpty(model.Timestep) ? "—" : model.Timestep)</td>
+                                <td>
+                                    <button type="button" class="vault-star @(starred ? "is-on" : null)" aria-pressed="@(starred ? "true" : "false")"
+                                            title="@(starred ? GoldNoteOf(rel) : "Star as a gold version")" disabled="@_busy"
+                                            aria-label="@($"Star {rel}")" @onclick="() => ToggleStar(rel)">★</button>
+                                </td>
+                                <td>
+                                    @if (brain.Url is { } url)
+                                    {
+                                        <a href="@url" rel="noopener noreferrer" title="@rel">@brain.Name</a>
+                                    }
+                                    else
+                                    {
+                                        <span title="@rel">@brain.Name</span>
+                                    }
+                                    <div class="global-note global-mono vault-path">@Folder(rel)@(brain.Sha1 is { Length: > 0 } sha ? $" · {sha}" : "")</div>
+                                </td>
+                                <td>
+                                    @brain.Repo
+                                    @if (brain.Stack is { Length: > 0 })
+                                    {
+                                        <div class="global-note">@brain.Stack</div>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="vault-sock" title="@(brain.Io ?? "inputs and outputs not recorded")">@brain.Socket</span>
+                                    <div class="global-note">
+                                        opset @(brain.Opset?.ToString(CultureInfo.InvariantCulture) ?? "?")
+                                        @if (!IsPolicy(brain))
+                                        {
+                                            <span class="global-tone is-muted">critic</span>
+                                        }
+                                        @if (!brain.Shipped)
+                                        {
+                                            <span class="global-tone is-muted">run output</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td class="is-number">@brain.Kb.ToString("0", CultureInfo.InvariantCulture)</td>
+                                <td class="is-nowrap">@(brain.Modified?.ToLocalTime().ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "–")</td>
+                                <td class="is-number">@brain.Copies</td>
+                                <td>
+                                    @if (brain.Fits.Count == 0)
+                                    {
+                                        <span class="global-note">only here</span>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var fit in brain.Fits)
+                                        {
+                                            <span class="global-tone is-good vault-fit">@fit</span>
+                                        }
+                                    }
+                                </td>
+                                <td>
+                                    @if (Helper.IsConnected)
+                                    {
+                                        <button type="button" class="global-chip" @onclick="() => OpenImport(rel)">Import…</button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="global-chip" @onclick="() => CopyImport(rel)">Copy import</button>
+                                    }
+                                </td>
                             </tr>
                         }
                     </tbody>
                 </table>
             </div>
+            @if (VisibleBrains.Count > 600)
+            {
+                <p class="global-note">Showing the first 600. Narrow the filters to see the rest.</p>
+            }
+            <p class="global-note">
+                Import copies a brain into another repo's <code>vault_imports/&lt;source repo&gt;/</code> folder, never overwrites anything,
+                checks the socket against the target's brains, and writes a provenance file next to it.
+            </p>
+        }
+        else
+        {
+            <div class="global-toolbar">
+                <input class="global-search" type="search" placeholder="Search bodies…"
+                       value="@_bodySearch" @oninput="e => _bodySearch = e.Value?.ToString() ?? string.Empty" aria-label="Search bodies" />
+                <select class="global-search vault-select" value="@_bodyRepo" @onchange="e => _bodyRepo = e.Value?.ToString() ?? string.Empty" aria-label="Filter bodies by repo">
+                    <option value="">All repos</option>
+                    @foreach (var repo in _vault.Models.Select(m => m.Repo).Distinct().Order(StringComparer.OrdinalIgnoreCase))
+                    {
+                        <option value="@repo">@repo</option>
+                    }
+                </select>
+                <span class="global-count">@VisibleModels.Count shown</span>
+            </div>
+            <div class="global-table-wrap">
+                <table class="global-table">
+                    <caption class="app-sr-only">MuJoCo bodies in the fleet</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Model</th>
+                            <th scope="col">Repo</th>
+                            <th scope="col" class="is-number">Joints</th>
+                            <th scope="col" class="is-number">Actuators</th>
+                            <th scope="col" class="is-number">Bodies</th>
+                            <th scope="col" class="is-number">Free</th>
+                            <th scope="col">dt</th>
+                            <th scope="col">File</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var model in VisibleModels.Take(600))
+                        {
+                            <tr>
+                                <th scope="row">@(model.Model ?? model.Name)</th>
+                                <td>@model.Repo</td>
+                                <td class="is-number">@model.Joints</td>
+                                <td class="is-number">@model.Actuators</td>
+                                <td class="is-number">@model.Bodies</td>
+                                <td class="is-number">@model.FreeJoints</td>
+                                <td class="is-nowrap">@(string.IsNullOrEmpty(model.Timestep) ? "–" : model.Timestep)</td>
+                                <td class="global-mono vault-path">
+                                    @if (model.Url is { } url)
+                                    {
+                                        <a href="@url" rel="noopener noreferrer">@InRepo(model.Rel)</a>
+                                    }
+                                    else
+                                    {
+                                        @InRepo(model.Rel)
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (VisibleModels.Count > 600)
+            {
+                <p class="global-note">Showing the first 600. Narrow the search to see the rest.</p>
+            }
         }
     }
 </main>
 
 @code {
+    private const string LocalGoldKey = "po.global.vaultGold";
+
     private GlobalVaultDto? _vault;
     private bool _loading = true;
     private string? _error;
+    private string? _output;
+    private bool _busy;
+
+    private string _tab = "brains";
     private string _search = "";
-    private string? _socketFilter;
-    private bool _onlyGold;
-    private bool _showModels;
+    private string _repo = "";
+    private string _socket = "";
+    private bool _policies = true;
+    private bool _shipped = true;
+    private bool _dedupe = true;
+    private bool _goldOnly;
+    private string _sortKey = "mtime";
+    private int _sortDir = -1;
+
+    private string _bodySearch = "";
+    private string _bodyRepo = "";
+
+    private string? _importRel;
+    private string _importTarget = "";
+    private bool _confirmImport;
+
+    private List<string> _repos = [];
+
+    // vault_gold.json as the snapshot has it, and this browser's changes on top (null = unstarred).
+    private Dictionary<string, string> _serverGold = new(StringComparer.Ordinal);
+    private Dictionary<string, string?> _localGold = new(StringComparer.Ordinal);
+    private bool _goldUnpushed;
+
+    private static bool IsPolicy(GlobalVaultBrainDto brain) => brain.Role != "critic";
+
+    private int UniqueFiles =>
+        _vault!.Brains.Where(b => b.Sha1 is { Length: > 0 }).Select(b => b.Sha1).Distinct(StringComparer.Ordinal).Count()
+        + _vault.Brains.Count(b => string.IsNullOrEmpty(b.Sha1));
+
+    private List<GlobalSocketDto> PolicySockets => _vault!.Sockets.Where(s => s.Repos.Count > 0).ToList();
+
+    private List<GlobalSocketDto> SharedSockets => _vault!.Sockets.Where(s => s.Repos.Count > 1).ToList();
+
+    private bool IsGold(string rel) =>
+        _localGold.TryGetValue(rel, out var local) ? local is not null : _serverGold.ContainsKey(rel);
+
+    private string? GoldNoteOf(string rel) =>
+        _localGold.TryGetValue(rel, out var local) ? local : _serverGold.GetValueOrDefault(rel);
+
+    private Dictionary<string, string> EffectiveGold()
+    {
+        var gold = new Dictionary<string, string>(_serverGold, StringComparer.Ordinal);
+        foreach (var (rel, note) in _localGold)
+        {
+            if (note is null)
+                gold.Remove(rel);
+            else
+                gold[rel] = note;
+        }
+
+        return gold;
+    }
 
     private List<GlobalVaultBrainDto> VisibleBrains
     {
         get
         {
-            if (_vault is null)
-                return [];
-
-            IEnumerable<GlobalVaultBrainDto> brains = _vault.Brains;
-            if (_socketFilter is { Length: > 0 } socket)
-                brains = brains.Where(b => b.Socket == socket);
-            if (_onlyGold)
-                brains = brains.Where(b => b.Gold);
+            IEnumerable<GlobalVaultBrainDto> brains = _vault!.Brains;
+            if (_policies)
+                brains = brains.Where(IsPolicy);
+            if (_repo.Length > 0)
+                brains = brains.Where(b => b.Repo == _repo);
+            if (_socket.Length > 0)
+                brains = brains.Where(b => b.Socket == _socket);
+            if (_shipped)
+                brains = brains.Where(b => b.Shipped);
+            if (_goldOnly)
+                brains = brains.Where(b => IsGold(b.Rel));
             if (!string.IsNullOrWhiteSpace(_search))
             {
                 var q = _search.Trim();
-                brains = brains.Where(b =>
-                    b.Repo.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || b.Name.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || b.Rel.Contains(q, StringComparison.OrdinalIgnoreCase));
+                brains = brains.Where(b => $"{b.Name} {b.Repo} {b.Socket} {b.Sha1} {b.Rel}".Contains(q, StringComparison.OrdinalIgnoreCase));
+            }
+
+            brains = (_sortKey, _sortDir) switch
+            {
+                ("name", 1) => brains.OrderBy(b => b.Name, StringComparer.OrdinalIgnoreCase),
+                ("name", _) => brains.OrderByDescending(b => b.Name, StringComparer.OrdinalIgnoreCase),
+                ("repo", 1) => brains.OrderBy(b => b.Repo, StringComparer.OrdinalIgnoreCase),
+                ("repo", _) => brains.OrderByDescending(b => b.Repo, StringComparer.OrdinalIgnoreCase),
+                ("socket", 1) => brains.OrderBy(b => b.Obs ?? 0).ThenBy(b => b.Act ?? 0),
+                ("socket", _) => brains.OrderByDescending(b => b.Obs ?? 0).ThenByDescending(b => b.Act ?? 0),
+                ("kb", 1) => brains.OrderBy(b => b.Kb),
+                ("kb", _) => brains.OrderByDescending(b => b.Kb),
+                ("copies", 1) => brains.OrderBy(b => b.Copies),
+                ("copies", _) => brains.OrderByDescending(b => b.Copies),
+                (_, 1) => brains.OrderBy(b => b.Modified),
+                _ => brains.OrderByDescending(b => b.Modified),
+            };
+
+            // Dedupe after sorting, so the copy that survives is the first in the chosen order.
+            if (_dedupe)
+            {
+                var seen = new HashSet<string>(StringComparer.Ordinal);
+                brains = brains.Where(b => string.IsNullOrEmpty(b.Sha1) || seen.Add(b.Sha1));
             }
 
             return brains.ToList();
@@ -170,24 +433,193 @@
     {
         get
         {
-            if (_vault is null)
-                return [];
-
-            IEnumerable<GlobalVaultModelDto> models = _vault.Models;
-            if (!string.IsNullOrWhiteSpace(_search))
+            IEnumerable<GlobalVaultModelDto> models = _vault!.Models;
+            if (_bodyRepo.Length > 0)
+                models = models.Where(m => m.Repo == _bodyRepo);
+            if (!string.IsNullOrWhiteSpace(_bodySearch))
             {
-                var q = _search.Trim();
-                models = models.Where(m =>
-                    m.Repo.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || m.Name.Contains(q, StringComparison.OrdinalIgnoreCase)
-                    || m.Rel.Contains(q, StringComparison.OrdinalIgnoreCase));
+                var q = _bodySearch.Trim();
+                models = models.Where(m => $"{m.Model} {m.Name} {m.Rel}".Contains(q, StringComparison.OrdinalIgnoreCase));
             }
 
-            return models.Take(400).ToList();
+            return models.ToList();
         }
     }
 
-    private void OnSearch(ChangeEventArgs e) => _search = e.Value?.ToString() ?? "";
+    // A Razor template (not RenderTreeBuilder calls), so the scoped CSS reaches the button.
+    private RenderFragment SortHeader(string key, string label, bool number = false) =>
+        @<th scope="col" class="@(number ? "is-number" : null)" aria-sort="@(_sortKey == key ? (_sortDir == 1 ? "ascending" : "descending") : "none")">
+            <button type="button" class="vault-sort" @onclick="() => Sort(key)">@label@(_sortKey == key ? (_sortDir == 1 ? " ▲" : " ▼") : "")</button>
+        </th>;
+
+    private void Sort(string key)
+    {
+        _sortDir = _sortKey == key ? -_sortDir : -1;
+        _sortKey = key;
+    }
+
+    private void PickSocket(string socket)
+    {
+        _tab = "brains";
+        _socket = _socket == socket ? "" : socket;
+    }
+
+    private static string InRepo(string rel)
+    {
+        var slash = rel.IndexOf('/', StringComparison.Ordinal);
+        return slash < 0 ? rel : rel[(slash + 1)..];
+    }
+
+    private static string Folder(string rel)
+    {
+        var parts = rel.Split('/');
+        return parts.Length <= 2 ? "" : string.Join('/', parts[1..^1]);
+    }
+
+    // ─── stars ─────────────────────────────────────────────────────────────────
+
+    private async Task ToggleStar(string rel)
+    {
+        _localGold[rel] = IsGold(rel)
+            ? null
+            : $"starred {DateTime.Now.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}";
+
+        if (!Helper.IsConnected)
+        {
+            await SaveLocalGoldAsync();
+            return;
+        }
+
+        _busy = true;
+        try
+        {
+            var reply = await Helper.SendAsync(new LocalHelperRequest { Action = "save_config", Arg = "vault_gold", Data = GoldJson(EffectiveGold()) });
+            if (reply.Ok)
+            {
+                // The PC's file now holds every star: fold them into the baseline.
+                _serverGold = EffectiveGold();
+                _localGold.Clear();
+                _goldUnpushed = true;
+                await SaveLocalGoldAsync();
+            }
+            else
+            {
+                await SaveLocalGoldAsync();
+            }
+
+            _output = reply.Output;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task PushGold()
+    {
+        _busy = true;
+        _output = "Working…";
+        try
+        {
+            var reply = await Helper.SendAsync(new LocalHelperRequest { Action = "refresh", Push = true, NoCrawl = true });
+            _output = reply.Output;
+            if (reply.Ok)
+                _goldUnpushed = false;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private static JsonElement GoldJson(Dictionary<string, string> gold)
+    {
+        using var stream = new MemoryStream();
+        using (var w = new Utf8JsonWriter(stream))
+        {
+            w.WriteStartObject();
+            w.WriteStartObject("gold");
+            foreach (var (rel, note) in gold.OrderBy(g => g.Key, StringComparer.Ordinal))
+                w.WriteString(rel, note);
+            w.WriteEndObject();
+            w.WriteEndObject();
+        }
+
+        using var doc = JsonDocument.Parse(stream.ToArray());
+        return doc.RootElement.Clone();
+    }
+
+    private async Task SaveLocalGoldAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", LocalGoldKey,
+                JsonSerializer.Serialize(new GlobalVaultGoldLocalDto { Gold = _localGold }, GlobalJsonContext.Default.GlobalVaultGoldLocalDto));
+        }
+        catch (JSException)
+        {
+            // Storage blocked: the stars hold until the tab closes.
+        }
+    }
+
+    private async Task LoadLocalGoldAsync()
+    {
+        try
+        {
+            var saved = await JS.InvokeAsync<string?>("localStorage.getItem", LocalGoldKey);
+            if (saved is { Length: > 0 } && JsonSerializer.Deserialize(saved, GlobalJsonContext.Default.GlobalVaultGoldLocalDto) is { Gold: { } gold })
+                _localGold = new Dictionary<string, string?>(gold, StringComparer.Ordinal);
+        }
+        catch (Exception ex) when (ex is JSException or JsonException)
+        {
+            _localGold = new(StringComparer.Ordinal);
+        }
+    }
+
+    // ─── import ────────────────────────────────────────────────────────────────
+
+    private void OpenImport(string rel)
+    {
+        _importRel = rel;
+        _confirmImport = false;
+        _output = null;
+    }
+
+    private async Task Import(bool dry)
+    {
+        if (_importRel is not { } rel || _importTarget.Length == 0)
+            return;
+
+        _confirmImport = false;
+        _busy = true;
+        _output = "Working…";
+        try
+        {
+            _output = (await Helper.SendAsync(new LocalHelperRequest { Action = "vault_import", Brain = rel, Target = _importTarget, Dry = dry })).Output;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private async Task CopyImport(string rel)
+    {
+        var command = $"python scripts\\global\\vault_import.py \"{rel}\" <TargetRepo> --dry-run";
+        bool copied;
+        try
+        {
+            copied = await JS.InvokeAsync<bool>("copyToClipboard", command);
+        }
+        catch (JSException)
+        {
+            copied = false;
+        }
+
+        _output = copied
+            ? $"Copied. Run it from the PoPunkouterSoftware folder with a target repo, then without --dry-run to copy:\n{command}"
+            : $"Copy failed. The command:\n{command}";
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -195,6 +627,15 @@
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             _vault = await Api.GetGlobalVaultAsync(cts.Token);
+            if (_vault is not null)
+            {
+                _repos = _vault.Brains.Select(b => b.Repo).Distinct().Order(StringComparer.OrdinalIgnoreCase).ToList();
+                _serverGold = _vault.Brains.Where(b => b.Gold)
+                    .GroupBy(b => b.Rel, StringComparer.Ordinal)
+                    .ToDictionary(g => g.Key, g => g.First().GoldNote ?? "starred", StringComparer.Ordinal);
+            }
+
+            await LoadLocalGoldAsync();
         }
         catch (Exception ex)
         {

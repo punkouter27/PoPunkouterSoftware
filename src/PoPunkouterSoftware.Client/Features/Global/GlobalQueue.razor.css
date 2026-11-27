@@ -1,0 +1,133 @@
+/* GPU queue planner: catalog left, tonight's queue right (sticky) on a wide screen, one column on a phone. */
+.queue-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: var(--po-space-4);
+    align-items: start;
+}
+
+.queue-side {
+    position: sticky;
+    top: calc(var(--app-header-reserve, 60px) + 8px);
+    max-height: calc(100vh - var(--app-header-reserve, 60px) - 16px);
+    overflow-y: auto;
+    padding-right: 2px;
+}
+
+@media (max-width: 980px) {
+    .queue-grid { grid-template-columns: minmax(0, 1fr); }
+    .queue-side { position: static; max-height: none; overflow: visible; }
+}
+
+.queue-plan h2:first-child,
+.queue-side h2:first-child { margin-top: 0; }
+
+/* 1 · urgency list */
+.queue-urgent {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    background: var(--po-surface);
+    border: 1px solid var(--po-border);
+    border-radius: var(--po-radius);
+}
+
+.queue-urg {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    gap: var(--po-space-2);
+    align-items: center;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--po-border);
+}
+
+.queue-urg:last-child { border-bottom: 0; }
+
+.queue-score {
+    padding: 4px 0;
+    border-radius: var(--po-radius-sm);
+    color: var(--po-text);
+    font-size: 1.05rem;
+    font-weight: 800;
+    text-align: center;
+}
+
+.queue-score.is-high { background: var(--po-danger-soft); box-shadow: inset 0 0 0 1px var(--po-danger); }
+.queue-score.is-mid { background: var(--po-warning-soft); box-shadow: inset 0 0 0 1px var(--po-warning); }
+.queue-score.is-low { background: var(--po-success-soft); box-shadow: inset 0 0 0 1px var(--po-success); }
+
+.queue-urg-text { min-width: 0; font-size: var(--po-text-sm); }
+.queue-next { margin-top: 2px; color: var(--po-text-muted); }
+
+.queue-urg-jobs {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.queue-repo-job { border-style: dashed; opacity: .8; }
+
+@media (max-width: 560px) {
+    .queue-urg { grid-template-columns: 40px minmax(0, 1fr); }
+    .queue-urg-jobs { grid-column: 2; flex-direction: row; flex-wrap: wrap; align-items: center; }
+}
+
+/* 2 · catalog */
+.queue-job-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+}
+
+.queue-job-tags { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.queue-catalog .global-item.is-blocked { border-style: dashed; }
+.queue-missing { color: var(--po-text); }
+.queue-missing::before { content: "⚠ "; color: var(--po-danger); }
+
+.queue-catalog .global-code,
+.queue-cmd code { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* 3 · tonight's queue */
+.queue-items { margin: 0 0 var(--po-space-2); padding: 0; list-style: none; display: grid; gap: 6px; }
+
+.queue-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 8px;
+    align-items: center;
+    padding: 6px 8px;
+    background: var(--po-surface-2);
+    border: 1px solid var(--po-border);
+    border-radius: var(--po-radius-sm);
+}
+
+.queue-item-name { min-width: 0; font-size: var(--po-text-sm); overflow-wrap: anywhere; }
+.queue-item-moves { display: inline-flex; gap: 4px; }
+
+.queue-settings {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--po-space-2) var(--po-space-3);
+    margin: var(--po-space-2) 0;
+}
+
+.queue-name { width: 12em; min-width: 0; flex: 0 1 auto; }
+.queue-eta { margin: var(--po-space-2) 0; font-size: var(--po-text-sm); }
+
+.queue-cmd {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin: 4px 0 var(--po-space-2);
+    padding: 6px 8px;
+    background: var(--po-surface-2);
+    border-radius: var(--po-radius-sm);
+    font-size: var(--po-text-xs);
+}
+
+.queue-cmd code { flex: 1 1 auto; min-width: 0; }
+.queue-json { max-height: 18em; overflow: auto; }
+.queue-run .global-table-wrap { margin-top: 6px; }
