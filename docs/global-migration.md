@@ -13,7 +13,7 @@ boundary on 2026-11-27.
 | `station/scripts/` crawlers (fleet, lessons) | [`scripts/global/`](../scripts/global) — data only, no HTML |
 | `rl_training/scripts/` crawler + history recorder | [`scripts/global/`](../scripts/global) |
 | `station/*.html` (fleet health, briefing, vault, showroom, ship board, lessons, disk, incubator) | Blazor pages under `/global` |
-| `rl_training/*.html` (overview, progress over time) | `/global/rl` |
+| `rl_training/*.html` (overview, progress over time) | `/global/rl` — the same reports, built by GLOBAL's own generators (`scripts/global/rl_reports`, vendored) |
 | `index.html` hub, `RUN_ME.bat` | `/global` and `scripts/global/refresh_and_push.ps1` (crawl, commit, push) |
 | `station/automation/station_server.py` (the :5050 launcher) | `scripts/global/local_helper.py` — same port, no file serving, token + origin checked |
 | `rl_training/gpu_queue/run_gpu_queue.ps1` + `gpu_queue.html` | `scripts/global/run_gpu_queue.ps1`, launched from `/global/queue` |
@@ -30,7 +30,7 @@ itself is deleted once the owner has confirmed the buttons work from the live si
 
 | Route | What it shows |
 | --- | --- |
-| `/global` | Hub: fleet counts, CI failures, disk, and a tile per tool |
+| `/global` | Hub, like GLOBAL's index.html: data freshness, start here, needs attention, latest benchmark attempt, totals with change since the last crawl, control panel, trend over time, RL data-quality flags and benchmark context, a tile per tool, project groups & reports, glossary |
 | `/global/fleet` | Per repo: branch, dirty/ahead/behind, last commit, CI conclusion, brains, models, disk, live URL |
 | `/global/briefing` | What changed between the last two crawls: commits, new brains, disk movement, CI flips, working-tree churn |
 | `/global/vault` | Every `.onnx` grouped by socket (obs → action), starred brains, every MJCF body |
@@ -38,12 +38,16 @@ itself is deleted once the owner has confirmed the buttons work from the live si
 | `/global/readiness` | Ship board: Prototype → Shipped, six-point checklist, suggested stage with a reason |
 | `/global/lessons` | Traps and rules harvested from every repo's docs, with search, repo and kind filters |
 | `/global/disk` | Space per repo and folder type, heaviest folders, how safe each is to delete |
-| `/global/rl` | Shipped brains, benchmark facts, and the recorded history chart |
+| `/global/rl` | Three views: **Comparison & triage** and **Progress over time** are GLOBAL's two RL reports (what to train next, 0–2 h actions, transfers, portability matrix, passports, skill library, starter recipes, per-repo deep dives; brains and speed over time), **Summary** is the page's own view of the facts |
 | `/global/queue` | Training queue: every job in `config/train_jobs.json`, whether the crawl found what it needs, and (with the helper connected) dry run / start on the PC's GPU or send to the Google Cloud GPU |
 | `/global/unite` | The 6 prefabs, the document list, and the rules |
 | `/global/pc` | This PC: refresh and push the snapshot, run benchmarks, copy a brain, drive the cloud GPU VM |
 | `/global/standards` | The Blazor and RL standards, the portability contract and the saved prompts |
 | `/global/incubator` | Five questions → which repo to start from, brains to bring, clone command |
+
+Every `/global` page has the old station's tab strip across the top (Hub, Fleet Health,
+Briefing, GPU Queue, Brain Vault, Showroom, Ship Board, Lessons, Disk, Incubator, RL Dashboard),
+followed by the pages that are new here (UNITE, Standards, This PC).
 
 ## How the data gets there
 
@@ -164,6 +168,8 @@ The recorded history did come across: `history/station_timeline.jsonl` and
 | Deviation | Why |
 | --- | --- |
 | `snake_case` file naming on the API's raw-read context | the crawlers are unchanged Python tools; rewriting every key would risk the crawl for cosmetics |
-| Showroom links to GitHub instead of rendering the images | no second copy of 900 captures, and the biggest GIFs are tens of MB |
+| Screenshots and GIFs load from `raw.githubusercontent.com` (all Po repos are public; CSP `img-src` allows it) | no second copy of 900 captures; a capture that is not pushed yet does not show |
+| The two RL reports are GLOBAL's generated HTML in a sandboxed frame, not Blazor | ~2,500 lines of hand-written analysis carried over intact; the response has its own CSP (no network but GitHub images, `sandbox`, `frame-ancestors 'self'`) |
+| `scripts/global/rl_reports` is excluded from ruff | vendored as written so it can be diffed against GLOBAL's originals |
 | No scheduled crawl | F1 has no Always On; the owner runs the crawl and commits, as with every other snapshot in this repo |
 | `docs/unite/tools/` sits beside the prefabs | the tools resolve `creatures/` relative to themselves; moving them to `scripts/` would need path surgery in ten files |

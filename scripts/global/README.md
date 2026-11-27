@@ -20,7 +20,9 @@ Then reload `/global` — the API re-reads a file when its timestamp changes, so
 | `lessons` | `harvest_lessons.py` | `lessons.json` | `/api/global/lessons` |
 | `rl` | `collect_rl_facts.py`, `record_rl_history.py` | `rl_facts.json`, `rl/rl_timeline.jsonl` | `/api/global/rl` |
 | `unite` | `build_global_data.py` (inline) | `unite.json` | `/api/global/unite` |
-| `queue` | `build_global_data.py` (inline) | `queue.json` (jobs, missing requirements, cloud jobs) | `/api/global/queue` |
+| `queue` | `build_global_data.py` (inline) | `queue.json` (jobs, missing requirements, cloud jobs, the behaviours ranked by urgency from `config/behaviors.json`, past queue runs from `.local/runs`) | `/api/global/queue` |
+| `benchmark` | `build_global_data.py` (inline) | `benchmark_last.json` (newest `run_benchmarks.ps1` attempt) | `/api/global/home` |
+| `reports` | `build_rl_reports.py` → `rl_reports/` (GLOBAL's generators, vendored) | `reports/rl-overview.html`, `reports/rl-progress.html` | `/api/global/reports/{name}` |
 | `standards` | `build_global_data.py` (inline) | `standards.json` (from `docs/global-standards`) | `/api/global/standards` |
 
 `config/` holds the hand-edited inputs the previous station kept: `train_jobs.json`,
@@ -43,6 +45,7 @@ Every crawler only reads the sibling repos. `vault_import.py` is the exception: 
 | `run_benchmarks.ps1` | Runs each RL repo's own `benchmark.ps1 -Run`, then refreshes |
 | `vault_import.py` | Copies a brain between repos (above) |
 | `test_local_helper.py` | `python -m unittest scripts/global/test_local_helper.py` |
+| `test_build_rl_reports.py` | `python -m unittest scripts/global/test_build_rl_reports.py` (link rewriting in the RL reports) |
 
 `.local/` (git-ignored) holds the helper token, saved queues, queue runs, benchmark logs and
 the refresh log.
