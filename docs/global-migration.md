@@ -23,8 +23,9 @@ boundary on 2026-11-27.
 | the 07:00 task "CODEMATT Morning Briefing" | same task, now `refresh_and_push.ps1` (`scripts/global/register_daily_refresh.ps1`) |
 | `station/config/*.json` | `src/PoPunkouterSoftware.Api/App_Data/global/config/` |
 
-The `_CODEMATT/GLOBAL` folder is archived in `_CODEMATT/GLOBAL-archive-20261127.zip` (849 files). The folder
-itself is deleted once the owner has confirmed the buttons work from the live site; nothing reads it any more.
+The `_CODEMATT/global` folder was deleted on 2026-11-28 after a file-by-file check against this repo. A backup is
+in `_CODEMATT/GLOBAL-archive-20261128.zip` (301 files). PoBasketball and PoRaceUnreal now read UNITE from
+`../PoPunkouterSoftware/docs/unite`.
 
 ## The fourteen pages
 
