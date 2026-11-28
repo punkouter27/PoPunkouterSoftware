@@ -1,6 +1,6 @@
 {
- "generated": "2026-11-27T13:30:56-05:00",
- "stamp": "20261127_133056",
+ "generated": "2026-11-28T07:00:02-05:00",
+ "stamp": "20261128_070002",
  "root": "C:\\Users\\punko\\Downloads\\_CODEMATT",
  "used_gh": true,
  "repos": {
@@ -19,17 +19,27 @@
     "dirty_count": 0,
     "dirty_files": [],
     "ahead": 0,
-    "behind": 1,
-    "last_commit_iso": "2026-11-27T11:30:32-05:00",
-    "last_commit_msg": "Add live MuJoCo viewer for real-time training checkpoint visualization",
-    "last_commit_hash": "d1d1061",
-    "days_since_commit": 0.1,
-    "commits_7d": 59,
-    "commits_30d": 155,
-    "commits_total": 155,
+    "behind": 0,
+    "last_commit_iso": "2026-11-27T14:21:17-05:00",
+    "last_commit_msg": "Refactor code structure for improved readability and maintainability",
+    "last_commit_hash": "4b821e8",
+    "days_since_commit": 0.7,
+    "commits_7d": 53,
+    "commits_30d": 157,
+    "commits_total": 157,
     "remote": "https://github.com/punkouter27/PoBasketball.git",
     "slug": "punkouter27/PoBasketball",
     "recent_commits": [
+     {
+      "iso": "2026-11-27T14:21:17-05:00",
+      "hash": "4b821e8",
+      "msg": "Refactor code structure for improved readability and maintainability"
+     },
+     {
+      "iso": "2026-11-27T13:16:51-05:00",
+      "hash": "7070f91",
+      "msg": "Add hourly status updates for l1_traverse_q1 runs"
+     },
      {
       "iso": "2026-11-27T11:30:32-05:00",
       "hash": "d1d1061",
@@ -59,16 +69,6 @@
       "iso": "2026-11-27T06:19:42-05:00",
       "hash": "199fc15",
       "msg": "Add training speed comparison dashboard and related tests"
-     },
-     {
-      "iso": "2026-11-26T12:33:06-05:00",
-      "hash": "f79ea23",
-      "msg": "Merge remote-tracking branch 'origin/master'"
-     },
-     {
-      "iso": "2026-11-26T12:31:45-05:00",
-      "hash": "b387d87",
-      "msg": "Record benchmark run 2026-11-26 on WIN-C2ANEVBHN6Q"
      }
     ]
    },
@@ -78,11 +78,11 @@
     ],
     "latest_run": {
      "conclusion": "failure",
-     "createdAt": "2026-11-27T18:17:02Z",
+     "createdAt": "2026-11-27T19:21:25Z",
      "event": "push",
      "headBranch": "master",
      "status": "completed",
-     "url": "https://github.com/punkouter27/PoBasketball/actions/runs/46048287660",
+     "url": "https://github.com/punkouter27/PoBasketball/actions/runs/46056114584",
      "workflowName": "Test & Deploy",
      "recent": [
       "failure",
@@ -918,9 +918,9 @@
     }
    ],
    "disk": {
-    "total_bytes": 14252634350,
+    "total_bytes": 14254487736,
     "categories": {
-     "git": 383753440,
+     "git": 384251138,
      "media": 6211622,
      "builds": 5423403,
      "unreal_binaries": 151461440,
@@ -928,7 +928,7 @@
      "unreal_saved": 665756124,
      "python_env": 3695888580,
      "training_output": 849550620,
-     "source_other": 491038686
+     "source_other": 492394374
     },
     "heavy_dirs": [
      {
@@ -963,8 +963,8 @@
       "rel": "PoBasketball/.git",
       "category": "git",
       "safety": "never",
-      "bytes": 383753440,
-      "files": 229
+      "bytes": 384251138,
+      "files": 241
      },
      {
       "rel": "PoBasketball/unreal/StreetballGym/Binaries",
@@ -997,8 +997,8 @@
     "last_commit_iso": "2026-11-27T10:44:43-05:00",
     "last_commit_msg": "Add station_train.json configuration for PoBox queue runner",
     "last_commit_hash": "1805986",
-    "days_since_commit": 0.1,
-    "commits_7d": 61,
+    "days_since_commit": 0.8,
+    "commits_7d": 55,
     "commits_30d": 172,
     "commits_total": 444,
     "remote": "https://github.com/punkouter27/PoBox.git",
@@ -4580,9 +4580,9 @@
     "last_commit_iso": "2026-11-24T19:51:58-05:00",
     "last_commit_msg": "fights are back on, the AI host finally showed up",
     "last_commit_hash": "79e7547",
-    "days_since_commit": 2.7,
-    "commits_7d": 15,
-    "commits_30d": 43,
+    "days_since_commit": 3.5,
+    "commits_7d": 12,
+    "commits_30d": 39,
     "commits_total": 349,
     "remote": "https://github.com/punkouter27/PoFightJudge.git",
     "slug": "punkouter27/PoFightJudge",
@@ -4825,8 +4825,8 @@
     "last_commit_iso": "2026-11-26T18:39:31-05:00",
     "last_commit_msg": "Update plugin metadata to enable platform data for NuGet packages and increment bundle version",
     "last_commit_hash": "0d922ee",
-    "days_since_commit": 0.8,
-    "commits_7d": 22,
+    "days_since_commit": 1.5,
+    "commits_7d": 19,
     "commits_30d": 51,
     "commits_total": 163,
     "remote": "https://github.com/punkouter27/PoFootball.git",
@@ -6045,20 +6045,28 @@
    "git": {
     "is_git": true,
     "branch": "master",
-    "dirty_count": 0,
-    "dirty_files": [],
+    "dirty_count": 2,
+    "dirty_files": [
+     "M cloud-train.ps1",
+     " M cloud/startup.sh"
+    ],
     "ahead": 0,
     "behind": 0,
-    "last_commit_iso": "2026-11-27T07:51:17-05:00",
-    "last_commit_msg": "Refactor fighter checkpoint handling to use shipped models in overnight_hill, queue_hill, and queue_hill4 scripts",
-    "last_commit_hash": "daf3670a",
-    "days_since_commit": 0.2,
-    "commits_7d": 44,
-    "commits_30d": 72,
-    "commits_total": 162,
+    "last_commit_iso": "2026-11-27T17:42:56-05:00",
+    "last_commit_msg": "Cloud training on a Google Cloud Spot L4 (cloud-train.ps1)",
+    "last_commit_hash": "5891df74",
+    "days_since_commit": 0.6,
+    "commits_7d": 41,
+    "commits_30d": 73,
+    "commits_total": 163,
     "remote": "https://github.com/punkouter27/PoHillKing.git",
     "slug": "punkouter27/PoHillKing",
     "recent_commits": [
+     {
+      "iso": "2026-11-27T17:42:56-05:00",
+      "hash": "5891df74",
+      "msg": "Cloud training on a Google Cloud Spot L4 (cloud-train.ps1)"
+     },
      {
       "iso": "2026-11-27T07:51:17-05:00",
       "hash": "daf3670a",
@@ -6093,11 +6101,6 @@
       "iso": "2026-11-25T21:47:40-05:00",
       "hash": "8220989e",
       "msg": "Update tournament structure to 8-player knockout format with adjusted match descriptions and test cases"
-     },
-     {
-      "iso": "2026-11-24T08:46:33-05:00",
-      "hash": "ef636e57",
-      "msg": "Retrained kim/trump fighter models, trump action map, ReviewCapture editor tool"
      }
     ]
    },
@@ -6107,15 +6110,15 @@
     ],
     "latest_run": {
      "conclusion": "failure",
-     "createdAt": "2026-11-27T13:19:40Z",
+     "createdAt": "2026-11-27T22:43:00Z",
      "event": "push",
      "headBranch": "master",
      "status": "completed",
-     "url": "https://github.com/punkouter27/PoHillKing/actions/runs/46006144356",
+     "url": "https://github.com/punkouter27/PoHillKing/actions/runs/46078305516",
      "workflowName": "PoHillKing",
      "recent": [
       "failure",
-      "success",
+      "failure",
       "success",
       "success",
       "success"
@@ -8526,15 +8529,15 @@
     }
    ],
    "disk": {
-    "total_bytes": 11571234557,
+    "total_bytes": 11571355086,
     "categories": {
-     "git": 650947300,
+     "git": 651040490,
      "builds": 223401906,
      "unity_cache": 4431523660,
      "media": 175486697,
      "python_env": 5198153260,
      "training_output": 155752012,
-     "source_other": 735969722
+     "source_other": 735997061
     },
     "heavy_dirs": [
      {
@@ -8555,8 +8558,8 @@
       "rel": "PoHillKing/.git",
       "category": "git",
       "safety": "never",
-      "bytes": 650947300,
-      "files": 115
+      "bytes": 651040490,
+      "files": 126
      },
      {
       "rel": "PoHillKing/Builds",
@@ -8603,9 +8606,9 @@
     "last_commit_iso": "2026-11-25T09:41:48-05:00",
     "last_commit_msg": "judge finally gets eyeballs in prod: screenshots come from a scale-to-zero container now, so no more flat cards beating real 3D heads",
     "last_commit_hash": "6c29acc",
-    "days_since_commit": 2.2,
-    "commits_7d": 15,
-    "commits_30d": 48,
+    "days_since_commit": 2.9,
+    "commits_7d": 13,
+    "commits_30d": 44,
     "commits_total": 217,
     "remote": "https://github.com/punkouter27/PoLocalCompare.git",
     "slug": "punkouter27/PoLocalCompare",
@@ -8836,17 +8839,27 @@
     "dirty_count": 0,
     "dirty_files": [],
     "ahead": 0,
-    "behind": 0,
-    "last_commit_iso": "2026-11-25T21:47:38-05:00",
+    "behind": 7,
+    "last_commit_iso": "2026-11-27T13:54:59-05:00",
     "last_commit_msg": "Merge branch 'master' of https://github.com/punkouter27/PoMiniGames",
-    "last_commit_hash": "f0b87e01",
-    "days_since_commit": 1.7,
-    "commits_7d": 100,
-    "commits_30d": 333,
-    "commits_total": 892,
+    "last_commit_hash": "d5867f0b",
+    "days_since_commit": 0.7,
+    "commits_7d": 81,
+    "commits_30d": 328,
+    "commits_total": 894,
     "remote": "https://github.com/punkouter27/PoMiniGames.git",
     "slug": "punkouter27/PoMiniGames",
     "recent_commits": [
+     {
+      "iso": "2026-11-27T13:54:59-05:00",
+      "hash": "d5867f0b",
+      "msg": "Merge branch 'master' of https://github.com/punkouter27/PoMiniGames"
+     },
+     {
+      "iso": "2026-11-27T13:54:58-05:00",
+      "hash": "873c647e",
+      "msg": "feat: add WebGPU support for materials in campus, crowd, and scene creation"
+     },
      {
       "iso": "2026-11-25T21:47:38-05:00",
       "hash": "f0b87e01",
@@ -8876,16 +8889,6 @@
       "iso": "2026-11-25T09:14:59-05:00",
       "hash": "29ac2bc4",
       "msg": "Change Connect Five board from 9x9 to 9x7"
-     },
-     {
-      "iso": "2026-11-24T23:30:29-05:00",
-      "hash": "9f828112",
-      "msg": "..."
-     },
-     {
-      "iso": "2026-11-24T20:10:04-05:00",
-      "hash": "988d8a82",
-      "msg": "..."
      }
     ]
    },
@@ -8895,18 +8898,18 @@
     ],
     "latest_run": {
      "conclusion": "failure",
-     "createdAt": "2026-11-26T02:47:46Z",
+     "createdAt": "2026-11-28T00:11:48Z",
      "event": "push",
      "headBranch": "master",
      "status": "completed",
-     "url": "https://github.com/punkouter27/PoMiniGames/actions/runs/45744776163",
+     "url": "https://github.com/punkouter27/PoMiniGames/actions/runs/46086581135",
      "workflowName": "Build & Deploy",
      "recent": [
       "failure",
       "failure",
-      "success",
-      "success",
-      "success"
+      "failure",
+      "failure",
+      "failure"
      ]
     }
    },
@@ -8975,13 +8978,13 @@
     ]
    },
    "disk": {
-    "total_bytes": 6666186510,
+    "total_bytes": 6824253851,
     "categories": {
-     "git": 512756401,
+     "git": 670822432,
      "media": 18912121,
      "dotnet_build": 4866322588,
      "node": 34160584,
-     "source_other": 1234034816
+     "source_other": 1234036126
     },
     "heavy_dirs": [
      {
@@ -9006,6 +9009,13 @@
       "files": 1396
      },
      {
+      "rel": "PoMiniGames/.git",
+      "category": "git",
+      "safety": "never",
+      "bytes": 670822432,
+      "files": 220
+     },
+     {
       "rel": "PoMiniGames/tests/PoMiniGames.Integration/bin",
       "category": "dotnet_build",
       "safety": "regenerable",
@@ -9018,13 +9028,6 @@
       "safety": "regenerable",
       "bytes": 635745930,
       "files": 1085
-     },
-     {
-      "rel": "PoMiniGames/.git",
-      "category": "git",
-      "safety": "never",
-      "bytes": 512756401,
-      "files": 200
      },
      {
       "rel": "PoMiniGames/src/PoMiniGames.Client/bin",
@@ -9078,9 +9081,9 @@
     "last_commit_iso": "2026-11-27T11:09:38-05:00",
     "last_commit_msg": "Add missing workload pack configuration for .NET Runtime MonoTargets",
     "last_commit_hash": "e173b6e",
-    "days_since_commit": 0.1,
-    "commits_7d": 18,
-    "commits_30d": 57,
+    "days_since_commit": 0.8,
+    "commits_7d": 10,
+    "commits_30d": 48,
     "commits_total": 229,
     "remote": "https://github.com/punkouter27/PoMode.git",
     "slug": "punkouter27/PoMode",
@@ -9315,8 +9318,8 @@
     "last_commit_iso": "2026-11-26T12:33:10-05:00",
     "last_commit_msg": "Merge remote-tracking branch 'origin/master'",
     "last_commit_hash": "d5aae2a",
-    "days_since_commit": 1.0,
-    "commits_7d": 26,
+    "days_since_commit": 1.8,
+    "commits_7d": 24,
     "commits_30d": 62,
     "commits_total": 235,
     "remote": "https://github.com/punkouter27/PoOlympic.git",
@@ -15999,62 +16002,59 @@
    "git": {
     "is_git": true,
     "branch": "master",
-    "dirty_count": 2,
-    "dirty_files": [
-     "M .gitignore",
-     "?? src/PoPunkouterSoftware.Api/App_Data/"
-    ],
-    "ahead": 8,
+    "dirty_count": 0,
+    "dirty_files": [],
+    "ahead": 0,
     "behind": 0,
-    "last_commit_iso": "2026-11-27T13:16:16-05:00",
-    "last_commit_msg": "Merge branch 'master' of https://github.com/punkouter27/PoPunkouterSoftware",
-    "last_commit_hash": "4936a0a",
-    "days_since_commit": 0.0,
-    "commits_7d": 37,
-    "commits_30d": 106,
-    "commits_total": 398,
+    "last_commit_iso": "2026-11-27T17:43:00-05:00",
+    "last_commit_msg": "GitHub links from crawl paths drop the repo folder once; test counts",
+    "last_commit_hash": "4a9c3ec",
+    "days_since_commit": 0.6,
+    "commits_7d": 45,
+    "commits_30d": 111,
+    "commits_total": 408,
     "remote": "https://github.com/punkouter27/PoPunkouterSoftware.git",
     "slug": "punkouter27/PoPunkouterSoftware",
     "recent_commits": [
      {
-      "iso": "2026-11-27T13:16:16-05:00",
-      "hash": "4936a0a",
-      "msg": "Merge branch 'master' of https://github.com/punkouter27/PoPunkouterSoftware"
+      "iso": "2026-11-27T17:43:00-05:00",
+      "hash": "4a9c3ec",
+      "msg": "GitHub links from crawl paths drop the repo folder once; test counts"
      },
      {
-      "iso": "2026-11-27T13:15:47-05:00",
-      "hash": "47a69f4",
-      "msg": "..."
+      "iso": "2026-11-27T17:25:24-05:00",
+      "hash": "cdcf66b",
+      "msg": "Merge branch 'global-fork-A'"
      },
      {
-      "iso": "2026-11-27T13:15:36-05:00",
-      "hash": "12d00e7",
-      "msg": "chore: remove unused binary files from GCP scripts"
+      "iso": "2026-11-27T17:24:49-05:00",
+      "hash": "33681d3",
+      "msg": "Fleet Health: read CI run age and workflow, fit all columns on desktop"
      },
      {
-      "iso": "2026-11-27T12:10:17-05:00",
-      "hash": "3fb4b98",
-      "msg": "global moves in: /global reads the fleet snapshot, behind Microsoft sign-in"
+      "iso": "2026-11-27T17:07:30-05:00",
+      "hash": "5ddc7d1",
+      "msg": "Merge branch 'global-fork-C'"
      },
      {
-      "iso": "2026-11-27T11:40:47-05:00",
-      "hash": "32fa9aa",
-      "msg": ".."
+      "iso": "2026-11-27T17:07:23-05:00",
+      "hash": "a8740fd",
+      "msg": "Merge branch 'global-fork-B'"
      },
      {
-      "iso": "2026-11-27T11:40:09-05:00",
-      "hash": "0eb9b14",
-      "msg": "Merge branch 'master' of https://github.com/punkouter27/PoPunkouterSoftware"
+      "iso": "2026-11-27T17:07:23-05:00",
+      "hash": "e5e28ed",
+      "msg": "Merge branch 'global-fork-A'"
      },
      {
-      "iso": "2026-11-27T11:39:58-05:00",
-      "hash": "c58d073",
-      "msg": "..."
+      "iso": "2026-11-27T17:07:18-05:00",
+      "hash": "79e6c1a",
+      "msg": "GLOBAL station: Incubator, Readiness and Showroom pages"
      },
      {
-      "iso": "2026-11-27T11:39:52-05:00",
-      "hash": "45bfb94",
-      "msg": "..."
+      "iso": "2026-11-27T17:07:17-05:00",
+      "hash": "72956b5",
+      "msg": "GLOBAL station: Queue and Vault pages"
      }
     ]
    },
@@ -16063,19 +16063,19 @@
      "deploy.yml"
     ],
     "latest_run": {
-     "conclusion": "failure",
-     "createdAt": "2026-11-27T18:15:44Z",
+     "conclusion": "success",
+     "createdAt": "2026-11-27T22:43:12Z",
      "event": "push",
      "headBranch": "master",
      "status": "completed",
-     "url": "https://github.com/punkouter27/PoPunkouterSoftware/actions/runs/46048119552",
+     "url": "https://github.com/punkouter27/PoPunkouterSoftware/actions/runs/46078324386",
      "workflowName": "Build & Deploy",
      "recent": [
-      "failure",
-      "failure",
-      "failure",
-      "failure",
-      "failure"
+      "success",
+      "success",
+      "success",
+      "success",
+      "success"
      ]
     }
    },
@@ -16144,63 +16144,63 @@
     ]
    },
    "disk": {
-    "total_bytes": 7017362507,
+    "total_bytes": 1217376586,
     "categories": {
-     "git": 6038946325,
+     "git": 192322119,
      "media": 36341330,
-     "dotnet_build": 878300467,
-     "training_output": 454270,
-     "source_other": 63320115
+     "dotnet_build": 921130169,
+     "training_output": 460886,
+     "source_other": 67122082
     },
     "heavy_dirs": [
-     {
-      "rel": "PoPunkouterSoftware/.git",
-      "category": "git",
-      "safety": "never",
-      "bytes": 6038946325,
-      "files": 215
-     },
      {
       "rel": "PoPunkouterSoftware/tests/PoPunkouterSoftware.E2EUI/bin",
       "category": "dotnet_build",
       "safety": "regenerable",
-      "bytes": 233511938,
+      "bytes": 233840018,
       "files": 418
+     },
+     {
+      "rel": "PoPunkouterSoftware/.git",
+      "category": "git",
+      "safety": "never",
+      "bytes": 192322119,
+      "files": 394
      },
      {
       "rel": "PoPunkouterSoftware/src/PoPunkouterSoftware.Client/bin",
       "category": "dotnet_build",
       "safety": "regenerable",
-      "bytes": 175569564,
-      "files": 1176
+      "bytes": 182043838,
+      "files": 1182
      },
      {
       "rel": "PoPunkouterSoftware/tests/PoPunkouterSoftware.Integration/bin",
       "category": "dotnet_build",
       "safety": "regenerable",
-      "bytes": 153713693,
-      "files": 1053
+      "bytes": 157182793,
+      "files": 1072
      },
      {
       "rel": "PoPunkouterSoftware/src/PoPunkouterSoftware.Client/obj",
       "category": "dotnet_build",
       "safety": "regenerable",
-      "bytes": 116242285,
-      "files": 1148
+      "bytes": 130772161,
+      "files": 1256
      },
      {
       "rel": "PoPunkouterSoftware/src/PoPunkouterSoftware.Api/bin",
       "category": "dotnet_build",
       "safety": "regenerable",
-      "bytes": 95060030,
-      "files": 225
+      "bytes": 103852155,
+      "files": 270
      },
      {
       "rel": "PoPunkouterSoftware/tests/PoPunkouterSoftware.Unit/bin",
       "category": "dotnet_build",
       "safety": "regenerable",
-      "bytes": 69347890,
-      "files": 267
+      "bytes": 72331766,
+      "files": 268
      },
      {
       "rel": "PoPunkouterSoftware/SCREENSHOTS",
@@ -16215,6 +16215,13 @@
       "safety": "review",
       "bytes": 454270,
       "files": 10
+     },
+     {
+      "rel": "PoPunkouterSoftware/scripts/global/.local/runs",
+      "category": "training_output",
+      "safety": "review",
+      "bytes": 6616,
+      "files": 6
      }
     ],
     "scan_errors": 0,
@@ -16240,8 +16247,8 @@
     "last_commit_iso": "2026-11-27T08:06:22-05:00",
     "last_commit_msg": "Add cross-app agent interface and role observation tests",
     "last_commit_hash": "1a843f8",
-    "days_since_commit": 0.2,
-    "commits_7d": 22,
+    "days_since_commit": 1.0,
+    "commits_7d": 18,
     "commits_30d": 36,
     "commits_total": 36,
     "remote": "https://github.com/punkouter27/PoRaceUnreal.git",
@@ -19343,9 +19350,9 @@
     "last_commit_iso": "2026-11-27T11:09:51-05:00",
     "last_commit_msg": "feat: Add project file for missing workload pack configuration",
     "last_commit_hash": "8b53a6a",
-    "days_since_commit": 0.1,
-    "commits_7d": 18,
-    "commits_30d": 85,
+    "days_since_commit": 0.8,
+    "commits_7d": 13,
+    "commits_30d": 78,
     "commits_total": 144,
     "remote": "https://github.com/punkouter27/PoRedoMedia.git",
     "slug": "punkouter27/PoRedoMedia",
@@ -19535,9 +19542,9 @@
     "last_commit_iso": "2026-11-24T02:16:58-05:00",
     "last_commit_msg": "one command makes the before/after page now (scripts/screenshots.ps1), backfilled the v4 audit page",
     "last_commit_hash": "c04460f",
-    "days_since_commit": 3.5,
-    "commits_7d": 8,
-    "commits_30d": 54,
+    "days_since_commit": 4.2,
+    "commits_7d": 4,
+    "commits_30d": 46,
     "commits_total": 306,
     "remote": "https://github.com/punkouter27/PoRepoLineTracker.git",
     "slug": "punkouter27/PoRepoLineTracker",
@@ -19758,8 +19765,8 @@
     "last_commit_iso": "2026-11-27T10:45:00-05:00",
     "last_commit_msg": "Merge branch 'master' of https://github.com/punkouter27/PoRobotTrain",
     "last_commit_hash": "bf102ae",
-    "days_since_commit": 0.1,
-    "commits_7d": 50,
+    "days_since_commit": 0.8,
+    "commits_7d": 43,
     "commits_30d": 56,
     "commits_total": 56,
     "remote": "https://github.com/punkouter27/PoRobotTrain.git",
@@ -21796,9 +21803,9 @@
     "last_commit_iso": "2026-11-24T02:32:59-05:00",
     "last_commit_msg": "one command makes the before/after page now (scripts/screenshots.ps1)",
     "last_commit_hash": "147bae0",
-    "days_since_commit": 3.5,
-    "commits_7d": 9,
-    "commits_30d": 57,
+    "days_since_commit": 4.2,
+    "commits_7d": 5,
+    "commits_30d": 49,
     "commits_total": 217,
     "remote": "https://github.com/punkouter27/PoSeeReview.git",
     "slug": "punkouter27/PoSeeReview",
@@ -21996,15 +22003,22 @@
    "git": {
     "is_git": true,
     "branch": "master",
-    "dirty_count": 0,
-    "dirty_files": [],
+    "dirty_count": 6,
+    "dirty_files": [
+     "M docs/20261127/config_snapshots/grandpa_L4_v4_night18_0955.json",
+     "?? docs/20261127/config_snapshots/kim_L4_v4_night19_1902.json",
+     "?? docs/20261127/config_snapshots/mom_L2_v4_night20_2035.json",
+     "?? docs/20261127/config_snapshots/mom_L3_v4_night21_2205.json",
+     "?? docs/20261127/config_snapshots/mom_L4_v4_night22_2306.json",
+     "?? docs/20261128/"
+    ],
     "ahead": 0,
     "behind": 0,
     "last_commit_iso": "2026-11-27T10:47:10-05:00",
     "last_commit_msg": "Merge branch 'master' of https://github.com/punkouter27/PoSlapUnreal",
     "last_commit_hash": "b93128f",
-    "days_since_commit": 0.1,
-    "commits_7d": 42,
+    "days_since_commit": 0.8,
+    "commits_7d": 39,
     "commits_30d": 191,
     "commits_total": 350,
     "remote": "https://github.com/punkouter27/PoSlapUnreal.git",
@@ -26743,7 +26757,7 @@
     }
    ],
    "disk": {
-    "total_bytes": 14518088426,
+    "total_bytes": 14720930717,
     "categories": {
      "git": 2376414141,
      "unreal_binaries": 3186648,
@@ -26753,8 +26767,8 @@
      "builds": 320913099,
      "node": 196289144,
      "python_env": 5064267443,
-     "training_output": 128429400,
-     "source_other": 3467233381
+     "training_output": 331210202,
+     "source_other": 3467294870
     },
     "heavy_dirs": [
      {
@@ -26777,6 +26791,13 @@
       "safety": "never",
       "bytes": 1700602454,
       "files": 3056
+     },
+     {
+      "rel": "PoSlapUnreal/training/runs",
+      "category": "training_output",
+      "safety": "review",
+      "bytes": 327981641,
+      "files": 197
      },
      {
       "rel": "PoSlapUnreal/Plugins/UnrealRoboticsLab/Intermediate/Build",
@@ -26812,13 +26833,6 @@
       "safety": "never",
       "bytes": 130706082,
       "files": 28
-     },
-     {
-      "rel": "PoSlapUnreal/training/runs",
-      "category": "training_output",
-      "safety": "review",
-      "bytes": 125200839,
-      "files": 95
      },
      {
       "rel": "PoSlapUnreal/Plugins/UnrealRoboticsLab/third_party/CoACD/src/build/_deps/tbb-src/.git",
@@ -26879,8 +26893,8 @@
     "last_commit_iso": "2026-11-26T18:39:38-05:00",
     "last_commit_msg": "Update sprite importer settings for adaptive and legacy app icons",
     "last_commit_hash": "cb8f379",
-    "days_since_commit": 0.8,
-    "commits_7d": 26,
+    "days_since_commit": 1.5,
+    "commits_7d": 23,
     "commits_30d": 66,
     "commits_total": 273,
     "remote": "https://github.com/punkouter27/PoSoccer.git",
@@ -27871,15 +27885,20 @@
    "git": {
     "is_git": true,
     "branch": "master",
-    "dirty_count": 0,
-    "dirty_files": [],
+    "dirty_count": 4,
+    "dirty_files": [
+     "M Assets/_Project/Core/Editor/BuildTrainingEnv.cs",
+     "?? Training/stamps/matt_unique01c.json",
+     "?? cloud-train.ps1",
+     "?? cloud/"
+    ],
     "ahead": 0,
     "behind": 0,
     "last_commit_iso": "2026-11-26T13:43:35-05:00",
     "last_commit_msg": "Record benchmark run 2026-11-26 on WIN-C2ANEVBHN6Q (Unity licence active)",
     "last_commit_hash": "26fbecb",
-    "days_since_commit": 1.0,
-    "commits_7d": 28,
+    "days_since_commit": 1.7,
+    "commits_7d": 27,
     "commits_30d": 63,
     "commits_total": 235,
     "remote": "https://github.com/punkouter27/PoSumo.git",
@@ -28881,24 +28900,24 @@
    ],
    "mjcf": [],
    "disk": {
-    "total_bytes": 7019774590,
+    "total_bytes": 8030210615,
     "categories": {
      "git": 1418911597,
-     "builds": 391836996,
-     "unity_cache": 3573268953,
+     "builds": 699656293,
+     "unity_cache": 4273237401,
      "media": 45789723,
      "training_output": 3305278,
-     "python_env": 1383328209,
+     "python_env": 1385932709,
      "dotnet_build": 55763217,
-     "source_other": 147570617
+     "source_other": 147614397
     },
     "heavy_dirs": [
      {
       "rel": "PoSumo/Library",
       "category": "unity_cache",
       "safety": "slow_rebuild",
-      "bytes": 3558713952,
-      "files": 50283
+      "bytes": 4254905253,
+      "files": 63353
      },
      {
       "rel": "PoSumo/.git",
@@ -28911,15 +28930,15 @@
       "rel": "PoSumo/Training/venv",
       "category": "python_env",
       "safety": "recreate",
-      "bytes": 1383328209,
-      "files": 25001
+      "bytes": 1385932709,
+      "files": 25243
      },
      {
       "rel": "PoSumo/Builds",
       "category": "builds",
       "safety": "review",
-      "bytes": 391836996,
-      "files": 350
+      "bytes": 699656293,
+      "files": 676
      },
      {
       "rel": "PoSumo/PoChopAudio/src/PoChopAudio.WinUI/obj",
@@ -28984,9 +29003,9 @@
     "last_commit_iso": "2026-11-27T11:10:02-05:00",
     "last_commit_msg": "chore: add backup project file for missing workload pack configuration",
     "last_commit_hash": "93a4d86",
-    "days_since_commit": 0.1,
-    "commits_7d": 12,
-    "commits_30d": 53,
+    "days_since_commit": 0.8,
+    "commits_7d": 8,
+    "commits_30d": 45,
     "commits_total": 232,
     "remote": "https://github.com/punkouter27/PoTraffic.git",
     "slug": "punkouter27/PoTraffic",
@@ -29210,13 +29229,13 @@
     "dirty_count": 0,
     "dirty_files": [],
     "ahead": 0,
-    "behind": 0,
+    "behind": 3,
     "last_commit_iso": "2026-11-27T11:10:06-05:00",
     "last_commit_msg": "feat: Add project configuration for missing workload pack in mobile project",
     "last_commit_hash": "418d232",
-    "days_since_commit": 0.1,
-    "commits_7d": 38,
-    "commits_30d": 139,
+    "days_since_commit": 0.8,
+    "commits_7d": 32,
+    "commits_30d": 132,
     "commits_total": 314,
     "remote": "https://github.com/punkouter27/PoWatch.git",
     "slug": "punkouter27/PoWatch",
@@ -29268,16 +29287,16 @@
      "deploy.yml"
     ],
     "latest_run": {
-     "conclusion": "failure",
-     "createdAt": "2026-11-27T16:10:15Z",
+     "conclusion": "success",
+     "createdAt": "2026-11-27T21:42:18Z",
      "event": "push",
      "headBranch": "master",
      "status": "completed",
-     "url": "https://github.com/punkouter27/PoWatch/actions/runs/46031286886",
+     "url": "https://github.com/punkouter27/PoWatch/actions/runs/46072009025",
      "workflowName": "Build & Deploy",
      "recent": [
-      "failure",
-      "failure",
+      "success",
+      "success",
       "failure",
       "failure",
       "failure"
@@ -29349,9 +29368,9 @@
     ]
    },
    "disk": {
-    "total_bytes": 3669037036,
+    "total_bytes": 3669270031,
     "categories": {
-     "git": 39437695,
+     "git": 39670690,
      "media": 4825214,
      "dotnet_build": 2652666553,
      "source_other": 972107574
@@ -29424,8 +29443,8 @@
       "rel": "PoWatch/.git",
       "category": "git",
       "safety": "never",
-      "bytes": 39437695,
-      "files": 74
+      "bytes": 39670690,
+      "files": 192
      }
     ],
     "scan_errors": 0,
