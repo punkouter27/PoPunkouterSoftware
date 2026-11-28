@@ -1,4 +1,4 @@
-"""Prove that every creature in global/UNITE/creatures is actually portable.
+"""Prove that every creature in PoPunkouterSoftware/docs/unite/creatures is actually portable.
 
     python tools/check_creatures.py
 

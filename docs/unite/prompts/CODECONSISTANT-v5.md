@@ -49,7 +49,7 @@ Profile B (MiniGames)
 
 **Profile C (RL / MuJoCo) — fix, not just audit**
 
-Authoritative rules: `global/UNITE/RULES.md` (28 rules). This profile is the *apply* pass for that file. It does not restate the rules; it runs them and records the result. If this text and RULES.md ever disagree, RULES.md wins and this text is the bug.
+Authoritative rules: `PoPunkouterSoftware/docs/unite/RULES.md` (43 rules). This profile is the *apply* pass for that file. It does not restate the rules; it runs them and records the result. If this text and RULES.md ever disagree, RULES.md wins and this text is the bug.
 
 *Scope gate first — classify every repo before touching it.* The class is a column in the matrix.
 
@@ -87,7 +87,7 @@ For **C1** repos: run Parts 1–2, stop at the first missing contract, and submi
 
 - TAB overlay (FPS, reward, latency, stage) with an honestly labelled benchmark. 30 s attract mode whose timer ignores frames over 0.25 s.
 
-- **The creature comparison is generated, not written.** The root `_CODEMATT` HTML is built from `global/UNITE/creatures/*/contract.json`: game, creature, joints, actuators, sensors, roles mapped, `n_obs`/`n_action`, hardware yes/no, and the `interface_sha256` each row came from. A hand-edited row is FAIL; a creature with no contract is a contract gap, not a blank cell.
+- **The creature comparison is generated, not written.** The root `_CODEMATT` HTML is built from `PoPunkouterSoftware/docs/unite/creatures/*/contract.json`: game, creature, joints, actuators, sensors, roles mapped, `n_obs`/`n_action`, hardware yes/no, and the `interface_sha256` each row came from. A hand-edited row is FAIL; a creature with no contract is a contract gap, not a blank cell.
 
 *New matrix rows.* Add these alongside the existing ones; the first four are the only ones that prove the concept actually landed.
 
@@ -117,7 +117,7 @@ For **C1** repos: run Parts 1–2, stop at the first missing contract, and submi
 - upgrades a MuJoCo pin to make a test pass (R17);
 - forces two apps onto identical worlds to claim compatibility;
 - claims sim-to-real fidelity without `sim_real_diff`;
-- edits `global/UNITE` from inside a repo — report the gap instead (R27).
+- edits `PoPunkouterSoftware/docs/unite` from inside a repo — report the gap instead (R27).
 
 *Running Profile C.* Scope-gate the whole fleet first and write the C0/C1/C2/N/A column before touching a repo — that is what keeps the matrix honest and stops N/A rows from looking like failures. Then run C0 in this order: `PoRobotTrain` (hardware path), `PoBasketball` (second creature), `PoRaceUnreal` (in-engine rebuild path), `PoSlapUnreal`. One repo per pass, republish after each. After every pass, if `interface_sha256` moved, that pass is a FAIL: the whole design depends on that value never changing.
 

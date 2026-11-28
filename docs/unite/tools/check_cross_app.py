@@ -31,7 +31,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import pocontract_lib as L  # noqa: E402
 
-ROOT = L.UNITE.parents[1]  # _CODEMATT
+ROOT = L.UNITE.parents[2]  # _CODEMATT (UNITE = PoPunkouterSoftware/docs/unite)
 APPS = ["PoRobotTrain", "PoBasketball", "PoRaceUnreal", "PoSlapUnreal"]
 CODE_EXT = {".py", ".cs", ".cpp", ".h", ".js", ".ts"}
 SKIP_DIRS = {".venv", "Library", "Intermediate", "Saved", "DerivedDataCache", "node_modules", "bin", "obj"}

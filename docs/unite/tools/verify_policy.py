@@ -15,6 +15,13 @@ this instead of writing its own check, so "conforms" means one thing everywhere.
     # build a synthetic conforming policy, to test the tool itself
     python verify_policy.py --selftest
 
+Training standard (R35-R43): a `<policy>.training.json` card beside the onnx is validated by
+`check_training.py`. A card that breaks the standard fails the guard. `--require-card` makes a missing card
+fatal (every new app passes it). The sidecar records `portable`; a runtime loading a brain from another app
+passes `--require-portable` and refuses anything that is not (R41). Before anything goes to a physical
+robot, `--require-robot-ready` refuses unless the card is tier `robot` with calibration, sim_real_diff,
+deploy-gate and staged bring-up evidence (R43); the owner app's deploy gate still runs on top.
+
 Exit codes: 0 = OK, 1 = the policy does not conform, 2 = the tool cannot decide (missing file, etc).
 
 Needs `onnx` and `hashlib` only. `onnxruntime` is not required.
@@ -28,6 +35,7 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import check_training as T  # noqa: E402
 import pocontract_lib as L  # noqa: E402
 
 SIDECAR_SUFFIX = ".json"
@@ -128,7 +136,7 @@ def load_contract(creature):
     return json.loads(p.read_text(encoding="utf-8"))
 
 
-def check(policy, creature, allow_baked_norm=False):
+def check(policy, creature, allow_baked_norm=False, require_card=False):
     """Return (problems, info, contract)."""
     c = load_contract(creature)
     info = inspect(policy)
@@ -159,7 +167,35 @@ def check(policy, creature, allow_baked_norm=False):
             f"it in contract.observation.normalizer, or pass --allow-baked-norm if this is deliberate."
         )
 
+    tp, block = training_status(policy, c, require_card)
+    problems += tp
+    info["training"] = block
     return problems, info, c
+
+
+def training_status(policy, contract, require_card=False):
+    """(problems, block). problems fail the guard; block goes into the sidecar (R39/R41)."""
+    card_path = T.card_path_for(policy)
+    if not card_path.exists():
+        msg = f"no training card {card_path.name} (R39); the policy cannot be portable"
+        return ([msg] if require_card else []), {"training_card": None, "portable": False,
+                                                 "not_portable_reasons": [msg], "robot_ready": False,
+                                                 "not_robot_ready_reasons": [msg]}
+    card, errors, notp, notr = T.check_card_file(card_path, contract=contract)
+    env = T.load_envelope()
+    block = {
+        "training_card": card_path.name,
+        "training_card_sha256": sha256_file(card_path),
+        "envelope_version": env["envelope_version"],
+        "envelope_sha256_16": T.envelope_sha256(env)[:16],
+        "tier": card.get("tier"),
+        "skill": card.get("skill", {}).get("name"),
+        "portable": not errors and not notp,
+        "not_portable_reasons": errors + notp,
+        "robot_ready": not errors and not notp and not notr,
+        "not_robot_ready_reasons": errors + notr,
+    }
+    return [f"training standard: {e}" for e in errors], block
 
 
 def sidecar_for(policy, creature, info, contract, extra=None):
@@ -178,16 +214,17 @@ def sidecar_for(policy, creature, info, contract, extra=None):
         "physics_sha256": contract["hashes"]["physics_sha256"],
         "policy_sha256": sha256_file(policy),
         "mujoco": contract["physics"]["mujoco"],
-        "contract_path": f"global/UNITE/creatures/{creature}/contract.json",
+        "contract_path": f"PoPunkouterSoftware/docs/unite/creatures/{creature}/contract.json",
         "status": "conforming",
     }
+    sc.update(info.get("training") or {"training_card": None, "portable": False, "robot_ready": False})
     if extra:
         sc.update(extra)
     return sc
 
 
-def verify_sidecar(policy, creature, contract, info):
-    """What a runtime does at load time (R14). Returns a list of problems."""
+def verify_sidecar(policy, creature, contract, info, require_portable=False, require_robot_ready=False):
+    """What a runtime does at load time (R14, R41). Returns a list of problems."""
     path = policy.with_suffix(SIDECAR_SUFFIX)
     if not path.exists():
         return [f"no sidecar beside {policy.name}; R10 requires one"]
@@ -210,6 +247,15 @@ def verify_sidecar(policy, creature, contract, info):
         problems.append(f"sidecar n_obs {sc.get('n_obs')} != contract {contract['observation']['n_obs']}")
     if int(sc.get("n_action", -1)) != int(contract["action"]["n_action"]):
         problems.append(f"sidecar n_action {sc.get('n_action')} != contract {contract['action']['n_action']}")
+    card = T.card_path_for(policy)
+    if sc.get("training_card_sha256") and (not card.exists() or sha256_file(card) != sc["training_card_sha256"]):
+        problems.append(f"{card.name} changed or is missing since the sidecar was written")
+    if require_portable and not sc.get("portable"):
+        why = "; ".join(sc.get("not_portable_reasons") or ["sidecar predates the training standard"])
+        problems.append(f"not portable (R41): {why}")
+    if require_robot_ready and not sc.get("robot_ready"):
+        why = "; ".join(sc.get("not_robot_ready_reasons") or ["sidecar predates the robot tier"])
+        problems.append(f"not robot-ready (R43): {why}")
     return problems
 
 
@@ -289,6 +335,52 @@ def selftest():
     print(f"corrupt sidecar:    {'correctly refused' if vp else 'MISSED the corrupt hash'}")
     ok &= bool(vp)
 
+    # training standard: no card -> loads, but is refused where portability is required
+    good.with_name(good.stem + T.CARD_SUFFIX).unlink(missing_ok=True)
+    problems, info, c = check(good, "unitree_r1_a5")
+    sc = sidecar_for(good, "unitree_r1_a5", info, c)
+    good.with_suffix(".json").write_text(json.dumps(sc, indent=2) + "\n", encoding="utf-8")
+    vp = verify_sidecar(good, "unitree_r1_a5", c, info, require_portable=True)
+    print(f"no card, portable required: {'correctly refused' if vp else 'MISSED'}")
+    ok &= bool(vp)
+    problems, _i, _c = check(good, "unitree_r1_a5", require_card=True)
+    print(f"no card, card required:     {'correctly flagged' if problems else 'MISSED'}")
+    ok &= bool(problems)
+
+    # a valid release card -> portable
+    env = T.load_envelope()
+    card = T.example_card(env, c)
+    T.card_path_for(good).write_text(json.dumps(card, indent=2) + "\n", encoding="utf-8")
+    T.write_example_log(tmp, env, card["reward"]["terms"])
+    problems, info2, _c = check(good, "unitree_r1_a5", require_card=True)
+    sc = sidecar_for(good, "unitree_r1_a5", info2, c)
+    good.with_suffix(".json").write_text(json.dumps(sc, indent=2) + "\n", encoding="utf-8")
+    vp = verify_sidecar(good, "unitree_r1_a5", c, info2, require_portable=True)
+    passed = not problems and not vp and sc["portable"]
+    print(f"release card -> portable:   {'PASS' if passed else 'FAIL ' + str((problems or vp)[:1])}")
+    ok &= passed
+
+    # portable is not robot-ready: a release card is refused for the robot, a robot card is accepted
+    vp = verify_sidecar(good, "unitree_r1_a5", c, info2, require_robot_ready=True)
+    print(f"release card, robot asked:  {'correctly refused' if vp else 'MISSED'}")
+    ok &= bool(vp)
+    rcard = T.example_card(env, c, tier="robot")
+    T.card_path_for(good).write_text(json.dumps(rcard, indent=2) + "\n", encoding="utf-8")
+    problems, info3, _c = check(good, "unitree_r1_a5", require_card=True)
+    sc = sidecar_for(good, "unitree_r1_a5", info3, c)
+    good.with_suffix(".json").write_text(json.dumps(sc, indent=2) + "\n", encoding="utf-8")
+    vp = verify_sidecar(good, "unitree_r1_a5", c, info3, require_portable=True, require_robot_ready=True)
+    passed = not problems and not vp and sc["robot_ready"]
+    print(f"robot card -> robot-ready:  {'PASS' if passed else 'FAIL ' + str((problems or vp)[:1])}")
+    ok &= passed
+
+    # a card that breaks the standard fails the guard
+    card["randomisation"]["floor_friction"] = [0.8, 1.0]
+    T.card_path_for(good).write_text(json.dumps(card, indent=2) + "\n", encoding="utf-8")
+    problems, _i, _c = check(good, "unitree_r1_a5")
+    print(f"card breaks standard:       {'correctly flagged' if problems else 'MISSED'}")
+    ok &= bool(problems)
+
     print("SELFTEST", "OK" if ok else "FAILED", f"({tmp})")
     return 0 if ok else 1
 
@@ -303,6 +395,11 @@ def main():
     ap.add_argument("--write", action="store_true", help="write/refresh the sidecar after a passing check")
     ap.add_argument("--verify-sidecar", action="store_true", help="re-verify an existing sidecar")
     ap.add_argument("--allow-baked-norm", action="store_true", help="accept normalisation inside the graph")
+    ap.add_argument("--require-card", action="store_true", help="R39: a missing training card is fatal")
+    ap.add_argument("--require-portable", action="store_true",
+                    help="R41 (with --verify-sidecar): refuse a policy whose sidecar is not portable")
+    ap.add_argument("--require-robot-ready", action="store_true",
+                    help="R43 (with --verify-sidecar): refuse unless the card is tier robot with sim-to-real evidence")
     ap.add_argument("--selftest", action="store_true", help="test the tool itself and exit")
     a = ap.parse_args()
 
@@ -316,7 +413,7 @@ def main():
         print(f"ERROR: {policy} not found", file=sys.stderr)
         return 2
 
-    problems, info, contract = check(policy, a.creature, a.allow_baked_norm)
+    problems, info, contract = check(policy, a.creature, a.allow_baked_norm, a.require_card)
 
     print(f"{policy.name}: {info['input_dims']} -> {info['output_dims']}  opset {info['opset']}  "
           f"{info['n_nodes']} nodes")
@@ -333,7 +430,7 @@ def main():
             return 1
 
     if a.verify_sidecar:
-        vp = verify_sidecar(policy, a.creature, contract, info)
+        vp = verify_sidecar(policy, a.creature, contract, info, a.require_portable, a.require_robot_ready)
         if vp:
             print("\nSIDECAR REFUSED")
             for p in vp:
@@ -348,7 +445,9 @@ def main():
         sc = sidecar_for(policy, a.creature, info, contract)
         out = policy.with_suffix(SIDECAR_SUFFIX)
         out.write_text(json.dumps(sc, indent=2) + "\n", encoding="utf-8")
-        print(f"\nwrote {out.name}  policy_sha256 {sc['policy_sha256'][:16]}...")
+        print(f"\nwrote {out.name}  policy_sha256 {sc['policy_sha256'][:16]}...  portable={sc['portable']}")
+        for why in sc.get("not_portable_reasons") or []:
+            print(f"  not portable: {why}")
 
     if not problems and not a.verify_sidecar and not a.write:
         print("\nCONFORMS")

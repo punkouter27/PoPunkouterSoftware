@@ -1,4 +1,4 @@
-"""Build global/UNITE/creatures from the repos' existing MJCFs.
+"""Build PoPunkouterSoftware/docs/unite/creatures from the repos' existing MJCFs.
 
     python tools/build_creatures.py            # build every creature + INDEX.md
     python tools/build_creatures.py go2 r1     # build a subset
@@ -30,7 +30,7 @@ import numpy as np
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import pocontract_lib as L  # noqa: E402
 
-ROOT = L.UNITE.parents[1]
+ROOT = L.UNITE.parents[2]  # _CODEMATT (UNITE = PoPunkouterSoftware/docs/unite)
 TRAIN = ROOT / "PoRaceUnreal" / "training"
 MJCF = ROOT / "PoRobotTrain" / "UnrealProject" / "MJCF"
 BB = ROOT / "PoBasketball" / "sim" / "assets"
@@ -470,7 +470,7 @@ def write_index(contracts):
         "```xml",
         '<mujoco model="my game">',
         '  <compiler angle="radian" autolimits="true"/>   <!-- required: it wins over the included file -->',
-        '  <include file="../../global/UNITE/creatures/go2/creature.xml"/>',
+        '  <include file="../../PoPunkouterSoftware/docs/unite/creatures/go2/creature.xml"/>',
         "  <worldbody>",
         '    <geom name="floor" type="plane" size="0 0 0.05"/>   <!-- required: creatures assume a "floor" -->',
         "  </worldbody>",

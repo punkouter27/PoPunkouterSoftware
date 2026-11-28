@@ -5,7 +5,7 @@ row is provable with `file:line`, a command and its output, or a run URL.
 
 Two changes from the old Profile C:
 
-1. **It fixes, not just audits.** Profile C now runs the six parts of `global/UNITE/RULES.md` §5 in each
+1. **It fixes, not just audits.** Profile C now runs the six parts of `PoPunkouterSoftware/docs/unite/RULES.md` §5 in each
    repo, in order, and the matrix records before → after.
 2. **It has a scope gate.** Repos this concept is not compatible with are classified N/A up front and
    left alone, instead of generating red rows nobody can clear.
@@ -14,7 +14,7 @@ Two changes from the old Profile C:
 
 **Profile C (RL / MuJoCo) — fix, not just audit**
 
-Authoritative rules: `global/UNITE/RULES.md` (28 rules). This profile is the *apply* pass for that
+Authoritative rules: `PoPunkouterSoftware/docs/unite/RULES.md` (43 rules). This profile is the *apply* pass for that
 file. It does not restate the rules; it runs them and records the result. If this text and RULES.md
 ever disagree, RULES.md wins and this text is the bug.
 
@@ -78,7 +78,7 @@ finding. For **C2** repos: run only step 3's loader check if it is a small chang
   timer ignores frames over 0.25 s.
 
 - **The creature comparison is generated, not written.** The root `_CODEMATT` HTML is built from
-  `global/UNITE/creatures/*/contract.json`: game, creature, joints, actuators, sensors, roles mapped,
+  `PoPunkouterSoftware/docs/unite/creatures/*/contract.json`: game, creature, joints, actuators, sensors, roles mapped,
   `n_obs`/`n_action`, hardware yes/no, and the `interface_sha256` each row came from. A hand-edited row is
   FAIL; a creature with no contract is a contract gap, not a blank cell.
 
@@ -113,7 +113,7 @@ described. N/A needs a reason, not just the label.
 - upgrades a MuJoCo pin to make a test pass (R17);
 - forces two apps onto identical worlds to claim compatibility;
 - claims sim-to-real fidelity without `sim_real_diff`;
-- edits `global/UNITE` from inside a repo — report the gap instead (R27).
+- edits `PoPunkouterSoftware/docs/unite` from inside a repo — report the gap instead (R27).
 
 ---
 

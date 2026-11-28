@@ -32,13 +32,13 @@ load the same body, the same interface and the same slot map without copying the
 
 ## The first agent in the library
 
-`global/UNITE/runs/ppo-r1-edu-stand` is the first conforming brain trained for this creature, and the
+`PoPunkouterSoftware/docs/unite/runs/ppo-r1-edu-stand` is the first conforming brain trained for this creature, and the
 example of what "portable" means end to end.
 
 ```powershell
 $py = 'PoRobotTrain\.venv\Scripts\python.exe'
-& $py global\UNITE\tools\role_agent.py global\UNITE\runs\ppo-r1-edu-stand --hardware
-& $py global\UNITE\tools\role_agent.py global\UNITE\runs\ppo-r1-edu-stand --all-creatures
+& $py PoPunkouterSoftware\docs\unite\tools\role_agent.py PoPunkouterSoftware\docs\unite\runs\ppo-r1-edu-stand --hardware
+& $py PoPunkouterSoftware\docs\unite\tools\role_agent.py PoPunkouterSoftware\docs\unite\runs\ppo-r1-edu-stand --all-creatures
 ```
 
 `--hardware` loads the policy only if its sidecar still matches this contract (R14), runs one control
@@ -128,6 +128,6 @@ evidence that counts. Everything in this folder is a precondition for that test,
 Regenerate everything with:
 
 ```powershell
-& PoRobotTrain\.venv\Scripts\python.exe global\UNITE\tools\build_creatures.py unitree_r1_a5
-& PoRobotTrain\.venv\Scripts\python.exe global\UNITE\tools\check_creatures.py
+& PoRobotTrain\.venv\Scripts\python.exe PoPunkouterSoftware\docs\unite\tools\build_creatures.py unitree_r1_a5
+& PoRobotTrain\.venv\Scripts\python.exe PoPunkouterSoftware\docs\unite\tools\check_creatures.py
 ```

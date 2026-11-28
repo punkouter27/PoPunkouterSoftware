@@ -12,8 +12,8 @@ Legend: **[P]** = python, **[C++]** = Unreal/URLab, **[C#]** = Unity, **[doc]**,
 
 Goal: one file that describes a creature, an interface and a timing, and nothing else.
 
-1. Add `global/UNITE/pocontract.schema.json` (done) as the only schema. No second schema.
-1b. `global/UNITE/creatures/` (done) holds six mounted prefabs; `tools/check_creatures.py`
+1. Add `PoPunkouterSoftware/docs/unite/pocontract.schema.json` (done) as the only schema. No second schema.
+1b. `PoPunkouterSoftware/docs/unite/creatures/` (done) holds six mounted prefabs; `tools/check_creatures.py`
    proves each one loads in isolation and through `<include>` from a foreign directory.
 2. Run the existing generators and capture what each emits today, so nothing is lost:
    - `PoBasketball/sim/streetball/obs.py::write_spec_and_golden` → `obs_spec.json`

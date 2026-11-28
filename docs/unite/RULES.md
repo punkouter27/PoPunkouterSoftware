@@ -35,7 +35,7 @@ interface run in any app. Let the R1's policies reach the physical robot.
 
 ## 2. Definitions
 
-- **Contract** — `global/UNITE/creatures/<id>/contract.json`, schema `global/UNITE/pocontract.schema.json`.
+- **Contract** — `PoPunkouterSoftware/docs/unite/creatures/<id>/contract.json`, schema `PoPunkouterSoftware/docs/unite/pocontract.schema.json`.
 - **Interface** — `contract.observation` + `contract.action` + `contract.roles`.
 - **Role-ordered** — indexed by `contract.roles.canonical_order`, **never** by MuJoCo joint order.
 - **Sidecar** — the JSON beside an `.onnx` that pins the hashes.
@@ -78,18 +78,18 @@ The R1 is compatible and not yet fidelity-verified (§9).
 
 ---
 
-## 4. The rules — R1 to R28
+## 4. The rules — R1 to R43
 
 ### Creature
 
-- **R1.** A creature comes from `global/UNITE/creatures/<id>/contract.json`. Never a hand-written copy.
+- **R1.** A creature comes from `PoPunkouterSoftware/docs/unite/creatures/<id>/contract.json`. Never a hand-written copy.
 - **R2.** A creature is a portable prefab: no `meshdir`, meshes referenced as `meshes/<name>`,
   `angle="radian"`, no floor/lights/ground textures. The host supplies `<geom name="floor">`.
   Verified behaviour, not style: `<include>` discards `meshdir`, and the host's `<compiler>` wins over
   an included file's.
 - **R3.** The mount snippet is exactly `<compiler angle="radian" autolimits="true"/>` +
   `<include file="…/creature.xml"/>` + a `floor` geom.
-- **R4.** New creatures go through `global/UNITE/tools/build_creatures.py` and must pass
+- **R4.** New creatures go through `PoPunkouterSoftware/docs/unite/tools/build_creatures.py` and must pass
   `check_creatures.py` — identical joint tables standalone and through a foreign `<include>`, and no
   joint axis, range or mass changed by the split.
 - **R5.** Never invent a role or reorder `canonical_order`. A new role is a `roles_version` bump and a
@@ -150,14 +150,73 @@ The R1 is compatible and not yet fidelity-verified (§9).
 
 ### Governance
 
-- **R25.** `global/UNITE` is a registry and generator, **not a monorepo**. No app code, builds, or
+- **R25.** `PoPunkouterSoftware/docs/unite` is a registry and generator, **not a monorepo**. No app code, builds, or
   per-game configuration lives there.
-- **R26.** No shared code between repos. Referencing `global/UNITE` does not violate this — it is not a
-  repo — but every reference is pinned by hash in `contracts.lock.json` so drift shows in the diff.
-- **R27.** Never copy `global/UNITE` files into a repo. Never hand-edit a `contract.json`. To change a
+- **R26.** No shared code between repos. An app may **read** UNITE data at the local path
+  `<workspace>/PoPunkouterSoftware/docs/unite`. That access is optional: CI and a fresh clone run from
+  `contracts.lock.json` alone. An app never imports UNITE code into its build. It may shell out to a UNITE
+  tool locally, as the export guard does. Every reference is pinned by hash in `contracts.lock.json`, so
+  drift shows in the diff.
+- **R27.** Never copy `PoPunkouterSoftware/docs/unite` files into a repo. Never hand-edit a `contract.json`. To change a
   contract, change the source and regenerate.
-- **R28.** If a repo needs a creature `global/UNITE` does not have, stop and report it. Do not invent
+- **R28.** If a repo needs a creature `PoPunkouterSoftware/docs/unite` does not have, stop and report it. Do not invent
   one.
+
+### Unreal humanoid (render side) — details in [`docs/UNREAL-HUMANOID.md`](docs/UNREAL-HUMANOID.md)
+
+- **R29.** Use three meshes, in one direction. MuJoCo body transforms are copied onto a sim proxy
+  (`SK_<id>_Proxy`, one bone per body, no IK). Display meshes retarget from the proxy through one IK
+  Retargeter at runtime. Copy world transforms, never per-axis joint angles.
+- **R30.** Display meshes use the UE5 Mannequin hierarchy and bone names: Z-up, facing +X, cm, `root`
+  on the floor, no root motion. IK Retargeter chains are named and mapped per the role table in
+  `UNREAL-HUMANOID.md` §3, identically in every app.
+- **R31.** The retarget pose of the sim IK Rig is the creature at `contract.action.default`. The
+  Mannequin's retarget pose is edited to match it.
+- **R32.** One MuJoCo↔UE conversion function (`×100`, negate Y, quaternion `(w,−x,y,−z)`), covered by a
+  round-trip test. Fixed-step sim, interpolated render, no extrapolation.
+- **R33.** No Chaos on the creature. The Physics Asset is query-only, the Character Movement Component
+  never moves it, and no animation clip is blended into a sim-driven pose. Foot IK is cosmetic, applies
+  to display meshes only, and is capped at 2 cm.
+- **R34.** The proxy matches MuJoCo to ≤ 1 mm and ≤ 0.5° per body over a 5 s rollout. NNE uses the CPU
+  backend, and there are zero per-tick allocations in the policy and observation path.
+
+### Training & environment: real Earth (details in [`docs/TRAINING-ENV.md`](docs/TRAINING-ENV.md), numbers in [`training-envelope.json`](training-envelope.json))
+
+- **R35.** One world envelope for the fleet, and it is **the real Earth** (`training-envelope.json` v2).
+  - Gravity `[0,0,-9.81]`, SI units, and real floors, motors, sensors and latency.
+  - Every training card pins the envelope's version and hash.
+  - Changing the envelope bumps the version; old cards stop being portable until they are re-checked.
+  - Games that need non-Earth physics use app-specific brains. They never bend the envelope.
+- **R36.** The env follows the standard:
+  - observations and actions only through the contract;
+  - episodes 10–30 s, with a timeout treated as truncation;
+  - the fixed fall rule (height < 0.55 × home, or `|g_z|` < 0.3);
+  - the standard reset noise;
+  - commands resampled every 4–10 s.
+- **R37.** Randomisation and observation noise **contain** the real-world ranges: friction 0.3–1.5,
+  payload −1/+3 kg, CoM ±3 cm, PD gains, motor strength 0.8–1.0, joint friction, armature, encoder bias,
+  0–25 ms latency, gyro bias, 0.8 m/s pushes, 3 cm roughness and 8° slopes. Every app's `world.json` sits
+  inside the world limits (`check_training.py world`).
+- **R38.** Locomotion skills carry the ten core reward terms with fixed signs, including `torque_l2` and
+  `joint_limit`. Extra terms are named `task_*`. Every term is logged separately.
+- **R39.** Every `.onnx` has a `<policy>.training.json` card and a `train_log.csv` beside it, written by
+  the trainer. `verify_policy.py --require-card` makes a missing card fatal; new apps always pass it. A
+  card that breaks R35–R38 fails the export guard at any tier.
+- **R40.** Before release, evaluate on all 10 envelope corners (≥ 20 episodes each). Every corner must
+  pass: ≤ 1 fall/min, ≤ 0.25 m/s velocity error, peak torque ≤ 90% of the limit, and zero joint-limit hits.
+- **R41.** `portable` is earned: a valid card, tier `release` or `robot` (≥ 10⁷ steps), every corner
+  passing, and a benchmark. A brain from another app loads only with `--verify-sidecar
+  --require-portable`, and the Unreal NNE loader enforces the same check.
+- **R42.** Release and robot cards record `steps_per_s` from the repo's `benchmark.ps1` kit.
+- **R43.** **Physical robot.** An ONNX reaches a robot only if it meets all of these:
+  - its card is tier `robot`, for a creature with a `hardware` block (R21);
+  - the twin is calibrated (`calibrate_sim.py`: parity RMS ≤ 2°, max ≤ 5°);
+  - `sim_real_diff` shows < 5° per joint at every tick over ≥ 500 ticks;
+  - the owner app's deploy gate passed;
+  - staged bring-up has passed in order, with `gantry` and `low_gain` done.
+
+  `verify_policy.py --require-robot-ready` refuses anything less. Deployment always goes through the
+  owner app's deploy path, never by copying the file.
 
 ---
 
@@ -166,7 +225,7 @@ The R1 is compatible and not yet fidelity-verified (§9).
 ### Part 1 — Adopt the contract (no behaviour change)
 
 1. List every creature this repo renders or trains.
-2. Resolve each to `global/UNITE/creatures/<id>/contract.json`. If one does not exist, stop that
+2. Resolve each to `PoPunkouterSoftware/docs/unite/creatures/<id>/contract.json`. If one does not exist, stop that
    creature and report it.
 3. Add `contracts.lock.json` at the repo root: per creature `{id, path, interface_sha256,
    morphology_sha256, physics_sha256}`.
@@ -226,7 +285,7 @@ Do not migrate old checkpoints. Make non-conforming training impossible.
 A table: rule → before → after → evidence. Then:
 - **Grandfathered:** policies left alone, with their interface hashes or `null`.
 - **Not done:** anything you could not do, and why.
-- **Contract gaps:** creatures this repo needs that `global/UNITE` does not have.
+- **Contract gaps:** creatures this repo needs that `PoPunkouterSoftware/docs/unite` does not have.
 
 ### If this repo trains with Unity ML-Agents
 
@@ -253,6 +312,10 @@ Status is PASS / FAIL / N/A / NOT VERIFIED. Flaky is FAIL.
 | Runtime refuses | the corrupt-sidecar test passes |
 | Parity | parity output with max deviation and the tolerance |
 | An app can consume 131 | `check_cross_app.py` → `PoRobotTrain`, `PoBasketball`, `PoRaceUnreal` `131 builder (9/9)` |
+| Training card valid | `check_training.py card <policy>.training.json` → `CARD OK` (R39) |
+| Policy portable | sidecar `portable: true`; `verify_policy.py … --verify-sidecar --require-portable` → OK (R41) |
+| App world inside envelope | `check_training.py world world.json` → `WORLD INSIDE ENVELOPE` (R37) |
+| Robot-ready | card tier `robot` → `ROBOT-READY`; `verify_policy.py … --require-robot-ready` → OK; PoRobotTrain deploy gate passed (R43) |
 
 Applicability: MuJoCo-trained work is in scope. Unity ML-Agents repos are **N/A** on the interface,
 parity and portability rows until re-exported — record N/A, not FAIL.
@@ -263,7 +326,7 @@ parity and portability rows until re-exported — record N/A, not FAIL.
 
 - Invent a role, or extend/reorder `canonical_order`.
 - Hand-edit a `contract.json`.
-- Copy `global/UNITE` files into a repo.
+- Copy `PoPunkouterSoftware/docs/unite` files into a repo.
 - Bake normalisation into a graph.
 - "Fix" compatibility by reordering observations at load time.
 - Upgrade a MuJoCo pin to make a test pass.
@@ -309,6 +372,16 @@ render or physics behaviour changed.
    per body, each needing a `role_map.json` and a golden), which is an owner decision.
    `PoRaceUnreal`'s stroller is the same kind of gap: 4 joints, no contract, named in its test.
 
+8. **No portable brain exists yet.** The training standard (R35–R43) is new on 2026-11-28. Every policy in
+   the fleet, including `runs/ppo-*`, is at most *conforming*. `tools/role_ppo.py` and `tools/role_env.py`
+   are interface references only: they do not randomise friction, mass, gains, latency or terrain, and do
+   not write a card, so their exports carry `portable: false`. The first portable brain needs a GPU trainer
+   that implements R36–R40.
+
+9. **The R1 twin's world is outside the envelope.** It uses `condim 6`, and R37 allows only 3 (see gap 2).
+   Until that changes, the PoRobotTrain twin can run portable brains, but its `world.json` fails
+   `check_training.py world`.
+
 The only sim-to-real evidence that counts: `sim_real_diff` at **<5° max per-joint at every 20 ms tick**.
 
 ---
@@ -331,7 +404,7 @@ Creature compatibility is done and verified; brain compatibility applies to new 
 
 ## 11. Where things live
 
-All under `global/UNITE/` unless marked otherwise:
+All under `PoPunkouterSoftware/docs/unite/` unless marked otherwise:
 
 | Path | What it is |
 |---|---|
@@ -341,6 +414,7 @@ All under `global/UNITE/` unless marked otherwise:
 | [`docs/GOVERNANCE.md`](docs/GOVERNANCE.md) | versioning, vendoring, adding a creature, drift detection |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | phases, exit criteria, risks |
 | [`docs/AGENTS-SECTION.md`](docs/AGENTS-SECTION.md) | the section to paste into any repo's `AGENTS.md` (and the `CLAUDE.md` pointer) |
+| [`docs/UNREAL-HUMANOID.md`](docs/UNREAL-HUMANOID.md) | the Unreal render standard (R29–R34): proxy, retargeter, Mannequin, no Chaos |
 | [`pocontract.schema.json`](pocontract.schema.json) | the contract schema |
 | [`creatures/INDEX.md`](creatures/INDEX.md) | the creature library and mount snippet |
 | [`creatures/unitree_r1_a5/README.md`](creatures/unitree_r1_a5/README.md) | the hardware creature and its fidelity gaps |
@@ -348,6 +422,8 @@ All under `global/UNITE/` unless marked otherwise:
 | [`tools/role_obs.py`](tools/role_obs.py) | **the reference 131-float builder** (R6/R8) and the per-creature goldens every other runtime must reproduce |
 | [`tools/role_env.py`](tools/role_env.py) | one virtual env for every creature: 28 actions in, 131 observations out, masked roles PD-held |
 | [`tools/role_agent.py`](tools/role_agent.py) | **the runtime**: sidecar refusal, any creature in MuJoCo, and the R1's 31-slot `unitree_hg` command vector (`--hardware`) |
+| [`tools/check_training.py`](tools/check_training.py) | **the training standard** (R35–R43): validates a training card and an app `world.json` against [`training-envelope.json`](training-envelope.json); `example` prints a card template |
+| [`docs/TRAINING-ENV.md`](docs/TRAINING-ENV.md) | the real-Earth training standard: envelope, env, reward, logs, eval, tiers, robot tier |
 | [`prompts/PROMPT-ProfileC.md`](prompts/PROMPT-ProfileC.md) | the *fleet-wide* CODECONSISTANT Profile C: scope gate (C0/C1/C2/N/A) + the fix pass (different job) |
 | [`../station/README.md`](../station/README.md) | the 10 cross-repo tools; `vault.html` lists every `.onnx` by socket |
 | [`../README.md`](../README.md) | the map of the whole `global/` area |
@@ -361,24 +437,31 @@ From the `_CODEMATT` root:
 ```powershell
 $py = 'PoRobotTrain\.venv\Scripts\python.exe'
 
-& $py global\UNITE\tools\build_creatures.py            # rebuild creatures + contracts + INDEX
-& $py global\UNITE\tools\build_creatures.py --check    # fail if anything on disk is stale
-& $py global\UNITE\tools\check_creatures.py            # portability + split fidelity + Earth asserts
-& $py global\UNITE\tools\verify_policy.py --selftest   # test the export guard itself
-& $py global\UNITE\tools\role_obs.py --selftest        # test the universal 131-float builder
-& $py global\UNITE\tools\role_obs.py --verify          # every creature reproduces its golden
-& $py global\UNITE\tools\role_env.py --smoke           # step every creature through one 28/131 interface
-& $py global\UNITE\tools\role_ppo.py --smoke           # 2 tiny iterations, then export + guard (~5 s)
-& $py global\UNITE\tools\role_agent.py --selftest      # test the runtime: bus map, sim/bus agreement, refusal
-& $py global\UNITE\tools\role_agent.py global\UNITE\runs\ppo-r1-edu-stand --hardware   # twin + motor bus
-& $py global\UNITE\tools\role_agent.py global\UNITE\runs\ppo-r1-edu-stand --all-creatures
-& $py global\UNITE\tools\check_cross_app.py            # is a new agent actually usable in every app?
-cd global\UNITE; uv run --no-project --with jsonschema python tools\validate.py
+& $py PoPunkouterSoftware\docs\unite\tools\build_creatures.py            # rebuild creatures + contracts + INDEX
+& $py PoPunkouterSoftware\docs\unite\tools\build_creatures.py --check    # fail if anything on disk is stale
+& $py PoPunkouterSoftware\docs\unite\tools\check_creatures.py            # portability + split fidelity + Earth asserts
+& $py PoPunkouterSoftware\docs\unite\tools\verify_policy.py --selftest   # test the export guard itself
+& $py PoPunkouterSoftware\docs\unite\tools\role_obs.py --selftest        # test the universal 131-float builder
+& $py PoPunkouterSoftware\docs\unite\tools\role_obs.py --verify          # every creature reproduces its golden
+& $py PoPunkouterSoftware\docs\unite\tools\role_env.py --smoke           # step every creature through one 28/131 interface
+& $py PoPunkouterSoftware\docs\unite\tools\role_ppo.py --smoke           # 2 tiny iterations, then export + guard (~5 s)
+& $py PoPunkouterSoftware\docs\unite\tools\role_agent.py --selftest      # test the runtime: bus map, sim/bus agreement, refusal
+& $py PoPunkouterSoftware\docs\unite\tools\role_agent.py PoPunkouterSoftware\docs\unite\runs\ppo-r1-edu-stand --hardware   # twin + motor bus
+& $py PoPunkouterSoftware\docs\unite\tools\role_agent.py PoPunkouterSoftware\docs\unite\runs\ppo-r1-edu-stand --all-creatures
+& $py PoPunkouterSoftware\docs\unite\tools\check_cross_app.py            # is a new agent actually usable in every app?
+cd PoPunkouterSoftware\docs\unite; uv run --no-project --with jsonschema python tools\validate.py
 
 # the export guard for one policy (R10 + R11). Put this in the repo's export entrypoint.
-& $py global\UNITE\tools\verify_policy.py <policy.onnx> --creature <id> --check     # exit 1 = abort
-& $py global\UNITE\tools\verify_policy.py <policy.onnx> --creature <id> --write     # write sidecar
-& $py global\UNITE\tools\verify_policy.py <policy.onnx> --creature <id> --verify-sidecar   # runtime check
+& $py PoPunkouterSoftware\docs\unite\tools\verify_policy.py <policy.onnx> --creature <id> --check     # exit 1 = abort
+& $py PoPunkouterSoftware\docs\unite\tools\verify_policy.py <policy.onnx> --creature <id> --write     # write sidecar
+& $py PoPunkouterSoftware\docs\unite\tools\verify_policy.py <policy.onnx> --creature <id> --verify-sidecar   # runtime check
+& $py PoPunkouterSoftware\docs\unite\tools\verify_policy.py <policy.onnx> --creature <id> --check --write --require-card   # new apps
+& $py PoPunkouterSoftware\docs\unite\tools\verify_policy.py <policy.onnx> --creature <id> --verify-sidecar --require-portable  # load from another app
+& $py PoPunkouterSoftware\docs\unite\tools\verify_policy.py <policy.onnx> --creature unitree_r1_a5 --verify-sidecar --require-robot-ready  # before the robot (R43)
+& $py PoPunkouterSoftware\docs\unite\tools\check_training.py card <policy>.training.json    # R39
+& $py PoPunkouterSoftware\docs\unite\tools\check_training.py world world.json              # R37
+& $py PoPunkouterSoftware\docs\unite\tools\check_training.py example --creature <id>       # card template
+& $py PoPunkouterSoftware\docs\unite\tools\check_training.py --selftest
 ```
 
 This file is the per-repo prompt. For the whole-fleet audit, use `prompts/PROMPT-ProfileC.md`.

@@ -148,7 +148,7 @@ Mounting one in any scene:
 ```xml
 <mujoco model="my game">
   <compiler angle="radian" autolimits="true"/>          <!-- required -->
-  <include file="../../global/UNITE/creatures/go2/creature.xml"/>
+  <include file="../../PoPunkouterSoftware/docs/unite/creatures/go2/creature.xml"/>
   <worldbody>
     <geom name="floor" type="plane" size="0 0 0.05"/>    <!-- required -->
   </worldbody>
@@ -190,10 +190,10 @@ chain is the point of the example, not locomotion quality.
 ```powershell
 $py = 'PoRobotTrain\.venv\Scripts\python.exe'
 
-& $py global\UNITE\tools\role_ppo.py --creature unitree_r1_a5 --command-range 0,0,0 --log-std -1.0 `
-      --iters 900 --steps 64 --envs 16 --lr 1e-4 --entropy 0.002 --out global\UNITE\runs\ppo-r1-edu-stand
-& $py global\UNITE\tools\role_agent.py global\UNITE\runs\ppo-r1-edu-stand --hardware
-& $py global\UNITE\tools\role_agent.py global\UNITE\runs\ppo-r1-edu-stand --all-creatures
+& $py PoPunkouterSoftware\docs\unite\tools\role_ppo.py --creature unitree_r1_a5 --command-range 0,0,0 --log-std -1.0 `
+      --iters 900 --steps 64 --envs 16 --lr 1e-4 --entropy 0.002 --out PoPunkouterSoftware\docs\unite\runs\ppo-r1-edu-stand
+& $py PoPunkouterSoftware\docs\unite\tools\role_agent.py PoPunkouterSoftware\docs\unite\runs\ppo-r1-edu-stand --hardware
+& $py PoPunkouterSoftware\docs\unite\tools\role_agent.py PoPunkouterSoftware\docs\unite\runs\ppo-r1-edu-stand --all-creatures
 ```
 
 **What it is not.** This is 920k PPO steps on CPU, and it does not learn to stand: it holds the nominal stance for
@@ -244,9 +244,12 @@ ML-Agents, URLab or a MuJoCo version today.
 | [`docs/GOVERNANCE.md`](./docs/GOVERNANCE.md) | versioning, vendoring, review checklist, how to add a creature |
 | [`docs/ROADMAP.md`](./docs/ROADMAP.md) | the phases, in order, with exit criteria and real file targets |
 | [`docs/AGENTS-SECTION.md`](./docs/AGENTS-SECTION.md) | the cross-app section to paste into a repo's `AGENTS.md` |
+| [`docs/UNREAL-HUMANOID.md`](./docs/UNREAL-HUMANOID.md) | **the Unreal render standard** (R29–R34): sim proxy → IK Retargeter → Mannequin, role→chain map, no Chaos, verification |
+| [`docs/TRAINING-ENV.md`](./docs/TRAINING-ENV.md) + [`training-envelope.json`](./training-envelope.json) | **the real-Earth training standard** (R35–R43): Earth envelope, env, reward, logs, eval, tiers, robot tier; checked by `tools/check_training.py` |
 | **prompts/** | one prompt per job, never mixed |
 | [`prompts/PROMPT-ProfileC.md`](./prompts/PROMPT-ProfileC.md) | the **fleet-wide** Profile C replacement: scope gate (C0/C1/C2/N/A) + the fix pass for CODECONSISTANT |
 | [`prompts/CODECONSISTANT-v5.md`](./prompts/CODECONSISTANT-v5.md) | the **whole** audit prompt, v4 with Profile C already swapped in — paste this one |
+| [`prompts/PROMPT-UnrealApp.md`](./prompts/PROMPT-UnrealApp.md) | **the first prompt for a new Unreal RL app** (`UR_START`): one round of requirements → PRD → one approval → a working first attempt (UE + URLab + NNE, real-Earth training pipeline, smoke brain, tests, CI) → roadmap |
 | *(the per-repo prompt is [`RULES.md`](RULES.md) above — rules in §4, work plan in §5)* | |
 | **tools/** | generators and verifiers |
 | [`tools/pocontract_lib.py`](./tools/pocontract_lib.py) | canonical roles, auto-mapper, contract builder (shared) |
@@ -263,16 +266,16 @@ ML-Agents, URLab or a MuJoCo version today.
 
 ```powershell
 # build every creature prefab (and creatures/INDEX.md)
-& PoRobotTrain\.venv\Scripts\python.exe global\UNITE\tools\build_creatures.py
+& PoRobotTrain\.venv\Scripts\python.exe PoPunkouterSoftware\docs\unite\tools\build_creatures.py
 
 # fail if a prefab on disk is stale
-& PoRobotTrain\.venv\Scripts\python.exe global\UNITE\tools\build_creatures.py --check
+& PoRobotTrain\.venv\Scripts\python.exe PoPunkouterSoftware\docs\unite\tools\build_creatures.py --check
 
 # prove every creature loads in isolation AND when included from another directory
-& PoRobotTrain\.venv\Scripts\python.exe global\UNITE\tools\check_creatures.py
+& PoRobotTrain\.venv\Scripts\python.exe PoPunkouterSoftware\docs\unite\tools\check_creatures.py
 
 # validate every contract against the schema
-cd global\UNITE; uv run --no-project --with jsonschema python tools\validate.py
+cd PoPunkouterSoftware\docs\unite; uv run --no-project --with jsonschema python tools\validate.py
 ```
 
 ---

@@ -1,0 +1,142 @@
+{
+  "_comment": "UNITE training standard v2 - REAL EARTH (RULES.md R35-R43, docs/TRAINING-ENV.md). The envelope is set by the physical world a policy may meet (indoor/outdoor floors, real motors, real sensors, real latency), not by any game. Every portable policy trains across all of it; every app world stays inside it; a robot policy additionally proves itself against the calibrated twin and the real robot (tier 'robot'). Machine-checked by tools/check_training.py. Change only with an envelope_version bump.",
+  "envelope_version": 2,
+
+  "earth": {
+    "_comment": "Fixed physical constants. Local g varies 9.78-9.83 m/s^2 (<0.3%), far inside the mass randomisation, so it is pinned.",
+    "gravity": [0.0, 0.0, -9.81],
+    "units": "SI (m, kg, s, rad)",
+    "air_drag": "neglected (< 1% of body forces below 2 m/s)"
+  },
+
+  "randomisation_min": {
+    "_comment": "A card's declared range must CONTAIN each range. Sources: rubber feet on wet tile (~0.3) to dry concrete/carpet (~1.5); battery and accessory payloads; motor torque sag with bus voltage; gearbox friction spread; measured DDS + Jetson latency (10 ms) plus jitter; real IMU gyro bias; door thresholds, cables and ramps.",
+    "floor_friction":          [0.3, 1.5],
+    "body_mass_scale":         [0.9, 1.1],
+    "base_payload_kg":         [-1.0, 3.0],
+    "com_offset_m":            [-0.03, 0.03],
+    "kp_scale":                [0.85, 1.15],
+    "kd_scale":                [0.7, 1.3],
+    "motor_strength_scale":    [0.8, 1.0],
+    "joint_friction_scale":    [0.5, 2.0],
+    "armature_scale":          [0.8, 1.2],
+    "joint_offset_rad":        [-0.03, 0.03],
+    "action_latency_ms":       [0.0, 25.0],
+    "imu_gyro_bias_rad_s":     [-0.02, 0.02],
+    "push_max_mps":            [0.0, 0.8],
+    "push_interval_s":         [4.0, 10.0],
+    "terrain_rough_max_m":     [0.0, 0.03],
+    "terrain_slope_max_deg":   [0.0, 8.0]
+  },
+  "obs_noise_min_std": {
+    "_comment": "At least the real sensor noise, with margin (R1 encoder 0.0012 rad, IMU 0.003 rad measured in sim_calibration.yaml).",
+    "joint_pos_rel":     0.01,
+    "joint_vel":         0.15,
+    "base_ang_vel":      0.2,
+    "projected_gravity": 0.05
+  },
+
+  "world_limits": {
+    "_comment": "Every app world (game or twin) must be a piece of real Earth inside the trained envelope, with margin.",
+    "floor_friction":        [0.4, 1.2],
+    "terrain_rough_max_m":   0.03,
+    "terrain_slope_max_deg": 8.0,
+    "action_latency_ms":     20.0,
+    "condim":                [3],
+    "gravity":               [0.0, 0.0, -9.81]
+  },
+
+  "env": {
+    "episode_s":         [10.0, 30.0],
+    "termination": {
+      "fall_height_frac":      0.55,
+      "fall_upright_min":      0.3,
+      "timeout_is_truncation": true
+    },
+    "reset": {
+      "yaw_rad":            [-3.141593, 3.141593],
+      "roll_pitch_max_rad": 0.1,
+      "joint_std_rad_max":  0.05,
+      "base_pos_std_m_max": 0.02
+    },
+    "command_resample_s": [4.0, 10.0]
+  },
+
+  "reward": {
+    "_comment": "Core terms every locomotion-tier skill must have and log separately. Weights free, signs fixed. App-specific terms are task_*. torque and joint-limit terms are core because real motors overheat and real joints hit stops.",
+    "core_terms": {
+      "alive":            "+",
+      "track_lin_vel_xy": "+",
+      "track_ang_vel_z":  "+",
+      "upright":          "+",
+      "ang_vel_xy":       "-",
+      "action_l2":        "-",
+      "action_rate":      "-",
+      "torque_l2":        "-",
+      "joint_limit":      "-",
+      "fall":             "-"
+    },
+    "reference_weights": {
+      "alive": 0.6, "track_lin_vel_xy": 1.6, "track_ang_vel_z": 0.4, "upright": 0.5,
+      "ang_vel_xy": -0.05, "action_l2": -0.02, "action_rate": -0.01,
+      "torque_l2": -1e-5, "joint_limit": -1.0, "fall": -1.0
+    },
+    "extra_prefix": "task_"
+  },
+
+  "trainer": {
+    "algorithms": ["ppo", "amp", "sac"],
+    "tiers": {
+      "smoke":   {"min_env_steps": 0,        "portable": false, "robot": false},
+      "dev":     {"min_env_steps": 1000000,  "portable": false, "robot": false},
+      "release": {"min_env_steps": 10000000, "portable": true,  "robot": false},
+      "robot":   {"min_env_steps": 10000000, "portable": true,  "robot": true}
+    },
+    "required": ["algorithm", "seed", "env_steps", "num_envs", "hyperparameters", "network", "hardware", "wall_s", "mujoco"],
+    "network": {"kind": "mlp", "export": "deterministic_mean"}
+  },
+
+  "logs": {
+    "file": "train_log.csv",
+    "required_columns": ["iter", "env_steps", "wall_s", "mean_return", "mean_ep_len_s", "fall_rate"],
+    "per_term_prefix": "r_"
+  },
+
+  "eval": {
+    "_comment": "Every portable policy is evaluated at each corner of the envelope, on its own creature. All must pass.",
+    "episodes_min": 20,
+    "corners": {
+      "nominal":      {},
+      "friction_lo":  {"floor_friction": 0.3},
+      "friction_hi":  {"floor_friction": 1.5},
+      "payload_hi":   {"base_payload_kg": 3.0},
+      "motor_weak":   {"motor_strength_scale": 0.8},
+      "latency_max":  {"action_latency_ms": 25.0},
+      "push":         {"push_max_mps": 0.8},
+      "slope":        {"terrain_slope_max_deg": 8.0},
+      "rough":        {"terrain_rough_max_m": 0.03},
+      "sensor_noise": {"obs_noise": "min_std", "imu_gyro_bias_rad_s": 0.02}
+    },
+    "pass": {
+      "falls_per_min_max":       1.0,
+      "lin_vel_err_mps_max":     0.25,
+      "peak_torque_frac_max":    0.9,
+      "joint_limit_hits_per_min_max": 0.0
+    }
+  },
+
+  "robot": {
+    "_comment": "Tier 'robot': the extra evidence before an ONNX may go to a physical robot. Only a creature whose contract has a hardware block (R21). Deployment itself always goes through the owner app's deploy gate, never by copying the file.",
+    "calibration": {"parity_rms_deg_max": 2.0, "parity_max_deg_max": 5.0},
+    "sim_real_diff": {"max_deg_max": 5.0, "min_ticks": 500},
+    "deploy_gate": {"passed": true},
+    "bringup_required": ["gantry", "low_gain"],
+    "bringup_order": ["gantry", "low_gain", "supported_floor", "free"]
+  },
+
+  "benchmark": {
+    "tool": "benchmark.ps1",
+    "required_for": ["release", "robot"],
+    "field": "steps_per_s"
+  }
+}

@@ -65,8 +65,9 @@ needs both sets, and they are separate fields in the contract for that reason.
 build and verify them.
 
 **Is not:** a monorepo. No app code, no builds, no per-game configuration, no assets that belong to a
-game. Referencing `global/UNITE` from a repo is not "shared code between repos" — it is not a repo —
-but every reference is pinned by hash so drift is visible.
+game. It lives inside PoPunkouterSoftware's docs. Apps may *read* its data at a local path, optionally:
+CI runs from `contracts.lock.json` alone. Apps never build against its code (R26), and every reference is
+pinned by hash so drift is visible.
 
 Three subfolders only:
 
