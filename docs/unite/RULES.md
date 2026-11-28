@@ -348,16 +348,22 @@ render or physics behaviour changed.
 
 ## 9. Known gaps — state them, do not paper over them
 
-1. **R1 mass.** Twin is **30.150 kg**; training model and real A5 are **28.93 kg** — +1.2 kg above the
-   pelvis. Fix by rebuilding from the mjlab model or setting `mass.torso_extra_mass_kg: -1.22`, then
-   re-gate.
+1. **R1 mass is unmeasured.** The twin is **30.150 kg**; mjlab's training model `r1.xml` is **28.932 kg**.
+   The whole 1.218 kg is the twin's two head links (`head_pitch_link` 0.504 + `head_yaw_link` 0.714, from
+   Unitree's `R1.urdf`), which mjlab's model omits; every other body mass is identical. The real A5 has
+   head motors (bus slots 29/30), so 28.93 kg is the mjlab figure, **not** the robot's. Nobody has weighed
+   the robot. Close it by weighing it: if it is not 30.15 kg, correct the creature's source and regenerate
+   through `build_creatures.py` (new `morphology_sha256`, re-gate). Never drop the head to match mjlab: it
+   would remove the mapped `head_*` roles. The physical robot and this creature must match.
 2. **Contacts.** Twin `condim 6` / foot friction 1.0 / floor 0.9 vs training `condim 3` / 0.6
    randomised 0.3–1.6. The real floor is unmeasured.
 3. **Never calibrated.** `sim_calibration.yaml` has `last_calibrated_at: null`,
    `parity_rms_deg: null`. Every gain is an estimate.
 4. **No randomisation in the twin**, while training randomises encoder bias, CoM and pushes. The twin
    is the easier test.
-5. **Training model not vendored.** mjlab's `r1.xml` (28.93 kg) exists only inside the level-2 image.
+5. **mjlab training model.** mjlab's `r1.xml` (28.932 kg, no head links) is vendored at
+   `PoRobotTrain/external/unitree_rl_mjlab/src/assets/robots/unitree_r1/xmls/r1.xml`. It is a different body
+   from this contract (no head), so its policies are a `legacy_interfaces` bridge, not this creature.
 
 6. **Three contracts carry no `kd`.** `matthew`, `grandma` and `g1` have `"kd": null` on every joint, because
    their MJCF actuators are `biasprm="0 -kp"` — the source models have no velocity damping. A runtime must read

@@ -125,7 +125,7 @@ questions in **one** message, each with a recommended default, so the user can a
 5. **World.** Floors, terrain, slopes. It must be inside the Earth `world_limits`. Name anything outside
    them (ice, stairs, sand); brains for that part are app-specific.
 6. **Physical robot.** Will any brain go to the real R1, now or later? If yes, list the open gaps from
-   `creatures/unitree_r1_a5/README.md`: the +1.22 kg twin mass error, the uncalibrated
+   `creatures/unitree_r1_a5/README.md`: the unweighed robot mass (twin 30.15 kg with head vs mjlab 28.93 kg without), the uncalibrated
    `sim_calibration.yaml`, and the `condim 6` twin contacts. Say who closes each one.
 7. **Targets.** The frame budget and the target hardware for play and for training.
 

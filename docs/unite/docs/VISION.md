@@ -53,7 +53,7 @@ Two separate requirements, tracked separately:
 1. **Compatibility** — same interface, same role order, same motor-slot map, same 50 Hz. This makes
    a brain *loadable* on the robot. Largely done.
 2. **Fidelity** — the simulated robot behaves like the real one. This makes a brain *correct* on the
-   robot. Not done: mass is 30.15 kg vs 28.93 kg, contacts differ, and `sim_calibration.yaml` has
+   robot. Not done: the robot's mass is unweighed (twin 30.15 kg with head, mjlab 28.93 kg without), contacts differ, and `sim_calibration.yaml` has
    never been filled in.
 
 Masses and inertias belong to **links**; limits, torque and gains belong to **joints**. Sim-to-real

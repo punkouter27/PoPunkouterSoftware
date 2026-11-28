@@ -38,7 +38,7 @@ A card's range must **contain** each range below. Wider is fine.
 |---|---|---|
 | floor friction | 0.3 – 1.5 | rubber feet on wet tile, up to dry concrete or carpet |
 | body mass scale | 0.9 – 1.1 | manufacturing spread, cables, wear |
-| base payload | −1 – +3 kg | battery and Jetson, accessories; covers the R1 twin's +1.22 kg error |
+| base payload | −1 – +3 kg | battery and Jetson, accessories; covers the unmeasured R1 mass (twin 30.15 kg vs mjlab 28.93 kg, the head links) |
 | CoM offset | ±3 cm | payload placement |
 | PD `kp` / `kd` scale | 0.85 – 1.15 / 0.7 – 1.3 | firmware gains vs the sim model |
 | motor strength | 0.8 – 1.0 | torque sag as the battery voltage drops |

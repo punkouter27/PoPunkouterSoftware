@@ -8,7 +8,7 @@
     "tool": "pocontract",
     "tool_version": "0.2.0",
     "source": "PoRaceUnreal/training/grandma/assets/grandma_porace.xml",
-    "written_at": "2026-11-27T00:27:28Z"
+    "written_at": "2026-11-28T16:41:16Z"
   },
   "physics": {
     "mujoco": "4.0.0",

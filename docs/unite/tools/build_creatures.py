@@ -56,8 +56,8 @@ REGISTRY = {
               "Any brain exported here must pass pocontract verify + the PoRobotTrain gate before it is copied on. "
               "Earth and timing verified: gravity [0,0,-9.81], SI metres/radians, 5 ms implicitfast, 50 Hz policy. "
               "KNOWN GAPS vs the physical A5 (from PoRobotTrain/docs/level2_walk.md and "
-              "configs/sim_calibration.yaml, tracked in this folder's README): twin mass 30.15 kg vs real "
-              "28.93 kg (1.2 kg extra above the pelvis); contacts condim 6 / friction 1.0 vs training condim 3 / "
+              "configs/sim_calibration.yaml, tracked in this folder's README): robot mass unweighed (twin 30.15 kg "
+              "includes Unitree's 1.22 kg head links; mjlab's headless r1.xml is 28.93 kg); contacts condim 6 / friction 1.0 vs training condim 3 / "
               "0.6 randomised 0.3-1.6; sim_calibration last_calibrated_at is null and parity_rms_deg is null, "
               "so the actuator chain has never been identified against the robot; the twin applies no domain "
               "randomisation. Do not treat this contract alone as proof of sim-to-real fidelity.",

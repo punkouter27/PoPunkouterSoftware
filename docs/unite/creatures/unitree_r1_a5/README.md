@@ -98,12 +98,16 @@ Measured from the emitted contract and `PoRobotTrain`'s own config on 2026-11-26
 
 ### What is NOT yet proven, and must be before a brain reaches the robot
 
-1. **Mass.** The twin is **30.15 kg**; the training model and the real A5 are **28.93 kg**
-   (`docs/level2_walk.md`, "Known sim-to-sim differences"). That is +1.2 kg, all of it **above the
-   pelvis** — the worst place, because it raises the centre of mass and the yaw inertia that a
-   balance policy has to control. Fix by one of: rebuild this creature from the mjlab `r1.xml`
-   (28.93 kg, no head links; it is not vendored in the repo today), or set
-   `sim_calibration.yaml: mass.torso_extra_mass_kg: -1.22` and re-gate. **Do not ignore it silently.**
+1. **Mass is unmeasured.** The twin is **30.15 kg**; mjlab's training model `r1.xml` is **28.932 kg**
+   (`docs/level2_walk.md`, "Known sim-to-sim differences"). The whole 1.218 kg is the twin's two head
+   links, `head_pitch_link` 0.504 kg + `head_yaw_link` 0.714 kg from Unitree's `R1.urdf`; pelvis, waist,
+   torso and every limb are identical. mjlab's model has no head, while the real A5 does (head motors on
+   bus slots 29/30, `r1_joint_map.yaml`), so **28.93 kg is the mjlab figure, not the robot's**. Nobody has
+   weighed the robot. Close it by weighing it (±0.1 kg): if it is not 30.15 kg, correct this creature's
+   source and regenerate (`build_creatures.py`, new `morphology_sha256`, re-gate every policy). Do not drop
+   the head or apply `torso_extra_mass_kg: -1.22` on the mjlab assumption: the twin must match the robot
+   you own, measured. mjlab's `r1.xml` is vendored at
+   `PoRobotTrain/external/unitree_rl_mjlab/src/assets/robots/unitree_r1/xmls/r1.xml`.
 2. **Contacts.** Twin uses `condim 6`, foot `friction 1.0`, floor `0.9`; training uses `condim 3`,
    `friction 0.6` randomised 0.3–1.6. Your real floor has never been measured. A ball or a foot
    on a polished floor is not the same contact as on rubber.
