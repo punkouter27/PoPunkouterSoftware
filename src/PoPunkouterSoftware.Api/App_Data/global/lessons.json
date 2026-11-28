@@ -1,5 +1,5 @@
 {
-"count": 717,
+"count": 710,
 "lessons": [
 {
 "repo": "PoBasketball",
@@ -666,157 +666,6 @@
 "onnx",
 "testing"
 ]
-},
-{
-"repo": "PoBasketball",
-"file": "PoBasketball/docs/phase_reports/PhaseC_setup.md",
-"line": 29,
-"heading": "Phase C \u2014 Training Setup: C1\u2013C8 implemented \u203a Decisions / deviations",
-"kind": "trap",
-"text": "**Warp data budgets**: `njmax` is *per world* in `mujoco_warp.put_data` (it allocates a dense njmax\u00b2 block per world); passing a global number allocated 22 GB. Now njmax = 160 per world, naconmax = 24 \u00d7 N. Observed maxima under random actions: 55 constraint rows, 27 k contacts for 4096 worlds.",
-"id": "712aa246d24774",
-"repos": [
-"PoBasketball"
-],
-"sources": [
-{
-"repo": "PoBasketball",
-"file": "PoBasketball/docs/phase_reports/PhaseC_setup.md",
-"line": 29
-}
-],
-"tags": [
-"mujoco"
-]
-},
-{
-"repo": "PoBasketball",
-"file": "PoBasketball/docs/phase_reports/PhaseC_setup.md",
-"line": 30,
-"heading": "Phase C \u2014 Training Setup: C1\u2013C8 implemented \u203a Decisions / deviations",
-"kind": "trap",
-"text": "**Warp world-to-world nondeterminism** (5e-4 rad over 5 s): accepted, gate at 1e-3 (A8).",
-"id": "6c1d37f87727f9",
-"repos": [
-"PoBasketball"
-],
-"sources": [
-{
-"repo": "PoBasketball",
-"file": "PoBasketball/docs/phase_reports/PhaseC_setup.md",
-"line": 30
-}
-],
-"tags": [
-"mujoco",
-"training"
-]
-},
-{
-"repo": "PoBasketball",
-"file": "PoBasketball/docs/phase_reports/PhaseC_setup.md",
-"line": 31,
-"heading": "Phase C \u2014 Training Setup: C1\u2013C8 implemented \u203a Decisions / deviations",
-"kind": "trap",
-"text": "**Policy output**: `tanh` mean with Gaussian exploration, samples clipped to [-1, 1] by the env (blueprint said tanh output; exploration noise is added after the tanh).",
-"id": "e22d05c21c3e2a",
-"repos": [
-"PoBasketball"
-],
-"sources": [
-{
-"repo": "PoBasketball",
-"file": "PoBasketball/docs/phase_reports/PhaseC_setup.md",
-"line": 31
-}
-],
-"tags": [
-"unreal"
-]
-},
-{
-"repo": "PoBasketball",
-"file": "PoBasketball/docs/phase_reports/PhaseC_setup.md",
-"line": 32,
-"heading": "Phase C \u2014 Training Setup: C1\u2013C8 implemented \u203a Decisions / deviations",
-"kind": "trap",
-"text": "**Adaptive LR** capped at 1e-3 after the smoke run showed oscillation between 1e-5 and 3e-3.",
-"id": "a9cd412486a19e",
-"repos": [
-"PoBasketball"
-],
-"sources": [
-{
-"repo": "PoBasketball",
-"file": "PoBasketball/docs/phase_reports/PhaseC_setup.md",
-"line": 32
-}
-],
-"tags": [
-"training"
-]
-},
-{
-"repo": "PoBasketball",
-"file": "PoBasketball/docs/phase_reports/PhaseC_setup.md",
-"line": 33,
-"heading": "Phase C \u2014 Training Setup: C1\u2013C8 implemented \u203a Decisions / deviations",
-"kind": "trap",
-"text": "**L0 foot-drift termination** relaxed from 0.15 m to 0.20 m.",
-"id": "48992821371e48",
-"repos": [
-"PoBasketball"
-],
-"sources": [
-{
-"repo": "PoBasketball",
-"file": "PoBasketball/docs/phase_reports/PhaseC_setup.md",
-"line": 33
-}
-],
-"tags": []
-},
-{
-"repo": "PoBasketball",
-"file": "PoBasketball/docs/phase_reports/PhaseC_setup.md",
-"line": 34,
-"heading": "Phase C \u2014 Training Setup: C1\u2013C8 implemented \u203a Decisions / deviations",
-"kind": "trap",
-"text": "**L4 pass criterion** is per-shot: each episode is one shot, pass = \u2265 30 % scored over 200 shots. The \"20 shots\" PRD framing is applied in the Unreal showcase counter.",
-"id": "a2ce5b9bdaa605",
-"repos": [
-"PoBasketball"
-],
-"sources": [
-{
-"repo": "PoBasketball",
-"file": "PoBasketball/docs/phase_reports/PhaseC_setup.md",
-"line": 34
-}
-],
-"tags": [
-"unreal"
-]
-},
-{
-"repo": "PoBasketball",
-"file": "PoBasketball/docs/phase_reports/PhaseC_setup.md",
-"line": 35,
-"heading": "Phase C \u2014 Training Setup: C1\u2013C8 implemented \u203a Decisions / deviations",
-"kind": "trap",
-"text": "**Ball-floor contact flag** added to the env contact scan (bounce detection for L2\u2013L4); assets unchanged.",
-"id": "41e7e008b2f94e",
-"repos": [
-"PoBasketball"
-],
-"sources": [
-{
-"repo": "PoBasketball",
-"file": "PoBasketball/docs/phase_reports/PhaseC_setup.md",
-"line": 35
-}
-],
-"tags": []
 },
 {
 "repo": "PoBox",
@@ -2578,7 +2427,7 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 974,
+"line": 977,
 "heading": "Architecture \u2014 PoPunkouterSoftware \u203a Things that will bite you",
 "kind": "trap",
 "text": "**Client JSON is source-generated.** Every type the WASM client (de)serialises needs a `[JsonSerializable]` entry in [AppJsonContext.cs](../src/PoPunkouterSoftware.Client/AppJsonContext.cs). `PublishTrimmed` + `EnableTrimAnalyzer` are on for `.Client` with no `WarningsNotAsErrors` escape hatch, so reflection-based JSON fails the build.",
@@ -2590,7 +2439,7 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 974
+"line": 977
 }
 ],
 "tags": []
@@ -2598,7 +2447,7 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 978,
+"line": 981,
 "heading": "Architecture \u2014 PoPunkouterSoftware \u203a Things that will bite you",
 "kind": "trap",
 "text": "**The whole app has one rAF loop.** It lives in `js/motion-kit.js`. Do not add another \u2014 see [Graphics and audio](#graphics-and-audio).",
@@ -2610,7 +2459,7 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 978
+"line": 981
 }
 ],
 "tags": []
@@ -2618,7 +2467,7 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 980,
+"line": 983,
 "heading": "Architecture \u2014 PoPunkouterSoftware \u203a Things that will bite you",
 "kind": "trap",
 "text": "**The icon font is a SUBSET, and adding an icon means rebuilding it.** Radzen.Blazor ships the Material Symbols variable font (~3,600 glyphs, 1,068,920 bytes) and self-hosts it as family `\"Material Symbols\"`. This app draws about thirty of those glyphs, so [scripts/Build-IconFontSubset.py](../scripts/Build-IconFontSubset.py) builds `wwwroot/fonts/material-symbols-subset.woff2` (16,744 bytes, from the Radzen version pinned in `Directory.Packages.props` \u2014 the script used to take the \"newest\" cache folder by string sort, which picked 8.7.3) and `modern-ui.css` declares the family against that. **Material Symbols renders through LIGATURES** \u2014 the element's text is the icon's name \u2014 so a name mis",
@@ -2630,7 +2479,7 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 980
+"line": 983
 }
 ],
 "tags": []
@@ -2638,7 +2487,7 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 998,
+"line": 1001,
 "heading": "Architecture \u2014 PoPunkouterSoftware \u203a Things that will bite you",
 "kind": "trap",
 "text": "**A `RadzenChart` over time needs a DATE category, not a formatted label.** Bound to strings, `RadzenCategoryAxis` draws one tick per category and honours neither `Step` nor `TickDistance` \u2014 30 day-labels on `/users` ran into each other and 90 were a solid grey band, through two attempts at thinning them from the markup. Give the axis `DateTime` values and a `FormatString`, and it thins its own ticks to the available width at every viewport with no breakpoint. `SignInTrendPoint.Day` is a `DateTime` for exactly this reason.",
@@ -2650,7 +2499,7 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 998
+"line": 1001
 }
 ],
 "tags": []
@@ -2658,7 +2507,7 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 1004,
+"line": 1007,
 "heading": "Architecture \u2014 PoPunkouterSoftware \u203a Things that will bite you",
 "kind": "trap",
 "text": "**A page root that is `display: grid` needs `grid-template-columns: minmax(0, 1fr)`.** The default `auto` track is floored at the min-content width of its widest item, so one child with an intrinsic minimum \u2014 a `RadzenChart` with a legend \u2014 pushed `/users` to 441px inside a 390px viewport and every sibling stretched with it. **It does not show up as a horizontal scrollbar**: the overflow is clipped, `document.scrollWidth` stays exactly `clientWidth`, and the header, KPI tiles and card borders are simply cropped off the right. An E2E test that measures `scrollWidth` passes throughout. `Users_RostersRender_AndNothingOverflowsTheBody` therefore measures **element bounds**, excluding anything in",
@@ -2670,7 +2519,7 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 1004
+"line": 1007
 }
 ],
 "tags": [
@@ -2681,7 +2530,7 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 1013,
+"line": 1016,
 "heading": "Architecture \u2014 PoPunkouterSoftware \u203a Things that will bite you",
 "kind": "trap",
 "text": "**One application stylesheet.** `wwwroot/css/modern-ui.css` is the whole thing (plus `boot.css` for the pre-Blazor splash). It was a four-line aggregator over `modern-ui.base/.components/.responsive`; CSS `@import` is serial, so the split cost three extra round trips on the critical path and bought nothing a section comment does not. Order inside the file is load-bearing: tokens, then components that consume them, then breakpoint overrides.",
@@ -2693,7 +2542,7 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 1013
+"line": 1016
 }
 ],
 "tags": [
@@ -2703,7 +2552,7 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 1018,
+"line": 1021,
 "heading": "Architecture \u2014 PoPunkouterSoftware \u203a Things that will bite you",
 "kind": "trap",
 "text": "**Scoped CSS does not cross component boundaries.** Blazor stamps the scope attribute only on the owning component's own elements, so moving markup from a page into a child component silently kills every scoped rule that styled it. `AzureDashboard.razor.css` is written as `.azure-ops-page ::deep \u2026` for exactly that reason \u2014 keep **every** rule in that form, media-query overrides included. `::deep` also moves the scope attribute leftward, so mixing forms breaks specificity: `.azure-ops-page ::deep .x` compiles to `.azure-ops-page[b-id] .x` (0,3,0) while a bare `.x` compiles to `.x[b-id]` (0,2,0). Media queries add no specificity, so a bare override loses to its own base rule** and the layout ",
@@ -2715,7 +2564,7 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 1018
+"line": 1021
 }
 ],
 "tags": [
@@ -2725,7 +2574,7 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 1028,
+"line": 1031,
 "heading": "Architecture \u2014 PoPunkouterSoftware \u203a Things that will bite you",
 "kind": "trap",
 "text": "**A global rule that must beat a page-root scoped rule needs (0,2,1), not (0,2,0).** A page root such as `.azure-ops-page` carries a scoped rule compiling to `.azure-ops-page[b-hash]` \u2014 (0,2,0) \u2014 and `App.razor` loads `PoPunkouterSoftware.Client.styles.css` **after** `modern-ui.css`, so a global selector that merely ties loses the tie on document order. Prefix it with `html`. The removed phone pager learned this the hard way: its `display: block` lost to the scoped `display: grid`, the panes became grid rows a sixth of a screen tall painting over one another, and every E2E assertion that measured CONTENT still passed. Measure the rendered box.",
@@ -2737,7 +2586,7 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 1028
+"line": 1031
 }
 ],
 "tags": [
@@ -2748,7 +2597,7 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 1035,
+"line": 1038,
 "heading": "Architecture \u2014 PoPunkouterSoftware \u203a Things that will bite you",
 "kind": "trap",
 "text": "**The Integration fixture must hand back a developer's local report.** `TestWebApp` sets `App_Data/azure-full-report.json` aside, seeds its own, and restores on dispose. Its `Dispose(true)` runs TWICE (`WebApplicationFactory` reaches it from `DisposeAsync` and `Dispose`), and until 2026-11-03 the second pass deleted the real report the first had just put back \u2014 every test run wiped the local cache. It clears its fields before touching a file, and it never moves aside a seed it finds in place.",
@@ -2760,7 +2609,7 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 1035
+"line": 1038
 }
 ],
 "tags": [
@@ -2771,33 +2620,11 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 1041,
+"line": 1044,
 "heading": "Architecture \u2014 PoPunkouterSoftware \u203a Things that will bite you",
 "kind": "trap",
 "text": "**`Testing` is the hermetic switch.** It skips Key Vault entirely. Integration tests boot the real entry point via `WebApplicationFactory`, and collections run sequentially (`AssemblyInfo.cs`) because concurrent entry-point boots race.",
 "id": "8871a037a58c54",
-"repos": [
-"PoPunkouterSoftware"
-],
-"sources": [
-{
-"repo": "PoPunkouterSoftware",
-"file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 1041
-}
-],
-"tags": [
-"testing"
-]
-},
-{
-"repo": "PoPunkouterSoftware",
-"file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 1044,
-"heading": "Architecture \u2014 PoPunkouterSoftware \u203a Things that will bite you",
-"kind": "trap",
-"text": "**UI tests must cover both viewports.** `PortfolioUiTests` drives every test at mobile-portrait (390\u00d7844) and desktop-landscape (1440\u00d71000) through the shared `Viewports` theory data. Visual parity is a hard rule, not a preference.",
-"id": "9d2d928fa822f4",
 "repos": [
 "PoPunkouterSoftware"
 ],
@@ -2818,6 +2645,28 @@
 "line": 1047,
 "heading": "Architecture \u2014 PoPunkouterSoftware \u203a Things that will bite you",
 "kind": "trap",
+"text": "**UI tests must cover both viewports.** `PortfolioUiTests` drives every test at mobile-portrait (390\u00d7844) and desktop-landscape (1440\u00d71000) through the shared `Viewports` theory data. Visual parity is a hard rule, not a preference.",
+"id": "9d2d928fa822f4",
+"repos": [
+"PoPunkouterSoftware"
+],
+"sources": [
+{
+"repo": "PoPunkouterSoftware",
+"file": "PoPunkouterSoftware/docs/architecture.md",
+"line": 1047
+}
+],
+"tags": [
+"testing"
+]
+},
+{
+"repo": "PoPunkouterSoftware",
+"file": "PoPunkouterSoftware/docs/architecture.md",
+"line": 1050,
+"heading": "Architecture \u2014 PoPunkouterSoftware \u203a Things that will bite you",
+"kind": "trap",
 "text": "**Screenshots are no longer captured; the app shows the last ones.** `screenshots.yml` was the only writer of the `app-screenshots` blob container (one PNG per host, plus PageSpeed scores) and was dropped on 2026-11-20 by the owner's choice, together with the PageSpeed score chips it fed (production never held a score: anonymous PageSpeed calls answered 429). `AppScreenshotStore` still reads the stored PNGs, so cards show the last captured picture and the home page says the pictures are no longer updated; a new app shows its placeholder. In-process capture (Playwright) was removed on 2026-11-07 and must not come back: the F1 sandbox has no Chromium (an install once filled the worker disk and",
 "id": "cf3c0bd4c10f6f",
 "repos": [
@@ -2827,7 +2676,7 @@
 {
 "repo": "PoPunkouterSoftware",
 "file": "PoPunkouterSoftware/docs/architecture.md",
-"line": 1047
+"line": 1050
 }
 ],
 "tags": []
@@ -10859,7 +10708,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 229,
+"line": 230,
 "heading": "1. Coding standard \u203a 1.4 Working in this repo \u203a Commands",
 "kind": "rule",
 "text": "`ImportAll` / `ImportOne -kothScene koth_6p`: import `Training/assets/<robot>/scene_<tag>_unity.xml` into `Testbed_<tag>.unity` (`-kothRobot kim|trump|grandpa` for a human body).",
@@ -10871,7 +10720,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 229
+"line": 230
 }
 ],
 "tags": [
@@ -10881,7 +10730,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 230,
+"line": 231,
 "heading": "1. Coding standard \u203a 1.4 Working in this repo \u203a Commands",
 "kind": "rule",
 "text": "`RunHold -kothScene flat_1p`, `RunPolicy -kothScene <tag> -kothRung r1`: trajectory parity gates against `<rung>_reference_trajectory*.json`.",
@@ -10893,7 +10742,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 230
+"line": 231
 }
 ],
 "tags": [
@@ -10903,7 +10752,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 231,
+"line": 232,
 "heading": "1. Coding standard \u203a 1.4 Working in this repo \u203a Commands",
 "kind": "rule",
 "text": "`RunDuelStats -kothRounds 100 -kothA 0 -kothB 0`, `RunDuelParity`: combat gates (statistical, on koth_2p). `RunGetupDuelStats(robot, rounds, a, b, hill)` (the get-up rule: hill = the game's, vs `duel_stats.py --getup --hill-rule`; else the older 5 s count, vs `--getup`), `RunGetupStats` (drops on flat_1p, vs `getup_stats.py`). `RunHumanFfaStats(body, rounds)` (the humans' three-way gate on the game's bodies: `<body>`'s fighter vs the other two, vs `eval.py --rung <body>_hill`). `RunObsDump(robot, rounds, a, b, ffaCandidate, tag, brain)`: a stats gate with `ObsRecorder` writing `Training/assets/<body>/unity_obs_<tag>.jsonl` (and its stats beside it, never over the gate references).",
@@ -10915,7 +10764,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 231
+"line": 232
 }
 ],
 "tags": [
@@ -10926,7 +10775,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 232,
+"line": 233,
 "heading": "1. Coding standard \u203a 1.4 Working in this repo \u203a Commands",
 "kind": "rule",
 "text": "`PlayGame` (add `-kothShots <dir>` for menu/combat/ejection captures), `BuildPlayer` (`Builds/Win`, `-kothDev`), `MapOverview`.",
@@ -10938,7 +10787,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 232
+"line": 233
 }
 ],
 "tags": []
@@ -10946,7 +10795,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 233,
+"line": 234,
 "heading": "1. Coding standard \u203a 1.4 Working in this repo \u203a Commands",
 "kind": "rule",
 "text": "Web: `pwsh -File scripts/publish_webgl.ps1` (EditMode tests, WebGL build with the pinned editor, a `webgl-*` release) -> `.github/workflows/webgl.yml` deploys it to https://white-bush-08dbace0f.4.azurestaticapps.net (Static Web App `pohillking`) and checks the page and `/diag`. Android side-load: `PlayAab.SideloadApk` with the editor on the Android target, then `adb install -r Builds/Android/PoHillKing.apk` (the upload keystore path comes from the `POHILLKING_KEYSTORE` environment variable).",
@@ -10958,7 +10807,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 233
+"line": 234
 }
 ],
 "tags": [
@@ -10971,7 +10820,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 234,
+"line": 235,
 "heading": "1. Coding standard \u203a 1.4 Working in this repo \u203a Commands",
 "kind": "rule",
 "text": "`GameScene` ([Assets/_Project/Core/Editor/GameScene.cs](Assets/_Project/Core/Editor/GameScene.cs)): `RefreshBrains` (roster and get-up brains from `Models/`, after `export_policy.py`), `RefreshBodies` (the MuJoCo bodies, runners and skins from `Testbed_koth_game`, after `build_mjcf game`), `Compose(tag, robot, path)` (a gate scene: the game scene with another testbed's bodies).",
@@ -10983,7 +10832,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 234
+"line": 235
 }
 ],
 "tags": [
@@ -10997,7 +10846,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 235,
+"line": 236,
 "heading": "1. Coding standard \u203a 1.4 Working in this repo \u203a Commands",
 "kind": "rule",
 "text": "Player switches: `-kothRounds N` (stats gate in the player), `-kothPerf 30` (writes `perf_unity.json`).",
@@ -11009,7 +10858,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 235
+"line": 236
 }
 ],
 "tags": [
@@ -11020,7 +10869,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 257,
+"line": 258,
 "heading": "1. Coding standard \u203a 1.4 Working in this repo \u203a Architecture",
 "kind": "rule",
 "text": "`MatchDirector`: the match state machine (`Menu \u2192 Fight \u2192 Result (\u2192 Replay) \u2192 Fight | Menu`); quick match and custom (`FfaPlayers` = 8 at once, `FfaSeats`: every available (or ticked) agent once before any repeats, so with three brains it is 3 + 3 + 2; `StartFreeForAll(16)` seats the whole field, and `launchPlayers` = 16 only for `PerfProbe`), the 16-player bracket (`StartTournament`: single elimination of one-round 1v1 duels over the menu's seats, 01 v 02, 03 v 04 ..., 15 matches, `BuildBracket`; every duel names a winner on the spot: the last one in, else nearest the centre when time is up, else whoever went over last, else the higher Elo; no replays, so 15 duels always end with one champi",
@@ -11032,7 +10881,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 257
+"line": 258
 }
 ],
 "tags": [
@@ -11043,7 +10892,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 258,
+"line": 259,
 "heading": "1. Coding standard \u203a 1.4 Working in this repo \u203a Architecture",
 "kind": "rule",
 "text": "Shoves and jabs (`MatchDirector.Shoves.cs`, `GameSettings.Strikes`, on by default; Settings > Advanced): a fighter within `strikeReach` (0.85 m) of its target and facing it throws a scripted strike every 0.9-1.8 s (`PolicyRunner.BeginStrike`: both arms = shove, one = jab; the striking arm's shoulder pitch and elbow are laid over the brain's targets in `WriteCtrl` only, `Ctrl` is untouched). A fist reaching the target's torso while the arm goes out gives it `strikeImpulse` (42 N s, a jab 0.6 of it, x1.6 with Heavy) / its mass away from the striker, and the striker 0.3 of it back. Never in a statistics gate, so the brain gates measure the brains alone. The learned side is the env's `strike_pus",
@@ -11055,7 +10904,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 258
+"line": 259
 }
 ],
 "tags": [
@@ -11065,7 +10914,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 259,
+"line": 260,
 "heading": "1. Coding standard \u203a 1.4 Working in this repo \u203a Architecture",
 "kind": "rule",
 "text": "Presentation never gets called by the director: it subscribes to `MatchEvents` (state, round start/end, knock-out and its credit, down/recovered, impact, footfall, splash, caption). `HudView` (UI Toolkit, styles in `UI/Hud.uss` with a six-step type scale, one 9:16 column, no scrolling; one row of avatar badges with a `VitalsBar`, knock-out feed, intro card, replay bar with a draggable playhead, tabs Play/Agents/Settings on a bottom sheet that swipes down to a peek pill and turns dense when it would not fit; every option sits on the Settings page in sections Match/Picture/Sound/Advanced; Picture is Quality plus one Cinematic switch (effects, camera cuts and shake, slow motion); Advanced \u2192 Dev",
@@ -11077,7 +10926,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 259
+"line": 260
 }
 ],
 "tags": [
@@ -11087,34 +10936,11 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 260,
+"line": 261,
 "heading": "1. Coding standard \u203a 1.4 Working in this repo \u203a Architecture",
 "kind": "rule",
 "text": "Match state `Intro` (tale of the tape) sits between Menu and Fight on a match's first round: bodies stand passively (no brain), then `ArmBrains` + `NewRound` place them afresh. Gates and auto runs skip it; tests call `SkipIntro()`.",
 "id": "b3078806f80b05",
-"repos": [
-"PoHillKing"
-],
-"sources": [
-{
-"repo": "PoHillKing",
-"file": "PoHillKing/AGENTS.md",
-"line": 260
-}
-],
-"tags": [
-"training",
-"testing"
-]
-},
-{
-"repo": "PoHillKing",
-"file": "PoHillKing/AGENTS.md",
-"line": 261,
-"heading": "1. Coding standard \u203a 1.4 Working in this repo \u203a Architecture",
-"kind": "rule",
-"text": "Sensors and mechanics, all inert in the statistics gates unless a gate asks: `ContactLedger` (pairwise pushing impulse from `mj_contactForce`, knock-out credit and assists), `Biometrics` (capture point vs the planted feet = balance, capture point vs the rim = edge, strain history). The get-up rule is always on in the game (the hill rule: every fall on the mountain top gets up with the body's get-up brain, no count, no limit; only leaving the top is a knock-out; the sea still ends a round) and lives in `MatchDirector.OutWithGetUp` (body-kind brains in `getupBrains`, `PolicyRunner.SetGetUp`), mirrored by `duel_stats.py --getup`.",
-"id": "9f3afac4c4aa89",
 "repos": [
 "PoHillKing"
 ],
@@ -11127,13 +10953,36 @@
 ],
 "tags": [
 "training",
-"git"
+"testing"
 ]
 },
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
 "line": 262,
+"heading": "1. Coding standard \u203a 1.4 Working in this repo \u203a Architecture",
+"kind": "rule",
+"text": "Sensors and mechanics, all inert in the statistics gates unless a gate asks: `ContactLedger` (pairwise pushing impulse from `mj_contactForce`, knock-out credit and assists), `Biometrics` (capture point vs the planted feet = balance, capture point vs the rim = edge, strain history). The get-up rule is always on in the game (the hill rule: every fall on the mountain top gets up with the body's get-up brain, no count, no limit; only leaving the top is a knock-out; the sea still ends a round) and lives in `MatchDirector.OutWithGetUp` (body-kind brains in `getupBrains`, `PolicyRunner.SetGetUp`), mirrored by `duel_stats.py --getup`.",
+"id": "9f3afac4c4aa89",
+"repos": [
+"PoHillKing"
+],
+"sources": [
+{
+"repo": "PoHillKing",
+"file": "PoHillKing/AGENTS.md",
+"line": 262
+}
+],
+"tags": [
+"training",
+"git"
+]
+},
+{
+"repo": "PoHillKing",
+"file": "PoHillKing/AGENTS.md",
+"line": 263,
 "heading": "1. Coding standard \u203a 1.4 Working in this repo \u203a Architecture",
 "kind": "rule",
 "text": "`LifeSigns` (render only, after `SkinFollower`): the head and neck turn to the brain's opponent, the rim, the camera (`SkinFollower.Look`; the physics has no neck joint), the chest breathes with exertion, belly / hair / chest lag on springs, the jaw and brow follow hits, fear, strain and the win, and the winner's arms go up (`SkinFollower.ArmsUp`). The meshes have no face, hair or cloth bones and no blendshapes, so everything but the bone turns is a vertex offset in `FX/Fighter.shader` (`_Life*`, the same in all four passes), written into the property block `BodyLook` uses. The mouth is found per body kind from the mesh (nose tip, then 10.5 % of a head below it). `MusicBed` (pure C#, in `Imp",
@@ -11145,7 +10994,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 262
+"line": 263
 }
 ],
 "tags": []
@@ -11153,7 +11002,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 263,
+"line": 264,
 "heading": "1. Coding standard \u203a 1.4 Working in this repo \u203a Architecture",
 "kind": "rule",
 "text": "After a round (`MatchDirector.EndRound`, never in a gate): `PolicyRunner.SetPostRound`. The winner's fight brain walks it to the centre and stands on a zero command; whoever else still stands gets a zero command. The joint targets stay the brain's: arms really raised made it fall (brain or joint hold, 8 of 8 trials), so the pose is on the skin only.",
@@ -11165,7 +11014,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 263
+"line": 264
 }
 ],
 "tags": [
@@ -11175,7 +11024,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 264,
+"line": 265,
 "heading": "1. Coding standard \u203a 1.4 Working in this repo \u203a Architecture",
 "kind": "rule",
 "text": "`Sea` (rising water = round clock, buoyancy via `xfrc_applied` for every fighter body), `ImpactSynth` (procedural audio, no audio files: hits by material and body through `SoundPool`'s 3D one-shots whose clips are synthesized at start, sliding and grinding from the contact list, ambience beds of wind, surf and crowd in `OnAudioFilterRead`; mix channels in `GameSettings`), `SkinFollower` (a human's mesh follows its MuJoCo bodies), `ProjectilePool` (re-pins the MJCF's parked boxes; the hold-parity gate fires them).",
@@ -11187,7 +11036,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 264
+"line": 265
 }
 ],
 "tags": [
@@ -11198,7 +11047,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 265,
+"line": 266,
 "heading": "1. Coding standard \u203a 1.4 Working in this repo \u203a Architecture",
 "kind": "rule",
 "text": "Parity/diagnostic components (`ParityProbe`, `PolicyParityProbe`, `ModelDumpCheck`, `PerfProbe`, `AutoShot`) are inert unless their `-koth*` switch is given; switches are read through `Cli` (the editor's own command line: a CLI `eval` cannot set them, so gates that need parameters have overloads). `GetupProbe` is added only by `RunGetupStats`.",
@@ -11210,7 +11059,7 @@
 {
 "repo": "PoHillKing",
 "file": "PoHillKing/AGENTS.md",
-"line": 265
+"line": 266
 }
 ],
 "tags": [
